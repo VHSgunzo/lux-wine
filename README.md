@@ -1,2 +1,2 @@
 # lutris-wine
-Lutris Wine Runner as sytem Wine and even better
+Lutris Wine Runner as system Wine and even better
