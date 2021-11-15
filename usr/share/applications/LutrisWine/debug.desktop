@@ -1,0 +1,14 @@
+[Desktop Entry]
+Categories=Lutris Wine
+Comment=
+Exec=env LU_DEBUG=1 lutris-wine
+Icon=/usr/share/lutris/media/default_icon.png
+Name=DEBUG
+NoDisplay=false
+Path[$e]=
+StartupNotify=true
+Terminal=0
+TerminalOptions=--hold
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=

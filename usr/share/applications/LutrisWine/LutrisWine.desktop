@@ -1,0 +1,15 @@
+[Desktop Entry]
+Categories=Lutris Wine
+Comment=
+Exec=lutris-wine %F
+Icon=/usr/share/lutris/media/default_icon.png
+MimeType=application/x-ms-dos-executable;application/x-wine-extension-msp;application/x-msi;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit
+Name=Wine in Lutris
+NoDisplay=false
+Path[$e]=
+StartupNotify=true
+Terminal=0
+TerminalOptions=--hold
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=

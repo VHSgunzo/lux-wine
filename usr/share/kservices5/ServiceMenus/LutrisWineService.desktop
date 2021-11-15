@@ -1,0 +1,83 @@
+[Desktop Action explorer]
+Exec=lutris-wine
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Рабочий стол
+
+[Desktop Action shell]
+Exec=lutris-wine shell "%U"
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Открыть в SHELL
+
+[Desktop Action cmd]
+Exec=lutris-wine cmd "%U"
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Открыть в CMD
+
+[Desktop Action regedit]
+Exec=lutris-wine regedit
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Редактор реестра
+
+[Desktop Action control]
+Exec=lutris-wine control
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Панель управления
+
+[Desktop Action winecfg]
+Exec=lutris-wine winecfg
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Настройки Wine
+
+[Desktop Action winetricks]
+Exec=lutris-wine winetricks
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Winetricks
+
+[Desktop Action taskmgr]
+Exec=lutris-wine taskmgr
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Диспетчер задач
+
+[Desktop Action uninstaller]
+Exec=lutris-wine uninstaller
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Установка/Удаление программ
+
+[Desktop Action open_pfx]
+Exec=lutris-wine open_pfx
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Открыть диск C:\\
+
+[Desktop Action killwine]
+Exec=lutris-wine killwine
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Убить все процессы Wine
+
+[Desktop Action clear_pfx]
+Exec=lutris-wine clear_pfx
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Очистить префикс
+
+[Desktop Action debug]
+Exec=LU_DEBUG=1 lutris-wine "%U"
+Icon=/usr/share/lutris/media/default_icon.png
+Name=DEBUG
+
+[Desktop Action shortcut]
+Exec=lutris-wine shortcut "%U"
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Cоздать ярлык
+
+[Desktop Entry]
+Type=Service
+Actions=shell;cmd;explorer;regedit;control;winecfg;winetricks;taskmgr;uninstaller;open_pfx;killwine;clear_pfx;debug;shortcut
+Encoding=UTF-8
+Name=Lutris Wine
+Name[en_US]=Lutris Wine
+Icon=/usr/share/lutris/media/default_icon.png
+ServiceTypes=all/allfiles;KonqPopupMenu/Plugin;
+MimeType=all/all;
+X-KDE-ServiceTypes=KonqPopupMenu/Plugin
+X-KDE-Priority=TopLevel
+X-KDE-Submenu=Lutris Wine
+X-KDE-Icon=/usr/share/lutris/media/default_icon.png
