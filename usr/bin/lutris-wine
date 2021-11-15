@@ -16,10 +16,11 @@ export RESETCOLOR='\033[1;00m'
 #export LU_DEBUG=1
 #export LU_USE_TERMINAL=1
 
-export EXE_ARG="-dx12"
+#export EXE_ARG="-dx12"
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
+export LU_APP="${HOME}/.local/share/applications/LutrisWine/Applications"
 
 export WINEARCH="win64"
 export LU_WINDOWS_VER="10"
@@ -248,8 +249,12 @@ create_shortcut() {
             zenity --question --title "Выбор" --text "Ярлык '$(basename "$DESKF")' создан в директории с исполнительным файлом.\nДобавить его в МЕНЮ?" --no-wrap &> /dev/null
             if [ $? -eq "0" ]
                 then
-                    cp -rf "$DESKF" ${HOME}/.local/share/applications/LutrisWine/Applications/
-                    kbuildsycoca5 &>/dev/null
+                    if [ ! -d $LU_APP ]
+                        then
+                            mkdir -p $LU_APP
+                    fi
+                    cp -rf "$DESKF" ${LU_APP}/
+                    update-desktop-database -q "${HOME}/.local/share/applications"
             fi
     fi
 }
@@ -424,7 +429,7 @@ lu_run() {
                 "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" \
                 "LU_DIR" "LU_WINE_CONF" "GST_PLUGIN_SYSTEM_PATH_1_0" "WINE_GST_REGISTRY_DIR" "WINEESYNC" \
                 "WINEFSYNC" "WINEFSYNC_FUTEX2" "WINE_FULLSCREEN_FSR" "WINE_FULLSCREEN_FSR_STRENGTH" "STAGING_SHARED_MEMORY" \
-                "LU_LOG_FILE" "WINE_LARGE_ADDRESS_AWARE" "terminal_app" "DXVK_NVAPIHACK" "RUN_MANGOHUD" "RUN_GAMEMODE" \
+                "LU_LOG_FILE" "WINE_LARGE_ADDRESS_AWARE" "terminal_app" "DXVK_NVAPIHACK" "RUN_MANGOHUD" "RUN_GAMEMODE" "VKD3D_LOG_FILE" \
                 "VK_ICD_FILENAMES" "SDL_VIDEO_FULLSCREEN_DISPLAY" "DXVK_STATE_CACHE_PATH" "__GLX_VENDOR_LIBRARY_NAME" "__NV_PRIME_RENDER_OFFLOAD" \
                 "DXVK_STATE_CACHE_PATH" "DXVK_STATE_CACHE" "__GL_DXVK_OPTIMIZATIONS" "__GL_SHADER_DISK_CACHE_PATH" "__GL_SHADER_DISK_CACHE" "__GL_SHADER_DISK_CACHE_SIZE" \
                 "MEDIACONV_AUDIO_DUMP_FILE" "MEDIACONV_AUDIO_TRANSCODED_FILE" "MEDIACONV_VIDEO_DUMP_FILE" "MEDIACONV_VIDEO_TRANSCODED_FILE")"
@@ -678,6 +683,8 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
             killwine) kill_wine ;;
             clear_pfx) export -f clear_prefix
                        $terminal_app -e $SHELL -c "clear_prefix" ;;
+            rem_app) rm -rfv $LU_APP
+                     update-desktop-database -q "${HOME}/.local/share/applications" ;;
             shortcut) if [ -f "$2" ]
                           then
                               export SHRT_FL="$(readlink -f "$2")"
