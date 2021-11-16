@@ -1,81 +1,101 @@
 [Desktop Action explorer]
 Exec=lutris-wine
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Рабочий стол
-
-[Desktop Action shell]
-Exec=lutris-wine shell "%U"
-Icon=/usr/share/lutris/media/default_icon.png
-Name=Открыть в SHELL
+Name=Explorer
+Name[ru_RU]=Рабочий стол
 
 [Desktop Action cmd]
-Exec=lutris-wine cmd "%U"
+Exec=lutris-wine -cmd "%U"
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Открыть в CMD
+Name=Open in CMD
+Name[ru_RU]=Открыть в CMD
+
+[Desktop Action shell]
+Exec=lutris-wine -shell "%U"
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Open in SHELL
+Name[ru_RU]=Открыть в SHELL
 
 [Desktop Action regedit]
-Exec=lutris-wine regedit
+Exec=lutris-wine -regedit
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Редактор реестра
+Name=Registry editor
+Name[ru_RU]=Редактор реестра
 
 [Desktop Action control]
-Exec=lutris-wine control
+Exec=lutris-wine -control
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Панель управления
+Name=Control Panel
+Name[ru_RU]=Панель управления
 
 [Desktop Action winecfg]
-Exec=lutris-wine winecfg
+Exec=lutris-wine -winecfg
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Настройки Wine
-
-[Desktop Action winetricks]
-Exec=lutris-wine winetricks
-Icon=/usr/share/lutris/media/default_icon.png
-Name=Winetricks
+Name=Wine settings
+Name[ru_RU]=Настройки Wine
 
 [Desktop Action taskmgr]
-Exec=lutris-wine taskmgr
+Exec=lutris-wine -taskmgr
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Диспетчер задач
+Name=Task Manager
+Name[ru_RU]=Диспетчер задач
 
 [Desktop Action uninstaller]
-Exec=lutris-wine uninstaller
+Exec=lutris-wine -uninstaller
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Установка/Удаление программ
+Name=Add/Remove Programs
+Name[ru_RU]=Установка/Удаление программ
+
+[Desktop Action winetricks]
+Exec=lutris-wine -winetricks
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Winetricks
+Name[ru_RU]=Winetricks
 
 [Desktop Action open_pfx]
-Exec=lutris-wine open_pfx
+Exec=lutris-wine -openpfx
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Открыть диск C:\\
+Name=Open drive C:\\
+Name[ru_RU]=Открыть диск C:\\
 
 [Desktop Action killwine]
-Exec=lutris-wine killwine
+Exec=lutris-wine -killwine
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Убить все процессы Wine
+Name=Kill all Wine processes
+Name[ru_RU]=Убить все процессы Wine
 
 [Desktop Action clear_pfx]
-Exec=lutris-wine clear_pfx
+Exec=lutris-wine -clearpfx
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Очистить префикс
+Name=Clear prefix
+Name[ru_RU]=Очистить префикс
 
 [Desktop Action debug]
 Exec=LU_DEBUG=1 lutris-wine "%U"
 Icon=/usr/share/lutris/media/default_icon.png
 Name=DEBUG
+Name[ru_RU]=ДЕБАГ
 
 [Desktop Action shortcut]
-Exec=lutris-wine shortcut "%U"
+Exec=lutris-wine -shortcut "%U"
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Cоздать ярлык
+Name=Create shortcut
+Name[ru_RU]=Cоздать ярлык
+
+[Desktop Action rmapp]
+Exec=lutris-wine -rmapp
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Remove all shortcuts from menu
+Name[ru_RU]=Удалить все ярлыки из меню
 
 [Desktop Entry]
 Type=Service
-Actions=shell;cmd;explorer;regedit;control;winecfg;winetricks;taskmgr;uninstaller;open_pfx;killwine;clear_pfx;debug;shortcut
+Actions=shell;cmd;explorer;regedit;control;winecfg;winetricks;taskmgr;uninstaller;open_pfx;killwine;clear_pfx;debug;shortcut;rmapp
 Encoding=UTF-8
 Name=Lutris Wine
-Name[en_US]=Lutris Wine
+Name[ru_RU]=Lutris Wine
 Icon=/usr/share/lutris/media/default_icon.png
-ServiceTypes=all/allfiles;KonqPopupMenu/Plugin;
+ServiceTypes=all/allfiles;KonqPopupMenu/Plugin
 MimeType=all/all;
 X-KDE-ServiceTypes=KonqPopupMenu/Plugin
 X-KDE-Priority=TopLevel

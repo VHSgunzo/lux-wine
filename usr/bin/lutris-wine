@@ -2,8 +2,8 @@
 ###VHSgunzo
 ###VERSION 0.35
 if [ $(id -u) -eq 0 ] ; then
-    echo -e "$RED[!]Не запускайте Lutris Wine от рута[!]$RESETCOLOR"
-    zenity --error --title "Ошибка"  --text "Не запускайте Lutris Wine от рута!" --no-wrap &> /dev/null
+    echo -e "$RED[!]Don't run Lutris Wine as root[!]$RESETCOLOR"
+    zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &> /dev/null
     exit 1
 fi
 export BLUE='\033[1;94m'
@@ -16,7 +16,7 @@ export RESETCOLOR='\033[1;00m'
 #export LU_DEBUG=1
 #export LU_USE_TERMINAL=1
 
-#export EXE_ARG="-dx12"
+#export EXE_ARG=""
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
@@ -135,71 +135,60 @@ kill_wine() {
 }
 
 clear_prefix() {
-    while true
-        do
-            read -p "Очистить префикс "$WINEPREFIX" ? (д/н) > " yn_pfx
-            case $yn_pfx in
-                [YyДд] ) rm -rfv "${WINEPREFIX}/registry_*"
-                        rm -rfv "${WINEPREFIX}/*.reg"
-                        rm -rfv "${WINEPREFIX}/winetricks.log"
-                        rm -rfv "${WINEPREFIX}/.update-timestamp"
-                        rm -rfv "${WINEPREFIX}/drive_c/.windows-serial"
-                        rm -rfv "${WINEPREFIX}/drive_c/windows/"
-                        rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Setup"
-                        rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Windows"
-                        rm -rfv "${WINEPREFIX}/drive_c/ProgramData/WindowsTask"
-                        rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Package Cache"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Application Data/Microsoft"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Application Data/Temp"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Temporary Internet Files"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/Public/Application Data/Microsoft"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/Public/Application Data/wine_gecko"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/Public/Temp"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Application Data/Microsoft"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Application Data/Temp"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Temporary Internet Files"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/user/Application Data/Microsoft"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/user/Application Data/wine_gecko"
-                        rm -rfv "${WINEPREFIX}/drive_c/users/user/Temp"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files/Internet Explorer"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files/Windows Media Player"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files/Windows NT"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files/Common Files"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Internet Explorer"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Common Files"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Windows Media Player"
-                        rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Windows NT"
-                        rm -rfv "$__GL_SHADER_DISK_CACHE_PATH"/*
-                        rm -rfv "$DXVK_STATE_CACHE_PATH"/*
-                        rm -rfv "$WINE_GST_REGISTRY_DIR"/*
-                        rm -rfv "$HOME/.cache/mesa_shader_cache/*"
-                        echo -en "\n"
-                        read -p 'Префикс очищен, продолжить?' ; return  0 ;;
-                [NnНн] )  echo -en "\nОтмена"
-                        sleep 1; return  1 ;;
-            esac
-            clear
-    done
+    zenity --question --title "Clearing prefix" --text "Do you really want to clear prefix ["$WINEPREFIX"] ?" --no-wrap &> /dev/null
+    if [ $? -eq "0" ]
+        then
+            rm -rfv "${WINEPREFIX}/registry_*"
+            rm -rfv "${WINEPREFIX}/*.reg"
+            rm -rfv "${WINEPREFIX}/winetricks.log"
+            rm -rfv "${WINEPREFIX}/.update-timestamp"
+            rm -rfv "${WINEPREFIX}/drive_c/.windows-serial"
+            rm -rfv "${WINEPREFIX}/drive_c/windows/"
+            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Setup"
+            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Windows"
+            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/WindowsTask"
+            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Package Cache"
+            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Application Data/Microsoft"
+            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Application Data/Temp"
+            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Temporary Internet Files"
+            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Application Data/Microsoft"
+            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Application Data/wine_gecko"
+            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Temp"
+            rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Application Data/Microsoft"
+            rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Application Data/Temp"
+            rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Temporary Internet Files"
+            rm -rfv "${WINEPREFIX}/drive_c/users/user/Application Data/Microsoft"
+            rm -rfv "${WINEPREFIX}/drive_c/users/user/Application Data/wine_gecko"
+            rm -rfv "${WINEPREFIX}/drive_c/users/user/Temp"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Internet Explorer"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Windows Media Player"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Windows NT"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Common Files"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Internet Explorer"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Common Files"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Windows Media Player"
+            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Windows NT"
+            rm -rfv "$__GL_SHADER_DISK_CACHE_PATH"/*
+            rm -rfv "$DXVK_STATE_CACHE_PATH"/*
+            rm -rfv "$WINE_GST_REGISTRY_DIR"/*
+            rm -rfv "$HOME/.cache/mesa_shader_cache/*"
+            echo -en "\nPrefix cleared successfully!\n"
+            zenity --info --title "Clearing prefix" --text "Prefix "$WINEPREFIX" cleared successfully!" --no-wrap &> /dev/null
+    fi
 }
 
 reg_edit() {
-    while true
-        do
-            echo -en "          Редактор реестра Lutris Wine\n\nДобавление сведений может привести к непреднамеренному изменению\nили удалению значений и неправильной работе компонентов.\nЕсли сведения в "$1"\nполучены из недостоверного источника, не добавляйте их в реестр!\n\n"
-            read -p "Вы действительно хотите продолжить? (д/н) > " yn_reg
-            case $yn_reg in
-                [YyДд] )  clear
-                        REG_BC_DIR="$WINEPREFIX/registry_$(date +'%Y-%m-%d_%T')"
-                        echo "Бекап реестра в $REG_BC_DIR ..."
-                        mkdir "$REG_BC_DIR" 2>/dev/null
-                        for regbc in $(ls $WINEPREFIX/*.reg) ; do cp -rfv "$regbc" "$REG_BC_DIR/" ; done
-                        $WINE regedit "$1" >/dev/null 2>&1
-                        echo -en "\n"
-                        read -p "Данные из "$1" успешно добавлены в реестр, продолжить?" ; return  0;;
-                [NnНн] ) return  1 ;;
-            esac
-            clear
-    done
+    zenity --question --title "Lutris Wine Registry Editor" --text "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in "$1" do not add it to the registry.\nAre you sure you want to continue?" --no-wrap &> /dev/null
+    if [ $? -eq "0" ]
+        then
+            REG_BC_DIR="$WINEPREFIX/registry_$(date +'%Y-%m-%d_%T')"
+            echo "Registry backup to '$REG_BC_DIR'"
+            mkdir "$REG_BC_DIR" 2>/dev/null
+            for regbc in $(ls $WINEPREFIX/*.reg) ; do cp -rfv "$regbc" "$REG_BC_DIR/" ; done
+            $WINE regedit "$1" >/dev/null 2>&1
+            echo -en "\nData from "$1" has been successfully added to Lutris Wine registry!\n"
+            zenity --info --title "Lutris Wine Registry Editor" --text "Registry backup to $REG_BC_DIR\nData from "$1" has been successfully added to Lutris Wine registry!" --no-wrap &> /dev/null
+    fi
 }
 
 exe2png() {
@@ -222,11 +211,12 @@ exe2png() {
                     rm -rf "${SHRT_NAME}"*.ico *_*_*.png
                     echo -en "${BLUE}Converting complete!\n$RESETCOLOR"
                 else
-                    echo -en "${RED}[!]ICO not found[!]\n$RESETCOLOR"
-                    exit 1
+                    echo -en "${RED}[!]Failed to get ico from executable file[!]\n$RESETCOLOR"
+                    zenity --error --text "Failed to get ico from executable file!" --no-wrap &> /dev/null
             fi
         else
             echo -en "${RED}\n[!]You must install icoutils[!]\n\n$RESETCOLOR"
+            zenity --error --text "You must install icoutils!" --no-wrap &> /dev/null
             exit 1
     fi
 }
@@ -238,7 +228,13 @@ create_shortcut() {
             export DESKF="${SHRT_PATH}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
             echo "Name=${SHRT_NAME}" >> "$DESKF"
-            echo "Exec=\"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
+            ADD_EXE_ARG="$(zenity --entry --title "Enter arguments"  --text "Specify additional startup arguments")"
+            if [ ! -z "$ADD_EXE_ARG" ]
+                then
+                    echo "Exec=EXE_ARG=\"$ADD_EXE_ARG\" \"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
+                else
+                    echo "Exec=\"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
+            fi
             echo "Type=Application" >> "$DESKF"
             echo "Categories=Lutris Wine App" >> "$DESKF"
             echo "StartupNotify=true" >> "$DESKF"
@@ -246,7 +242,7 @@ create_shortcut() {
             echo "Icon="${SHRT_PATH}/${SHRT_NAME}.png"" >> "$DESKF"
             chmod u+x "$DESKF"
             echo -en "${BLUE}Creating '$(basename "$DESKF")' complete!\n$RESETCOLOR"
-            zenity --question --title "Выбор" --text "Ярлык '$(basename "$DESKF")' создан в директории с исполнительным файлом.\nДобавить его в МЕНЮ?" --no-wrap &> /dev/null
+            zenity --question --title "Creating shortcut" --text "Shortcut '$(basename "$DESKF")' successfully created in the directory with the executable file.\nDo you want to add it to application menu?" --no-wrap &> /dev/null
             if [ $? -eq "0" ]
                 then
                     if [ ! -d $LU_APP ]
@@ -255,6 +251,22 @@ create_shortcut() {
                     fi
                     cp -rf "$DESKF" ${LU_APP}/
                     update-desktop-database -q "${HOME}/.local/share/applications"
+                    zenity --info --title "Creating shortcut" --text "Shortcut successfully added to application menu!" --no-wrap &> /dev/null
+            fi
+    fi
+}
+
+remove_app() {
+    zenity --question --title "Removing shortcuts" --text "Are you sure you want to remove all Lutris Wine applications from menu?" --no-wrap &> /dev/null
+    if [ $? -eq "0" ]
+        then
+            if [ -d $LU_APP ]
+                then
+                    rm -rfv $LU_APP
+                    update-desktop-database -q "${HOME}/.local/share/applications"
+                    zenity --info --title "Removing shortcuts" --text "Lutris Wine applications deleted from menu!" --no-wrap &> /dev/null
+                else
+                    zenity --error --title "Removing shortcuts" --text "Lutris Wine applications not found in menu!" --no-wrap &> /dev/null
             fi
     fi
 }
@@ -508,14 +520,14 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                         export RUN_MANGOHUD="mangohud --dlsym"
                 fi
             else
-                echo -e "$RED[!]MANGOHUD not found in you system or disabled[!]"
+                echo -e "$RED[!]MANGOHUD not found in you system or disabled in Lutris[!]"
                 export DISABLE_MANGOHUD=1
         fi
         if [[ ! -z "$gamemode" && "$gamemode" == true && ! -z "$(which gamemoderun 2>/dev/null)" ]]
             then
                 export RUN_GAMEMODE="gamemoderun"
             else
-                echo -e "$RED[!]GAMEMODE not found in you system or disabled[!]"
+                echo -e "$RED[!]GAMEMODE not found in you system or disabled in Lutris[!]"
                 export RUN_GAMEMODE=""
         fi
         if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
@@ -626,7 +638,7 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                 echo "WINDOWS VERSION SET TO WINDOWS $LU_WINDOWS_VER"
         fi
         case $1 in
-            cmd) unset -f compositor_sw
+            -cmd) unset -f compositor_sw
                  unset EXE_ARG
                  export LU_USE_TERMINAL=1
                  if [ -f "$2" ]
@@ -642,7 +654,7 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                         unset -f lu_debug
                         lu_run cmd
                 fi ;;
-            shell) unset -f compositor_sw
+            -shell) unset -f compositor_sw
                    export LU_USE_TERMINAL=1
                     if [ -f "$2" ]
                         then
@@ -658,34 +670,32 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                                 export LU_SHELL_PTH="$HOME"
                                 lu_run
                         fi ;;
-            regedit) unset -f compositor_sw
+            -regedit) unset -f compositor_sw
                      unset -f lu_debug
                      unset EXE_ARG
                      lu_run regedit ;;
-            control) unset -f compositor_sw
+            -control) unset -f compositor_sw
                      unset -f lu_debug
                      unset EXE_ARG
                      lu_run control ;;
-            winecfg) unset -f compositor_sw
+            -winecfg) unset -f compositor_sw
                      unset -f lu_debug
                      unset EXE_ARG
                      lu_run winecfg ;;
-            taskmgr) unset -f compositor_sw
+            -taskmgr) unset -f compositor_sw
                      unset -f lu_debug
                      unset EXE_ARG
                      lu_run taskmgr ;;
-            uninstaller) unset -f compositor_sw
+            -uninstaller) unset -f compositor_sw
                      unset -f lu_debug
                      unset EXE_ARG
                      lu_run uninstaller ;;
-            winetricks) winetricks ;;
-            open_pfx) xdg-open "$WINEPREFIX/drive_c/" 2>/dev/null ;;
-            killwine) kill_wine ;;
-            clear_pfx) export -f clear_prefix
-                       $terminal_app -e $SHELL -c "clear_prefix" ;;
-            rem_app) rm -rfv $LU_APP
-                     update-desktop-database -q "${HOME}/.local/share/applications" ;;
-            shortcut) if [ -f "$2" ]
+            -winetricks) winetricks ;;
+            -openpfx) xdg-open "$WINEPREFIX/drive_c/" 2>/dev/null ;;
+            -killwine) kill_wine ;;
+            -clearpfx) clear_prefix ;;
+            -rmapp) remove_app ;;
+            -shortcut) if [ -f "$2" ]
                           then
                               export SHRT_FL="$(readlink -f "$2")"
                               if [ ! -z "$(file "$SHRT_FL"|grep "for MS Windows"|grep -o "executable (GUI)")" ]
@@ -693,8 +703,8 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                                       export LU_EXE="$SHRT_FL"
                                       create_shortcut "$LU_EXE"
                                   else
-                                      echo -e "$RED[!]Невозможно создать ярлык для этого файла[!]$RESETCOLOR"
-                                      zenity --error --title "Ошибка" --text "Невозможно создать ярлык для этого файла!" --no-wrap &> /dev/null
+                                      echo -e "$RED[!]Unable to create shortcut for this file[!]$RESETCOLOR"
+                                      zenity --error --text "Unable to create shortcut for this file!" --no-wrap &> /dev/null
                               fi
                       fi ;;
             *)  if [ -f "$1" ]
@@ -714,8 +724,7 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                                 lu_run "$LU_EXE"
                         elif [ ! -z "$LU_REG" ]
                             then
-                                export -f reg_edit
-                                $terminal_app -e $SHELL -c "reg_edit '$LU_EXE'"
+                                reg_edit "$LU_EXE"
                         else
                             if [[ ! -z "$LU_DEBUG" && "$LU_DEBUG" != 0 ]]
                                 then
@@ -735,7 +744,7 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                 fi ;;
         esac
     else
-        echo -e "$RED[!]Сначала нужно настроить WINE в Lutris[!]$RESETCOLOR"
-        zenity --error --title "Ошибка"  --text "Сначала нужно настроить WINE в Lutris!" --no-wrap &> /dev/null
+        echo -e "$RED[!]First you need to configure Wine in Lutris[!]$RESETCOLOR"
+        zenity --error --text "First you need to configure Wine in Lutris!" --no-wrap &> /dev/null
         exit 1
 fi

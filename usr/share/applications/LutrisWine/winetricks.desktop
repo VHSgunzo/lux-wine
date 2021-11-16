@@ -1,14 +1,11 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Comment=
-Exec=lutris-wine winetricks
+Exec=lutris-wine -winetricks
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Winetricks
 NoDisplay=false
-Path[$e]=
 StartupNotify=true
 Terminal=0
 TerminalOptions=--hold
 Type=Application
 X-KDE-SubstituteUID=false
-X-KDE-Username=

@@ -1,14 +1,12 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Comment=
-Exec=lutris-wine clear_pfx
+Exec=lutris-wine -clearpfx
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Очистить префикс
+Name=Clear prefix
+Name[ru_RU]=Очистить префикс
 NoDisplay=false
-Path[$e]=
 StartupNotify=true
 Terminal=0
 TerminalOptions=--hold
 Type=Application
 X-KDE-SubstituteUID=false
-X-KDE-Username=

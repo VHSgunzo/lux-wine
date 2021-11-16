@@ -1,14 +1,12 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Comment=
-Exec=lutris-wine regedit
+Exec=lutris-wine -regedit
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Редактор реестра
+Name=Registry editor
+Name[ru_RU]=Редактор реестра
 NoDisplay=false
-Path[$e]=
 StartupNotify=true
 Terminal=0
 TerminalOptions=--hold
 Type=Application
 X-KDE-SubstituteUID=false
-X-KDE-Username=

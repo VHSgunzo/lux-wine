@@ -1,14 +1,12 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Comment=
-Exec=lutris-wine killwine
+Exec=lutris-wine -killwine
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Убить все процессы Wine
+Name=Kill all Wine processes
+Name[ru_RU]=Убить все процессы Wine
 NoDisplay=false
-Path[$e]=
 StartupNotify=true
 Terminal=0
 TerminalOptions=--hold
 Type=Application
 X-KDE-SubstituteUID=false
-X-KDE-Username=

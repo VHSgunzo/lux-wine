@@ -1,14 +1,12 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Comment=
-Exec=lutris-wine shell
+Exec=lutris-wine -shell
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Открыть SHELL
+Name=Open SHELL
+Name[ru_RU]=Открыть SHELL
 NoDisplay=false
-Path[$e]=
 StartupNotify=true
 Terminal=0
 TerminalOptions=--hold
 Type=Application
 X-KDE-SubstituteUID=false
-X-KDE-Username=
