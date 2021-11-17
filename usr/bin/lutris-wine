@@ -1,6 +1,6 @@
 #!/bin/bash
 ###VHSgunzo
-###VERSION 0.35
+###VERSION 0.37
 if [ $(id -u) -eq 0 ] ; then
     echo -e "$RED[!]Don't run Lutris Wine as root[!]$RESETCOLOR"
     zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &> /dev/null
@@ -15,7 +15,6 @@ export RESETCOLOR='\033[1;00m'
 #export LU_LOG=1
 #export LU_DEBUG=1
 #export LU_USE_TERMINAL=1
-
 #export EXE_ARG=""
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
@@ -62,9 +61,9 @@ check_wine() {
 
 check_exe() {
     unset EXE_PID
-    if [[ "$(ps -ef|grep "$(ps -eo args|grep "$(dirname "$1"|rev|cut -d"/" -f1|rev)"|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v grep|grep -v "$(basename $BASH_SOURCE)"|awk '{print$2}'|wc -l)" == 1 ]]
+    if [[ "$(ps -ef|grep "$(ps -eo args|grep "$(dirname "$1"|rev|cut -d"/" -f1|rev)"|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v grep|grep -v "$(basename $BASH_SOURCE)"|grep -v ".log"|awk '{print$2}'|wc -l)" == 1 ]]
         then
-            export EXE_PID="$(ps -ef|grep "$(ps -eo args|grep "$(dirname "$1"|rev|cut -d"/" -f1|rev)"|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v grep|grep -v "$(basename $BASH_SOURCE)"|awk '{print$2}')"
+            export EXE_PID="$(ps -ef|grep "$(ps -eo args|grep "$(dirname "$1"|rev|cut -d"/" -f1|rev)"|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v grep|grep -v "$(basename $BASH_SOURCE)"|grep -v ".log"|awk '{print$2}')"
     fi
 }
 
@@ -106,15 +105,15 @@ winetricks() {
             then
                 if [ ! -z "$(which winetricks 2>/dev/null)" ]
                     then
-                        echo -e "$RED[!] Using SYSTEM winetricks!$RESETCOLOR"
+                        echo -e "${RED}Using SYSTEM winetricks$RESETCOLOR"
                         "$(which winetricks)" "$@"
                     else
-                        echo -e "$RED[!] Winetricks not found in you system!$RESETCOLOR"
-                        echo -e "$RED[!] Using LUTRIS winetricks!$RESETCOLOR"
+                        echo -e "$RED[!]Winetricks not found in you system[!]$RESETCOLOR"
+                        echo -e "${RED}Using LUTRIS winetricks$RESETCOLOR"
                         "$LU_DIR/runtime/winetricks/winetricks" "$@"
                 fi
             else
-                echo -e "$RED[!] Using LUTRIS winetricks!$RESETCOLOR!"
+                echo -e "${RED}Using LUTRIS winetricks$RESETCOLOR"
                 "$LU_DIR/runtime/winetricks/winetricks" "$@"
         fi
 }
@@ -127,10 +126,15 @@ kill_wine() {
                 do
                     if [ "$(ps cax|grep $kill_pids)" ]
                         then
-                            kill -n 9 $kill_pids
-                            echo "kill -n 9 $kill_pids"
+                            kill -9 $kill_pids
+                            echo "kill -9 $kill_pids"
                     fi
             done
+            echo -en "Lutris Wine successfully killed!\n"
+            zenity --info --title "Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &> /dev/null
+        else
+            echo -e "$RED[!]Lutris Wine not runing[!]$RESETCOLOR"
+            zenity --error --text "Lutris Wine not runing!" --no-wrap &> /dev/null
     fi
 }
 
@@ -203,13 +207,13 @@ exe2png() {
                     (IFS=$'\n' ; for ico in $(ls "${SHRT_NAME}"*.ico 2>/dev/null)
                                     do
                                     echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG...\n$RESETCOLOR"
-                                    icotool -x --output=./ "$ico"
+                                    icotool -x --output=./ "$ico" 2>/dev/null
                                 done)
-                    echo -en "${RED}$(ls "${SHRT_NAME}"*_*.png 2>/dev/null)\n$RESETCOLOR"
+                    echo -en "${RED}$(ls "${SHRT_NAME}".png 2>/dev/null)\n$RESETCOLOR"
                     cp -rf "$(ls -S -1 "${SHRT_NAME}"*_*.png|head -1)" "${SHRT_NAME}".png 2>/dev/null
-                    echo -en "${YELLOW}CLEANUP...\n"
+                    echo -en "${GREEN}CLEANUP...\n"
                     rm -rf "${SHRT_NAME}"*.ico *_*_*.png
-                    echo -en "${BLUE}Converting complete!\n$RESETCOLOR"
+                    echo -en "${GREEN}Converting complete!\n$RESETCOLOR"
                 else
                     echo -en "${RED}[!]Failed to get ico from executable file[!]\n$RESETCOLOR"
                     zenity --error --text "Failed to get ico from executable file!" --no-wrap &> /dev/null
@@ -227,8 +231,18 @@ create_shortcut() {
             exe2png "$LU_EXE"
             export DESKF="${SHRT_PATH}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
-            echo "Name=${SHRT_NAME}" >> "$DESKF"
-            ADD_EXE_ARG="$(zenity --entry --title "Enter arguments"  --text "Specify additional startup arguments")"
+            zenity --question --title "Creating shortcut" --text "Change display name [ $SHRT_NAME ] ?" --no-wrap &> /dev/null
+            if [ $? -eq "0" ]
+                then
+                    ADD_EXE_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
+                    if [ ! -z "$ADD_EXE_NAME" ]
+                        then
+                            echo "Name=$ADD_EXE_NAME" >> "$DESKF"
+                        else
+                            echo "Name=${SHRT_NAME}" >> "$DESKF" >> "$DESKF"
+                    fi
+            fi
+            ADD_EXE_ARG="$(zenity --entry --title "Enter arguments" --text "Specify additional startup arguments")"
             if [ ! -z "$ADD_EXE_ARG" ]
                 then
                     echo "Exec=EXE_ARG=\"$ADD_EXE_ARG\" \"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
@@ -241,8 +255,8 @@ create_shortcut() {
             echo "Path="${WINEPREFIX}"/drive_c/" >> "$DESKF"
             echo "Icon="${SHRT_PATH}/${SHRT_NAME}.png"" >> "$DESKF"
             chmod u+x "$DESKF"
-            echo -en "${BLUE}Creating '$(basename "$DESKF")' complete!\n$RESETCOLOR"
-            zenity --question --title "Creating shortcut" --text "Shortcut '$(basename "$DESKF")' successfully created in the directory with the executable file.\nDo you want to add it to application menu?" --no-wrap &> /dev/null
+            echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}complete!\n$RESETCOLOR"
+            zenity --question --title "Creating shortcut" --text "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file.\nDo you want to add it to application menu?" --no-wrap &> /dev/null
             if [ $? -eq "0" ]
                 then
                     if [ ! -d $LU_APP ]
@@ -283,25 +297,18 @@ lu_debug() {
             export VKD3D_DEBUG="warn"
             export WINE_MONO_TRACE="E:System.NotImplementedException"
             export VKBASALT_LOG_LEVEL=debug
-            TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%T').debug"
+            export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%T').debug"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            if [ ! -z "$LU_EXE" ]
-                then
-                    echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-                    export DiskMP="$(mount|grep -w "on $(stat -c %m -- "$LU_EXE")")"
-                    echo "[ Disk info ] : $(echo $DiskMP|awk -F'type ' '{print $2}') " >> "$TMP_DEB"
-                    echo -en "$(df -h|head -1)\n$(df -h|grep "$(echo $DiskMP|awk '{print$1}')")\n" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            fi
-            echo "[ GLIBC version ] : $(ldd --version|grep -m1 ldd|awk '{print $NF}')" >> "$TMP_DEB"
+            echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ WINE version in LUTRIS ] : $WINE_IN_USE" >> "$TMP_DEB"
             [ -f "$WINEDIR/version" ] && cat "$WINEDIR/version" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DEB"
+            echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Operating system ] : $(lsb_release -d|sed s/Description://g)" >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            echo "[ GLIBC version ] : $(ldd --version|grep -m1 ldd|awk '{print $NF}')" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Desktop Environment ] : $XDG_CURRENT_DESKTOP - $DESKTOP_SESSION" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
@@ -311,6 +318,10 @@ lu_debug() {
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Memory ] :" >> "$TMP_DEB"
             free -m >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            export DiskMP="$(mount|grep -w "on $(stat -c %m -- "$LU_EXE")")"
+            echo "[ Disk info ] : $(echo $DiskMP|awk -F'type ' '{print $2}') " >> "$TMP_DEB"
+            echo -en "$(df -h|head -1)\n$(df -h|grep "$(echo $DiskMP|awk '{print$1}')")\n" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Graphic cards and drivers ] :" >> "$TMP_DEB"
             echo $(lspci|grep -iF VGA) >> "$TMP_DEB"
@@ -387,6 +398,17 @@ lu_debug() {
     fi
 }
 
+clear_log() {
+    sed -i '/gstreamer-1.0/d' "$LU_LOG_FILE"
+    sed -i '/winemenubuilder.exe/d' "$LU_LOG_FILE"
+    sed -i '/.fx$/d' "$LU_LOG_FILE"
+    sed -i '/HACK_does_openvr_work/d' "$LU_LOG_FILE"
+    sed -i '/dlopen failed - libgamemode.so/d' "$LU_LOG_FILE"
+    sed -i '/Uploading is disabled/d' "$LU_LOG_FILE"
+    sed -i '/gamemodeauto: /d' "$LU_LOG_FILE"
+    sed -i '/\[MANGOHUD\] \[info\] \[config.cpp:114\] skipping config:/d' "$LU_LOG_FILE"
+}
+
 lu_run() {
     compositor_sw 2>/dev/null
     lu_debug 2>/dev/null
@@ -435,7 +457,8 @@ lu_run() {
     fi
     if [[ ! -z "$LU_DEBUG" && "$LU_DEBUG" != 0 ]]
         then
-            export VKD3D_LOG_FILE="$EXE_PATH/$(basename "$LU_EXE")_vkd3d.log"
+            #export VKD3D_LOG_FILE="$EXE_PATH/$(basename "$LU_EXE"|sed s/".exe"/""/gi)_vkd3d.log"
+            #export VKBASALT_LOG_FILE="$EXE_PATH/$(basename "$LU_EXE"|sed s/".exe"/""/gi)_vkbasalt.log"
             export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "LU_WINDOWS_VER" "WINEDLLOVERRIDES" \
                 "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" \
                 "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" \
@@ -450,24 +473,24 @@ lu_run() {
         then
             if [ ! -z "$LU_SHELL_EXE" ]
                 then
-                    $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; '$@'|tee '$LU_LOG_FILE'"
-                    echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n-------------------------------------------\n$(cat "$LU_LOG_FILE")" > "$LU_LOG_FILE"
+                    $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LU_LOG_FILE' ; '$@'|& tee -a '$LU_LOG_FILE'"
+                    clear_log  2>/dev/null
                     xdg-open "$LU_LOG_FILE" 2>/dev/null
             elif [ ! -z "$LU_SHELL_PTH" ]
                 then
                     $terminal_app -e $SHELL
             else
-                $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' ${EXE_ARG[*]}|tee '$LU_LOG_FILE'"
-                echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n-------------------------------------------\n$(cat "$LU_LOG_FILE")" > "$LU_LOG_FILE"
+                $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LU_LOG_FILE' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' ${EXE_ARG[*]}|& tee -a '$LU_LOG_FILE'"
                 compositor_sw 2>/dev/null
+                clear_log  2>/dev/null
                 xdg-open "$LU_LOG_FILE" 2>/dev/null
             fi
     elif [ "$LU_LOG" == 1 ]
         then
             echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
-            $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" ${EXE_ARG[*]}|tee "$LU_LOG_FILE"
-            echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n-------------------------------------------\n$(cat "$LU_LOG_FILE")" > "$LU_LOG_FILE"
+            $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" ${EXE_ARG[*]}|& tee -a "$LU_LOG_FILE"
             compositor_sw 2>/dev/null
+            clear_log  2>/dev/null
             xdg-open "$LU_LOG_FILE" 2>/dev/null
     elif [ "$LU_USE_TERMINAL" == 1 ]
         then
@@ -475,8 +498,8 @@ lu_run() {
                 then
                     if [ "$LU_LOG" == 1 ]
                         then
-                            $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; '$@'|tee '$LU_LOG_FILE'"
-                            echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n-------------------------------------------\n$(cat "$LU_LOG_FILE")" > "$LU_LOG_FILE"
+                            $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LU_LOG_FILE' ; '$@'|& tee -a '$LU_LOG_FILE'"
+                            clear_log  2>/dev/null
                             xdg-open "$LU_LOG_FILE" 2>/dev/null
                         else
                             $terminal_app -e $SHELL -c "$@"
@@ -485,8 +508,7 @@ lu_run() {
                 then
                     $terminal_app -e $SHELL
             else
-                TMP_OUT="/tmp/wineout_$(date +'%Y-%m-%d_%T')"
-                $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' ${EXE_ARG[*]}|tee '$TMP_OUT'"
+                $terminal_app -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' ${EXE_ARG[*]}"
                 compositor_sw 2>/dev/null
             fi
     else
@@ -494,7 +516,107 @@ lu_run() {
         $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" ${EXE_ARG[*]}
         compositor_sw 2>/dev/null
     fi
-    rm -rf "$TMP_DEB" "$TMP_OUT"
+    rm -rf "$TMP_DEB"
+}
+
+lu_help() {
+    echo -e "
+        ${RED} Lutris Wine
+            ${RED}Usage:
+            $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
+            $RED└──╼ \$$GREEN "$(basename "$BASH_SOURCE")" $BLUE{optional argument} ${RED}blabla.exe
+
+            ${RED}-explorer $GREEN      Wine Explorer
+            ${RED}-cmd $GREEN           Open CMD or open file in CMD
+            ${RED}-shell $GREEN         Open SHELL or open file in SHELL
+            ${RED}-regedit $GREEN       Registry editor
+            ${RED}-control $GREEN       Control Panel
+            ${RED}-winecfg $GREEN       Wine settings
+            ${RED}-taskmgr $GREEN       Task Manager
+            ${RED}-uninstaller $GREEN   Add/Remove Programs
+            ${RED}-winetricks $GREEN    Winetricks
+            ${RED}-openpfx $GREEN       Open drive C:
+            ${RED}-killwine $GREEN      Kill all Wine processes
+            ${RED}-clearpfx $GREEN      Clear prefix
+            ${RED}-rmapp $GREEN         Remove all shortcuts from menu
+            ${RED}-shortcut $GREEN      Create shortcut
+            ${RED}-debug $GREEN         DEBUG
+            ${RED}-help $GREEN          Show this usage info
+        $RESETCOLOR" >&2
+        zenity --info --title "Lutris Wine usage info" --text "┌──[@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ "$(basename "$BASH_SOURCE")" {optional argument} blabla.exe \n\n \
+        -explorer       Wine Explorer\n \
+        -cmd                Open CMD or open file in CMD\n \
+        -shell               Open SHELL or open file in SHELL\n \
+        -regedit          Registry editor\n \
+        -control           Control Panel\n \
+        -winecfg         Wine settings\n \
+        -taskmgr        Task Manager\n \
+        -uninstaller    Add/Remove Programs\n \
+        -winetricks     Winetricks\n \
+        -openpfx        Open drive C:\n \
+        -killwine          Kill all Wine processes\n \
+        -clearpfx        Clear prefix\n \
+        -rmapp           Remove all shortcuts from menu\n \
+        -shortcut        Create shortcut\n \
+        -debug            DEBUG\n \
+        -help                Show this usage info \
+        " --no-wrap &> /dev/null
+}
+
+lu_explorer() {
+    unset -f compositor_sw
+    unset EXE_ARG
+    if [[ ! -z "$LU_DEBUG" && "$LU_DEBUG" != 0 ]]
+        then
+            export LU_EXE="$WINEPREFIX/drive_c/windows/explorer.exe"
+            export EXE_PATH="$HOME"
+            lu_run explorer
+        else
+            lu_run explorer
+    fi
+}
+
+lu_start() {
+    if [ -f "$1" ]
+        then
+            LU_START="$1"
+    elif [ -f "$2" ]
+        then
+            LU_START="$2"
+    fi
+    if [ ! -z "$LU_START" ]
+        then
+        export LU_EXE="$(readlink -f "$LU_START")"
+        export LU_MSI="$(basename "$LU_EXE"|grep -iF ".msi")"
+        export LU_BAT="$(basename "$LU_EXE"|grep -iF ".bat")"
+        export LU_REG="$(basename "$LU_EXE"|grep -iF ".reg")"
+        if [ ! -z "$LU_MSI" ]
+            then
+                unset -f compositor_sw
+                lu_run "$LU_EXE"
+        elif [ ! -z "$LU_BAT" ]
+            then
+                unset -f compositor_sw
+                export LU_USE_TERMINAL=1
+                lu_run "$LU_EXE"
+        elif [ ! -z "$LU_REG" ]
+            then
+                reg_edit "$LU_EXE"
+        else
+            if [[ ! -z "$LU_DEBUG" && "$LU_DEBUG" != 0 ]]
+                then
+                    unset -f compositor_sw
+            fi
+            lu_run "$LU_EXE"
+        fi
+    else
+        if [[ ! -z "$LU_DEBUG" && "$LU_DEBUG" != 0 ]]
+            then
+                lu_explorer
+            else
+                lu_help
+        fi
+    fi
 }
 
 if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
@@ -706,42 +828,14 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
                                       echo -e "$RED[!]Unable to create shortcut for this file[!]$RESETCOLOR"
                                       zenity --error --text "Unable to create shortcut for this file!" --no-wrap &> /dev/null
                               fi
+                            else
+                                echo -e "$RED[!]Specify the executable file to create shortcut[!]$RESETCOLOR"
+                                zenity --error --text "Specify the executable file to create shortcut!" --no-wrap &> /dev/null
                       fi ;;
-            *)  if [ -f "$1" ]
-                    then
-                        export LU_EXE="$(readlink -f "$1")"
-                        export LU_MSI="$(basename "$LU_EXE"|grep -iF ".msi")"
-                        export LU_BAT="$(basename "$LU_EXE"|grep -iF ".bat")"
-                        export LU_REG="$(basename "$LU_EXE"|grep -iF ".reg")"
-                        if [ ! -z "$LU_MSI" ]
-                            then
-                                unset -f compositor_sw
-                                lu_run "$LU_EXE"
-                        elif [ ! -z "$LU_BAT" ]
-                            then
-                                unset -f compositor_sw
-                                export LU_USE_TERMINAL=1
-                                lu_run "$LU_EXE"
-                        elif [ ! -z "$LU_REG" ]
-                            then
-                                reg_edit "$LU_EXE"
-                        else
-                            if [[ ! -z "$LU_DEBUG" && "$LU_DEBUG" != 0 ]]
-                                then
-                                    unset -f compositor_sw
-                            fi
-                            lu_run "$LU_EXE"
-                        fi
-                    else
-                        unset -f compositor_sw
-                        unset EXE_ARG
-                        if [[ ! -z "$LU_DEBUG" && "$LU_DEBUG" != 0 ]]
-                            then
-                                export LU_EXE="$WINEPREFIX/drive_c/windows/explorer.exe"
-                                export EXE_PATH="$HOME"
-                        fi
-                        lu_run explorer
-                fi ;;
+            -explorer) lu_explorer ;;
+            -debug) export LU_DEBUG=1 ; lu_start "$@" ;;
+            -help) lu_help ;;
+            *) lu_start "$@" ;;
         esac
     else
         echo -e "$RED[!]First you need to configure Wine in Lutris[!]$RESETCOLOR"

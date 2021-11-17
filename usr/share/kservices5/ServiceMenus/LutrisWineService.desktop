@@ -1,7 +1,7 @@
 [Desktop Action explorer]
-Exec=lutris-wine
+Exec=lutris-wine -explorer
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Explorer
+Name=Wine Explorer
 Name[ru_RU]=Рабочий стол
 
 [Desktop Action cmd]
@@ -52,7 +52,7 @@ Icon=/usr/share/lutris/media/default_icon.png
 Name=Winetricks
 Name[ru_RU]=Winetricks
 
-[Desktop Action open_pfx]
+[Desktop Action openpfx]
 Exec=lutris-wine -openpfx
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Open drive C:\\
@@ -64,14 +64,14 @@ Icon=/usr/share/lutris/media/default_icon.png
 Name=Kill all Wine processes
 Name[ru_RU]=Убить все процессы Wine
 
-[Desktop Action clear_pfx]
+[Desktop Action clearpfx]
 Exec=lutris-wine -clearpfx
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Clear prefix
 Name[ru_RU]=Очистить префикс
 
 [Desktop Action debug]
-Exec=LU_DEBUG=1 lutris-wine "%U"
+Exec=lutris-wine -debug "%U"
 Icon=/usr/share/lutris/media/default_icon.png
 Name=DEBUG
 Name[ru_RU]=ДЕБАГ
@@ -90,7 +90,7 @@ Name[ru_RU]=Удалить все ярлыки из меню
 
 [Desktop Entry]
 Type=Service
-Actions=shell;cmd;explorer;regedit;control;winecfg;winetricks;taskmgr;uninstaller;open_pfx;killwine;clear_pfx;debug;shortcut;rmapp
+Actions=shell;cmd;explorer;regedit;control;winecfg;winetricks;taskmgr;uninstaller;openpfx;killwine;clearpfx;debug;shortcut;rmapp
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine
