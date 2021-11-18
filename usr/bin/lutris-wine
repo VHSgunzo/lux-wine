@@ -15,7 +15,7 @@ export RESETCOLOR='\033[1;00m'
 #export LU_LOG=1
 #export LU_DEBUG=1
 #export LU_USE_TERMINAL=1
-export EXE_ARG="+in_terminal 1 +com_skipIntroVideo 1 +com_skipSignInManager 1"
+#export EXE_ARG=""
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
@@ -847,7 +847,6 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
         fi
         case $1 in
             -cmd) unset -f compositor_sw
-                 #unset EXE_ARG
                  export LU_USE_TERMINAL=1
                  if [ -f "$2" ]
                     then
