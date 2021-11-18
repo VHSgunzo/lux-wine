@@ -1,6 +1,6 @@
 #!/bin/bash
 ###VHSgunzo
-###VERSION 0.37
+###VERSION 0.38
 if [ $(id -u) -eq 0 ] ; then
     echo -e "$RED[!]Don't run Lutris Wine as root[!]$RESETCOLOR"
     zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &> /dev/null
@@ -15,7 +15,7 @@ export RESETCOLOR='\033[1;00m'
 #export LU_LOG=1
 #export LU_DEBUG=1
 #export LU_USE_TERMINAL=1
-#export EXE_ARG=""
+export EXE_ARG="+in_terminal 1 +com_skipIntroVideo 1 +com_skipSignInManager 1"
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
@@ -67,28 +67,114 @@ check_exe() {
     fi
 }
 
-compositor_sw() {
-    if [[ ! -z "$disable_compositor" && "$disable_compositor" == true ]]
+compositor_check() {
+    if [[ "$DESKTOP_SESSION" == "plasma" ]]
         then
-            if [[ "$(qdbus org.kde.KWin /Compositor active 2>/dev/null)" == true && "$CMPSTR_CHECK" == true ]]
-                then
-                    qdbus org.kde.KWin /Compositor suspend
-            elif [[ "$(qdbus org.kde.KWin /Compositor active 2>/dev/null)" == false && "$CMPSTR_CHECK" == true ]]
-                then
-                    while true
-                        do
-                            check_exe "$LU_EXE"
-                            if  [ ! -z "$EXE_PID" ]
-                                then
-                                    sleep 1
-                                    continue
-                                else
-                                    qdbus org.kde.KWin /Compositor resume
-                                    break
-                            fi
-                    done
-            fi
+            export CMPSTR_PLASMA="qdbus org.kde.KWin /Compositor active"
+            export CMPSTR_PLASMA_CHECK="$(exec $CMPSTR_PLASMA)"
+    elif [[ "$DESKTOP_SESSION" == "mate" ]]
+        then
+            export CMPSTR_MATE="gsettings get org.mate.Marco.general compositing-manager"
+            export CMPSTR_MATE_CHECK="$(exec $CMPSTR_MATE)"
+    elif [[ "$DESKTOP_SESSION" == "xfce" ]]
+        then
+            export CMPSTR_XFCE="xfconf-query --channel=xfwm4 --property=/general/use_compositing"
+            export CMPSTR_XFCE_CHECK="$(exec $CMPSTR_XFCE)"
+    elif [[ "$DESKTOP_SESSION" == "deepin" ]]
+        then
+            export CMPSTR_DEEPIN_SW="dbus-send --session --dest=com.deepin.WMSwitcher --type=method_call /com/deepin/WMSwitcher com.deepin.WMSwitcher.RequestSwitchWM"
+            export CMPSTR_DEEPIN="dbus-send --session --dest=com.deepin.WMSwitcher --type=method_call --print-reply=literal /com/deepin/WMSwitcher com.deepin.WMSwitcher.CurrentWM"
+            export CMPSTR_DEEPIN_CHECK="$(exec $CMPSTR_DEEPIN)"
+    else
+        export CMPSTR_NULL=""
     fi
+}
+
+compositor_sw() {
+    if [[ ! -z "$disable_compositor" && "$disable_compositor" == true && -z "$CMPSTR_NULL" ]]
+        then
+            if [ ! -z "$CMPSTR_PLASMA_CHECK" ]
+                then
+                    if [[ "$(exec $CMPSTR_PLASMA)" == true && "$CMPSTR_PLASMA_CHECK" == true ]]
+                        then
+                            qdbus org.kde.KWin /Compositor suspend
+                    elif [[ "$(exec $CMPSTR_PLASMA)" == false && "$CMPSTR_PLASMA_CHECK" == true ]]
+                        then
+                            while true
+                                do
+                                    check_exe "$LU_EXE"
+                                    if  [ ! -z "$EXE_PID" ]
+                                        then
+                                            sleep 1
+                                            continue
+                                        else
+                                            qdbus org.kde.KWin /Compositor resume
+                                            break
+                                    fi
+                            done
+                    fi
+            elif [ ! -z "$CMPSTR_MATE_CHECK" ]
+                then
+                    if [[ "$(exec $CMPSTR_MATE)" == true && "$CMPSTR_MATE_CHECK" == true ]]
+                        then
+                            gsettings set org.mate.Marco.general compositing-manager false
+                    elif [[ "$(exec $CMPSTR_MATE)" == false && "$CMPSTR_MATE_CHECK" == true ]]
+                        then
+                            while true
+                                do
+                                    check_exe "$LU_EXE"
+                                    if  [ ! -z "$EXE_PID" ]
+                                        then
+                                            sleep 1
+                                            continue
+                                        else
+                                            gsettings set org.mate.Marco.general compositing-manager true
+                                            break
+                                    fi
+                            done
+                    fi
+            elif [ ! -z "$CMPSTR_XFCE_CHECK" ]
+                then
+                    if [[ "$(exec $CMPSTR_XFCE)" == true && "$CMPSTR_XFCE_CHECK" == true ]]
+                        then
+                            xfconf-query --channel=xfwm4 --property=/general/use_compositing --set=false
+                    elif [[ "$(exec $CMPSTR_XFCE)" == false && "$CMPSTR_XFCE_CHECK" == true ]]
+                        then
+                            while true
+                                do
+                                    check_exe "$LU_EXE"
+                                    if  [ ! -z "$EXE_PID" ]
+                                        then
+                                            sleep 1
+                                            continue
+                                        else
+                                            xfconf-query --channel=xfwm4 --property=/general/use_compositing --set=true
+                                            break
+                                    fi
+                            done
+                    fi
+            elif [ ! -z "$CMPSTR_DEEPIN_CHECK" ]
+                then
+                    if [[ "$(exec $CMPSTR_DEEPIN)" == "deepin wm" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
+                        then
+                            $CMPSTR_DEEPIN_SW
+                    elif [[ "$(exec $CMPSTR_DEEPIN)" == "deepin metacity" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
+                        then
+                            while true
+                                do
+                                    check_exe "$LU_EXE"
+                                    if  [ ! -z "$EXE_PID" ]
+                                        then
+                                            sleep 1
+                                            continue
+                                        else
+                                            $CMPSTR_DEEPIN_SW
+                                            break
+                                    fi
+                            done
+                    fi
+            fi
+fi
 }
 
 wdllover_upd() {
@@ -622,7 +708,7 @@ lu_start() {
 if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
     then
         export -f winetricks
-        export CMPSTR_CHECK="$(qdbus org.kde.KWin /Compositor active 2>/dev/null)"
+        compositor_check 2>/dev/null
         export $(yaml_parser $LU_WINE_CONF|sed "s/wine-//g"|sed "s/system-//g"|sed "s/env-//g")
         wdllover_upd "$(echo -n "$(sed -n  '/\(^  overrides\)/,$p' $LU_WINE_CONF|grep "    "|sed 's/^ *//g'|tr ':' '='|sed "s/ //g"|sed "s/''//g")"|tr "\n" ";")"
         export WINE_MONO_OVERRIDES="Microsoft.Xna.Framework.*,Gac=n"
@@ -761,7 +847,7 @@ if [[ -f $LU_WINE_CONF && -d $LU_DIR ]]
         fi
         case $1 in
             -cmd) unset -f compositor_sw
-                 unset EXE_ARG
+                 #unset EXE_ARG
                  export LU_USE_TERMINAL=1
                  if [ -f "$2" ]
                     then
