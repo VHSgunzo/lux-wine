@@ -1,6 +1,6 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname=lutris-wine-git
-pkgver=0.38
+pkgver=0.39
 pkgrel=1
 pkgdesc='Lutris Wine Runner as system Wine and even better'
 arch=('any')
@@ -34,6 +34,7 @@ package() {
     install -Dm644 usr/share/applications/LutrisWine/regedit.desktop ${pkgdir}/usr/share/applications/LutrisWine/regedit.desktop
     install -Dm644 usr/share/applications/LutrisWine/rmapp.desktop ${pkgdir}/usr/share/applications/LutrisWine/rmapp.desktop
     install -Dm644 usr/share/applications/LutrisWine/shell.desktop ${pkgdir}/usr/share/applications/LutrisWine/shell.desktop
+    install -Dm644 usr/share/applications/LutrisWine/shortcut.desktop ${pkgdir}/usr/share/applications/LutrisWine/shortcut.desktop
     install -Dm644 usr/share/applications/LutrisWine/taskmgr.desktop ${pkgdir}/usr/share/applications/LutrisWine/taskmgr.desktop
     install -Dm644 usr/share/applications/LutrisWine/uninstaller.desktop ${pkgdir}/usr/share/applications/LutrisWine/uninstaller.desktop
     install -Dm644 usr/share/applications/LutrisWine/winecfg.desktop ${pkgdir}/usr/share/applications/LutrisWine/winecfg.desktop
@@ -41,5 +42,8 @@ package() {
     install -Dm644 usr/share/desktop-directories/LutrisWineApp.directory ${pkgdir}/usr/share/desktop-directories/LutrisWineApp.directory
     install -Dm644 usr/share/desktop-directories/LutrisWine.directory ${pkgdir}/usr/share/desktop-directories/LutrisWine.directory
     install -Dm644 usr/share/kservices5/ServiceMenus/LutrisWineService.desktop ${pkgdir}/usr/share/kservices5/ServiceMenus/LutrisWineService.desktop
-    install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/${pkgname}/LICENSE
+    install -Dm644 usr/share/lutris-wine/themes/breeze_dark.reg ${pkgdir}/usr/share/lutris-wine/themes/breeze_dark.reg
+    install -Dm644 usr/share/lutris-wine/themes/win10_black.reg ${pkgdir}/usr/share/lutris-wine/themes/win10_black.reg
+    install -Dm644 usr/share/lutris-wine/themes/wine_dark.reg ${pkgdir}/usr/share/lutris-wine/themes/wine_dark.reg
+    install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/lutris-wine/LICENSE
 }

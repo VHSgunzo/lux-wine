@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=LU_DEBUG=1 lutris-wine
+Exec=lutris-wine -debug
 Icon=/usr/share/lutris/media/default_icon.png
 Name=DEBUG
 Name[ru_RU]=ДЕБАГ

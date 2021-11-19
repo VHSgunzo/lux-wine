@@ -1,9 +1,9 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -rmapp
+Exec=lutris-wine -shortcut
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Remove Lutris Wine shortcuts from menu
-Name[ru_RU]=Удалить Lutris Wine ярлыки из меню
+Name=Create shortcut
+Name[ru_RU]=Cоздать ярлык
 NoDisplay=false
 StartupNotify=true
 Terminal=0
