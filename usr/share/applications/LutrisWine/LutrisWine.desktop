@@ -1,10 +1,10 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine %F
+Exec=lutris-wine %f
 Icon=/usr/share/lutris/media/default_icon.png
 MimeType=application/x-ms-dos-executable;application/x-wine-extension-msp;application/x-msi;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit
-Name=Wine in Lutris
-Name[ru_RU]=Wine в Lutris
+Name=Lutris Wine
+Name[ru_RU]=Lutris Wine
 NoDisplay=false
 StartupNotify=true
 Terminal=0

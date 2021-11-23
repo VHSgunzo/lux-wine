@@ -1,12 +1,12 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname=lutris-wine-git
-pkgver=0.39
+pkgver=0.40
 pkgrel=1
 pkgdesc='Lutris Wine Runner as system Wine and even better'
 arch=('any')
 url='https://github.com/VHSgunzo/lutris-wine'
 license=('MIT')
-depends=('lutris-git' 'zenity')
+depends=('lutris-git' 'zenity' 'yad' 'icoutils' 'imagemagick')
 makedepends=('git')
 optdepends=('lutris-wine-meta')
 provides=("${pkgname%-git}")
@@ -35,6 +35,7 @@ package() {
     install -Dm644 usr/share/applications/LutrisWine/rmapp.desktop ${pkgdir}/usr/share/applications/LutrisWine/rmapp.desktop
     install -Dm644 usr/share/applications/LutrisWine/shell.desktop ${pkgdir}/usr/share/applications/LutrisWine/shell.desktop
     install -Dm644 usr/share/applications/LutrisWine/shortcut.desktop ${pkgdir}/usr/share/applications/LutrisWine/shortcut.desktop
+    install -Dm644 usr/share/applications/LutrisWine/addtolu.desktop ${pkgdir}/usr/share/applications/LutrisWine/addtolu.desktop
     install -Dm644 usr/share/applications/LutrisWine/taskmgr.desktop ${pkgdir}/usr/share/applications/LutrisWine/taskmgr.desktop
     install -Dm644 usr/share/applications/LutrisWine/uninstaller.desktop ${pkgdir}/usr/share/applications/LutrisWine/uninstaller.desktop
     install -Dm644 usr/share/applications/LutrisWine/winecfg.desktop ${pkgdir}/usr/share/applications/LutrisWine/winecfg.desktop
