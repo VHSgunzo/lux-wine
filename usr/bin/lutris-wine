@@ -1,6 +1,6 @@
 #!/bin/bash
 ###VHSgunzo
-###VERSION 0.40
+###VERSION 0.41
 if [ $(id -u) -eq 0 ] ; then
     echo -e "$RED[!]Don't run Lutris Wine as root[!]$RESETCOLOR"
     zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &> /dev/null
@@ -252,7 +252,6 @@ add_to_lutris() {
             fi
             echo -e "  system: {}\n  wine: {}" >> "$YMLTOLU"
             LUTRIS_SKIP_INIT=1 lutris -i "$YMLTOLU" 2>/dev/null &
-            LUADDPID="$(ps -ef|grep "lutris -i"|grep "$(basename "$YMLTOLU")"|awk '{print$2}')"
             ludb_md5sum1=$(md5sum "$LUDB")
             timewait=15
             (IFS=$'\n' ; while true
@@ -267,11 +266,19 @@ add_to_lutris() {
                                     LUNEWAPP="$(ls $HOME/.config/lutris/games/"$SHRT_NAME"-*.yml 2>/dev/null)"
                                     sed -i 's/wine:\{1,\}$/wine: {}/' "$LUNEWAPP" 2>/dev/null
                                     sed -i '/  version: /d' "$LUNEWAPP" 2>/dev/null
-                                    sleep 0.8
-                                    kill "$LUADDPID" 2>/dev/null
+                                    LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
+                                    if [ ! -z "$LUADDPID" ]
+                                        then
+                                            zenity --question --title "Creating shortcut" --text "Application successfully added to Lutris!\nDo you want to close Lutris?" --no-wrap &> /dev/null
+                                            if [ $? -eq "0" ]
+                                                then
+                                                    kill -9 "$LUADDPID" 2>/dev/null
+                                            fi
+                                    fi
                                     break
                             fi
                         else
+                            LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                             if [ ! -z "$LUADDPID" ]
                                 then
                                     zenity --question --title "Creating shortcut" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &> /dev/null
@@ -992,7 +999,7 @@ lu_help() {
             ${RED}-debug $GREEN         DEBUG
             ${RED}-help $GREEN          Show this usage info
         $RESETCOLOR" >&2
-        zenity --info --title "Lutris Wine usage info" --text "┌──[@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ "$(basename "$BASH_SOURCE")" {$(basename "$BASH_SOURCE") argument} blabla.exe {exe arguments} \n\n \
+        zenity --info --title "Lutris Wine usage info" --text "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ "$(basename "$BASH_SOURCE")" {$(basename "$BASH_SOURCE") argument} blabla.exe {exe arguments} \n\n \
         -explorer       Wine Explorer\n \
         -cmd                Open CMD or open file in CMD\n \
         -shell               Open SHELL or open file in SHELL\n \
