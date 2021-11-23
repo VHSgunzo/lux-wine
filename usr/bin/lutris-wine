@@ -1,6 +1,6 @@
 #!/bin/bash
 ###VHSgunzo
-###VERSION 0.41
+###VERSION 0.40
 if [ $(id -u) -eq 0 ] ; then
     echo -e "$RED[!]Don't run Lutris Wine as root[!]$RESETCOLOR"
     zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &> /dev/null
