@@ -252,21 +252,37 @@ add_to_lutris() {
             fi
             echo -e "  system: {}\n  wine: {}" >> "$YMLTOLU"
             LUTRIS_SKIP_INIT=1 lutris -i "$YMLTOLU" 2>/dev/null &
+            LUADDPID="$(ps -ef|grep "lutris -i"|grep "$(basename "$YMLTOLU")"|awk '{print$2}')"
             ludb_md5sum1=$(md5sum "$LUDB")
+            timewait=15
             (IFS=$'\n' ; while true
                 do
-                    sleep 3
-                    ludb_md5sum2=$(md5sum "$LUDB")
-                    if [ "$ludb_md5sum1" != "$ludb_md5sum2" ]
+                    timesleep=$(($timesleep + 1))
+                    if [ "$timesleep" != "$(($timewait + 1))" ]
                         then
-                            LUNEWAPP="$(ls $HOME/.config/lutris/games/"$SHRT_NAME"-*.yml 2>/dev/null)"
-                            sed -i 's/wine:\{1,\}$/wine: {}/' "$LUNEWAPP" 2>/dev/null
-                            sed -i '/  version: /d' "$LUNEWAPP" 2>/dev/null
+                            sleep 1
+                            ludb_md5sum2=$(md5sum "$LUDB")
+                            if [ "$ludb_md5sum1" != "$ludb_md5sum2" ]
+                                then
+                                    LUNEWAPP="$(ls $HOME/.config/lutris/games/"$SHRT_NAME"-*.yml 2>/dev/null)"
+                                    sed -i 's/wine:\{1,\}$/wine: {}/' "$LUNEWAPP" 2>/dev/null
+                                    sed -i '/  version: /d' "$LUNEWAPP" 2>/dev/null
+                                    sleep 0.8
+                                    kill "$LUADDPID" 2>/dev/null
+                                    break
+                            fi
+                        else
+                            if [ ! -z "$LUADDPID" ]
+                                then
+                                    zenity --question --title "Creating shortcut" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &> /dev/null
+                                    if [ $? -eq "0" ]
+                                        then
+                                            kill "$LUADDPID" 2>/dev/null
+                                    fi
+                            fi
                             break
                     fi
             done)
-            sleep 0.8
-            kill $(ps -ef|grep "lutris -i"|grep "$(basename "$YMLTOLU")"|awk '{print$2}') 2>/dev/null
     fi
 }
 

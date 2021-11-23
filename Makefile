@@ -7,6 +7,7 @@ install:
 	cp -rfv usr/share/desktop-directories/LutrisWine.directory /usr/share/desktop-directories/LutrisWine.directory
 	cp -rfv usr/share/kservices5/ServiceMenus/LutrisWineService.desktop /usr/share/kservices5/ServiceMenus/LutrisWineService.desktop
 	cp -rfv usr/share/lutris-wine /usr/share/
+	mkdir -p /usr/share/licenses/lutris-wine
 	cp -rfv LICENSE /usr/share/licenses/lutris-wine/LICENSE
 
 uninstall:
