@@ -1,9 +1,9 @@
 #!/bin/bash
 ###VHSgunzo
-###VERSION 0.40
+export LU_WINE_VERSION=0.41
 if [ $(id -u) -eq 0 ] ; then
     echo -e "$RED[!]Don't run Lutris Wine as root[!]$RESETCOLOR"
-    zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &> /dev/null
+    zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &>/dev/null
     exit 1
 fi
 export BLUE='\033[1;94m'
@@ -14,6 +14,7 @@ export RESETCOLOR='\033[1;00m'
 
 #export LOG=1
 #export DEBUG=1
+#export NO_TRAY=1
 #export TERMINAL=1
 #export HOLD_TERMINAL=1
 #export UNSET_CMPSTR_SW=1
@@ -21,7 +22,7 @@ export RESETCOLOR='\033[1;00m'
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
-export LUDB="$LU_DIR/pga.db"
+export LU_DB="$LU_DIR/pga.db"
 export LU_APP="${HOME}/.local/share/applications/LutrisWineApp"
 
 print_var() {
@@ -48,21 +49,69 @@ yaml_parser() {
    }'
 }
 
-
-check_wine_pids() {
-    unset WINE_PIDS
-    if [ ! -z "$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')" ]
+check_tray_pid() {
+    unset TRAY_PID
+    unset FORCE_TRAY
+    CHK_TRAY_PID="$(pgrep -a yad|grep "\-\-notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
+    CHK_FORCE_TRAY="$(pgrep -a "lutris-wine"|grep -o "noclose")"
+    if [ ! -z "$CHK_TRAY_PID" ]
         then
-            export WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+            export TRAY_PID="$CHK_TRAY_PID"
+    fi
+    if [ ! -z "$CHK_FORCE_TRAY" ]
+        then
+            export FORCE_TRAY="$CHK_FORCE_TRAY"
     fi
 }
 
-check_exe_pid() {
-    unset EXE_PID
-    if [[ "$(ps -ef|grep "$(ps -eo args|grep "$(dirname "$1"|rev|cut -d"/" -f1|rev)"|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v grep|grep -v "$(basename $BASH_SOURCE)"|grep -v ".log"|awk '{print$2}'|wc -l)" == 1 ]]
+check_wine_pids() {
+    unset WINE_PIDS
+    CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+    if [ ! -z "$CHK_WINE_PIDS" ]
         then
-            export EXE_PID="$(ps -ef|grep "$(ps -eo args|grep "$(dirname "$1"|rev|cut -d"/" -f1|rev)"|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v grep|grep -v "$(basename $BASH_SOURCE)"|grep -v ".log"|awk '{print$2}')"
+            export WINE_PIDS="$CHK_WINE_PIDS"
     fi
+}
+
+check_luwine_pid() {
+    unset LU_WINE_PID
+    CHK_LU_WINE_PID="$(pgrep lutris-wine)"
+    if [ ! -z "$CHK_LU_WINE_PID" ]
+        then
+            export LU_WINE_PID="$CHK_LU_WINE_PID"
+    fi
+}
+
+check_exe_pids() {
+    unset EXE_PIDS
+    CHK_EXE_PIDS="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v windows|grep ":\\\\"|awk '{print$2}')"
+    if [ ! -z "$CHK_EXE_PIDS" ]
+        then
+            export EXE_PIDS="$CHK_EXE_PIDS"
+    fi
+}
+
+check_luconf() {
+    while true
+        do
+            lu_wine_conf_sum1=$(md5sum "$LU_WINE_CONF")
+            sleep 2
+            lu_wine_conf_sum2=$(md5sum "$LU_WINE_CONF")
+            if [ "$lu_wine_conf_sum1" != "$lu_wine_conf_sum2" ]
+                then
+                    FORCE_EXIT=1
+                    lu_killtray
+                    if [[ ! -z "$FORCE_TRAY" ]]
+                        then
+                            lutris-wine -tray noclose
+                        else
+                            lutris-wine -tray
+                    fi
+                    break
+                else
+                    continue
+            fi
+    done
 }
 
 check_compositor() {
@@ -98,8 +147,8 @@ check_compositor() {
 compositor_on() {
     while true
         do
-            check_exe_pid "$LU_EXE"
-            if  [ ! -z "$EXE_PID" ]
+            check_exe_pids
+            if  [ ! -z "$EXE_PIDS" ]
                 then
                     sleep 1
                     continue
@@ -110,8 +159,25 @@ compositor_on() {
     done
 }
 
+exe_is_death() {
+    if [[ "$disable_compositor" == false || ! -z "$CMPSTR_NULL" || "$UNSET_CMPSTR_SW" == 1 ]]
+        then
+            while true
+                do
+                    check_exe_pids
+                    if  [ ! -z "$EXE_PIDS" ]
+                        then
+                            sleep 1
+                            continue
+                        else
+                            break
+                    fi
+            done
+    fi
+}
+
 compositor_sw() {
-    if [[ ! -z "$disable_compositor" && "$disable_compositor" == true && -z "$CMPSTR_NULL" ]]
+    if [[ ! -z "$disable_compositor" && "$disable_compositor" == true && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 ]]
         then
             if [ ! -z "$CMPSTR_PLASMA_CHECK" ]
                 then
@@ -163,7 +229,7 @@ wdllover_upd() {
 }
 
 reg_edit() {
-    zenity --question --title "Lutris Wine Registry Editor" --text "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in "$1" do not add it to the registry.\nAre you sure you want to continue?" --no-wrap &> /dev/null
+    zenity --question --title "Lutris Wine Registry Editor" --text "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in "$1" do not add it to the registry.\nAre you sure you want to continue?" --no-wrap &>/dev/null
     if [ $? -eq "0" ]
         then
             REG_BC_DIR="$WINEPREFIX/registry_$(date +'%Y-%m-%d_%T')"
@@ -172,14 +238,14 @@ reg_edit() {
             for regbc in $(ls $WINEPREFIX/*.reg) ; do cp -rfv "$regbc" "$REG_BC_DIR/" ; done
             $WINE regedit "$1" >/dev/null 2>&1
             echo -en "\nData from "$1" has been successfully added to Lutris Wine registry!\n"
-            zenity --info --title "Lutris Wine Registry Editor" --text "Registry backup to $REG_BC_DIR\nData from "$1" has been successfully added to Lutris Wine registry!" --no-wrap &> /dev/null
+            zenity --info --title "Lutris Wine Registry Editor" --text "Registry backup to $REG_BC_DIR\nData from "$1" has been successfully added to Lutris Wine registry!" --no-wrap &>/dev/null
     fi
 }
 
 exe2png() {
     if [[ ! -z "$(which wrestool 2>/dev/null)" && ! -z "$(which convert 2>/dev/null)" ]]
         then
-            export SHRT_NAME="$(basename "$1"|sed s/".exe"/""/gi)"
+            export SHRT_NAME="$(basename "$1"|sed 's/.exe//')"
             export SHRT_PATH="$(cd "$(dirname "$1")" >/dev/null 2>&1 && pwd)"
             export LUJPG="$SHRT_PATH/${SHRT_NAME}.jpg"
             export LUPNG="$SHRT_PATH/${SHRT_NAME}.png"
@@ -205,12 +271,12 @@ exe2png() {
                             echo -en "${GREEN}Converting complete!\n$RESETCOLOR"
                         else
                             echo -en "${RED}[!]Failed to get ico from executable file[!]\n$RESETCOLOR"
-                            zenity --error --text "Failed to get ico from executable file!" --no-wrap &> /dev/null
+                            zenity --error --text "Failed to get ico from executable file!" --no-wrap &>/dev/null
                     fi
             fi
         else
             echo -en "${RED}\n[!]You must install icoutils and imagemagick[!]\n\n$RESETCOLOR"
-            zenity --error --text "You must install icoutils and imagemagick!" --no-wrap &> /dev/null
+            zenity --error --text "You must install icoutils and imagemagick!" --no-wrap &>/dev/null
             exit 1
     fi
 }
@@ -220,26 +286,33 @@ add_to_lutris() {
         then
             exe2png "$LU_EXE"
             export YMLTOLU="${SHRT_PATH}/${SHRT_NAME}.yaml"
-            if [ -z "$ADD_EXE_NAME" ]
+            if [ -z "$ADD_APP_NAME" ]
                 then
-                    zenity --question --title "Creating shortcut" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &> /dev/null
+                    zenity --question --title "Creating shortcut" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
                     if [ $? -eq "0" ]
                         then
-                            ADD_EXE_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
+                            ADD_APP_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
                     fi
             fi
-            if [ ! -z "$ADD_EXE_NAME" ]
+            if [ ! -z "$ADD_APP_NAME" ]
                 then
-                    export SHRT_NAME="$ADD_EXE_NAME"
-                    cp -rf "$LUJPG" "$LU_DIR"/banners/"$ADD_EXE_NAME".jpg
+                    export SHRT_NAME="$ADD_APP_NAME"
+                    cp -rf "$LUJPG" "$LU_DIR"/banners/"$ADD_APP_NAME".jpg
                 else
                     cp -rf "$LUJPG" "$LU_DIR"/banners/
             fi
-            echo -e "name: \"${SHRT_NAME}\"\ngame_slug: \"${SHRT_NAME}\"\nversion: \"${SHRT_NAME}\"\nslug: \"${SHRT_NAME}\"\nrunner: wine\n\nscript:\n  game:\n    exe: \"$LU_EXE\"" > "$YMLTOLU"
+            echo "name: \"${SHRT_NAME}\"" > "$YMLTOLU"
+            echo "game_slug: \"${SHRT_NAME}\"" >> "$YMLTOLU"
+            echo "version: \"${SHRT_NAME}\"" >> "$YMLTOLU"
+            echo "slug: \"${SHRT_NAME}\"" >> "$YMLTOLU"
+            echo -e "runner: wine\n" >> "$YMLTOLU"
+            echo "script:" >> "$YMLTOLU"
+            echo "  game:" >> "$YMLTOLU"
+            echo "    exe: \"$LU_EXE\"" >> "$YMLTOLU"
             if [ -z "$ADD_EXE_ARG" ]
                 then
                     sleep 0.3
-                    zenity --question --title "Creating shortcut" --text "Add launch arguments for EXE?" --no-wrap &> /dev/null
+                    zenity --question --title "Creating shortcut" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
                     if [ $? -eq "0" ]
                         then
                             sleep 0.3
@@ -250,9 +323,10 @@ add_to_lutris() {
                 then
                     echo "    args: "$ADD_EXE_ARG"" >> "$YMLTOLU"
             fi
-            echo -e "  system: {}\n  wine: {}" >> "$YMLTOLU"
+            echo "  system: {}" >> "$YMLTOLU"
+            echo "  wine: {}" >> "$YMLTOLU"
             LUTRIS_SKIP_INIT=1 lutris -i "$YMLTOLU" 2>/dev/null &
-            ludb_md5sum1=$(md5sum "$LUDB")
+            ludb_md5sum1=$(md5sum "$LU_DB")
             timewait=15
             (IFS=$'\n' ; while true
                 do
@@ -260,7 +334,7 @@ add_to_lutris() {
                     if [ "$timesleep" != "$(($timewait + 1))" ]
                         then
                             sleep 1
-                            ludb_md5sum2=$(md5sum "$LUDB")
+                            ludb_md5sum2=$(md5sum "$LU_DB")
                             if [ "$ludb_md5sum1" != "$ludb_md5sum2" ]
                                 then
                                     LUNEWAPP="$(ls $HOME/.config/lutris/games/"$SHRT_NAME"-*.yml 2>/dev/null)"
@@ -269,7 +343,7 @@ add_to_lutris() {
                                     LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                                     if [ ! -z "$LUADDPID" ]
                                         then
-                                            zenity --question --title "Creating shortcut" --text "Application successfully added to Lutris!\nDo you want to close Lutris?" --no-wrap &> /dev/null
+                                            zenity --question --title "Creating shortcut" --text "Application successfully added to Lutris!\nDo you want to close Lutris?" --no-wrap &>/dev/null
                                             if [ $? -eq "0" ]
                                                 then
                                                     kill -9 "$LUADDPID" 2>/dev/null
@@ -281,7 +355,7 @@ add_to_lutris() {
                             LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                             if [ ! -z "$LUADDPID" ]
                                 then
-                                    zenity --question --title "Creating shortcut" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &> /dev/null
+                                    zenity --question --title "Creating shortcut" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &>/dev/null
                                     if [ $? -eq "0" ]
                                         then
                                             kill "$LUADDPID" 2>/dev/null
@@ -299,37 +373,37 @@ create_shortcut() {
             exe2png "$LU_EXE"
             export DESKF="${SHRT_PATH}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
-            zenity --question --title "Creating shortcut" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &> /dev/null
+            zenity --question --title "Creating shortcut" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
-                    ADD_EXE_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
-                    if [ ! -z "$ADD_EXE_NAME" ]
+                    ADD_APP_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
+                    if [ ! -z "$ADD_APP_NAME" ]
                         then
-                            export SHRT_NAME="$ADD_EXE_NAME"
+                            export SHRT_NAME="$ADD_APP_NAME"
                     fi
             fi
             echo "Name=${SHRT_NAME}" >> "$DESKF"
             sleep 0.3
-            zenity --question --title "Creating shortcut" --text "Add launch arguments for EXE?" --no-wrap &> /dev/null
+            zenity --question --title "Creating shortcut" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     sleep 0.3
                     ADD_EXE_ARG="$(zenity --entry --title "Enter EXE arguments" --text "Specify additional launch arguments for EXE:")"
                     if [ ! -z "$ADD_EXE_ARG" ]
                         then
-                            echo "Exec=EXE_ARG=\"$ADD_EXE_ARG\" \"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
+                            echo "Exec=EXE_ARG=\"$ADD_EXE_ARG\" lutris-wine \"$LU_EXE\"" >> "$DESKF"
                         else
-                            echo "Exec=\"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
+                            echo "Exec=lutris-wine \"$LU_EXE\"" >> "$DESKF"
                     fi
                 else
-                    echo "Exec=\"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
+                    echo "Exec=lutris-wine \"$LU_EXE\"" >> "$DESKF"
             fi
             sleep 0.3
-            zenity --question --title "Creating shortcut" --text "Change advanced startup options for EXE?" --no-wrap &> /dev/null
+            zenity --question --title "Creating shortcut" --text "Change advanced startup options for EXE?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     sleep 0.3
-                    SHRT_PARAM="$(echo -e "\nTERMINAL\n\nHOLD_TERMINAL\n\nLOG\n\nDEBUG\n\nUNSET_CMPSTR_SW"| \
+                    SHRT_PARAM="$(echo -e "\nTERMINAL\n\nHOLD_TERMINAL\n\nLOG\n\nDEBUG\n\nUNSET_CMPSTR_SW\n\nNO_TRAY"| \
                     zenity --title "Creating shortcut" --text "Additional launch options:" --list --checklist --multiple --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500 2>/dev/null)"
                     if [ ! -z "$SHRT_PARAM" ]
                         then
@@ -357,6 +431,10 @@ create_shortcut() {
                                         then
                                             sed -i s/Exec=/Exec=UNSET_CMPSTR_SW=1' '/g "$DESKF"
                                     fi
+                                    if [[ "$shrt_item" == "NO_TRAY" ]]
+                                        then
+                                            sed -i s/Exec=/Exec=NO_TRAY=1' '/g "$DESKF"
+                                    fi
                             done)
                     fi
             fi
@@ -368,7 +446,7 @@ create_shortcut() {
             chmod u+x "$DESKF"
             sleep 0.3
             echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}complete!\n$RESETCOLOR"
-            zenity --question --title "Creating shortcut" --text "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file.\nDo you want to add it to application menu?" --no-wrap &> /dev/null
+            zenity --question --title "Creating shortcut" --text "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file.\nDo you want to add it to application menu?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     if [ ! -d "$LU_APP" ]
@@ -378,9 +456,9 @@ create_shortcut() {
                     cp -rf "$DESKF" ${LU_APP}/
                     update-desktop-database -q "${HOME}/.local/share/applications"
                     sleep 0.3
-                    zenity --info --title "Creating shortcut" --text "Shortcut successfully added to application menu!" --no-wrap &> /dev/null
+                    zenity --info --title "Creating shortcut" --text "Shortcut successfully added to application menu!" --no-wrap &>/dev/null
             fi
-            zenity --question --title "Creating shortcut" --text "Do you want to add it to Lutris?" --no-wrap &> /dev/null
+            zenity --question --title "Creating shortcut" --text "Do you want to add it to Lutris?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     add_to_lutris
@@ -394,16 +472,16 @@ lu_debug() {
             export LOG=1
             export TERMINAL=1
             lu_prerun
-            unset -f compositor_sw
-            #export VKD3D_LOG_FILE="$EXE_PATH/$(basename "$LU_EXE"|sed s/".exe"/""/gi)_vkd3d.log"
-            #export VKBASALT_LOG_FILE="$EXE_PATH/$(basename "$LU_EXE"|sed s/".exe"/""/gi)_vkbasalt.log"
+            UNSET_CMPSTR_SW=1
+            #export VKD3D_LOG_FILE="$EXE_PATH/$(basename "$LU_EXE"|sed 's/.exe//')_vkd3d.log"
+            #export VKBASALT_LOG_FILE="$EXE_PATH/$(basename "$LU_EXE"|sed 's/.exe//')_vkbasalt.log"
             export WINEDEBUG="fixme-all,err+loaddll,err+dll,err+file,err+reg"
             export DXVK_LOG_LEVEL="info"
             export DXVK_NVAPI_LOG_LEVEL="info"
             export DXVK_HUD="full"
             export VKD3D_DEBUG="warn"
             export WINE_MONO_TRACE="E:System.NotImplementedException"
-            export VKBASALT_LOG_LEVEL=debug
+            export VKBASALT_LOG_LEVEL="debug"
             export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%T').debug"
             export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" \
                 "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "DXVK_STATE_CACHE_PATH" \
@@ -511,7 +589,7 @@ lu_debug() {
             export DXVK_LOG_LEVEL="none"
             export VKD3D_DEBUG="none"
             export DXVK_LOG_PATH="none"
-            export VKBASALT_LOG_LEVEL=error
+            export VKBASALT_LOG_LEVEL="error"
             wdllover_upd "winedbg.exe="
     fi
 }
@@ -531,7 +609,7 @@ dis_debug_msg() {
     if [[ ! -z "$DEBUG" && "$DEBUG" != 0 ]]
         then
             echo -e "$RED[!]Unable to start DEBUG for this file[!]$RESETCOLOR"
-            zenity --error --text "Unable to start DEBUG for this file!" --no-wrap &> /dev/null
+            zenity --error --text "Unable to start DEBUG for this file!" --no-wrap &>/dev/null
             exit 1
     fi
 }
@@ -540,7 +618,7 @@ dis_cmd_msg() {
     if [[ ! -z "$TERMINAL" && "$TERMINAL" != 0 ]]
         then
             echo -e "$RED[!]Unable to start TERMINAL for this file[!]$RESETCOLOR"
-            zenity --error --text "Unable to start TERMINAL for this file!" --no-wrap &> /dev/null
+            zenity --error --text "Unable to start TERMINAL for this file!" --no-wrap &>/dev/null
             exit 1
     fi
 }
@@ -592,13 +670,10 @@ lu_prerun() {
 }
 
 lu_run() {
+    lu_tray
     if [[ ! -z "$HOLD_TERMINAL" && "$HOLD_TERMINAL" != 0 ]]
         then
             export term_hold="--hold"
-    fi
-    if [[ ! -z "$UNSET_CMPSTR_SW" && "$UNSET_CMPSTR_SW" != 0 ]]
-        then
-            unset -f compositor_sw
     fi
     lu_debug 2>/dev/null
     compositor_sw 2>/dev/null
@@ -656,6 +731,11 @@ lu_run() {
         compositor_sw 2>/dev/null
     fi
     rm -rf "$TMP_DEB" "$TMP_OUT"
+    exe_is_death; check_exe_pids; check_tray_pid
+    if [[ -z "$EXE_PIDS" && ! -z "$TRAY_PID" && -z "$FORCE_TRAY" ]]
+        then
+            lu_killtray
+    fi
 }
 
 lu_start() {
@@ -684,13 +764,13 @@ lu_start() {
             if [[ ! -z "$LU_MSI" && ! -z "$(file "$LU_EXE"|grep "Os: Windows"|grep -o "MSI Installer")" ]]
                 then
                     dis_debug_msg
-                    unset -f compositor_sw
+                    UNSET_CMPSTR_SW=1
                     lu_run "$LU_EXE"
             elif [ ! -z "$LU_BAT" ]
                 then
                     dis_debug_msg
                     TERMINAL=1
-                    unset -f compositor_sw
+                    UNSET_CMPSTR_SW=1
                     lu_run "$LU_EXE"
             elif [ ! -z "$LU_REG" ]
                 then
@@ -703,7 +783,7 @@ lu_start() {
                         lu_run "$LU_EXE"
                     else
                         echo -e "$RED[!]Unable to start Lutris Wine for this file[!]$RESETCOLOR"
-                        zenity --error --text "Unable to start Lutris Wine for this file!" --no-wrap &> /dev/null
+                        zenity --error --text "Unable to start Lutris Wine for this file!" --no-wrap &>/dev/null
                 fi
             fi
         else
@@ -719,12 +799,12 @@ lu_start() {
                                     lu_run "$LU_EXE"
                                 else
                                     echo -e "$RED[!]Unable to start DEBUG for this file[!]$RESETCOLOR"
-                                    zenity --error --text "Unable to start DEBUG for this file!" --no-wrap &> /dev/null
+                                    zenity --error --text "Unable to start DEBUG for this file!" --no-wrap &>/dev/null
                             fi
                     elif [ -d "$DEBUG_EXE" ]
                         then
                             echo -e "$RED[!]Specify the executable file to start DEBUG[!]$RESETCOLOR"
-                            zenity --error --text "Specify the executable file to start DEBUG!" --no-wrap &> /dev/null
+                            zenity --error --text "Specify the executable file to start DEBUG!" --no-wrap &>/dev/null
                             lu_start
                     fi
                 else
@@ -734,7 +814,7 @@ lu_start() {
 }
 
 lu_cmd() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     TERMINAL=1
     export DEBUG=0
     if [ -f "$2" ]
@@ -750,7 +830,7 @@ lu_cmd() {
 }
 
 lu_shell() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     TERMINAL=1
     export DEBUG=0
     if [ -f "$2" ]
@@ -761,7 +841,7 @@ lu_shell() {
                     lu_run "$LU_SHELL_EXE"
                 else
                     echo -e "$RED[!]Unable to start Lutris Wine for this file[!]$RESETCOLOR"
-                    zenity --error --text "Unable to start Lutris Wine for this file!" --no-wrap &> /dev/null
+                    zenity --error --text "Unable to start Lutris Wine for this file!" --no-wrap &>/dev/null
             fi
         elif [ -d "$2" ]
             then
@@ -774,35 +854,35 @@ lu_shell() {
 }
 
 lu_regedit() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
     lu_run regedit
 }
 
 lu_control() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
     lu_run control
 }
 
 lu_winecfg() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
     lu_run winecfg
 }
 
 lu_taskmgr() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
     lu_run taskmgr
 }
 
 lu_uninstaller() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
     lu_run uninstaller
@@ -830,28 +910,85 @@ lu_openpfx() {
     xdg-open "$WINEPREFIX/drive_c/" 2>/dev/null
 }
 
+lu_exit() {
+    FORCE_EXIT=1
+    pkill zenity
+    lu_killexe
+    lu_killwine
+    lu_killtray
+    sleep 2
+    pkill lutris-wine
+    check_luwine_pid; check_tray_pid; check_wine_pids; check_exe_pids
+    if [[ -z "$LU_WINE_PID" && -z "$WINE_PIDS" && -z "$EXE_PIDS" && -z "$TRAY_PID" ]]
+        then
+            echo -e "$RED[!]Lutris Wine successfully killed[!]$RESETCOLOR"
+            zenity --info --title "Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &>/dev/null &
+        else
+            echo -e "$RED[!]Lutris Wine not killed[!]$RESETCOLOR"
+            zenity --info --title "Wine Killer" --text "Lutris Wine not killed!" --no-wrap &>/dev/null &
+    fi
+}
+
+lu_killtray() {
+    check_tray_pid
+    check_exe_pids
+    if [ ! -z "$FORCE_EXIT" ]
+        then
+            kill -9 "$TRAY_PID" 2>/dev/null
+    elif [ ! -z "$TRAY_PID" ]
+        then
+            if [ ! -z "$EXE_PIDS" ]
+                then
+                    zenity --question --title "Tray Killer" --text "Incomplete processes found! \nClosing the tray will likely kill them or cause operational errors.\nAre you sure you want to close the tray?" --no-wrap &>/dev/null
+                    if [ $? -eq "0" ]
+                        then
+                            kill -9 "$TRAY_PID" 2>/dev/null
+                            pkill lutris-wine
+                    fi
+                else
+                    kill -9 "$TRAY_PID" 2>/dev/null
+                    pkill lutris-wine
+            fi
+    else
+        echo -e "$RED[!]Lutris Wine not runing in tray[!]$RESETCOLOR"
+        zenity --error --text "Lutris Wine not runing in tray!" --no-wrap &>/dev/null &
+    fi
+}
+
 lu_killwine() {
     check_wine_pids
-    if  [ ! -z "$WINE_PIDS" ]
+    if [ ! -z "$FORCE_EXIT" ]
         then
-            for kill_pids in $WINE_PIDS
-                do
-                    if [ "$(ps cax|grep $kill_pids)" ]
-                        then
-                            kill -9 $kill_pids
-                            echo "kill -9 $kill_pids"
-                    fi
-            done
-            echo -en "Lutris Wine successfully killed!\n"
-            zenity --info --title "Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &> /dev/null
-        else
-            echo -e "$RED[!]Lutris Wine not runing[!]$RESETCOLOR"
-            zenity --error --text "Lutris Wine not runing!" --no-wrap &> /dev/null
+            kill -9 $WINE_PIDS 2>/dev/null
+    elif [[ ! -z "$WINE_PIDS" ]]
+        then
+            kill -9 $WINE_PIDS 2>/dev/null
+            echo -e "$RED[!]Wine processes successfully killed[!]$RESETCOLOR"
+            zenity --info --title "Wine Killer" --text "Wine processes successfully killed!" --no-wrap &>/dev/null &
+    else
+        echo -e "$RED[!]Wine processes not found[!]$RESETCOLOR"
+        zenity --error --text "Wine processes not found!" --no-wrap &>/dev/null &
+    fi
+}
+
+lu_killexe() {
+    check_exe_pids
+    if [ ! -z "$FORCE_EXIT" ]
+        then
+            kill -9 $EXE_PIDS 2>/dev/null
+    elif [ ! -z "$EXE_PIDS" ]
+        then
+            kill -9 $EXE_PIDS 2>/dev/null
+            echo -e "$RED[!]Wine EXE processes successfully killed[!]$RESETCOLOR"
+            zenity --info --text "Wine EXE processes successfully killed!" --no-wrap &>/dev/null &
+    else
+        echo -e "$RED[!]Wine EXE processes not found[!]$RESETCOLOR"
+        zenity --error --title "EXE Killer" --text "Wine EXE processes not found!" --no-wrap &>/dev/null &
     fi
 }
 
 lu_clearpfx() {
-    zenity --question --title "Clearing prefix" --text "Do you really want to clear prefix ["$WINEPREFIX"] ?" --no-wrap &> /dev/null
+    zenity --question --title "Clearing prefix" --text "Do you really want to clear prefix ["$WINEPREFIX"] ?" --no-wrap &>/dev/null
     if [ $? -eq "0" ]
         then
             rm -rfv "${WINEPREFIX}/registry_*"
@@ -889,7 +1026,7 @@ lu_clearpfx() {
             rm -rfv "$WINE_GST_REGISTRY_DIR"/*
             rm -rfv "$HOME/.cache/mesa_shader_cache/*"
             echo -en "\nPrefix cleared successfully!\n"
-            zenity --info --title "Clearing prefix" --text "Prefix "$WINEPREFIX" cleared successfully!" --no-wrap &> /dev/null
+            zenity --info --title "Clearing prefix" --text "Prefix "$WINEPREFIX" cleared successfully!" --no-wrap &>/dev/null
     fi
 }
 
@@ -905,7 +1042,7 @@ lu_rmapp() {
                             if [[ "$shrt_rm" == "ALL SHORTCUTS" ]]
                                 then
                                     sleep 0.3
-                                    zenity --question --title "Removing shortcuts" --text "Are you sure you want to remove all Lutris Wine applications from menu?" --no-wrap &> /dev/null
+                                    zenity --question --title "Removing shortcuts" --text "Are you sure you want to remove all Lutris Wine applications from menu?" --no-wrap &>/dev/null
                                     if [ $? -eq "0" ]
                                         then
                                             rm -rfv "$LU_APP"
@@ -917,10 +1054,10 @@ lu_rmapp() {
                     done)
                     update-desktop-database -q "${HOME}/.local/share/applications"
                     sleep 0.3
-                    zenity --info --title "Removing shortcuts" --text "Lutris Wine applications deleted from menu!" --no-wrap &> /dev/null
+                    zenity --info --title "Removing shortcuts" --text "Lutris Wine applications deleted from menu!" --no-wrap &>/dev/null
             fi
         else
-            zenity --error --title "Removing shortcuts" --text "Lutris Wine applications not found in menu!" --no-wrap &> /dev/null
+            zenity --error --title "Removing shortcuts" --text "Lutris Wine applications not found in menu!" --no-wrap &>/dev/null
     fi
 }
 
@@ -939,7 +1076,7 @@ lu_shortcut() {
                     fi
                 else
                     echo -e "$RED[!]Unable to create shortcut for this file[!]$RESETCOLOR"
-                    zenity --error --text "Unable to create shortcut for this file!" --no-wrap &> /dev/null
+                    zenity --error --text "Unable to create shortcut for this file!" --no-wrap &>/dev/null
             fi
         else
             SHRT_EXE="$(zenity --file-selection --file-filter="*.exe")"
@@ -957,18 +1094,18 @@ lu_shortcut() {
                             fi
                         else
                             echo -e "$RED[!]Unable to create shortcut for this file[!]$RESETCOLOR"
-                            zenity --error --text "Unable to create shortcut for this file!" --no-wrap &> /dev/null
+                            zenity --error --text "Unable to create shortcut for this file!" --no-wrap &>/dev/null
                     fi
             elif [ -d "$SHRT_EXE" ]
                 then
                     echo -e "$RED[!]Specify the executable file to create shortcut[!]$RESETCOLOR"
-                    zenity --error --text "Specify the executable file to create shortcut!" --no-wrap &> /dev/null
+                    zenity --error --text "Specify the executable file to create shortcut!" --no-wrap &>/dev/null
             fi
     fi
 }
 
 lu_explorer() {
-    unset -f compositor_sw
+    UNSET_CMPSTR_SW=1
     unset EXE_ARG
     export DEBUG=0
     lu_run explorer
@@ -976,48 +1113,97 @@ lu_explorer() {
 
 lu_help() {
     echo -e "
-        ${RED} Lutris Wine
+        ${GREEN}Lutris Wine ${RED}v${LU_WINE_VERSION} ${GREEN}by VHSgunzo
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
-            $RED└──╼ \$$GREEN "$(basename "$BASH_SOURCE")" $BLUE{$(basename "$BASH_SOURCE") argument} ${RED}blabla.exe $BLUE{exe arguments}
+            $RED└──╼ \$$GREEN lutris-wine $BLUE{lutris-wine argument} ${RED}blabla.exe $BLUE{exe arguments}
 
-            ${RED}-explorer $GREEN      Wine Explorer
-            ${RED}-cmd $GREEN           Open CMD or open file in CMD
-            ${RED}-shell $GREEN         Open SHELL or open file in SHELL
-            ${RED}-regedit $GREEN       Registry editor
-            ${RED}-control $GREEN       Control Panel
-            ${RED}-winecfg $GREEN       Wine settings
-            ${RED}-taskmgr $GREEN       Task Manager
-            ${RED}-uninstaller $GREEN   Add/Remove Programs
-            ${RED}-winetricks $GREEN    Winetricks
-            ${RED}-openpfx $GREEN       Open drive C:
-            ${RED}-killwine $GREEN      Kill all Wine processes
-            ${RED}-clearpfx $GREEN      Clear prefix
-            ${RED}-rmapp $GREEN         Remove Lutris Wine shortcuts from menu
-            ${RED}-shortcut $GREEN      Create shortcut
-            ${RED}-addtolu $GREEN       Add to Lutris
-            ${RED}-debug $GREEN         DEBUG
-            ${RED}-help $GREEN          Show this usage info
+            ${RED}-explorer $GREEN          Wine Explorer
+            ${RED}-cmd $GREEN               Open CMD or open file in CMD
+            ${RED}-shell $GREEN             Open SHELL or open file in SHELL
+            ${RED}-regedit $GREEN           Registry editor
+            ${RED}-control $GREEN           Control Panel
+            ${RED}-winecfg $GREEN           Wine settings
+            ${RED}-taskmgr $GREEN           Task Manager
+            ${RED}-uninstaller $GREEN       Add/Remove Programs
+            ${RED}-winetricks $GREEN        Winetricks
+            ${RED}-openpfx $GREEN           Open drive C:
+            ${RED}-killwine $GREEN          Kill Wine processes
+            ${RED}-killtray $GREEN          Kill Lutris Wine tray
+            ${RED}-killexe $GREEN           Kill Lutris Wine launch EXE
+            ${RED}-exit $GREEN              Lutris Wine Force Exit
+            ${RED}-clearpfx $GREEN          Clear prefix
+            ${RED}-rmapp $GREEN             Remove Lutris Wine shortcuts from menu
+            ${RED}-shortcut $GREEN          Create shortcut
+            ${RED}-addtolu $GREEN           Add to Lutris
+            ${RED}-debug $GREEN             DEBUG
+            ${RED}-tray {noclose}$GREEN     Open Lutris Wine in tray
+            ${RED}-help $GREEN              Show this usage info
+            ${RED}-version $GREEN           Show Lutris Wine version
         $RESETCOLOR" >&2
-        zenity --info --title "Lutris Wine usage info" --text "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ "$(basename "$BASH_SOURCE")" {$(basename "$BASH_SOURCE") argument} blabla.exe {exe arguments} \n\n \
-        -explorer       Wine Explorer\n \
-        -cmd                Open CMD or open file in CMD\n \
-        -shell               Open SHELL or open file in SHELL\n \
-        -regedit          Registry editor\n \
-        -control           Control Panel\n \
-        -winecfg         Wine settings\n \
-        -taskmgr        Task Manager\n \
-        -uninstaller    Add/Remove Programs\n \
-        -winetricks     Winetricks\n \
-        -openpfx        Open drive C:\n \
-        -killwine          Kill all Wine processes\n \
-        -clearpfx        Clear prefix\n \
-        -rmapp           Remove Lutris Wine shortcuts from menu\n \
-        -shortcut        Create shortcut\n \
-        -addtolu         Add to Lutris\n \
-        -debug            DEBUG\n \
-        -help                Show this usage info \
-        " --no-wrap &> /dev/null
+        zenity --info --title "Lutris Wine usage info" --text "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ lutris-wine {lutris-wine argument} blabla.exe {exe arguments} \n\n \
+        -explorer                 Wine Explorer\n \
+        -cmd                          Open CMD or open file in CMD\n \
+        -shell                         Open SHELL or open file in SHELL\n \
+        -regedit                    Registry editor\n \
+        -control                     Control Panel\n \
+        -winecfg                   Wine settings\n \
+        -taskmgr                  Task Manager\n \
+        -uninstaller              Add/Remove Programs\n \
+        -winetricks               Winetricks\n \
+        -openpfx                  Open drive C:\n \
+        -killwine                    Kill Wine processes\n \
+        -killtray                     Kill Lutris Wine tray\n \
+        -killexe                      Kill Lutris Wine launch EXE\n \
+        -exit                           Lutris Wine Force Exit\n \
+        -clearpfx                  Clear prefix\n \
+        -rmapp                     Remove Lutris Wine shortcuts from menu\n \
+        -shortcut                  Create shortcut\n \
+        -addtolu                   Add to Lutris\n \
+        -debug                      DEBUG\n \
+        -tray {noclose}       Open Lutris Wine in tray\n \
+        -help                          Show this usage info\n \
+        -version                    Show Lutris Wine version\n\n \
+        Lutris Wine v${LU_WINE_VERSION} by VHSgunzo \
+        " --no-wrap &>/dev/null &
+}
+
+lu_version() {
+    echo -e "${GREEN}Lutris Wine ${RED}v${LU_WINE_VERSION} ${GREEN}by VHSgunzo$RESETCOLOR"
+    zenity --info --title "Version info" --text "Lutris Wine v${LU_WINE_VERSION} by VHSgunzo" --no-wrap &>/dev/null &
+}
+
+lu_tray() {
+    check_tray_pid
+    if [[ -z "$TRAY_PID" && "$NO_TRAY" != 1 ]]
+        then
+            yad --notification --no-middle --text="Lutris Wine" \
+                --window-icon="/usr/share/lutris/media/default_icon.png" \
+                --image="/usr/share/lutris/media/default_icon.png" \
+                --command="bash -c lu_help" \
+                --tooltip="Lutris Wine" \
+                --menu="| \
+Explorer!bash -c lu_explorer!"/usr/share/lutris/media/default_icon.png"| \
+Task Manager!bash -c lu_taskmgr!"/usr/share/lutris/media/default_icon.png"| \
+Open CMD!bash -c lu_cmd!"/usr/share/lutris/media/default_icon.png"| \
+Open SHELL!bash -c lu_shell!"/usr/share/lutris/media/default_icon.png"| \
+DEBUG!bash -c 'export DEBUG=1 ; lu_start'!"/usr/share/lutris/media/default_icon.png"| \
+Add/Remove Programs!bash -c lu_uninstaller!"/usr/share/lutris/media/default_icon.png"| \
+Control Panel!bash -c lu_control!"/usr/share/lutris/media/default_icon.png"| \
+Open drive C:\!bash -c lu_openpfx!"/usr/share/lutris/media/default_icon.png"| \
+Registry editor!bash -c lu_regedit!"/usr/share/lutris/media/default_icon.png"| \
+Wine settings!bash -c lu_winecfg!"/usr/share/lutris/media/default_icon.png"| \
+Winetricks!bash -c winetricks!"/usr/share/lutris/media/default_icon.png"| \
+Create shortcut!bash -c lu_shortcut!"/usr/share/lutris/media/default_icon.png"| \
+Add to Lutris!bash -c 'export ADDTOLU=1 ; lu_shortcut'!"/usr/share/lutris/media/default_icon.png"| \
+Remove menu app!bash -c lu_rmapp!"/usr/share/lutris/media/default_icon.png"| \
+Clear prefix!bash -c lu_clearpfx!"/usr/share/lutris/media/default_icon.png"| \
+Kill Wine processes!bash -c lu_killwine!"/usr/share/lutris/media/default_icon.png"| \
+Kill launch EXE!bash -c lu_killexe!"/usr/share/lutris/media/default_icon.png"| \
+Kill tray!bash -c lu_killtray!"/usr/share/lutris/media/default_icon.png"| \
+FORCE EXIT!bash -c lu_exit!"/usr/share/lutris/media/default_icon.png"|" &
+            check_luconf &
+    fi
 }
 
 if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
@@ -1038,7 +1224,6 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
             then
                 export SHELL="/usr/bin/bash"
         fi
-        export -f winetricks
         check_compositor 2>/dev/null
         export $(yaml_parser "$LU_WINE_CONF"|sed "s/wine-//g"|sed "s/system-//g"|sed "s/env-//g")
         wdllover_upd "$(echo -n "$(sed -n  '/\(^  overrides\)/,$p' "$LU_WINE_CONF"|grep "    "|sed 's/^ *//g'|tr ':' '='|sed "s/ //g"|sed "s/''//g")"|tr "\n" ";")"
@@ -1052,21 +1237,21 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         export SDL_VIDEO_FULLSCREEN_DISPLAY="$sdl_video_fullscreen"
         if [[ ! -z "$mangohud" && ! -z "$(which mangohud 2>/dev/null)" ]]
             then
-                if [ "$mangohud" == vk64 ]
+                if [ "$mangohud" == "vk64" ]
                     then
                         export RUN_MANGOHUD="mangohud"
                     else
                         export RUN_MANGOHUD="mangohud --dlsym"
                 fi
             else
-                echo -e "$RED[!]MANGOHUD not found in you system or disabled in Lutris[!]"
+                echo -e "$RED[!]MANGOHUD not found in you system or disabled in Lutris[!]$RESETCOLOR"
                 export DISABLE_MANGOHUD=1
         fi
         if [[ ! -z "$gamemode" && "$gamemode" == true && ! -z "$(which gamemoderun 2>/dev/null)" ]]
             then
                 export RUN_GAMEMODE="gamemoderun"
             else
-                echo -e "$RED[!]GAMEMODE not found in you system or disabled in Lutris[!]"
+                echo -e "$RED[!]GAMEMODE not found in you system or disabled in Lutris[!]$RESETCOLOR"
                 export RUN_GAMEMODE=""
         fi
         if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
@@ -1176,6 +1361,11 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
                 "$WINE" winecfg -v $(echo "win$WIN_VER"|sed 's/.*/\L&/')
                 echo "WINDOWS VERSION SET TO WINDOWS $WIN_VER"
         fi
+        export -f print_var yaml_parser check_tray_pid check_wine_pids check_exe_pids check_compositor compositor_on \
+        compositor_sw exe_is_death wdllover_upd reg_edit exe2png add_to_lutris create_shortcut lu_debug clear_log \
+        dis_debug_msg dis_cmd_msg lu_prerun lu_run lu_start lu_cmd lu_shell lu_regedit lu_control \
+        lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_killwine lu_killexe lu_clearpfx lu_rmapp \
+        lu_shortcut lu_explorer lu_help lu_killtray lu_exit lu_tray check_luconf check_luwine_pid
         case $1 in
             -cmd) lu_cmd "$@" ;;
             -shell) lu_shell "$@" ;;
@@ -1187,6 +1377,9 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
             -winetricks) winetricks ;;
             -openpfx) lu_openpfx ;;
             -killwine) lu_killwine ;;
+            -killtray) lu_killtray ;;
+            -killexe) lu_killexe ;;
+            -exit) lu_exit ;;
             -clearpfx) lu_clearpfx ;;
             -rmapp) lu_rmapp ;;
             -shortcut) lu_shortcut "$@" ;;
@@ -1194,10 +1387,12 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
             -explorer) lu_explorer ;;
             -debug) export DEBUG=1 ; lu_start "$@" ;;
             -help) lu_help ;;
+            -version) lu_version ;;
+            -tray) lu_tray ;;
             *) lu_start "$@" ;;
         esac
     else
         echo -e "$RED[!]First you need to configure Wine in Lutris[!]$RESETCOLOR"
-        zenity --error --text "First you need to configure Wine in Lutris!" --no-wrap &> /dev/null
+        zenity --error --text "First you need to configure Wine in Lutris!" --no-wrap &>/dev/null
         exit 1
 fi

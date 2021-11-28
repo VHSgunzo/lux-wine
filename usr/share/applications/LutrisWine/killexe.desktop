@@ -1,0 +1,12 @@
+[Desktop Entry]
+Categories=Lutris Wine
+Exec=lutris-wine -killexe
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Kill launch EXE
+Name[ru_RU]=Убить запущенные EXE
+NoDisplay=false
+StartupNotify=true
+Terminal=0
+TerminalOptions=--hold
+Type=Application
+X-KDE-SubstituteUID=false

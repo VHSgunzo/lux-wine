@@ -1,7 +1,7 @@
 [Desktop Action explorer]
 Exec=lutris-wine -explorer
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Wine Explorer
+Name=Explorer
 Name[ru_RU]=Рабочий стол
 
 [Desktop Action cmd]
@@ -61,8 +61,20 @@ Name[ru_RU]=Открыть диск C:\\
 [Desktop Action killwine]
 Exec=lutris-wine -killwine
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Kill all Wine processes
-Name[ru_RU]=Убить все процессы Wine
+Name=Kill Wine processes
+Name[ru_RU]=Убить процессы Wine
+
+[Desktop Action killtray]
+Exec=lutris-wine -killtray
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Kill tray
+Name[ru_RU]=Убить трэй
+
+[Desktop Action killexe]
+Exec=lutris-wine -killexe
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Kill launch EXE
+Name[ru_RU]=Убить запущенные EXE
 
 [Desktop Action clearpfx]
 Exec=lutris-wine -clearpfx
@@ -94,9 +106,21 @@ Icon=/usr/share/lutris/media/default_icon.png
 Name=Remove Lutris Wine shortcuts from menu
 Name[ru_RU]=Удалить Lutris Wine ярлыки из меню
 
+[Desktop Action tray]
+Exec=lutris-wine -tray noclose
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Open Lutris Wine in tray
+Name[ru_RU]=Открыть Lutris Wine в трее
+
+[Desktop Action exit]
+Exec=lutris-wine -exit
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Lutris Wine force exit
+Name[ru_RU]=Закрыть Lutris Wine принудительно
+
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;uninstaller;winetricks;openpfx;killwine;clearpfx;debug;shortcut;addtolu;rmapp
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine
