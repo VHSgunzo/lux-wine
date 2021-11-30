@@ -2,8 +2,8 @@
 Categories=Lutris Wine
 Exec=lutris-wine -tray noclose
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Open Lutris Wine in tray
-Name[ru_RU]=Открыть Lutris Wine в трее
+Name=Lutris Wine tray
+Name[ru_RU]=Lutris Wine трей
 NoDisplay=false
 StartupNotify=true
 Terminal=0

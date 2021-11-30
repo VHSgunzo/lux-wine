@@ -109,14 +109,14 @@ Name[ru_RU]=Удалить Lutris Wine ярлыки из меню
 [Desktop Action tray]
 Exec=lutris-wine -tray noclose
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Open Lutris Wine in tray
-Name[ru_RU]=Открыть Lutris Wine в трее
+Name=Lutris Wine tray
+Name[ru_RU]=Lutris Wine трей
 
 [Desktop Action exit]
 Exec=lutris-wine -exit
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Lutris Wine force exit
-Name[ru_RU]=Закрыть Lutris Wine принудительно
+Name[ru_RU]=Закрыть Lutris Wine
 
 [Desktop Entry]
 Type=Service

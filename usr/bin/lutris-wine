@@ -1,6 +1,6 @@
 #!/bin/bash
 ###VHSgunzo
-export LU_WINE_VERSION=0.41
+export LW_VERSION=0.42
 if [ $(id -u) -eq 0 ] ; then
     echo -e "$RED[!]Don't run Lutris Wine as root[!]$RESETCOLOR"
     zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &>/dev/null
@@ -22,6 +22,7 @@ export RESETCOLOR='\033[1;00m'
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
+export LU_RUNTIME="$HOME/.local/share/lutris/runtime"
 export LU_DB="$LU_DIR/pga.db"
 export LU_APP="${HOME}/.local/share/applications/LutrisWineApp"
 
@@ -49,9 +50,8 @@ yaml_parser() {
    }'
 }
 
-check_tray_pid() {
-    unset TRAY_PID
-    unset FORCE_TRAY
+check_tray() {
+    unset TRAY_PID FORCE_TRAY
     CHK_TRAY_PID="$(pgrep -a yad|grep "\-\-notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
     CHK_FORCE_TRAY="$(pgrep -a "lutris-wine"|grep -o "noclose")"
     if [ ! -z "$CHK_TRAY_PID" ]
@@ -82,12 +82,16 @@ check_luwine_pid() {
     fi
 }
 
-check_exe_pids() {
-    unset EXE_PIDS
-    CHK_EXE_PIDS="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v windows|grep ":\\\\"|awk '{print$2}')"
-    if [ ! -z "$CHK_EXE_PIDS" ]
+check_exes() {
+    unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
+    CHK_EXES="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v windows|grep ":\\\\")"
+    if [ ! -z "$CHK_EXES" ]
         then
-            export EXE_PIDS="$CHK_EXE_PIDS"
+            export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$2}')"
+            export RUN_EXES="$(while read exepid ; do ps -p $exepid -o args|cut -d":" -f2|sed '/COMMAND/d'|sed 'y#\\#/#' ; done <<< "$EXE_PIDS")"
+            export RUN_EXE=$(echo "$RUN_EXES"|grep -o "$EXE_DIR" 2>/dev/null)
+        else
+            unset RUN_EXE
     fi
 }
 
@@ -120,25 +124,25 @@ check_compositor() {
             export CMPSTR_PLASMA="qdbus org.kde.KWin /Compositor active"
             export CMPSTR_ON="qdbus org.kde.KWin /Compositor resume"
             export CMPSTR_OFF="qdbus org.kde.KWin /Compositor suspend"
-            export CMPSTR_PLASMA_CHECK="$(exec $CMPSTR_PLASMA)"
+            export CMPSTR_PLASMA_CHECK="$(eval $CMPSTR_PLASMA)"
     elif [[ "$DESKTOP_SESSION" == "mate" ]]
         then
             export CMPSTR_MATE="gsettings get org.mate.Marco.general compositing-manager"
             export CMPSTR_ON="gsettings set org.mate.Marco.general compositing-manager true"
             export CMPSTR_OFF="gsettings set org.mate.Marco.general compositing-manager false"
-            export CMPSTR_MATE_CHECK="$(exec $CMPSTR_MATE)"
+            export CMPSTR_MATE_CHECK="$(eval $CMPSTR_MATE)"
     elif [[ "$DESKTOP_SESSION" == "xfce" ]]
         then
             export CMPSTR_XFCE="xfconf-query --channel=xfwm4 --property=/general/use_compositing"
             export CMPSTR_ON="xfconf-query --channel=xfwm4 --property=/general/use_compositing --set=true"
             export CMPSTR_OFF="xfconf-query --channel=xfwm4 --property=/general/use_compositing --set=false"
-            export CMPSTR_XFCE_CHECK="$(exec $CMPSTR_XFCE)"
+            export CMPSTR_XFCE_CHECK="$(eval $CMPSTR_XFCE)"
     elif [[ "$DESKTOP_SESSION" == "deepin" ]]
         then
             export CMPSTR_ON="dbus-send --session --dest=com.deepin.WMSwitcher --type=method_call /com/deepin/WMSwitcher com.deepin.WMSwitcher.RequestSwitchWM"
             export CMPSTR_OFF="$CMPSTR_ON"
             export CMPSTR_DEEPIN="dbus-send --session --dest=com.deepin.WMSwitcher --type=method_call --print-reply=literal /com/deepin/WMSwitcher com.deepin.WMSwitcher.CurrentWM"
-            export CMPSTR_DEEPIN_CHECK="$(exec $CMPSTR_DEEPIN)"
+            export CMPSTR_DEEPIN_CHECK="$(eval $CMPSTR_DEEPIN)"
     else
         export CMPSTR_NULL=""
     fi
@@ -147,8 +151,8 @@ check_compositor() {
 compositor_on() {
     while true
         do
-            check_exe_pids
-            if  [ ! -z "$EXE_PIDS" ]
+            check_exes
+            if  [ ! -z "$RUN_EXE" ]
                 then
                     sleep 1
                     continue
@@ -164,7 +168,7 @@ exe_is_death() {
         then
             while true
                 do
-                    check_exe_pids
+                    check_exes
                     if  [ ! -z "$EXE_PIDS" ]
                         then
                             sleep 1
@@ -181,37 +185,37 @@ compositor_sw() {
         then
             if [ ! -z "$CMPSTR_PLASMA_CHECK" ]
                 then
-                    if [[ "$(exec $CMPSTR_PLASMA)" == true && "$CMPSTR_PLASMA_CHECK" == true ]]
+                    if [[ "$(eval $CMPSTR_PLASMA)" == true && "$CMPSTR_PLASMA_CHECK" == true ]]
                         then
                             $CMPSTR_OFF
-                    elif [[ "$(exec $CMPSTR_PLASMA)" == false && "$CMPSTR_PLASMA_CHECK" == true ]]
+                    elif [[ "$(eval $CMPSTR_PLASMA)" == false && "$CMPSTR_PLASMA_CHECK" == true ]]
                         then
                             compositor_on
                     fi
             elif [ ! -z "$CMPSTR_MATE_CHECK" ]
                 then
-                    if [[ "$(exec $CMPSTR_MATE)" == true && "$CMPSTR_MATE_CHECK" == true ]]
+                    if [[ "$(eval $CMPSTR_MATE)" == true && "$CMPSTR_MATE_CHECK" == true ]]
                         then
                             $CMPSTR_OFF
-                    elif [[ "$(exec $CMPSTR_MATE)" == false && "$CMPSTR_MATE_CHECK" == true ]]
+                    elif [[ "$(eval $CMPSTR_MATE)" == false && "$CMPSTR_MATE_CHECK" == true ]]
                         then
                             compositor_on
                     fi
             elif [ ! -z "$CMPSTR_XFCE_CHECK" ]
                 then
-                    if [[ "$(exec $CMPSTR_XFCE)" == true && "$CMPSTR_XFCE_CHECK" == true ]]
+                    if [[ "$(eval $CMPSTR_XFCE)" == true && "$CMPSTR_XFCE_CHECK" == true ]]
                         then
                             $CMPSTR_OFF
-                    elif [[ "$(exec $CMPSTR_XFCE)" == false && "$CMPSTR_XFCE_CHECK" == true ]]
+                    elif [[ "$(eval $CMPSTR_XFCE)" == false && "$CMPSTR_XFCE_CHECK" == true ]]
                         then
                             compositor_on
                     fi
             elif [ ! -z "$CMPSTR_DEEPIN_CHECK" ]
                 then
-                    if [[ "$(exec $CMPSTR_DEEPIN)" == "deepin wm" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
+                    if [[ "$(eval $CMPSTR_DEEPIN)" == "deepin wm" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
                         then
                             $CMPSTR_OFF
-                    elif [[ "$(exec $CMPSTR_DEEPIN)" == "deepin metacity" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
+                    elif [[ "$(eval $CMPSTR_DEEPIN)" == "deepin metacity" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
                         then
                             compositor_on
                     fi
@@ -411,29 +415,29 @@ create_shortcut() {
                                 do
                                     if [[ "$shrt_item" == "TERMINAL" ]]
                                         then
-                                            sed -i s/Exec=/Exec=TERMINAL=1' '/g "$DESKF"
+                                            sed -i 's/Exec=/Exec=TERMINAL=1  /g' "$DESKF"
                                     fi
                                     if [[ "$shrt_item" == "HOLD_TERMINAL" ]]
                                         then
-                                            sed -i s/Exec=/Exec=HOLD_TERMINAL=1' '/g "$DESKF"
+                                            sed -i 's/Exec=/Exec=HOLD_TERMINAL=1 /g' "$DESKF"
                                     fi
                                     if [[ "$shrt_item" == "LOG" ]]
                                         then
-                                            sed -i s/Exec=/Exec=LOG=1' '/g "$DESKF"
+                                            sed -i 's/Exec=/Exec=LOG=1 /g' "$DESKF"
                                     fi
                                     if [[ "$shrt_item" == "DEBUG" ]]
                                         then
                                             sed -i 's/\<TERMINAL=1\> //g' "$DESKF"
                                             sed -i 's/\<LOG=1\> //g' "$DESKF"
-                                            sed -i s/Exec=/Exec=DEBUG=1' '/g "$DESKF"
+                                            sed -i 's/Exec=/Exec=DEBUG=1 /g' "$DESKF"
                                     fi
                                     if [[ "$shrt_item" == "UNSET_CMPSTR_SW" ]]
                                         then
-                                            sed -i s/Exec=/Exec=UNSET_CMPSTR_SW=1' '/g "$DESKF"
+                                            sed -i 's/Exec=/Exec=UNSET_CMPSTR_SW=1 /g' "$DESKF"
                                     fi
                                     if [[ "$shrt_item" == "NO_TRAY" ]]
                                         then
-                                            sed -i s/Exec=/Exec=NO_TRAY=1' '/g "$DESKF"
+                                            sed -i 's/Exec=/Exec=NO_TRAY=1 /g' "$DESKF"
                                     fi
                             done)
                     fi
@@ -500,9 +504,9 @@ lu_debug() {
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Operating system ] : $(lsb_release -d|sed s/Description://g)" >> "$TMP_DEB"
+            echo "[ Operating system ] : $(lsb_release -d|sed 's/Description://g')" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ GLIBC version ] : $(ldd --version|grep -ludb_md5sum1 ldd|awk '{print $NF}')" >> "$TMP_DEB"
+            echo "[ GLIBC version ] : $(ldd --version|grep -m1 ldd|awk '{print $NF}')" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Desktop Environment ] : $XDG_CURRENT_DESKTOP - $DESKTOP_SESSION" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
@@ -558,11 +562,12 @@ lu_debug() {
                     cat "${WINEPREFIX}/winetricks.log" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
-            echo "[ Network status ] : $(ping -4 -q -c1 -W0.5 google.com &>/dev/null && echo ONLINE || echo OFFLINE)" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            if [ ! -z "$dxvk_nvapi_version" ]
+            if [[ ! -z "$dxvk" && "$dxvk" == true ]]
                 then
-                    echo "[ DXVK-NVAPI version ] : $dxvk_nvapi_version" >> "$TMP_DEB"
+                    echo "[ DXVK ] : ON" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                else
+                    echo "[ DXVK ] : OFF" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
             if [ ! -z "$dxvk_version" ]
@@ -570,9 +575,38 @@ lu_debug() {
                     echo "[ DXVK version ] : $dxvk_version" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
+            if [[ ! -z "$vkd3d" && "$vkd3d" == true ]]
+                then
+                    echo "[ VKD3D ] : ON" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                else
+                    echo "[ VKD3D ] : OFF" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
             if [ ! -z "$vkd3d_version" ]
                 then
                     echo "[ VKD3D version ] : $vkd3d_version" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            if [[ ! -z "$dxvk_nvapi" && "$dxvk_nvapi" == true ]]
+                then
+                    echo "[ DXVK-NVAPI ] : ON" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                else
+                    echo "[ DXVK-NVAPI ] : OFF" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            if [ ! -z "$dxvk_nvapi_version" ]
+                then
+                    echo "[ DXVK-NVAPI version ] : $dxvk_nvapi_version" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            if [[ ! -z "$d3d_extras" && "$d3d_extras" == true ]]
+                then
+                    echo "[ D3D EXTRAS ] : ON" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                else
+                    echo "[ D3D EXTRAS ] : OFF" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
             if [ ! -z "$d3d_extras_version" ]
@@ -580,6 +614,29 @@ lu_debug() {
                     echo "[ D3D EXTRAS version ] : $d3d_extras_version" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
+            if [[ ! -z "$dgvoodoo2" && "$dgvoodoo2" == true ]]
+                then
+                    echo "[ DGVOODOO2 ] : ON" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                else
+                    echo "[ DGVOODOO2 ] : OFF" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            if [ ! -z "$dgvoodoo2_version" ]
+                then
+                    echo "[ DGVOODOO2 version ] : $dgvoodoo2_version" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            if [[ ! -z "$battleye" && "$battleye" == true ]]
+                then
+                    echo "[ PROTON BATTLEYE ] : ON" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                else
+                    echo "[ PROTON BATTLEYE ] : OFF" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            echo "[ Network status ] : $(ping -4 -q -c1 -W0.5 google.com &>/dev/null && echo ONLINE || echo OFFLINE)" >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo " -------------------------------------------" >> "$TMP_DEB"
             echo "|[             Starting logging            ]|" >> "$TMP_DEB"
             echo " -------------------------------------------" >> "$TMP_DEB"
@@ -629,6 +686,7 @@ lu_prerun() {
             if [ -z "$EXE_PATH" ]
                 then
                     export EXE_PATH="$(cd "$(dirname "$LU_EXE")" >/dev/null 2>&1 && pwd)"
+                    export EXE_DIR="$(grep -o '[^/]*$' <<< "$EXE_PATH")"
                     cd "$EXE_PATH"
                     if [ "$LOG" == 1 ]
                         then
@@ -730,8 +788,8 @@ lu_run() {
         $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" $EXE_ARG
         compositor_sw 2>/dev/null
     fi
-    rm -rf "$TMP_DEB" "$TMP_OUT"
-    exe_is_death; check_exe_pids; check_tray_pid
+    rm -rf "$TMP_DEB" "$TMP_OUT" /tmp/*$BASHPID
+    exe_is_death; check_exes; check_tray
     if [[ -z "$EXE_PIDS" && ! -z "$TRAY_PID" && -z "$FORCE_TRAY" ]]
         then
             lu_killtray
@@ -898,11 +956,11 @@ winetricks() {
                 else
                     echo -e "$RED[!]Winetricks not found in you system[!]$RESETCOLOR"
                     echo -e "${RED}Using LUTRIS winetricks$RESETCOLOR"
-                    "$LU_DIR/runtime/winetricks/winetricks" "$@"
+                    "$LU_RUNTIME/winetricks/winetricks" "$@"
             fi
         else
             echo -e "${RED}Using LUTRIS winetricks$RESETCOLOR"
-            "$LU_DIR/runtime/winetricks/winetricks" "$@"
+            "$LU_RUNTIME/winetricks/winetricks" "$@"
     fi
 }
 
@@ -911,27 +969,34 @@ lu_openpfx() {
 }
 
 lu_exit() {
-    FORCE_EXIT=1
-    pkill zenity
-    lu_killexe
-    lu_killwine
-    lu_killtray
-    sleep 2
-    pkill lutris-wine
-    check_luwine_pid; check_tray_pid; check_wine_pids; check_exe_pids
-    if [[ -z "$LU_WINE_PID" && -z "$WINE_PIDS" && -z "$EXE_PIDS" && -z "$TRAY_PID" ]]
+    check_tray; check_wine_pids; check_exes
+    if [[ ! -z "$WINE_PIDS" || ! -z "$EXE_PIDS" || ! -z "$TRAY_PID" ]]
         then
-            echo -e "$RED[!]Lutris Wine successfully killed[!]$RESETCOLOR"
-            zenity --info --title "Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &>/dev/null &
+            FORCE_EXIT=1
+            lu_killtray
+            pkill zenity
+            lu_killexe
+            lu_killwine
+            sleep 2
+            pkill lutris-wine
+            check_luwine_pid; check_tray; check_wine_pids; check_exes
+            if [[ -z "$LU_WINE_PID" && -z "$WINE_PIDS" && -z "$EXE_PIDS" && -z "$TRAY_PID" ]]
+                then
+                    echo -e "$RED[!]Lutris Wine successfully killed[!]$RESETCOLOR"
+                    zenity --info --title "Lutris Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &>/dev/null &
+                else
+                    echo -e "$RED[!]Lutris Wine not killed[!]$RESETCOLOR"
+                    zenity --error --title "Lutris Wine Killer" --text "Lutris Wine not killed!" --no-wrap &>/dev/null &
+            fi
         else
-            echo -e "$RED[!]Lutris Wine not killed[!]$RESETCOLOR"
-            zenity --info --title "Wine Killer" --text "Lutris Wine not killed!" --no-wrap &>/dev/null &
+            echo -e "$RED[!]Lutris Wine not runing[!]$RESETCOLOR"
+            zenity --error --title "Lutris Wine Killer" --text "Lutris Wine not runing!" --no-wrap &>/dev/null &
     fi
 }
 
 lu_killtray() {
-    check_tray_pid
-    check_exe_pids
+    check_tray
+    check_exes
     if [ ! -z "$FORCE_EXIT" ]
         then
             kill -9 "$TRAY_PID" 2>/dev/null
@@ -951,7 +1016,7 @@ lu_killtray() {
             fi
     else
         echo -e "$RED[!]Lutris Wine not runing in tray[!]$RESETCOLOR"
-        zenity --error --text "Lutris Wine not runing in tray!" --no-wrap &>/dev/null &
+        zenity --error --title "Tray Killer" --text "Lutris Wine not runing in tray!" --no-wrap &>/dev/null &
     fi
 }
 
@@ -967,12 +1032,12 @@ lu_killwine() {
             zenity --info --title "Wine Killer" --text "Wine processes successfully killed!" --no-wrap &>/dev/null &
     else
         echo -e "$RED[!]Wine processes not found[!]$RESETCOLOR"
-        zenity --error --text "Wine processes not found!" --no-wrap &>/dev/null &
+        zenity --error --title "Wine Killer" --text "Wine processes not found!" --no-wrap &>/dev/null &
     fi
 }
 
 lu_killexe() {
-    check_exe_pids
+    check_exes
     if [ ! -z "$FORCE_EXIT" ]
         then
             kill -9 $EXE_PIDS 2>/dev/null
@@ -980,7 +1045,7 @@ lu_killexe() {
         then
             kill -9 $EXE_PIDS 2>/dev/null
             echo -e "$RED[!]Wine EXE processes successfully killed[!]$RESETCOLOR"
-            zenity --info --text "Wine EXE processes successfully killed!" --no-wrap &>/dev/null &
+            zenity --info --title "EXE Killer" --text "Wine EXE processes successfully killed!" --no-wrap &>/dev/null &
     else
         echo -e "$RED[!]Wine EXE processes not found[!]$RESETCOLOR"
         zenity --error --title "EXE Killer" --text "Wine EXE processes not found!" --no-wrap &>/dev/null &
@@ -1113,7 +1178,7 @@ lu_explorer() {
 
 lu_help() {
     echo -e "
-        ${GREEN}Lutris Wine ${RED}v${LU_WINE_VERSION} ${GREEN}by VHSgunzo
+        ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by VHSgunzo
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
             $RED└──╼ \$$GREEN lutris-wine $BLUE{lutris-wine argument} ${RED}blabla.exe $BLUE{exe arguments}
@@ -1164,17 +1229,42 @@ lu_help() {
         -tray {noclose}       Open Lutris Wine in tray\n \
         -help                          Show this usage info\n \
         -version                    Show Lutris Wine version\n\n \
-        Lutris Wine v${LU_WINE_VERSION} by VHSgunzo \
+        Lutris Wine v${LW_VERSION} by VHSgunzo \
         " --no-wrap &>/dev/null &
 }
 
 lu_version() {
-    echo -e "${GREEN}Lutris Wine ${RED}v${LU_WINE_VERSION} ${GREEN}by VHSgunzo$RESETCOLOR"
-    zenity --info --title "Version info" --text "Lutris Wine v${LU_WINE_VERSION} by VHSgunzo" --no-wrap &>/dev/null &
+    echo -e "${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by VHSgunzo$RESETCOLOR"
+    if [ ! -z "$dxvk_version" ]
+        then
+            export DXVK_VER="[ DXVK ]       : $dxvk_version\n"
+            echo -en "$DXVK_VER"
+    fi
+    if [ ! -z "$vkd3d_version" ]
+        then
+            export VKD3D_VER="[ VKD3D ]      : $vkd3d_version\n"
+            echo -en "$VKD3D_VER"
+    fi
+    if [ ! -z "$dxvk_nvapi_version" ]
+        then
+            export DXVK_NVAPI_VER="[ DXVK-NVAPI ] : $dxvk_nvapi_version\n"
+            echo -en "$DXVK_NVAPI_VER"
+    fi
+    if [ ! -z "$d3d_extras_version" ]
+        then
+            export D3DEXTRAS_VER="[ D3D EXTRAS ] : $d3d_extras_version\n"
+            echo -en "$D3DEXTRAS_VER"
+    fi
+    if [ ! -z "$dgvoodoo2_version" ]
+        then
+            export DGVOODOO2_VER="[ DGVOODOO2 ]  : $dgvoodoo2_version\n"
+            echo -en "$DGVOODOO2_VER"
+    fi
+    zenity --info --title "Version info" --text "Lutris Wine v${LW_VERSION} by VHSgunzo\n\n${DXVK_VER}${VKD3D_VER}${DXVK_NVAPI_VER}${D3DEXTRAS_VER}${DGVOODOO2_VER}" --no-wrap &>/dev/null &
 }
 
 lu_tray() {
-    check_tray_pid
+    check_tray
     if [[ -z "$TRAY_PID" && "$NO_TRAY" != 1 ]]
         then
             yad --notification --no-middle --text="Lutris Wine" \
@@ -1226,7 +1316,7 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         fi
         check_compositor 2>/dev/null
         export $(yaml_parser "$LU_WINE_CONF"|sed "s/wine-//g"|sed "s/system-//g"|sed "s/env-//g")
-        wdllover_upd "$(echo -n "$(sed -n  '/\(^  overrides\)/,$p' "$LU_WINE_CONF"|grep "    "|sed 's/^ *//g'|tr ':' '='|sed "s/ //g"|sed "s/''//g")"|tr "\n" ";")"
+        wdllover_upd "$(echo -n "$(sed -n  '/\(^  overrides\)/,$p' "$LU_WINE_CONF"|grep "    "|sed 's/^ *//g'|tr ':' '='|sed 's/ //g'|sed "s/''//g")"|tr "\n" ";")"
         export WINE_MONO_OVERRIDES="Microsoft.Xna.Framework.*,Gac=n"
         export WINE_IN_USE="$version"
         export WINEDIR="$LU_DIR/runners/wine/$WINE_IN_USE"
@@ -1281,19 +1371,28 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
                 export __GL_SHADER_DISK_CACHE_SIZE=1000000000
                 wdllover_upd "d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi=n"
         fi
+        if [[ ! -z "$vkd3d" && "$vkd3d" == true ]]
+            then
+                wdllover_upd "d3d12=n"
+        fi
         if [[ ! -z "$dxvk_nvapi" && "$dxvk_nvapi" == true ]]
             then
                 wdllover_upd "nvapi,nvapi64,nvml=n;nvcuda=b"
                 export DXVK_NVAPIHACK="0"
 
         fi
-        if [[ ! -z "$vkd3d" && "$vkd3d" == true ]]
-            then
-                wdllover_upd "d3d12=n"
-        fi
         if [[ ! -z "$d3d_extras" && "$d3d_extras" == true ]]
             then
                 wdllover_upd "d3dcompiler_42,d3dcompiler_43,d3dcompiler_46,d3dcompiler_47,d3dx10_33,d3dx10_34,d3dx10_35,d3dx10_36,d3dx10_37,d3dx10_38,d3dx10_39,d3dx10_40,d3dx10_41,d3dx10_42,d3dx10_43,d3dx10,d3dx11_42,d3dx11_43,d3dx9_24,d3dx9_25,d3dx9_26,d3dx9_27,d3dx9_28,d3dx9_29,d3dx9_30,d3dx9_31,d3dx9_32,d3dx9_33,d3dx9_34,d3dx9_35,d3dx9_36,d3dx9_37,d3dx9_38,d3dx9_39,d3dx9_40,d3dx9_41,d3dx9_42,d3dx9_43=n"
+        fi
+        if [[ ! -z "$dgvoodoo2" && "$dgvoodoo2" == true ]]
+            then
+                true
+        fi
+        if [[ ! -z "$battleye" && "$battleye" == true ]]
+            then
+                export PROTON_BATTLEYE_RUNTIME="$LU_RUNTIME/battleye_runtime"
+
         fi
         if [[ ! -z "$prime" && "$prime" == true ]]
             then
@@ -1304,12 +1403,9 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         if [[ ! -z "$esync" && "$esync" == true ]]
             then
                 export WINEESYNC="1"
-                export WINEFSYNC="0"
-                export WINEFSYNC_FUTEX2="0"
         fi
         if [[ ! -z "$fsync" && "$fsync" == true ]]
             then
-                export WINEESYNC="0"
                 export WINEFSYNC="1"
                 export WINEFSYNC_FUTEX2="1"
         fi
@@ -1320,10 +1416,21 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         fi
         if [[ ! -z "$use_us_layout" && "$use_us_layout" == true ]]
             then
-                export LU_XKBD="$(setxkbmap -query|grep -w ru|awk '{print($2)}')"
-                if [ ! -z $LU_XKBD ]
+                export SYS_LYT="setxkbmap -query|grep layout|awk '"'{print$2}'"'"
+                export SYS_OTHLYT="$(eval $SYS_LYT|sed 's/us//g'|sed 's/,//g')"
+                export CHK_US="$SYS_LYT|cut -d',' -f1"
+                export CHK_LYT="xset -q|grep LED|grep -o '00000002'"
+                if [ "$(echo "$SYS_OTHLYT"|wc -m)" == "3" ]
                     then
-                        setxkbmap us,ru
+                        if [[ "$(eval $CHK_US)" == "us" && ! -z "$(eval $CHK_LYT)" ]]
+                            then :
+                        elif [[ "$(eval $CHK_US)" != "us" && ! -z "$(eval $CHK_LYT)" ]]
+                            then
+                                setxkbmap us,$SYS_OTHLYT
+                        elif [[ "$(eval $CHK_US)" == "us" && -z "$(eval $CHK_LYT)" ]]
+                            then
+                                setxkbmap $SYS_OTHLYT,us
+                        fi
                 fi
         fi
         if [[ ! -z "$disable_runtime" && "$disable_runtime" == true ]]
@@ -1332,9 +1439,9 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
             else
                 if [[ ! -z "$prefer_libs" && "$prefer_libs" == true ]]
                     then
-                        export LD_LIBRARY_PATH="$WINEDIR/lib:$WINEDIR/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64:/usr/lib/libfakeroot:/usr/lib64:$LU_DIR/runtime/Ubuntu-18.04-i686:$LU_DIR/runtime/steam/i386/lib/i386-linux-gnu:$LU_DIR/runtime/steam/i386/lib:$LU_DIR/runtime/steam/i386/usr/lib/i386-linux-gnu:$LU_DIR/runtime/steam/i386/usr/lib:$LU_DIR/runtime/Ubuntu-18.04-x86_64:$LU_DIR/runtime/steam/amd64/lib/x86_64-linux-gnu:$LU_DIR/runtime/steam/amd64/lib:$LU_DIR/runtime/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_DIR/runtime/steam/amd64/usr/lib::$LD_LIBRARY_PATH"
+                        export LD_LIBRARY_PATH="$WINEDIR/lib:$WINEDIR/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64:/usr/lib/libfakeroot:/usr/lib64:$LU_RUNTIME/Ubuntu-18.04-i686:$LU_RUNTIME/steam/i386/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/lib:$LU_RUNTIME/steam/i386/usr/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/usr/lib:$LU_RUNTIME/Ubuntu-18.04-x86_64:$LU_RUNTIME/steam/amd64/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/lib:$LU_RUNTIME/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/usr/lib::$LD_LIBRARY_PATH"
                     else
-                        export LD_LIBRARY_PATH="$LU_DIR/runtime/Ubuntu-18.04-i686:$LU_DIR/runtime/steam/i386/lib/i386-linux-gnu:$LU_DIR/runtime/steam/i386/lib:$LU_DIR/runtime/steam/i386/usr/lib/i386-linux-gnu:$LU_DIR/runtime/steam/i386/usr/lib:$LU_DIR/runtime/Ubuntu-18.04-x86_64:$LU_DIR/runtime/steam/amd64/lib/x86_64-linux-gnu:$LU_DIR/runtime/steam/amd64/lib:$LU_DIR/runtime/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_DIR/runtime/steam/amd64/usr/lib:$LD_LIBRARY_PATH"
+                        export LD_LIBRARY_PATH="$LU_RUNTIME/Ubuntu-18.04-i686:$LU_RUNTIME/steam/i386/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/lib:$LU_RUNTIME/steam/i386/usr/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/usr/lib:$LU_RUNTIME/Ubuntu-18.04-x86_64:$LU_RUNTIME/steam/amd64/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/lib:$LU_RUNTIME/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/usr/lib:$LD_LIBRARY_PATH"
                 fi
         fi
         if [ ! -z "$LD_LIBRARY_PATH" ]
@@ -1361,7 +1468,37 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
                 "$WINE" winecfg -v $(echo "win$WIN_VER"|sed 's/.*/\L&/')
                 echo "WINDOWS VERSION SET TO WINDOWS $WIN_VER"
         fi
-        export -f print_var yaml_parser check_tray_pid check_wine_pids check_exe_pids check_compositor compositor_on \
+        if [[ ! -z "$terminal" && "$terminal" == true ]]
+            then
+                export TERMINAL=1
+
+        fi
+        if [[ ! -z "$pulse_latency" && "$pulse_latency" == true ]]
+            then
+                export PULSE_LATENCY_MSEC="60"
+
+        fi
+        if [[ ! -z "$reset_pulse" && "$reset_pulse" == true ]]
+            then
+                if [[ ! -z "$(pgrep pulseeffects)" && ! -z "$(pgrep pulseaudio)" ]]
+                    then
+                        pkill -15 pulseeffects
+                        pulseaudio -k
+                        if [ -z "$(pgrep pulseaudio)" ]
+                            then
+                                pulseaudio -D
+                        fi
+                        pulseeffects --gapplication-service
+                elif [ ! -z "$(pgrep pulseaudio)" ]
+                    then
+                        pulseaudio -k
+                        if [ -z "$(pgrep pulseaudio)" ]
+                            then
+                                pulseaudio -D
+                        fi
+                fi
+        fi
+        export -f print_var yaml_parser check_tray check_wine_pids check_exes check_compositor compositor_on \
         compositor_sw exe_is_death wdllover_upd reg_edit exe2png add_to_lutris create_shortcut lu_debug clear_log \
         dis_debug_msg dis_cmd_msg lu_prerun lu_run lu_start lu_cmd lu_shell lu_regedit lu_control \
         lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_killwine lu_killexe lu_clearpfx lu_rmapp \
