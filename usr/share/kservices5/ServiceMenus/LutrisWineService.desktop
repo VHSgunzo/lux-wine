@@ -40,6 +40,12 @@ Icon=/usr/share/lutris/media/default_icon.png
 Name=Task Manager
 Name[ru_RU]=Диспетчер задач
 
+[Desktop Action winemgr]
+Exec=lutris-wine -winemgr
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Wine manager
+Name[ru_RU]=Wine менеджер
+
 [Desktop Action uninstaller]
 Exec=lutris-wine -uninstaller
 Icon=/usr/share/lutris/media/default_icon.png
@@ -110,7 +116,7 @@ Name[ru_RU]=Удалить Lutris Wine ярлыки из меню
 Exec=lutris-wine -tray noclose
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Lutris Wine tray
-Name[ru_RU]=Lutris Wine трей
+Name[ru_RU]=Lutris Wine трэй
 
 [Desktop Action exit]
 Exec=lutris-wine -exit
@@ -120,7 +126,7 @@ Name[ru_RU]=Закрыть Lutris Wine
 
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine

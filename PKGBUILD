@@ -1,6 +1,6 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname=lutris-wine-git
-pkgver=0.42
+pkgver=0.43
 pkgrel=1
 pkgdesc='Lutris Wine Runner as system Wine and even better'
 arch=('any')
@@ -37,6 +37,7 @@ package() {
     install -Dm644 usr/share/applications/LutrisWine/shortcut.desktop ${pkgdir}/usr/share/applications/LutrisWine/shortcut.desktop
     install -Dm644 usr/share/applications/LutrisWine/addtolu.desktop ${pkgdir}/usr/share/applications/LutrisWine/addtolu.desktop
     install -Dm644 usr/share/applications/LutrisWine/taskmgr.desktop ${pkgdir}/usr/share/applications/LutrisWine/taskmgr.desktop
+    install -Dm644 usr/share/applications/LutrisWine/winemgr.desktop ${pkgdir}/usr/share/applications/LutrisWine/winemgr.desktop
     install -Dm644 usr/share/applications/LutrisWine/uninstaller.desktop ${pkgdir}/usr/share/applications/LutrisWine/uninstaller.desktop
     install -Dm644 usr/share/applications/LutrisWine/winecfg.desktop ${pkgdir}/usr/share/applications/LutrisWine/winecfg.desktop
     install -Dm644 usr/share/applications/LutrisWine/winetricks.desktop ${pkgdir}/usr/share/applications/LutrisWine/winetricks.desktop

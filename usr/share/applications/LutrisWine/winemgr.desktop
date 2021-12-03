@@ -1,9 +1,9 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -tray noclose
+Exec=lutris-wine -winemgr
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Lutris Wine tray
-Name[ru_RU]=Lutris Wine трэй
+Name=Wine manager
+Name[ru_RU]=Wine менеджер
 NoDisplay=false
 StartupNotify=true
 Terminal=0
