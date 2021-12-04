@@ -1,6 +1,6 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname=lutris-wine-git
-pkgver=0.43
+pkgver=0.44
 pkgrel=1
 pkgdesc='Lutris Wine Runner as system Wine and even better'
 arch=('any')
@@ -38,6 +38,7 @@ package() {
     install -Dm644 usr/share/applications/LutrisWine/addtolu.desktop ${pkgdir}/usr/share/applications/LutrisWine/addtolu.desktop
     install -Dm644 usr/share/applications/LutrisWine/taskmgr.desktop ${pkgdir}/usr/share/applications/LutrisWine/taskmgr.desktop
     install -Dm644 usr/share/applications/LutrisWine/winemgr.desktop ${pkgdir}/usr/share/applications/LutrisWine/winemgr.desktop
+    install -Dm644 usr/share/applications/LutrisWine/themesmgr.desktop ${pkgdir}/usr/share/applications/LutrisWine/themesmgr.desktop
     install -Dm644 usr/share/applications/LutrisWine/uninstaller.desktop ${pkgdir}/usr/share/applications/LutrisWine/uninstaller.desktop
     install -Dm644 usr/share/applications/LutrisWine/winecfg.desktop ${pkgdir}/usr/share/applications/LutrisWine/winecfg.desktop
     install -Dm644 usr/share/applications/LutrisWine/winetricks.desktop ${pkgdir}/usr/share/applications/LutrisWine/winetricks.desktop
@@ -48,8 +49,9 @@ package() {
     install -Dm644 usr/share/desktop-directories/LutrisWineApp.directory ${pkgdir}/usr/share/desktop-directories/LutrisWineApp.directory
     install -Dm644 usr/share/desktop-directories/LutrisWine.directory ${pkgdir}/usr/share/desktop-directories/LutrisWine.directory
     install -Dm644 usr/share/kservices5/ServiceMenus/LutrisWineService.desktop ${pkgdir}/usr/share/kservices5/ServiceMenus/LutrisWineService.desktop
-    install -Dm644 usr/share/lutris-wine/themes/breeze_dark.reg ${pkgdir}/usr/share/lutris-wine/themes/breeze_dark.reg
-    install -Dm644 usr/share/lutris-wine/themes/win10_black.reg ${pkgdir}/usr/share/lutris-wine/themes/win10_black.reg
-    install -Dm644 usr/share/lutris-wine/themes/wine_dark.reg ${pkgdir}/usr/share/lutris-wine/themes/wine_dark.reg
+    install -Dm644 "usr/share/lutris-wine/themes/DEFAULT.reg" "${pkgdir}/usr/share/lutris-wine/themes/DEFAULT.reg"
+    install -Dm644 "usr/share/lutris-wine/themes/Breeze Dark.reg" "${pkgdir}/usr/share/lutris-wine/themes/Breeze Dark.reg"
+    install -Dm644 "usr/share/lutris-wine/themes/Win10 Black.reg" "${pkgdir}/usr/share/lutris-wine/themes/Win10 Black.reg"
+    install -Dm644 "usr/share/lutris-wine/themes/Wine Dark.reg" "${pkgdir}/usr/share/lutris-wine/themes/Wine Dark.reg"
     install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/lutris-wine/LICENSE
 }
