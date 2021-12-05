@@ -1,6 +1,6 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname=lutris-wine-git
-pkgver=0.44
+pkgver=0.45
 pkgrel=1
 pkgdesc='Lutris Wine Runner as system Wine and even better'
 arch=('any')
@@ -46,6 +46,8 @@ package() {
     install -Dm644 usr/share/applications/LutrisWine/killexe.desktop ${pkgdir}/usr/share/applications/LutrisWine/killexe.desktop
     install -Dm644 usr/share/applications/LutrisWine/tray.desktop ${pkgdir}/usr/share/applications/LutrisWine/tray.desktop
     install -Dm644 usr/share/applications/LutrisWine/exit.desktop ${pkgdir}/usr/share/applications/LutrisWine/exit.desktop
+    install -Dm644 usr/share/applications/LutrisWine/killshell.desktop ${pkgdir}/usr/share/applications/LutrisWine/killshell.desktop
+    install -Dm644 usr/share/applications/LutrisWine/setwine.desktop ${pkgdir}/usr/share/applications/LutrisWine/setwine.desktop
     install -Dm644 usr/share/desktop-directories/LutrisWineApp.directory ${pkgdir}/usr/share/desktop-directories/LutrisWineApp.directory
     install -Dm644 usr/share/desktop-directories/LutrisWine.directory ${pkgdir}/usr/share/desktop-directories/LutrisWine.directory
     install -Dm644 usr/share/kservices5/ServiceMenus/LutrisWineService.desktop ${pkgdir}/usr/share/kservices5/ServiceMenus/LutrisWineService.desktop

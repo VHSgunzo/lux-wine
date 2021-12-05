@@ -1,6 +1,6 @@
 #!/bin/bash
 ###VHSgunzo
-export LW_VERSION=0.44
+export LW_VERSION=0.45
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -15,6 +15,7 @@ export RESETCOLOR='\033[1;00m'
 #export HOLD_TERMINAL=1
 #export UNSET_CMPSTR_SW=1
 #export EXE_ARG=""
+export MUST_HAVE_DLL="mfc42 vcrun2019 dotnet46"
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
@@ -58,13 +59,13 @@ print_info() {
 
 check_lupid() {
     unset LU_PID
-    export LU_PID="$(pgrep -a python|grep lutris|awk '{print$1}')"
+    export LU_PID="$(pgrep -fa python|grep lutris|awk '{print$1}')"
 }
 
 check_tray() {
-    unset TRAY_PID FORCE_TRAY
-    CHK_TRAY_PID="$(pgrep -a yad|grep "\-\-notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
-    CHK_FORCE_TRAY="$(pgrep -a "lutris-wine"|grep -o "noclose")"
+    unset TRAY_PID FORCE_TRAY CHK_TRAY_PID CHK_FORCE_TRAY
+    CHK_TRAY_PID="$(pgrep -fa yad|grep "\-\-notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
+    CHK_FORCE_TRAY="$(pgrep -fa "lutris-wine"|grep -o "noclose")"
     if [ ! -z "$CHK_TRAY_PID" ]
         then
             export TRAY_PID="$CHK_TRAY_PID"
@@ -76,8 +77,8 @@ check_tray() {
 }
 
 check_wine_pids() {
-    unset WINE_PIDS
-    CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+    unset WINE_PIDS CHK_WINE_PIDS
+    export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
     if [ ! -z "$CHK_WINE_PIDS" ]
         then
             export WINE_PIDS="$CHK_WINE_PIDS"
@@ -85,12 +86,25 @@ check_wine_pids() {
 }
 
 check_luwine_pid() {
-    unset LU_WINE_PID
+    unset LU_WINE_PID CHK_LU_WINE_PID
     CHK_LU_WINE_PID="$(pgrep lutris-wine)"
     if [ ! -z "$CHK_LU_WINE_PID" ]
         then
             export LU_WINE_PID="$CHK_LU_WINE_PID"
     fi
+}
+
+check_luwine_sh_pid() {
+    unset LW_SH_PID CHK_LW_SH_PID CHK_LW_SH_PIDS
+    export CHK_LW_SH_PIDS="$(pgrep -fa lutris-wine|grep "\-shell"|awk '{print$1}' 2>/dev/null)"
+    for lwshpid in $CHK_LW_SH_PIDS
+        do
+            export CHK_LW_SH_PID="$(pgrep -faP "$lwshpid"|grep "$terminal_app"|awk '{print$1}' 2>/dev/null)"
+            if [ ! -z "$CHK_LW_SH_PID" ]
+                then
+                    export LW_SH_PID="$CHK_LW_SH_PID"
+            fi
+    done
 }
 
 check_exes() {
@@ -106,27 +120,11 @@ check_exes() {
     fi
 }
 
-check_luconf() {
-    while true
-        do
-            lu_wine_conf_sum1=$(md5sum "$LU_WINE_CONF")
-            sleep 2
-            lu_wine_conf_sum2=$(md5sum "$LU_WINE_CONF")
-            if [ "$lu_wine_conf_sum1" != "$lu_wine_conf_sum2" ]
-                then
-                    FORCE_EXIT=1
-                    lu_killtray
-                    if [[ ! -z "$FORCE_TRAY" ]]
-                        then
-                            lutris-wine -tray noclose
-                        else
-                            lutris-wine -tray
-                    fi
-                    break
-                else
-                    continue
-            fi
-    done
+noclosetray() {
+    if [[ ! -z "$FORCE_TRAY" ]]
+        then
+            while : ; do sleep 60 ; done
+    fi
 }
 
 check_compositor() {
@@ -157,6 +155,46 @@ check_compositor() {
     else
         export CMPSTR_NULL=""
     fi
+}
+
+create_new_dir() {
+    if [ ! -d "$1" ]
+        then
+            mkdir -p "$1"
+    fi
+}
+
+check_symlink() {
+    CHK_SLK_FILE="$(file "$1")"
+    if [ ! -z "$(echo "$CHK_SLK_FILE"|grep -v "broken"|grep "symbolic link to"|awk '{print $1}')" ]
+        then
+            return 0
+    elif [ ! -z "$(echo "$CHK_SLK_FILE"|grep "broken symbolic link to"|awk '{print $1}')" ]
+        then
+            print_error "remove broken symlink: $CHK_SLK_FILE"
+            rm -rf "$CHK_SLK_FILE"
+            return 1
+    else
+        return 1
+    fi
+}
+
+check_mono_gecko() {
+    create_new_dir "$LU_RUNTIME/gecko"
+    create_new_dir "$LU_RUNTIME/mono"
+    for mono_gecko in "mono" "gecko"
+        do
+            if [ ! -d "$WINEDIR/share/wine/$mono_gecko" ]
+                then
+                    rm -rf "$WINEDIR/share/wine/$mono_gecko"
+                    ln -sf "$LU_RUNTIME/$mono_gecko" "$WINEDIR/share/wine/"
+            elif ! check_symlink "$WINEDIR/share/wine/$mono_gecko" && [[ -d "$WINEDIR/share/wine/$mono_gecko" ]]
+                then
+                    cp -rf "$WINEDIR/share/wine/$mono_gecko" "$LU_RUNTIME"
+                    rm -rf "$WINEDIR/share/wine/$mono_gecko"
+                    ln -sf "$LU_RUNTIME/$mono_gecko" "$WINEDIR/share/wine/"
+            fi
+    done
 }
 
 try_download() {
@@ -200,36 +238,64 @@ settingbar() {
     zenity --progress --title="Settings..." --text="Updating parameters" --pulsate --auto-close --width=500 --height=90 --no-cancel
 }
 
-compositor_on() {
+shell_is_death() {
     while true
         do
-            check_exes
-            if  [ ! -z "$RUN_EXE" ]
+            check_luwine_sh_pid
+            if  [ ! -z "$LW_SH_PID" ]
                 then
+                    #echo LW_SH_PID=$LW_SH_PID
                     sleep 1
                     continue
                 else
-                    $CMPSTR_ON
                     break
             fi
     done
 }
 
 exe_is_death() {
-    if [[ "$disable_compositor" == false || ! -z "$CMPSTR_NULL" || "$UNSET_CMPSTR_SW" == 1 ]]
-        then
-            while true
-                do
-                    check_exes
-                    if  [ ! -z "$EXE_PIDS" ]
-                        then
-                            sleep 1
-                            continue
-                        else
-                            break
-                    fi
-            done
-    fi
+    while true
+        do
+            check_exes
+            if  [ ! -z "$RUN_EXE" ]
+                then
+                    #echo RUN_EXE=$RUN_EXE
+                    sleep 1
+                    continue
+                else
+                    break
+            fi
+    done
+}
+
+exes_is_death() {
+    while true
+        do
+            check_exes
+            if  [ ! -z "$RUN_EXES" ]
+                then
+                    #echo RUN_EXES=$RUN_EXES
+                    sleep 1
+                    continue
+                else
+                    break
+            fi
+    done
+}
+
+wine_is_death() {
+    while true
+        do
+            check_wine_pids
+            if  [ ! -z "$WINE_PIDS" ]
+                then
+                    #echo WINE_PIDS=$WINE_PIDS
+                    sleep 1
+                    continue
+                else
+                    break
+            fi
+    done
 }
 
 compositor_sw() {
@@ -242,7 +308,10 @@ compositor_sw() {
                             $CMPSTR_OFF
                     elif [[ "$(eval $CMPSTR_PLASMA)" == false && "$CMPSTR_PLASMA_CHECK" == true ]]
                         then
-                            compositor_on
+                            if exes_is_death
+                                then
+                                    $CMPSTR_ON
+                            fi
                     fi
             elif [ ! -z "$CMPSTR_MATE_CHECK" ]
                 then
@@ -251,7 +320,10 @@ compositor_sw() {
                             $CMPSTR_OFF
                     elif [[ "$(eval $CMPSTR_MATE)" == false && "$CMPSTR_MATE_CHECK" == true ]]
                         then
-                            compositor_on
+                            if exes_is_death
+                                then
+                                    $CMPSTR_ON
+                            fi
                     fi
             elif [ ! -z "$CMPSTR_XFCE_CHECK" ]
                 then
@@ -260,7 +332,10 @@ compositor_sw() {
                             $CMPSTR_OFF
                     elif [[ "$(eval $CMPSTR_XFCE)" == false && "$CMPSTR_XFCE_CHECK" == true ]]
                         then
-                            compositor_on
+                            if exes_is_death
+                                then
+                                    $CMPSTR_ON
+                            fi
                     fi
             elif [ ! -z "$CMPSTR_DEEPIN_CHECK" ]
                 then
@@ -269,10 +344,107 @@ compositor_sw() {
                             $CMPSTR_OFF
                     elif [[ "$(eval $CMPSTR_DEEPIN)" == "deepin metacity" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
                         then
-                            compositor_on
+                            if exes_is_death
+                                then
+                                    $CMPSTR_ON
+                            fi
                     fi
             fi
     fi
+}
+
+update_winetricks() {
+    export WTRX_DIR="$LU_RUNTIME/winetricks"
+    WTRX_URL="https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks"
+    WTRX_EXT_VER="$(curl -s --list-only $WTRX_URL|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
+    print_info "Version winetricks on server: $WTRX_EXT_VER"
+    WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
+    print_info "Version winetricks in LUTRIS $WTRX_EXT_VER"
+    if [[ ! -f "$WTRX_DIR/winetricks" && ! -z "$WTRX_EXT_VER" ]] || [[ "$WTRX_INT_VER" != "$WTRX_EXT_VER" && ! -z "$WTRX_EXT_VER" ]]
+        then
+            if try_download "$WTRX_URL" "$WTRX_DIR/winetricks_new"
+                then
+                    mv -f "$WTRX_DIR/winetricks_new" "$WTRX_DIR/winetricks"
+                    WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')" && print_info "Winetricks version in LUTRIS has been updated ($WTRX_EXT_VER)"
+                    chmod u+x "$WTRX_DIR/winetricks"
+            fi
+    fi
+    if  [ -f "$WTRX_DIR/winetricks" ]
+        then
+            sed -i 's/w_metadata vcrun2015 dlls \\/w_metadata !dont_use_2015! dlls \\/' "$WTRX_DIR/winetricks"
+            sed -i 's/w_metadata vcrun2017 dlls \\/w_metadata !dont_use_2017! dlls \\/' "$WTRX_DIR/winetricks"
+            #HOTFIX SHA256SUM FOR VC_RUN2019
+            sed -i 's/vc_redist.x86.exe 1acd8d5ea1cdc3eb2eb4c87be3ab28722d0825c15449e5c9ceef95d897de52fa/vc_redist.x86.exe 80c7969f4e05002a0cd820b746e0acb7406d4b85e52ef096707315b390927824/g' "$WTRX_DIR/winetricks"
+            sed -i 's/vc_redist.x64.exe 003063723b2131da23f40e2063fb79867bae275f7b5c099dbd1792e25845872b/vc_redist.x64.exe 9b9dd72c27ab1db081de56bb7b73bee9a00f60d14ed8e6fde45dab3e619b5f04/g' "$WTRX_DIR/winetricks"
+
+    fi
+}
+
+check_musthave_dll() {
+    if [ ! -z "$MUST_HAVE_DLL" ]
+        then
+            export DLL_INSTALL="$MUST_HAVE_DLL $DLL_INSTALL"
+    fi
+    if [ ! -z "$DLL_INSTALL" ]
+        then
+            export DLL_NEED_INSTALL=""
+            export USE_WT_FROM_DB=0
+            if [ ! -f "$WTRX_LOG" ]
+                then
+                    touch "$WTRX_LOG"
+            fi
+            for need_install_dll_to_pfx in $DLL_INSTALL
+                do
+                    if [[ "$need_install_dll_to_pfx" == "vcrun2015" || "$need_install_dll_to_pfx" == "vcrun2017" ]]
+                        then
+                            need_install_dll_to_pfx="vcrun2019"
+                            sed -i '/vcrun2015/d' "$WTRX_LOG"
+                            sed -i '/vcrun2017/d' "$WTRX_LOG"
+                    elif [ "$need_install_dll_to_pfx" == "vcrun2019" ]
+                        then
+                            sed -i '/vcrun2015/d' "$WTRX_LOG"
+                            sed -i '/vcrun2017/d' "$WTRX_LOG"
+                    fi
+                    grep "$need_install_dll_to_pfx" "$WTRX_LOG" &>/dev/null
+                    if [ "$?" == "1" ]
+                        then
+                            if [ -z "$DLL_NEED_INSTALL" ]
+                                then
+                                    export DLL_NEED_INSTALL="$need_install_dll_to_pfx"
+                                else
+                                    export DLL_NEED_INSTALL="$need_install_dll_to_pfx $DLL_NEED_INSTALL"
+                            fi
+                            export USE_WT_FROM_DB=1
+                    fi
+            done
+            if [ "$USE_WT_FROM_DB" == "1" ]
+                then
+                    export UPDPFX_LOG="$WINEPREFIX/update_pfx.log"
+                    echo "Try to install DLL in prefix: $DLL_NEED_INSTALL" >> "$UPDPFX_LOG"
+                    print_info "Try to install DLL in prefix: $DLL_NEED_INSTALL"
+                    $terminal_app $term_hold -e $SHELL -c "winetricks -q -f -r $DLL_NEED_INSTALL|& tee -a '$UPDPFX_LOG'"
+            fi
+    fi
+}
+
+other_fixes() {
+#fix after installation Origin, for disabled OriginWebHelperService by default
+if [ ! -z "$(cat "$WINEPREFIX/system.reg"|grep -wm 1 "Origin.exe"|awk '{print $1}')" ]
+    then
+        sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg"|grep 'OriginWebHelperService'|awk '{print $1}') + 3)))
+        sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
+fi
+#fix after installation PnkBstr*, for disabled PnkBstr* by default
+for fix_reg in "PnkBstrA.exe" "PnkBstrB.exe"
+    do
+        if [ ! -z "$(cat "$WINEPREFIX/system.reg"|grep -wm 1 "$fix_reg"|awk '{print $1}')" ]
+            then
+                sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg" | grep "$fix_reg" | awk '{print $1}') + 3)))
+                sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
+        fi
+done
+#disabled silent autostart steam
+sed -i '/steam.exe\\" -silent"/d' "$WINEPREFIX/user.reg"
 }
 
 wdllover_upd() {
@@ -608,10 +780,10 @@ lu_debug() {
                     echo "[!]gamemod not found[!]"  >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
-            if [ -f ${WINEPREFIX}/winetricks.log ]
+            if [ -f "$WTRX_LOG" ]
                 then
                     echo "[ Winetricks log ] :" >> "$TMP_DEB"
-                    cat "${WINEPREFIX}/winetricks.log" >> "$TMP_DEB"
+                    cat "$WTRX_LOG" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
             if [[ ! -z "$dxvk" && "$dxvk" == true ]]
@@ -732,6 +904,68 @@ dis_cmd_msg() {
     fi
 }
 
+expluwineconf() {
+    export $(yaml_parser "$LU_WINE_CONF"|sed "s/wine~//g"|sed "s/system~//g"|sed "s/env~//g")
+    export WINE_IN_USE="$version"
+    export WINEDIR="$LU_DIR/runners/wine/$WINE_IN_USE"
+    export WINE="$WINEDIR/bin/wine"
+}
+
+setwine() {
+    if [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]]
+        then
+            print_error "Default WINE not selected!"
+            SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
+            if [ ! -z "$SETWINE" ]
+                then
+                    sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
+                    print_info "WINE $SETWINE select as default!"
+                    expluwineconf
+                else
+                    setwine
+            fi
+    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
+        then
+            print_error "Default WINE not selected!"
+            SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
+            if [ ! -z "$SETWINE" ]
+                then
+                    sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
+                    print_info "WINE $SETWINE select as default!"
+                    expluwineconf
+                else
+                    setwine
+            fi
+    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
+        then
+            export SETWINE="$(ls -1 "$LU_WINE_DIR"|head -1)"
+            sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
+            print_info "WINE $SETWINE select as default!"
+            expluwineconf
+            zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
+    elif [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 || "$SETWINE" == 1 ]]
+        then
+            print_info "Selecting default WINE..."
+            SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
+            if [ ! -z "$SETWINE" ]
+                then
+                    sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
+                    print_info "WINE $SETWINE select as default!"
+                    expluwineconf
+            fi
+    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]]
+        then
+            export SETWINE="$(ls -1 "$LU_WINE_DIR"|head -1)"
+            sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
+            print_info "WINE $SETWINE select as default!"
+            expluwineconf
+            zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
+    fi
+}
+
 lu_prerun() {
     if [ ! -z "$LU_EXE" ]
         then
@@ -781,6 +1015,7 @@ lu_prerun() {
 
 lu_run() {
     lu_tray
+    check_mono_gecko
     if [[ ! -z "$HOLD_TERMINAL" && "$HOLD_TERMINAL" != 0 ]]
         then
             export term_hold="--hold"
@@ -841,10 +1076,15 @@ lu_run() {
         compositor_sw 2>/dev/null
     fi
     rm -rf "$TMP_DEB" "$TMP_OUT" /tmp/*$BASHPID
-    exe_is_death; check_exes; check_tray
-    if [[ -z "$EXE_PIDS" && ! -z "$TRAY_PID" && -z "$FORCE_TRAY" ]]
+    if wine_is_death && shell_is_death
         then
-            lu_killtray
+            check_tray
+            check_wine_pids
+            check_luwine_sh_pid
+            if [[ -z "$WINE_PIDS" && -z "$FORCE_TRAY" && -z "$LW_SH_PID" && ! -z "$TRAY_PID" ]]
+                then
+                    lu_killtray
+            fi
     fi
 }
 
@@ -1022,11 +1262,13 @@ winetricks() {
                 else
                     print_error "Winetricks not found in you system!"
                     print_info "LUTRIS winetricks!"
-                    "$LU_RUNTIME/winetricks/winetricks" "$@"
+                    update_winetricks
+                    "$WTRX_DIR/winetricks" "$@"
             fi
         else
             print_info "Using LUTRIS winetricks!"
-            "$LU_RUNTIME/winetricks/winetricks" "$@"
+            update_winetricks
+            "$WTRX_DIR/winetricks" "$@"
     fi
 }
 
@@ -1035,40 +1277,69 @@ lu_openpfx() {
 }
 
 lu_exit() {
-    check_tray; check_wine_pids; check_exes
-    if [[ ! -z "$WINE_PIDS" || ! -z "$EXE_PIDS" || ! -z "$TRAY_PID" ]]
+    check_tray; check_wine_pids; check_exes; check_luwine_sh_pid
+    if [[ ! -z "$WINE_PIDS" || ! -z "$EXE_PIDS" || ! -z "$TRAY_PID" || ! -z "$LW_SH_PID" ]]
         then
             FORCE_EXIT=1
             lu_killtray
-            pkill zenity
+            lu_killshell
             lu_killexe
             lu_killwine
+            print_info "Lutris Wine successfully killed!"
+            zenity --info --title "Lutris Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &>/dev/null &
             sleep 2
             pkill lutris-wine
-            check_luwine_pid; check_tray; check_wine_pids; check_exes
-            if [[ -z "$LU_WINE_PID" && -z "$WINE_PIDS" && -z "$EXE_PIDS" && -z "$TRAY_PID" ]]
-                then
-                    print_info "Lutris Wine successfully killed!"
-                    zenity --info --title "Lutris Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &>/dev/null &
-                else
-                    print_error "Lutris Wine not killed!"
-                    zenity --error --title "Lutris Wine Killer" --text "Lutris Wine not killed!" --no-wrap &>/dev/null &
-            fi
         else
             print_error "Lutris Wine not runing!"
             zenity --error --title "Lutris Wine Killer" --text "Lutris Wine not runing!" --no-wrap &>/dev/null &
     fi
 }
 
+lu_killshell() {
+    check_luwine_sh_pid
+    if [ ! -z "$FORCE_EXIT" ]
+        then
+            while true
+                do
+                    check_luwine_sh_pid
+                    if  [ ! -z "$LW_SH_PID" ]
+                        then
+                            kill -9 "$LW_SH_PID" 2>/dev/null
+                        else
+                            break
+                    fi
+            done
+    elif [ ! -z "$LW_SH_PID" ]
+        then
+            while true
+                do
+                    check_luwine_sh_pid
+                    if  [ ! -z "$LW_SH_PID" ]
+                        then
+                            kill -9 "$LW_SH_PID" 2>/dev/null
+                        else
+                            break
+                    fi
+            done
+            print_info "Lutris Wine SHELL processes successfully killed!"
+            zenity --info --title "SHELL Killer" --text "Lutris Wine SHELL processes successfully killed!" --no-wrap &>/dev/null &
+    else
+        print_error "Lutris Wine SHELL processes not found!"
+        zenity --error --title "SHELL Killer" --text "Lutris Wine SHELL processes not found!" --no-wrap &>/dev/null &
+    fi
+}
+
 lu_killtray() {
     check_tray
     check_exes
+    check_wine_pids
+    check_luwine_sh_pid
     if [ ! -z "$FORCE_EXIT" ]
         then
             kill -9 "$TRAY_PID" 2>/dev/null
     elif [ ! -z "$TRAY_PID" ]
         then
-            if [ ! -z "$EXE_PIDS" ]
+            if [[ ! -z "$EXE_PIDS" || ! -z "$WINE_PIDS" || ! -z "$LW_SH_PID" ]]
                 then
                     zenity --question --title "Tray Killer" --text "Incomplete processes found! \nClosing the tray will likely kill them or cause operational errors.\nAre you sure you want to close the tray?" --no-wrap &>/dev/null
                     if [ $? -eq "0" ]
@@ -1094,7 +1365,7 @@ lu_killwine() {
     elif [[ ! -z "$WINE_PIDS" ]]
         then
             kill -9 $WINE_PIDS 2>/dev/null
-            print_error "Wine processes successfully killed!"
+            print_info "Wine processes successfully killed!"
             zenity --info --title "Wine Killer" --text "Wine processes successfully killed!" --no-wrap &>/dev/null &
     else
         print_error "Wine processes not found!"
@@ -1122,36 +1393,36 @@ lu_clearpfx() {
     zenity --question --title "Clearing prefix" --text "Do you really want to clear prefix ["$WINEPREFIX"] ?" --no-wrap &>/dev/null
     if [ $? -eq "0" ]
         then
-            rm -rfv "${WINEPREFIX}/registry_*"
-            rm -rfv "${WINEPREFIX}/*.reg"
-            rm -rfv "${WINEPREFIX}/winetricks.log"
-            rm -rfv "${WINEPREFIX}/.update-timestamp"
-            rm -rfv "${WINEPREFIX}/drive_c/.windows-serial"
-            rm -rfv "${WINEPREFIX}/drive_c/windows/"
-            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Setup"
-            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Windows"
-            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/WindowsTask"
-            rm -rfv "${WINEPREFIX}/drive_c/ProgramData/Package Cache"
-            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Application Data/Microsoft"
-            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Application Data/Temp"
-            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Local Settings/Temporary Internet Files"
-            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Application Data/Microsoft"
-            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Application Data/wine_gecko"
-            rm -rfv "${WINEPREFIX}/drive_c/users/Public/Temp"
-            rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Application Data/Microsoft"
-            rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Application Data/Temp"
-            rm -rfv "${WINEPREFIX}/drive_c/users/user/Local Settings/Temporary Internet Files"
-            rm -rfv "${WINEPREFIX}/drive_c/users/user/Application Data/Microsoft"
-            rm -rfv "${WINEPREFIX}/drive_c/users/user/Application Data/wine_gecko"
-            rm -rfv "${WINEPREFIX}/drive_c/users/user/Temp"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Internet Explorer"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Windows Media Player"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Windows NT"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files/Common Files"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Internet Explorer"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Common Files"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Windows Media Player"
-            rm -rfv "${WINEPREFIX}/drive_c/Program Files (x86)/Windows NT"
+            rm -rfv "$WINEPREFIX/registry_*"
+            rm -rfv "$WINEPREFIX/*.reg"
+            rm -rfv "$WINEPREFIX/*.log"
+            rm -rfv "$WINEPREFIX/.update-timestamp"
+            rm -rfv "$WINEPREFIX/drive_c/.windows-serial"
+            rm -rfv "$WINEPREFIX/drive_c/windows/"
+            rm -rfv "$WINEPREFIX/drive_c/ProgramData/Setup"
+            rm -rfv "$WINEPREFIX/drive_c/ProgramData/Windows"
+            rm -rfv "$WINEPREFIX/drive_c/ProgramData/WindowsTask"
+            rm -rfv "$WINEPREFIX/drive_c/ProgramData/Package Cache"
+            rm -rfv "$WINEPREFIX/drive_c/users/Public/Local Settings/Application Data/Microsoft"
+            rm -rfv "$WINEPREFIX/drive_c/users/Public/Local Settings/Application Data/Temp"
+            rm -rfv "$WINEPREFIX/drive_c/users/Public/Local Settings/Temporary Internet Files"
+            rm -rfv "$WINEPREFIX/drive_c/users/Public/Application Data/Microsoft"
+            rm -rfv "$WINEPREFIX/drive_c/users/Public/Application Data/wine_gecko"
+            rm -rfv "$WINEPREFIX/drive_c/users/Public/Temp"
+            rm -rfv "$WINEPREFIX/drive_c/users/user/Local Settings/Application Data/Microsoft"
+            rm -rfv "$WINEPREFIX/drive_c/users/user/Local Settings/Application Data/Temp"
+            rm -rfv "$WINEPREFIX/drive_c/users/user/Local Settings/Temporary Internet Files"
+            rm -rfv "$WINEPREFIX/drive_c/users/user/Application Data/Microsoft"
+            rm -rfv "$WINEPREFIX/drive_c/users/user/Application Data/wine_gecko"
+            rm -rfv "$WINEPREFIX/drive_c/users/user/Temp"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files/Internet Explorer"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files/Windows Media Player"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files/Windows NT"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files/Common Files"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files (x86)/Internet Explorer"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files (x86)/Common Files"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files (x86)/Windows Media Player"
+            rm -rfv "$WINEPREFIX/drive_c/Program Files (x86)/Windows NT"
             rm -rfv "$__GL_SHADER_DISK_CACHE_PATH"/*
             rm -rfv "$DXVK_STATE_CACHE_PATH"/*
             rm -rfv "$WINE_GST_REGISTRY_DIR"/*
@@ -1256,6 +1527,7 @@ lu_help() {
             ${RED}-control $GREEN           Control Panel
             ${RED}-winecfg $GREEN           Wine settings
             ${RED}-winemgr $GREEN           Wine manager
+            ${RED}-setwine $GREEN           Set default WINE
             ${RED}-taskmgr $GREEN           Task manager
             ${RED}-themesmgr $GREEN         Themes manager
             ${RED}-uninstaller $GREEN       Add/Remove Programs
@@ -1264,6 +1536,7 @@ lu_help() {
             ${RED}-killwine $GREEN          Kill Wine processes
             ${RED}-killtray $GREEN          Kill Lutris Wine tray
             ${RED}-killexe $GREEN           Kill Lutris Wine launch EXE
+            ${RED}-killshell $GREEN         Kill Lutris Wine SHELL
             ${RED}-exit $GREEN              Lutris Wine Force Exit
             ${RED}-clearpfx $GREEN          Clear prefix
             ${RED}-rmapp $GREEN             Remove Lutris Wine shortcuts from menu
@@ -1282,6 +1555,7 @@ lu_help() {
         -control                     Control Panel\n \
         -winecfg                   Wine settings\n \
         -winemgr                 Wine manager\n \
+        -setwine                   Set default Wine\n \
         -taskmgr                  Task Manager\n \
         -themesmgr           Themes Manager\n \
         -uninstaller              Add/Remove Programs\n \
@@ -1290,6 +1564,7 @@ lu_help() {
         -killwine                    Kill Wine processes\n \
         -killtray                     Kill Lutris Wine tray\n \
         -killexe                      Kill Lutris Wine launch EXE\n \
+        -killshell                    Kill Lutris Wine SHELL\n \
         -exit                           Lutris Wine Force Exit\n \
         -clearpfx                  Clear prefix\n \
         -rmapp                     Remove Lutris Wine shortcuts from menu\n \
@@ -1345,31 +1620,33 @@ lu_tray() {
             yad --notification --no-middle --text="Lutris Wine" \
                 --window-icon="/usr/share/lutris/media/default_icon.png" \
                 --image="/usr/share/lutris/media/default_icon.png" \
-                --command="bash -c lu_start" \
+                --command="$BASH -c lutris-wine" \
                 --tooltip="Lutris Wine" \
                 --menu="| \
-Explorer!bash -c lu_explorer!"/usr/share/lutris/media/default_icon.png"| \
-Task Manager!bash -c lu_taskmgr!"/usr/share/lutris/media/default_icon.png"| \
-Open CMD!bash -c lu_cmd!"/usr/share/lutris/media/default_icon.png"| \
-Open SHELL!bash -c lu_shell!"/usr/share/lutris/media/default_icon.png"| \
-DEBUG!bash -c 'export DEBUG=1 ; lu_start'!"/usr/share/lutris/media/default_icon.png"| \
-Add/Remove Programs!bash -c lu_uninstaller!"/usr/share/lutris/media/default_icon.png"| \
-Control Panel!bash -c lu_control!"/usr/share/lutris/media/default_icon.png"| \
-Open drive C:\!bash -c lu_openpfx!"/usr/share/lutris/media/default_icon.png"| \
-Registry editor!bash -c lu_regedit!"/usr/share/lutris/media/default_icon.png"| \
-Wine settings!bash -c lu_winecfg!"/usr/share/lutris/media/default_icon.png"| \
-Wine manager!bash -c lu_winemgr!"/usr/share/lutris/media/default_icon.png"| \
-Themes manager!bash -c lu_themesmgr!"/usr/share/lutris/media/default_icon.png"| \
-Winetricks!bash -c winetricks!"/usr/share/lutris/media/default_icon.png"| \
-Create shortcut!bash -c lu_shortcut!"/usr/share/lutris/media/default_icon.png"| \
-Add to Lutris!bash -c 'export ADDTOLU=1 ; lu_shortcut'!"/usr/share/lutris/media/default_icon.png"| \
-Remove menu app!bash -c lu_rmapp!"/usr/share/lutris/media/default_icon.png"| \
-Clear prefix!bash -c lu_clearpfx!"/usr/share/lutris/media/default_icon.png"| \
-Kill Wine processes!bash -c lu_killwine!"/usr/share/lutris/media/default_icon.png"| \
-Kill launch EXE!bash -c lu_killexe!"/usr/share/lutris/media/default_icon.png"| \
-Kill tray!bash -c lu_killtray!"/usr/share/lutris/media/default_icon.png"| \
-FORCE EXIT!bash -c lu_exit!"/usr/share/lutris/media/default_icon.png"|" &
-            check_luconf &
+Explorer!$BASH -c 'lutris-wine -explorer'!"/usr/share/lutris/media/default_icon.png"| \
+Task Manager!$BASH -c 'lutris-wine -taskmgr'!"/usr/share/lutris/media/default_icon.png"| \
+Open CMD!$BASH -c 'lutris-wine -cmd'!"/usr/share/lutris/media/default_icon.png"| \
+Open SHELL!$BASH -c 'lutris-wine -shell'!"/usr/share/lutris/media/default_icon.png"| \
+DEBUG!$BASH -c 'lutris-wine -debug'!"/usr/share/lutris/media/default_icon.png"| \
+Add/Remove Programs!$BASH -c 'lutris-wine -uninstaller'!"/usr/share/lutris/media/default_icon.png"| \
+Control Panel!$BASH -c 'lutris-wine -control'!"/usr/share/lutris/media/default_icon.png"| \
+Open drive C:\!$BASH -c 'lutris-wine -openpfx'!"/usr/share/lutris/media/default_icon.png"| \
+Registry editor!$BASH -c 'lutris-wine -regedit'!"/usr/share/lutris/media/default_icon.png"| \
+Wine settings!$BASH -c 'lutris-wine -winecfg'!"/usr/share/lutris/media/default_icon.png"| \
+Wine manager!$BASH -c 'lutris-wine -winemgr'!"/usr/share/lutris/media/default_icon.png"| \
+Set default Wine!$BASH -c 'lutris-wine -setwine'!"/usr/share/lutris/media/default_icon.png"| \
+Themes manager!$BASH -c 'lutris-wine -themesmgr'!"/usr/share/lutris/media/default_icon.png"| \
+Winetricks!$BASH -c 'lutris-wine -winetricks'!"/usr/share/lutris/media/default_icon.png"| \
+Create shortcut!$BASH -c 'lutris-wine -shortcut'!"/usr/share/lutris/media/default_icon.png"| \
+Add to Lutris!$BASH -c 'lutris-wine -addtolu'!"/usr/share/lutris/media/default_icon.png"| \
+Remove menu app!$BASH -c 'lutris-wine -rmapp'!"/usr/share/lutris/media/default_icon.png"| \
+Clear prefix!$BASH -c 'lutris-wine -clearpfx'!"/usr/share/lutris/media/default_icon.png"| \
+Kill Wine processes!$BASH -c 'lutris-wine -killwine'!"/usr/share/lutris/media/default_icon.png"| \
+Kill launch EXE!$BASH -c 'lutris-wine -killexe'!"/usr/share/lutris/media/default_icon.png"| \
+Kill SHELL!$BASH -c 'lutris-wine -killshell'!"/usr/share/lutris/media/default_icon.png"| \
+Kill tray!$BASH -c 'lutris-wine -killtray'!"/usr/share/lutris/media/default_icon.png"| \
+FORCE EXIT!$BASH -c 'lutris-wine -exit'!"/usr/share/lutris/media/default_icon.png"|" &
+            noclosetray &
     fi
 }
 
@@ -1403,7 +1680,13 @@ lu_winemgr() {
             echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="/usr/share/lutris/media/default_icon.png" --title "Wine Manager" --separator="" \
-                --tab-pos=top --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek" --tab="INSTALLED"
+                --tab-pos=top --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek" --tab="DELETE" --button="SET DEFAULT WINE:2"  --button="EXIT:1" --button="OK:0"
+            if [ "$?" == "2" ]
+                then
+                    rm -rf /tmp/*$WGUIDW
+                    export SETWINE="1"
+                    setwine
+            fi
             export PGE_SET="$(sed 's/TRUE //g' /tmp/PGE_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PGE_SET$WGUIDW)"
             export PPW_SET="$(sed 's/TRUE //g' /tmp/PPW_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PPW_SET$WGUIDW)"
             export PK4_SET="$(sed 's/TRUE //g' /tmp/PK4_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PK4_SET$WGUIDW)"
@@ -1418,9 +1701,16 @@ lu_winemgr() {
                 else
                     echo -e "\n$(echo "$ILW_LIST"|grep -v "$WINE_IN_USE"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             fi
+            export -f lu_themesmgr
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="/usr/share/lutris/media/default_icon.png" --title "Wine Manager" --separator="" \
-                --tab-pos=top --tab="INSTALLED"
+                --tab-pos=top --tab="DELETE" --button="SET DEFAULT WINE:2"  --button="EXIT:1" --button="OK:0"
+            if [ "$?" == "2" ]
+                then
+                    rm -rf /tmp/*$WGUIDW
+                    export SETWINE="1"
+                    setwine
+            fi
             export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/WDEL_SET$WGUIDW)"
     elif [[ -z "$ILW_LIST" && ! -z "$GITOK" ]]
         then
@@ -1570,7 +1860,7 @@ lu_winemgr() {
                         then
                             print_info "Removed WINE which was selected by default!"
                             zenity --info --title "Wine removing completed!" --text "Removed WINE which was selected by default!" --no-wrap &>/dev/null
-                            seldefwine
+                            setwine
                             print_info "You need to restart LUTRIS!"
                             zenity --question --title "Wine removing completed!" --text "You need to restart LUTRIS! Press YES to restart" --no-wrap &>/dev/null
                             if [ $? -eq "0" ]
@@ -1591,7 +1881,7 @@ lu_winemgr() {
                         then
                             print_info "Removed WINE which was selected by default!"
                             zenity --info --title "Wine removing completed!" --text "Removed WINE which was selected by default!" --no-wrap &>/dev/null
-                            seldefwine
+                            setwine
                         else
                             print_info "Removed WINE which was selected by default! WINE is not installed in Lutris, you must download WINE!"
                             zenity --info --title "Wine removing completed!" --text "Removed WINE which was selected by default!\nWINE is not installed in Lutris, you must download WINE!" --no-wrap &>/dev/null
@@ -1627,76 +1917,12 @@ lu_winemgr() {
                 else
                     if [ -z "$WINEINUSEDEL" ]
                         then
-                            seldefwine
+                            setwine
                             unset WDEL_SET
                     fi
                     unset PK4_INST PPW_INST PGE_INST
                     zenity --info --title "Wine Manager" --text "Wine installation completed!" --no-wrap &>/dev/null
             fi
-    fi
-}
-
-expluconf() {
-    export $(yaml_parser "$LU_WINE_CONF"|sed "s/wine~//g"|sed "s/system~//g"|sed "s/env~//g")
-    export WINE_IN_USE="$version"
-    export WINEDIR="$LU_DIR/runners/wine/$WINE_IN_USE"
-    export WINE="$WINEDIR/bin/wine"
-}
-
-seldefwine() {
-    if [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]]
-        then
-            print_error "Default WINE not selected!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
-            if [ ! -z "$SETWINE" ]
-                then
-                    sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
-                    print_info "WINE $SETWINE select as default!"
-                    expluconf
-                else
-                    seldefwine
-            fi
-    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
-        then
-            print_error "Default WINE not selected!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
-            if [ ! -z "$SETWINE" ]
-                then
-                    sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
-                    print_info "WINE $SETWINE select as default!"
-                    expluconf
-                else
-                    seldefwine
-            fi
-    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
-        then
-            export SETWINE="$(ls -1 "$LU_WINE_DIR"|head -1)"
-            sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
-            print_info "WINE $SETWINE select as default!"
-            expluconf
-            zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
-    elif [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
-        then
-            print_info "Selecting default WINE..."
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
-            if [ ! -z "$SETWINE" ]
-                then
-                    sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
-                    print_info "WINE $SETWINE select as default!"
-                    expluconf
-                else
-                    seldefwine
-            fi
-    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]]
-        then
-            export SETWINE="$(ls -1 "$LU_WINE_DIR"|head -1)"
-            sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
-            print_info "WINE $SETWINE select as default!"
-            expluconf
-            zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
     fi
 }
 
@@ -1707,10 +1933,13 @@ lu_themesmgr() {
             zenity --title "Themes Manager" --text "Select theme for WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=300  2>/dev/null)"
             if [ ! -z "$WINE_THEME" ]
                 then
+                    print_info "Change the WINE theme to $WINE_THEME..."
                     $WINE regedit "$THEMES_DIR/$WINE_THEME.reg" >/dev/null 2>&1
+                    print_info "Wine theme changed successfully!"
                     zenity --info --title "Themes Manager" --text "Wine theme changed successfully!" --no-wrap &>/dev/null
             fi
         else
+            print_error "Wine theme not found!"
             zenity --error --title "Themes Manager" --text "Wine theme not found!" --no-wrap &>/dev/null
     fi
 }
@@ -1720,28 +1949,21 @@ if [ $(id -u) -eq 0 ] ; then
     zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &>/dev/null &
     exit 1
 fi
-if [ ! -d "$LU_WINE_DIR" ]
-    then
-        mkdir -p "$LU_WINE_DIR"
-fi
+create_new_dir "$LU_WINE_DIR"
 if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
     then
         unset WINEINUSEDEL WDEL_SET PK4_INST PPW_INST PGE_INST
-        expluconf
+        expluwineconf
         if [[ ! -f "$WINE" && -z "$(ls -1 "$LU_WINE_DIR"|head -1)" ]]
             then
                 print_error "WINE is not installed in Lutris, you must download WINE!"
                 zenity --info --title "Wine check" --text "WINE is not installed in Lutris, you must download WINE!" --no-wrap &>/dev/null
                 lu_winemgr
         fi
-        seldefwine
+        setwine
         if [ -z "$WINEARCH" ]
             then
                 export WINEARCH="win64"
-        fi
-        if [ -z "$WIN_VER" ]
-            then
-                export WIN_VER="10"
         fi
         if [ -z "$WINEPREFIX" ]
             then
@@ -1758,6 +1980,7 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         export WINE_LARGE_ADDRESS_AWARE="1"
         export VK_ICD_FILENAMES="$vk_icd"
         export SDL_VIDEO_FULLSCREEN_DISPLAY="$sdl_video_fullscreen"
+        export WTRX_LOG="$WINEPREFIX/winetricks.log"
         if [[ ! -z "$mangohud" && ! -z "$(which mangohud 2>/dev/null)" ]]
             then
                 if [ "$mangohud" == "vk64" ]
@@ -1780,10 +2003,7 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
             then
                 export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0/:$WINEDIR/lib/gstreamer-1.0/"
-                if [ ! -d "$HOME/.cache/gstreamer-1.0" ]
-                    then
-                        mkdir HOME/.cache/gstreamer-1.0
-                fi
+                create_new_dir HOME/.cache/gstreamer-1.0
                 export WINE_GST_REGISTRY_DIR=$HOME/.cache/gstreamer-1.0
                 export MEDIACONV_AUDIO_DUMP_FILE=$HOME/.cache/gstreamer-1.0/audio.foz
                 export MEDIACONV_AUDIO_TRANSCODED_FILE=$HOME/.cache/gstreamer-1.0/transcoded_audio.foz
@@ -1794,8 +2014,8 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         fi
         if [[ ! -z "$dxvk" && "$dxvk" == true ]]
             then
-                mkdir $HOME/.cache/dxvk_cache 2>/dev/null
-                mkdir $HOME/.cache/gl_shader_cache 2>/dev/null
+                create_new_dir $HOME/.cache/dxvk_cache
+                create_new_dir $HOME/.cache/gl_shader_cache
                 export DXVK_STATE_CACHE_PATH=$HOME/.cache/dxvk_cache
                 export DXVK_STATE_CACHE=1
                 export __GL_DXVK_OPTIMIZATIONS=1
@@ -1904,15 +2124,6 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
             else
                 export PATH="$WINEDIR/bin"
         fi
-        if [[ -z $(cat "$WINEPREFIX/system.reg"|grep "Windows $WIN_VER") ]]
-            then
-                if [[ ! -z "$WIN_VER" && $(echo "$WIN_VER"|sed 's/.*/\L&/') == "xp" ]]
-                    then
-                        export WIN_VER="xp64"
-                fi
-                "$WINE" winecfg -v $(echo "win$WIN_VER"|sed 's/.*/\L&/')
-                echo "WINDOWS VERSION SET TO WINDOWS $WIN_VER"
-        fi
         if [[ ! -z "$terminal" && "$terminal" == true ]]
             then
                 export TERMINAL=1
@@ -1947,13 +2158,28 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
                         fi
                 fi
         fi
-        export -f print_var yaml_parser check_tray check_wine_pids check_exes check_compositor compositor_on \
-        compositor_sw exe_is_death wdllover_upd reg_edit exe2png add_to_lutris create_shortcut lu_debug clear_log \
-        dis_debug_msg dis_cmd_msg lu_prerun lu_run lu_prestart lu_start lu_cmd lu_shell lu_regedit lu_control \
-        lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_killwine lu_killexe lu_clearpfx lu_rmapp \
-        lu_shortcut lu_explorer lu_help lu_killtray lu_exit lu_tray check_luconf check_luwine_pid lu_winemgr \
-        settingbar unpack_tar unpack_tar_gz unpack_tar_xz download_error try_download print_info print_error \
-        check_lupid expluconf seldefwine lu_themesmgr
+        export -f yaml_parser print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid \
+        check_luwine_sh_pid check_exes noclosetray check_compositor create_new_dir check_symlink check_mono_gecko other_fixes \
+        try_download download_error unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death \
+        exes_is_death wine_is_death compositor_sw update_winetricks wdllover_upd reg_edit exe2png add_to_lutris create_shortcut \
+        lu_debug clear_log dis_debug_msg dis_cmd_msg expluwineconf setwine lu_prerun lu_run lu_prestart lu_start lu_cmd lu_shell \
+        lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell lu_killtray lu_killwine \
+        lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr lu_themesmgr check_musthave_dll
+        check_musthave_dll
+        if [ -z "$WIN_VER" ]
+            then
+                export WIN_VER="10"
+        fi
+        if [[ -z $(cat "$WINEPREFIX/system.reg"|grep "Windows $WIN_VER") ]]
+            then
+                if [[ ! -z "$WIN_VER" && $(echo "$WIN_VER"|sed 's/.*/\L&/') == "xp" ]]
+                    then
+                        export WIN_VER="xp64"
+                fi
+                "$WINE" winecfg -v $(echo "win$WIN_VER"|sed 's/.*/\L&/')
+                echo "WINDOWS VERSION SET TO WINDOWS $WIN_VER"
+        fi
+        other_fixes
         case $1 in
             -cmd) lu_cmd "$@" ;;
             -shell) lu_shell "$@" ;;
@@ -1969,6 +2195,7 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
             -killwine) lu_killwine ;;
             -killtray) lu_killtray ;;
             -killexe) lu_killexe ;;
+            -killshell) lu_killshell ;;
             -exit) lu_exit ;;
             -clearpfx) lu_clearpfx ;;
             -rmapp) lu_rmapp ;;
@@ -1979,6 +2206,7 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
             -help) lu_help ;;
             -version) lu_version ;;
             -tray) lu_tray ;;
+            -setwine) export SETWINE="1" ; setwine ;;
             -*) lu_help ;;
             *) lu_start "$@" ;;
         esac

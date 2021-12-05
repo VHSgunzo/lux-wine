@@ -88,6 +88,12 @@ Icon=/usr/share/lutris/media/default_icon.png
 Name=Kill launch EXE
 Name[ru_RU]=Убить запущенные EXE
 
+[Desktop Action killshell]
+Exec=lutris-wine -killshell
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Kill SHELL
+Name[ru_RU]=Убить SHELL
+
 [Desktop Action clearpfx]
 Exec=lutris-wine -clearpfx
 Icon=/usr/share/lutris/media/default_icon.png
@@ -130,9 +136,15 @@ Icon=/usr/share/lutris/media/default_icon.png
 Name=Lutris Wine force exit
 Name[ru_RU]=Закрыть Lutris Wine
 
+[Desktop Action setwine]
+Exec=lutris-wine -setwine
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Set default Wine
+Name[ru_RU]=Настроить дефолтный Wine
+
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;themesmgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;themesmgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;setwine
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine

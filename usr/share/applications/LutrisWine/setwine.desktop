@@ -1,0 +1,12 @@
+[Desktop Entry]
+Categories=Lutris Wine
+Exec=lutris-wine -setwine
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Set default Wine
+Name[ru_RU]=Настроить дефолтный Wine
+NoDisplay=false
+StartupNotify=true
+Terminal=0
+TerminalOptions=--hold
+Type=Application
+X-KDE-SubstituteUID=false
