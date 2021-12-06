@@ -1,6 +1,6 @@
 #!/bin/bash
 ###VHSgunzo
-export LW_VERSION=0.45
+export LW_VERSION=0.46
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -24,6 +24,7 @@ export LU_WINE_DIR="$LU_DIR/runners/wine"
 export LU_RUNTIME="$HOME/.local/share/lutris/runtime"
 export LU_DB="$LU_DIR/pga.db"
 export LU_APP="${HOME}/.local/share/applications/LutrisWineApp"
+export WTRX_DIR="$LU_RUNTIME/winetricks"
 
 yaml_parser() {
    local prefix=$2
@@ -123,7 +124,7 @@ check_exes() {
 noclosetray() {
     if [[ ! -z "$FORCE_TRAY" ]]
         then
-            while : ; do sleep 60 ; done
+            while : ; do sleep 1337 ; done
     fi
 }
 
@@ -354,29 +355,36 @@ compositor_sw() {
 }
 
 update_winetricks() {
-    export WTRX_DIR="$LU_RUNTIME/winetricks"
-    WTRX_URL="https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks"
-    WTRX_EXT_VER="$(curl -s --list-only $WTRX_URL|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
-    print_info "Version winetricks on server: $WTRX_EXT_VER"
-    WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
-    print_info "Version winetricks in LUTRIS $WTRX_EXT_VER"
-    if [[ ! -f "$WTRX_DIR/winetricks" && ! -z "$WTRX_EXT_VER" ]] || [[ "$WTRX_INT_VER" != "$WTRX_EXT_VER" && ! -z "$WTRX_EXT_VER" ]]
+    if [ -z "$(find "$WTRX_DIR/" -type f -name winetricks -mtime -3 -print)" ]
         then
-            if try_download "$WTRX_URL" "$WTRX_DIR/winetricks_new"
+            print_info "Check update..."
+            WTRX_URL="https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks"
+            WTRX_EXT_VER="$(curl -s --list-only $WTRX_URL|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
+            print_info "Version winetricks on server: $WTRX_EXT_VER"
+            WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
+            print_info "Version winetricks in LUTRIS $WTRX_EXT_VER"
+            if [[ ! -f "$WTRX_DIR/winetricks" && ! -z "$WTRX_EXT_VER" ]] || [[ "$WTRX_INT_VER" != "$WTRX_EXT_VER" && ! -z "$WTRX_EXT_VER" ]]
                 then
-                    mv -f "$WTRX_DIR/winetricks_new" "$WTRX_DIR/winetricks"
-                    WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')" && print_info "Winetricks version in LUTRIS has been updated ($WTRX_EXT_VER)"
-                    chmod u+x "$WTRX_DIR/winetricks"
+                    print_info "Updating winetricks..."
+                    if try_download "$WTRX_URL" "$WTRX_DIR/winetricks_new"
+                        then
+                            mv -f "$WTRX_DIR/winetricks_new" "$WTRX_DIR/winetricks"
+                            WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
+                            print_info "Winetricks version in LUTRIS has been updated ($WTRX_EXT_VER)"
+                            chmod u+x "$WTRX_DIR/winetricks"
+                    fi
+                else
+                    print_info "Winetricks does not need updating!"
             fi
-    fi
-    if  [ -f "$WTRX_DIR/winetricks" ]
-        then
-            sed -i 's/w_metadata vcrun2015 dlls \\/w_metadata !dont_use_2015! dlls \\/' "$WTRX_DIR/winetricks"
-            sed -i 's/w_metadata vcrun2017 dlls \\/w_metadata !dont_use_2017! dlls \\/' "$WTRX_DIR/winetricks"
-            #HOTFIX SHA256SUM FOR VC_RUN2019
-            sed -i 's/vc_redist.x86.exe 1acd8d5ea1cdc3eb2eb4c87be3ab28722d0825c15449e5c9ceef95d897de52fa/vc_redist.x86.exe 80c7969f4e05002a0cd820b746e0acb7406d4b85e52ef096707315b390927824/g' "$WTRX_DIR/winetricks"
-            sed -i 's/vc_redist.x64.exe 003063723b2131da23f40e2063fb79867bae275f7b5c099dbd1792e25845872b/vc_redist.x64.exe 9b9dd72c27ab1db081de56bb7b73bee9a00f60d14ed8e6fde45dab3e619b5f04/g' "$WTRX_DIR/winetricks"
+            if  [ -f "$WTRX_DIR/winetricks" ]
+                then
+                    sed -i 's/w_metadata vcrun2015 dlls \\/w_metadata !dont_use_2015! dlls \\/' "$WTRX_DIR/winetricks"
+                    sed -i 's/w_metadata vcrun2017 dlls \\/w_metadata !dont_use_2017! dlls \\/' "$WTRX_DIR/winetricks"
+                    #HOTFIX SHA256SUM FOR VC_RUN2019
+                    sed -i 's/vc_redist.x86.exe 1acd8d5ea1cdc3eb2eb4c87be3ab28722d0825c15449e5c9ceef95d897de52fa/vc_redist.x86.exe 80c7969f4e05002a0cd820b746e0acb7406d4b85e52ef096707315b390927824/g' "$WTRX_DIR/winetricks"
+                    sed -i 's/vc_redist.x64.exe 003063723b2131da23f40e2063fb79867bae275f7b5c099dbd1792e25845872b/vc_redist.x64.exe 9b9dd72c27ab1db081de56bb7b73bee9a00f60d14ed8e6fde45dab3e619b5f04/g' "$WTRX_DIR/winetricks"
 
+            fi
     fi
 }
 
@@ -516,7 +524,7 @@ add_to_lutris() {
             export YMLTOLU="${SHRT_PATH}/${SHRT_NAME}.yaml"
             if [ -z "$ADD_APP_NAME" ]
                 then
-                    zenity --question --title "Creating shortcut" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
+                    zenity --question --title "Add to Lutris" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
                     if [ $? -eq "0" ]
                         then
                             ADD_APP_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
@@ -540,7 +548,7 @@ add_to_lutris() {
             if [ -z "$ADD_EXE_ARG" ]
                 then
                     sleep 0.3
-                    zenity --question --title "Creating shortcut" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
+                    zenity --question --title "Add to Lutris" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
                     if [ $? -eq "0" ]
                         then
                             sleep 0.3
@@ -571,7 +579,7 @@ add_to_lutris() {
                                     LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                                     if [ ! -z "$LUADDPID" ]
                                         then
-                                            zenity --question --title "Creating shortcut" --text "Application successfully added to Lutris!\nDo you want to close Lutris?" --no-wrap &>/dev/null
+                                            zenity --question --title "Add to Lutris" --text "Application successfully added to Lutris!\nDo you want to close Lutris?" --no-wrap &>/dev/null
                                             if [ $? -eq "0" ]
                                                 then
                                                     kill -9 "$LUADDPID" 2>/dev/null
@@ -583,7 +591,7 @@ add_to_lutris() {
                             LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                             if [ ! -z "$LUADDPID" ]
                                 then
-                                    zenity --question --title "Creating shortcut" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &>/dev/null
+                                    zenity --question --title "Add to Lutris" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &>/dev/null
                                     if [ $? -eq "0" ]
                                         then
                                             kill "$LUADDPID" 2>/dev/null
@@ -912,6 +920,12 @@ expluwineconf() {
 }
 
 setwine() {
+    if [[ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" && -z "$(pgrep -fa zenity|grep "Wine Manager"|awk '{print$1}')" ]]; then :
+        else
+            print_error "Wine Manager already runing!"
+            zenity --error --title "Wine Manager" --text "Wine Manager already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     if [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]]
         then
             print_error "Default WINE not selected!"
@@ -925,7 +939,7 @@ setwine() {
                 else
                     setwine
             fi
-    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             print_error "Default WINE not selected!"
             SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
@@ -938,14 +952,14 @@ setwine() {
                 else
                     setwine
             fi
-    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             export SETWINE="$(ls -1 "$LU_WINE_DIR"|head -1)"
             sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
             print_info "WINE $SETWINE select as default!"
             expluwineconf
             zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
-    elif [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 || "$SETWINE" == 1 ]]
+    elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 || "$SETWINE" == 1 ]]
         then
             print_info "Selecting default WINE..."
             SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
@@ -1143,7 +1157,7 @@ lu_start() {
         else
             if [[ ! -z "$DEBUG" && "$DEBUG" != 0 ]]
                 then
-                    export DEBUG_EXE="$(zenity --title "Select an application to start DEBUG" --file-selection --file-filter="*.exe")"
+                    export DEBUG_EXE="$(zenity --title "Specify the executable file to start DEBUG:" --file-selection --file-filter="*.exe")"
                     if [ -f "$DEBUG_EXE" ]
                         then
                             export DEBUG_FL="$(readlink -f "$DEBUG_EXE")"
@@ -1162,14 +1176,14 @@ lu_start() {
                             lu_start
                     fi
                 else
-                    export LU_START="$(zenity --title "Select an application to run in Lutris Wine" --file-selection --file-filter="*.exe *.lnk *.bat *.msi *.reg")"
+                    export LU_START="$(zenity --title "Specify file to run in Lutris Wine:" --file-selection --file-filter="*.exe *.lnk *.bat *.msi *.reg")"
                     if [ -f "$LU_START" ]
                         then
                             lu_prestart
                     elif [ -d "$LU_START" ]
                         then
-                            print_error "Specify the executable file to start Lutris Wine!"
-                            zenity --error --text "Specify the executable file to start Lutris Wine!" --no-wrap &>/dev/null
+                            print_error "Specify file to run in Lutris Wine!"
+                            zenity --error --text "Specify file to run in Lutris Wine!" --no-wrap &>/dev/null
                             unset LU_START
                             lu_start
                     fi
@@ -1218,6 +1232,12 @@ lu_shell() {
 }
 
 lu_regedit() {
+    if [ -z "$(pgrep regedit.exe)" ]; then :
+        else
+            print_error "Registry Editor already runing!"
+            zenity --error --title "Registry Editor" --text "Registry Editor already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
@@ -1225,6 +1245,12 @@ lu_regedit() {
 }
 
 lu_control() {
+    if [ -z "$(pgrep control.exe)" ]; then :
+        else
+            print_error "Control Panel already runing!"
+            zenity --error --title "Control Panel" --text "Control Panel already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
@@ -1232,6 +1258,12 @@ lu_control() {
 }
 
 lu_winecfg() {
+    if [ -z "$(pgrep winecfg.exe)" ]; then :
+        else
+            print_error "Wine Settings already runing!"
+            zenity --error --title "Wine Settings" --text "Wine Settings already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
@@ -1239,6 +1271,12 @@ lu_winecfg() {
 }
 
 lu_taskmgr() {
+    if [ -z "$(pgrep taskmgr.exe)" ]; then :
+        else
+            print_error "Task Manager already runing!"
+            zenity --error --title "Task Manager" --text "Task Manager already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
@@ -1246,6 +1284,12 @@ lu_taskmgr() {
 }
 
 lu_uninstaller() {
+    if [ -z "$(pgrep uninstaller.exe)" ]; then :
+        else
+            print_error "Uninstaller already runing!"
+            zenity --error --title "Uninstaller" --text "Uninstaller already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     UNSET_CMPSTR_SW=1
     export DEBUG=0
     unset EXE_ARG
@@ -1253,6 +1297,12 @@ lu_uninstaller() {
 }
 
 winetricks() {
+    if [ -z "$(pgrep winetricks)" ]; then :
+        else
+            print_error "Winetricks already runing!"
+            zenity --error --title "Winetricks" --text "Winetricks already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     if [[ ! -z "$system_winetricks" && "$system_winetricks" == true ]]
         then
             if [ ! -z "$(which winetricks 2>/dev/null)" ]
@@ -1261,7 +1311,7 @@ winetricks() {
                     "$(which winetricks)" "$@"
                 else
                     print_error "Winetricks not found in you system!"
-                    print_info "LUTRIS winetricks!"
+                    print_info "Using LUTRIS winetricks!"
                     update_winetricks
                     "$WTRX_DIR/winetricks" "$@"
             fi
@@ -1390,7 +1440,13 @@ lu_killexe() {
 }
 
 lu_clearpfx() {
-    zenity --question --title "Clearing prefix" --text "Do you really want to clear prefix ["$WINEPREFIX"] ?" --no-wrap &>/dev/null
+    if [ -z "$(pgrep -fa zenity|grep "Prefix Cleaner"|awk '{print$1}')" ]; then :
+        else
+            print_error "Prefix Cleaner already runing!"
+            zenity --error --title "Prefix Cleaner" --text "Prefix Cleaner already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
+    zenity --question --title "Prefix Cleaner" --text "Do you really want to clear prefix ["$WINEPREFIX"] ?" --no-wrap &>/dev/null
     if [ $? -eq "0" ]
         then
             rm -rfv "$WINEPREFIX/registry_*"
@@ -1433,10 +1489,16 @@ lu_clearpfx() {
 }
 
 lu_rmapp() {
+    if [ -z "$(pgrep -fa zenity|grep "Shortcuts Remover"|awk '{print$1}')" ]; then :
+        else
+            print_error "Shortcuts Remover already runing!"
+            zenity --error --title "Shortcuts Remover" --text "Shortcuts Remover already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     if [[ -d "$LU_APP" && ! -z "$(ls -1 "$LU_APP"|head -1)" ]]
         then
             SHRT_RM="$(echo -e "\nALL SHORTCUTS\n\n$(echo "$(ls "$LU_APP")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            zenity --title "Removing shortcuts" --text "Select shortcuts to remove:" --list --checklist --multiple --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
+            zenity --title "Shortcuts Remover" --text "Select shortcuts to remove:" --list --checklist --multiple --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
             if [ ! -z "$SHRT_RM" ]
                 then
                     (IFS=$'\n' ; for shrt_rm in $SHRT_RM
@@ -1444,7 +1506,7 @@ lu_rmapp() {
                             if [[ "$shrt_rm" == "ALL SHORTCUTS" ]]
                                 then
                                     sleep 0.3
-                                    zenity --question --title "Removing shortcuts" --text "Are you sure you want to remove all Lutris Wine applications from menu?" --no-wrap &>/dev/null
+                                    zenity --question --title "Shortcuts Remover" --text "Are you sure you want to remove all Lutris Wine applications from menu?" --no-wrap &>/dev/null
                                     if [ $? -eq "0" ]
                                         then
                                             rm -rfv "$LU_APP"
@@ -1456,10 +1518,10 @@ lu_rmapp() {
                     done)
                     update-desktop-database -q "${HOME}/.local/share/applications"
                     sleep 0.3
-                    zenity --info --title "Removing shortcuts" --text "Lutris Wine applications deleted from menu!" --no-wrap &>/dev/null
+                    zenity --info --title "Shortcuts Remover" --text "Lutris Wine applications deleted from menu!" --no-wrap &>/dev/null
             fi
         else
-            zenity --error --title "Removing shortcuts" --text "Lutris Wine applications not found in menu!" --no-wrap &>/dev/null
+            zenity --error --title "Shortcuts Remover" --text "Lutris Wine applications not found in menu!" --no-wrap &>/dev/null
     fi
 }
 
@@ -1467,7 +1529,7 @@ lu_shortcut() {
     if [ -f "$2" ]
         then
             export SHRT_FL="$(readlink -f "$2")"
-            if [ ! -z "$(file "$SHRT_FL"|grep "for MS Windows"|grep -o "executable (GUI)")" ]
+            if [ ! -z "$(file "$SHRT_FL"|grep "for MS Windows"|grep -o "executable")" ]
                 then
                     export LU_EXE="$SHRT_FL"
                     if [[ ! -z "$ADDTOLU" && "$ADDTOLU" != 0 ]]
@@ -1481,11 +1543,11 @@ lu_shortcut() {
                     zenity --error --text "Unable to create shortcut for this file!" --no-wrap &>/dev/null
             fi
         else
-            SHRT_EXE="$(zenity --file-selection --file-filter="*.exe")"
+            SHRT_EXE="$(zenity --title "Specify the executable file:" --file-selection --file-filter="*.exe")"
             if [ -f "$SHRT_EXE" ]
                 then
                     export SHRT_FL="$(readlink -f "$SHRT_EXE")"
-                    if [ ! -z "$(file "$SHRT_FL"|grep "for MS Windows"|grep -o "executable (GUI)")" ]
+                    if [ ! -z "$(file "$SHRT_FL"|grep "for MS Windows"|grep -o "executable")" ]
                         then
                             export LU_EXE="$SHRT_FL"
                             if [[ ! -z "$ADDTOLU" && "$ADDTOLU" != 0 ]]
@@ -1651,16 +1713,46 @@ FORCE EXIT!$BASH -c 'lutris-wine -exit'!"/usr/share/lutris/media/default_icon.pn
 }
 
 lu_winemgr() {
+    if [[ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" && -z "$(pgrep -fa zenity|grep "Wine Manager"|awk '{print$1}')" ]]; then :
+        else
+            print_error "Wine Manager already runing!"
+            zenity --error --title "Wine Manager" --text "Wine Manager already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     export WGUIDW=$RANDOM
     export ILW_LIST="$(ls -1 "$LU_WINE_DIR")"
-    if [[ -z "$PGE_GIT" || -z  "$PPW_GIT" || -z  "$PK4_GIT" ]]
+    if [[ -z "$PGE_GIT_LIST" || -z  "$PPW_GIT_LIST" || -z  "$PK4_GIT_LIST" ]]
         then
             print_info "Сheck new WINE versions on GitHub..."
-            export PGE_GIT="$(curl -s "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"|grep "browser_download_url.*\.tar\.gz"|cut -d \" -f 4)"
-            export PPW_GIT="$(curl -s "https://api.github.com/repos/Castro-Fidel/wine_builds/releases"|grep "browser_download_url.*\.tar\.xz"|cut -d \" -f 4)"
-            export PK4_GIT="$(curl -s "https://api.github.com/repos/Kron4ek/Wine-Builds/releases"|grep "browser_download_url.*\.tar\.xz"|cut -d \" -f 4)"
+            export PLU_GIT="https://api.github.com/repos/lutris/wine/releases"
+            export PGE_GIT="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
+            export PPW_GIT="https://api.github.com/repos/Castro-Fidel/wine_builds/releases"
+            export PK4_GIT="https://api.github.com/repos/Kron4ek/Wine-Builds/releases"
+            curl -s "$PLU_GIT"|grep "browser_download_url.*\.tar\.xz"|cut -d \" -f 4 1> "/tmp/PLUGITLIST$WGUIDW" &
+            curl -s "$PGE_GIT"|grep "browser_download_url.*\.tar\.gz"|cut -d \" -f 4 1> "/tmp/PGEGITLIST$WGUIDW" &
+            curl -s "$PPW_GIT"|grep "browser_download_url.*\.tar\.xz"|cut -d \" -f 4 1> "/tmp/PPWGITLIST$WGUIDW" &
+            curl -s "$PK4_GIT"|grep "browser_download_url.*\.tar\.xz"|cut -d \" -f 4 1> "/tmp/PK4GITLIST$WGUIDW" &
+            while true
+                do
+                    sleep 0.2
+                    export GITLISTOK=0
+                    for curlgit in $PLU_GIT $PGE_GIT $PPW_GIT $PK4_GIT
+                            do
+                                sleep 0.2
+                                if [ -z "$(pgrep -fa curl|grep -o "$curlgit")" ]
+                                    then
+                                        GITLISTOK=$(($GITLISTOK + 1))
+                                fi
+                                if [ "$GITLISTOK" == 4 ]; then break; fi
+                        done
+                    if [ "$GITLISTOK" == 4 ]; then break; fi
+            done|settingbar
+            export PLU_GIT_LIST="$(cat /tmp/PLUGITLIST$WGUIDW 2>/dev/null ; rm -rf /tmp/PLUGITLIST$WGUIDW)"
+            export PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null ; rm -rf /tmp/PGEGITLIST$WGUIDW)"
+            export PPW_GIT_LIST="$(cat /tmp/PPWGITLIST$WGUIDW 2>/dev/null ; rm -rf /tmp/PPWGITLIST$WGUIDW)"
+            export PK4_GIT_LIST="$(cat /tmp/PK4GITLIST$WGUIDW 2>/dev/null ; rm -rf /tmp/PK4GITLIST$WGUIDW)"
     fi
-    if [[ ! -z "$PGE_GIT" || ! -z  "$PPW_GIT" || ! -z  "$PK4_GIT" ]]
+    if [[ ! -z "$PLU_GIT_LIST" || ! -z "$PGE_GIT_LIST" || ! -z  "$PPW_GIT_LIST" || ! -z  "$PK4_GIT_LIST" ]]
         then
             export GITOK="1"
             print_info "Сhecking new WINE versions on GitHub complete!"
@@ -1671,25 +1763,28 @@ lu_winemgr() {
     fi
     if [[ ! -z "$ILW_LIST" && ! -z "$GITOK" ]]
         then
-            export PGE_LIST="$(echo -e "$(for PGEGIT in $PGE_GIT ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
-            export PPW_LIST="$(echo -e "$(for PPWGIT in $PPW_GIT ; do echo $PPWGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/plugins/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
-            export PK4_LIST="$(echo -e "$(for PK4GIT in $PK4_GIT ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
-            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGE_SET$WGUIDW" &
-            echo -e "\n$(echo "$PPW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PPW_SET$WGUIDW" &
-            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4_SET$WGUIDW" &
-            echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
+            export PLU_LIST="$(echo -e "$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
+            export PGE_LIST="$(echo -e "$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
+            export PPW_LIST="$(echo -e "$(for PPWGIT in $PPW_GIT_LIST ; do echo $PPWGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/plugins/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
+            export PK4_LIST="$(echo -e "$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
+            echo -e "\n$(echo "$PLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PLUSET$WGUIDW" &
+            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
+            echo -e "\n$(echo "$PPW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PPWSET$WGUIDW" &
+            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
+            echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=5 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="/usr/share/lutris/media/default_icon.png" --title "Wine Manager" --separator="" \
-                --tab-pos=top --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek" --tab="DELETE" --button="SET DEFAULT WINE:2"  --button="EXIT:1" --button="OK:0"
+                --tab-pos=top --tab="Lutris" --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek" --tab="DELETE" --button="SET DEFAULT WINE:2"  --button="EXIT:1" --button="OK:0"
             if [ "$?" == "2" ]
                 then
                     rm -rf /tmp/*$WGUIDW
                     export SETWINE="1"
                     setwine
             fi
-            export PGE_SET="$(sed 's/TRUE //g' /tmp/PGE_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PGE_SET$WGUIDW)"
-            export PPW_SET="$(sed 's/TRUE //g' /tmp/PPW_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PPW_SET$WGUIDW)"
-            export PK4_SET="$(sed 's/TRUE //g' /tmp/PK4_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PK4_SET$WGUIDW)"
+            export PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; rm -rf /tmp/PLUSET$WGUIDW)"
+            export PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; rm -rf /tmp/PGESET$WGUIDW)"
+            export PPW_SET="$(sed 's/TRUE //g' /tmp/PPWSET$WGUIDW 2>/dev/null ; rm -rf /tmp/PPWSET$WGUIDW)"
+            export PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PK4SET$WGUIDW)"
             export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/WDEL_SET$WGUIDW)"
     elif [[ ! -z "$ILW_LIST" && -z "$GITOK" ]]
         then
@@ -1714,30 +1809,66 @@ lu_winemgr() {
             export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/WDEL_SET$WGUIDW)"
     elif [[ -z "$ILW_LIST" && ! -z "$GITOK" ]]
         then
-            export PGE_LIST="$(for PGEGIT in $PGE_GIT ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')"
-            export PPW_LIST="$(for PPWGIT in $PPW_GIT ; do echo $PPWGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/plugins/d')"
-            export PK4_LIST="$(for PK4GIT in $PK4_GIT ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')"
-            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGE_SET$WGUIDW" &
-            echo -e "\n$(echo "$PPW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PPW_SET$WGUIDW" &
-            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4_SET$WGUIDW" &
+            export PLU_LIST="$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)"
+            export PGE_LIST="$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')"
+            export PPW_LIST="$(for PPWGIT in $PPW_GIT_LIST ; do echo $PPWGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/plugins/d')"
+            export PK4_LIST="$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')"
+            echo -e "\n$(echo "$PLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PLUSET$WGUIDW" &
+            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
+            echo -e "\n$(echo "$PPW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PPWSET$WGUIDW" &
+            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="/usr/share/lutris/media/default_icon.png" --title "Wine Manager" --separator="" \
-                --tab-pos=top --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek"
-            export PGE_SET="$(sed 's/TRUE //g' /tmp/PGE_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PGE_SET$WGUIDW)"
-            export PPW_SET="$(sed 's/TRUE //g' /tmp/PPW_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PPW_SET$WGUIDW)"
-            export PK4_SET="$(sed 's/TRUE //g' /tmp/PK4_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PK4_SET$WGUIDW)"
+                --tab-pos=top --tab="Lutris" --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek"
+            export PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; rm -rf /tmp/PLUSET$WGUIDW)"
+            export PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; rm -rf /tmp/PGESET$WGUIDW)"
+            export PPW_SET="$(sed 's/TRUE //g' /tmp/PPWSET$WGUIDW 2>/dev/null ; rm -rf /tmp/PPWSET$WGUIDW)"
+            export PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; rm -rf /tmp/PK4SET$WGUIDW)"
     elif [[ -z "$ILW_LIST" && -z "$GITOK" ]]
         then
             print_error "Can't run Wine Manager!"
             zenity --error --title "Wine Manager" --text "Can't run Wine Manager!" --no-wrap &>/dev/null
             exit 1
     fi
+    if [ ! -z "$(echo "$PLU_SET"|head -1)" ]
+        then
+            for PLU_DW in $PLU_SET
+                do
+                    unset PLU_DW_URL
+                    export PLU_DW_URL="$(echo "$PLU_GIT_LIST"|grep $PLU_DW)"
+                    if [ ! -z "$PLU_DW_URL" ]
+                        then
+                            print_info "Download and install $PLU_DW"
+                            if try_download "$PLU_DW_URL" "$LU_WINE_DIR/"
+                                then
+                                    for archive_type in "gz" "xz"
+                                        do
+                                            if [ -f "$LU_WINE_DIR/${PLU_DW}.tar.${archive_type}" ]
+                                                then
+                                                    if unpack_tar_${archive_type} "$LU_WINE_DIR/${PLU_DW}.tar.${archive_type}" "$LU_WINE_DIR/"
+                                                        then
+                                                            export PLU_INST="1"
+                                                            rm -rf "$LU_WINE_DIR/${PLU_DW}.tar.${archive_type}"
+                                                            print_info "Installing $PLU_DW complete!"
+                                                        else
+                                                            rm -rf "$LU_WINE_DIR/${PLU_DW}.tar.${archive_type}"
+                                                            rm -rf "$LU_WINE_DIR/${PLU_DW}"
+                                                            download_error && lu_winemgr
+                                                    fi
+                                            fi
+                                    done
+                                else
+                                    download_error && lu_winemgr
+                            fi
+                    fi
+            done
+    fi
     if [ ! -z "$(echo "$PGE_SET"|head -1)" ]
         then
             for PGE_DW in $PGE_SET
                 do
                     unset PGE_DW_URL
-                    export PGE_DW_URL="$(echo "$PGE_GIT"|grep $PGE_DW)"
+                    export PGE_DW_URL="$(echo "$PGE_GIT_LIST"|grep $PGE_DW)"
                     if [ ! -z "$PGE_DW_URL" ]
                         then
                             print_info "Download and install $PGE_DW..."
@@ -1779,7 +1910,7 @@ lu_winemgr() {
             for PPW_DW in $PPW_SET
                 do
                     unset PPW_DW_URL
-                    export PPW_DW_URL="$(echo "$PPW_GIT"|grep $PPW_DW)"
+                    export PPW_DW_URL="$(echo "$PPW_GIT_LIST"|grep $PPW_DW)"
                     if [ ! -z "$PPW_DW_URL" ]
                         then
                             print_info "Download and install $PPW_DW..."
@@ -1812,7 +1943,7 @@ lu_winemgr() {
             for PK4_DW in $PK4_SET
                 do
                     unset PK4_DW_URL
-                    export PK4_DW_URL="$(echo "$PK4_GIT"|grep $PK4_DW)"
+                    export PK4_DW_URL="$(echo "$PK4_GIT_LIST"|grep $PK4_DW)"
                     if [ ! -z "$PK4_DW_URL" ]
                         then
                             print_info "Download and install $PK4_DW..."
@@ -1901,7 +2032,7 @@ lu_winemgr() {
                 zenity --info --title "Wine remove" --text "Wine removing completed!" --no-wrap &>/dev/null
             fi
     fi
-    if [[ "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
+    if [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             check_lupid
             if [ ! -z "$LU_PID" ]
@@ -1920,13 +2051,19 @@ lu_winemgr() {
                             setwine
                             unset WDEL_SET
                     fi
-                    unset PK4_INST PPW_INST PGE_INST
+                    unset PLU_INST PK4_INST PPW_INST PGE_INST
                     zenity --info --title "Wine Manager" --text "Wine installation completed!" --no-wrap &>/dev/null
             fi
     fi
 }
 
 lu_themesmgr() {
+    if [ ! -z "$(pgrep -fa zenity|grep "Themes Manager"|awk '{print$1}')" ]
+        then
+            print_error "Themes Manager already runing!"
+            zenity --error --title "Themes Manager" --text "Themes Manager already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     if [[ -d "$THEMES_DIR" && ! -z "$(ls -1 "$THEMES_DIR"|head -1)" ]]
         then
             export WINE_THEME="$(echo -e "\n$(echo "$(ls "$THEMES_DIR")"|sed 's/.reg//g'|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
@@ -2003,19 +2140,19 @@ if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
         if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
             then
                 export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0/:$WINEDIR/lib/gstreamer-1.0/"
-                create_new_dir HOME/.cache/gstreamer-1.0
-                export WINE_GST_REGISTRY_DIR=$HOME/.cache/gstreamer-1.0
-                export MEDIACONV_AUDIO_DUMP_FILE=$HOME/.cache/gstreamer-1.0/audio.foz
-                export MEDIACONV_AUDIO_TRANSCODED_FILE=$HOME/.cache/gstreamer-1.0/transcoded_audio.foz
-                export MEDIACONV_VIDEO_DUMP_FILE=$HOME/.cache/gstreamer-1.0/video.foz
-                export MEDIACONV_VIDEO_TRANSCODED_FILE=$HOME/.cache/gstreamer-1.0/transcoded_video.foz
+                create_new_dir "$HOME/.cache/gstreamer-1.0"
+                export WINE_GST_REGISTRY_DIR="$HOME/.cache/gstreamer-1.0"
+                export MEDIACONV_AUDIO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/audio.foz
+                export MEDIACONV_AUDIO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_audio.foz
+                export MEDIACONV_VIDEO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/video.foz
+                export MEDIACONV_VIDEO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_video.foz
             else
                 wdllover_upd "winegstreamer="
         fi
         if [[ ! -z "$dxvk" && "$dxvk" == true ]]
             then
-                create_new_dir $HOME/.cache/dxvk_cache
-                create_new_dir $HOME/.cache/gl_shader_cache
+                create_new_dir "$HOME/.cache/dxvk_cache"
+                create_new_dir "$HOME/.cache/gl_shader_cache"
                 export DXVK_STATE_CACHE_PATH=$HOME/.cache/dxvk_cache
                 export DXVK_STATE_CACHE=1
                 export __GL_DXVK_OPTIMIZATIONS=1
