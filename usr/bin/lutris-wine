@@ -1,6 +1,6 @@
 #!/bin/bash
-###VHSgunzo
-export LW_VERSION=0.46
+export LW_DEVELOPERS="VHSgunzo"
+export LW_VERSION=0.47
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -23,7 +23,8 @@ export THEMES_DIR="/usr/share/lutris-wine/themes"
 export LU_WINE_DIR="$LU_DIR/runners/wine"
 export LU_RUNTIME="$HOME/.local/share/lutris/runtime"
 export LU_DB="$LU_DIR/pga.db"
-export LU_APP="${HOME}/.local/share/applications/LutrisWineApp"
+export MENUAPPDIR="$HOME/.local/share/applications"
+export LW_APP_DIR="$MENUAPPDIR/LutrisWineApp"
 export WTRX_DIR="$LU_RUNTIME/winetricks"
 
 yaml_parser() {
@@ -435,24 +436,27 @@ check_musthave_dll() {
     fi
 }
 
-other_fixes() {
-#fix after installation Origin, for disabled OriginWebHelperService by default
-if [ ! -z "$(cat "$WINEPREFIX/system.reg"|grep -wm 1 "Origin.exe"|awk '{print $1}')" ]
-    then
-        sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg"|grep 'OriginWebHelperService'|awk '{print $1}') + 3)))
-        sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
-fi
-#fix after installation PnkBstr*, for disabled PnkBstr* by default
-for fix_reg in "PnkBstrA.exe" "PnkBstrB.exe"
-    do
-        if [ ! -z "$(cat "$WINEPREFIX/system.reg"|grep -wm 1 "$fix_reg"|awk '{print $1}')" ]
-            then
-                sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg" | grep "$fix_reg" | awk '{print $1}') + 3)))
-                sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
-        fi
-done
-#disabled silent autostart steam
-sed -i '/steam.exe\\" -silent"/d' "$WINEPREFIX/user.reg"
+check_other_fixes() {
+    #fix after installation Origin, for disabled OriginWebHelperService by default
+    if [ ! -z "$(cat "$WINEPREFIX/system.reg"|grep -wm 1 "Origin.exe"|awk '{print $1}')" ]
+        then
+            sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg"|grep 'OriginWebHelperService'|awk '{print $1}') + 3)))
+            sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
+    fi
+    #fix after installation PnkBstr*, for disabled PnkBstr* by default
+    for fix_reg in "PnkBstrA.exe" "PnkBstrB.exe"
+        do
+            if [ ! -z "$(cat "$WINEPREFIX/system.reg"|grep -wm 1 "$fix_reg"|awk '{print $1}')" ]
+                then
+                    sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg" | grep "$fix_reg" | awk '{print $1}') + 3)))
+                    sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
+            fi
+    done
+    #disabled silent autostart steam
+    sed -i '/steam.exe\\" -silent"/d' "$WINEPREFIX/user.reg"
+    export WINE_MONO_OVERRIDES="Microsoft.Xna.Framework.*,Gac=n"
+    export STAGING_SHARED_MEMORY="1"
+    export WINE_LARGE_ADDRESS_AWARE="1"
 }
 
 wdllover_upd() {
@@ -468,7 +472,7 @@ reg_edit() {
     zenity --question --title "Lutris Wine Registry Editor" --text "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in "$1" do not add it to the registry.\nAre you sure you want to continue?" --no-wrap &>/dev/null
     if [ $? -eq "0" ]
         then
-            REG_BC_DIR="$WINEPREFIX/registry_$(date +'%Y-%m-%d_%T')"
+            REG_BC_DIR="$WINEPREFIX/registry_$(date +'%Y-%m-%d_%H%M%S')"
             echo "Registry backup to '$REG_BC_DIR'"
             mkdir "$REG_BC_DIR" 2>/dev/null
             for regbc in $(ls "$WINEPREFIX"/*.reg) ; do cp -rfv "$regbc" "$REG_BC_DIR/" ; done
@@ -524,7 +528,7 @@ add_to_lutris() {
             export YMLTOLU="${SHRT_PATH}/${SHRT_NAME}.yaml"
             if [ -z "$ADD_APP_NAME" ]
                 then
-                    zenity --question --title "Add to Lutris" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
+                    zenity --question --title "Shortcuts Creator" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
                     if [ $? -eq "0" ]
                         then
                             ADD_APP_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
@@ -548,7 +552,7 @@ add_to_lutris() {
             if [ -z "$ADD_EXE_ARG" ]
                 then
                     sleep 0.3
-                    zenity --question --title "Add to Lutris" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
+                    zenity --question --title "Shortcuts Creator" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
                     if [ $? -eq "0" ]
                         then
                             sleep 0.3
@@ -579,7 +583,7 @@ add_to_lutris() {
                                     LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                                     if [ ! -z "$LUADDPID" ]
                                         then
-                                            zenity --question --title "Add to Lutris" --text "Application successfully added to Lutris!\nDo you want to close Lutris?" --no-wrap &>/dev/null
+                                            zenity --question --title "Shortcuts Creator" --text "Application successfully added to Lutris!\nDo you want to close Lutris?" --no-wrap &>/dev/null
                                             if [ $? -eq "0" ]
                                                 then
                                                     kill -9 "$LUADDPID" 2>/dev/null
@@ -591,7 +595,7 @@ add_to_lutris() {
                             LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                             if [ ! -z "$LUADDPID" ]
                                 then
-                                    zenity --question --title "Add to Lutris" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &>/dev/null
+                                    zenity --question --title "Shortcuts Creator" --text "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else.\nDo you want to close Lutris?" --no-wrap &>/dev/null
                                     if [ $? -eq "0" ]
                                         then
                                             kill "$LUADDPID" 2>/dev/null
@@ -609,7 +613,7 @@ create_shortcut() {
             exe2png "$LU_EXE"
             export DESKF="${SHRT_PATH}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
-            zenity --question --title "Creating shortcut" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
+            zenity --question --title "Shortcuts Creator" --text "Change application name [ $SHRT_NAME ] ?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     ADD_APP_NAME="$(zenity --entry --title "Enter name"  --text "Enter name for application")"
@@ -620,7 +624,7 @@ create_shortcut() {
             fi
             echo "Name=${SHRT_NAME}" >> "$DESKF"
             sleep 0.3
-            zenity --question --title "Creating shortcut" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
+            zenity --question --title "Shortcuts Creator" --text "Add launch arguments for EXE?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     sleep 0.3
@@ -635,12 +639,12 @@ create_shortcut() {
                     echo "Exec=lutris-wine \"$LU_EXE\"" >> "$DESKF"
             fi
             sleep 0.3
-            zenity --question --title "Creating shortcut" --text "Change advanced startup options for EXE?" --no-wrap &>/dev/null
+            zenity --question --title "Shortcuts Creator" --text "Change advanced startup options for EXE?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     sleep 0.3
                     SHRT_PARAM="$(echo -e "\nTERMINAL\n\nHOLD_TERMINAL\n\nLOG\n\nDEBUG\n\nUNSET_CMPSTR_SW\n\nNO_TRAY"| \
-                    zenity --title "Creating shortcut" --text "Additional launch options:" --list --checklist --multiple --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500 2>/dev/null)"
+                    zenity --title "Shortcuts Creator" --text "Additional launch options:" --list --checklist --multiple --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500 2>/dev/null)"
                     if [ ! -z "$SHRT_PARAM" ]
                         then
                             (IFS=$'\n' ; for shrt_item in $SHRT_PARAM
@@ -682,19 +686,19 @@ create_shortcut() {
             chmod u+x "$DESKF"
             sleep 0.3
             echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}complete!\n$RESETCOLOR"
-            zenity --question --title "Creating shortcut" --text "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file.\nDo you want to add it to application menu?" --no-wrap &>/dev/null
+            zenity --question --title "Shortcuts Creator" --text "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file.\nDo you want to add it to application menu?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
-                    if [ ! -d "$LU_APP" ]
+                    if [ ! -d "$LW_APP_DIR" ]
                         then
-                            mkdir -p "$LU_APP"
+                            mkdir -p "$LW_APP_DIR"
                     fi
-                    cp -rf "$DESKF" ${LU_APP}/
+                    cp -rf "$DESKF" ${LW_APP_DIR}/
                     update-desktop-database -q "${HOME}/.local/share/applications"
                     sleep 0.3
-                    zenity --info --title "Creating shortcut" --text "Shortcut successfully added to application menu!" --no-wrap &>/dev/null
+                    zenity --info --title "Shortcuts Creator" --text "Shortcut successfully added to application menu!" --no-wrap &>/dev/null
             fi
-            zenity --question --title "Creating shortcut" --text "Do you want to add it to Lutris?" --no-wrap &>/dev/null
+            zenity --question --title "Shortcuts Creator" --text "Do you want to add it to Lutris?" --no-wrap &>/dev/null
             if [ $? -eq "0" ]
                 then
                     add_to_lutris
@@ -718,7 +722,7 @@ lu_debug() {
             export VKD3D_DEBUG="warn"
             export WINE_MONO_TRACE="E:System.NotImplementedException"
             export VKBASALT_LOG_LEVEL="debug"
-            export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%T').debug"
+            export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').debug"
             export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" \
                 "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "DXVK_STATE_CACHE_PATH" \
                 "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" \
@@ -912,14 +916,14 @@ dis_cmd_msg() {
     fi
 }
 
-expluwineconf() {
+import_luwine_conf() {
     export $(yaml_parser "$LU_WINE_CONF"|sed "s/wine~//g"|sed "s/system~//g"|sed "s/env~//g")
     export WINE_IN_USE="$version"
     export WINEDIR="$LU_DIR/runners/wine/$WINE_IN_USE"
     export WINE="$WINEDIR/bin/wine"
 }
 
-setwine() {
+check_def_wine() {
     if [[ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" && -z "$(pgrep -fa zenity|grep "Wine Manager"|awk '{print$1}')" ]]; then :
         else
             print_error "Wine Manager already runing!"
@@ -935,9 +939,9 @@ setwine() {
                 then
                     sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
                     print_info "WINE $SETWINE select as default!"
-                    expluwineconf
+                    import_luwine_conf
                 else
-                    setwine
+                    check_def_wine
             fi
     elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
         then
@@ -948,16 +952,16 @@ setwine() {
                 then
                     sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
                     print_info "WINE $SETWINE select as default!"
-                    expluwineconf
+                    import_luwine_conf
                 else
-                    setwine
+                    check_def_wine
             fi
     elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             export SETWINE="$(ls -1 "$LU_WINE_DIR"|head -1)"
             sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
             print_info "WINE $SETWINE select as default!"
-            expluwineconf
+            import_luwine_conf
             zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
     elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 || "$SETWINE" == 1 ]]
         then
@@ -968,14 +972,14 @@ setwine() {
                 then
                     sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
                     print_info "WINE $SETWINE select as default!"
-                    expluwineconf
+                    import_luwine_conf
             fi
     elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]]
         then
             export SETWINE="$(ls -1 "$LU_WINE_DIR"|head -1)"
             sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
             print_info "WINE $SETWINE select as default!"
-            expluwineconf
+            import_luwine_conf
             zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
     fi
 }
@@ -990,13 +994,13 @@ lu_prerun() {
                     cd "$EXE_PATH"
                     if [ "$LOG" == 1 ]
                         then
-                            export LOG_FILE="$EXE_PATH/$(basename "$LU_EXE")_$(date +"%Y-%m-%d_%T").log"
+                            export LOG_FILE="$EXE_PATH/$(basename "$LU_EXE")_$(date +'%Y-%m-%d_%H%M%S').log"
                     fi
                 else
                     cd "$EXE_PATH"
                     if [ "$LOG" == 1 ]
                         then
-                            export LOG_FILE="$EXE_PATH/$(basename "$LU_EXE")_$(date +"%Y-%m-%d_%T").log"
+                            export LOG_FILE="$EXE_PATH/$(basename "$LU_EXE")_$(date +'%Y-%m-%d_%H%M%S').log"
                     fi
             fi
     elif [ ! -z "$LU_SHELL_EXE" ]
@@ -1007,13 +1011,13 @@ lu_prerun() {
                     cd "$LU_SHELL_EXE_PTH"
                     if [ "$LOG" == 1 ]
                         then
-                            export LOG_FILE="$LU_SHELL_EXE_PTH/$(basename "$LU_SHELL_EXE")_$(date +"%Y-%m-%d_%T").log"
+                            export LOG_FILE="$LU_SHELL_EXE_PTH/$(basename "$LU_SHELL_EXE")_$(date +'%Y-%m-%d_%H%M%S').log"
                     fi
                 else
                     cd "$LU_SHELL_EXE_PTH"
                     if [ "$LOG" == 1 ]
                         then
-                            export LOG_FILE="$LU_SHELL_EXE_PTH/$(basename "$LU_SHELL_EXE")_$(date +"%Y-%m-%d_%T").log"
+                            export LOG_FILE="$LU_SHELL_EXE_PTH/$(basename "$LU_SHELL_EXE")_$(date +'%Y-%m-%d_%H%M%S').log"
                     fi
             fi
     elif [ ! -z "$LU_PTH" ]
@@ -1029,13 +1033,9 @@ lu_prerun() {
 
 lu_run() {
     lu_tray
-    check_mono_gecko
-    if [[ ! -z "$HOLD_TERMINAL" && "$HOLD_TERMINAL" != 0 ]]
-        then
-            export term_hold="--hold"
-    fi
+    us_layout_sw
+    compositor_sw
     lu_debug 2>/dev/null
-    compositor_sw 2>/dev/null
     if [[ "$LOG" == 1 && "$TERMINAL" == 1 ]]
         then
             if [ ! -z "$LU_SHELL_EXE" ]
@@ -1077,7 +1077,7 @@ lu_run() {
             else
                 if [ ! -z "$LU_LNK" ]
                     then
-                        export TMP_OUT="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%T').out"
+                        export TMP_OUT="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').out"
                         $terminal_app $term_hold -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
                     else
                         $terminal_app $term_hold -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' $EXE_ARG"
@@ -1495,30 +1495,40 @@ lu_rmapp() {
             zenity --error --title "Shortcuts Remover" --text "Shortcuts Remover already runing!" --no-wrap &>/dev/null
             exit 1
     fi
-    if [[ -d "$LU_APP" && ! -z "$(ls -1 "$LU_APP"|head -1)" ]]
+    updmenuapp() {
+        update-desktop-database -q "$MENUAPPDIR"
+        sleep 0.3
+        zenity --info --title "Shortcuts Remover" --text "Lutris Wine applications deleted from menu!" --no-wrap &>/dev/null
+    }
+    export LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$MENUAPPDIR")"
+    if [[ ! -z "$(echo "$LWAPPSHRT"|head -1)" ]]
         then
-            SHRT_RM="$(echo -e "\nALL SHORTCUTS\n\n$(echo "$(ls "$LU_APP")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            zenity --title "Shortcuts Remover" --text "Select shortcuts to remove:" --list --checklist --multiple --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
-            if [ ! -z "$SHRT_RM" ]
+            LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep "^Name=" {}|sed 's/^Name=//g'|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            yad --title "Shortcuts Remover" --list --checklist --separator "\n" --column="" --column="Select shortcuts to remove:" \
+            --text-align=center --center --window-icon="/usr/share/lutris/media/default_icon.png" \
+            --width=300 --height=500 --button="REMOVE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
+            if [ "$?" == "2" ]
                 then
-                    (IFS=$'\n' ; for shrt_rm in $SHRT_RM
+                    sleep 0.3
+                    zenity --question --title "Shortcuts Remover" --text "Are you sure you want to remove all Lutris Wine applications from menu?" --no-wrap &>/dev/null
+                    if [ $? -eq "0" ]
+                        then
+                            echo "$LWAPPSHRT"|xargs -d "\n" -I {} rm -rfv {}
+                            rm -rfv "$LW_APP_DIR"
+                            updmenuapp
+                    fi
+            elif [ ! -z "$(echo "$LW_APP_RM"|head -1)" ]
+                then
+                    export LW_APP_RM="$(echo "$LW_APP_RM"|sed '/^TRUE$/d'|sed '/^$/d')"
+                    (IFS=$'\n' ; for LWAPPRM in $LW_APP_RM
                         do
-                            if [[ "$shrt_rm" == "ALL SHORTCUTS" ]]
+                            export LWSHRTRM="$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -lo "Name=$LWAPPRM" {} 2>/dev/null)"
+                            if [ ! -z "$LWSHRTRM" ]
                                 then
-                                    sleep 0.3
-                                    zenity --question --title "Shortcuts Remover" --text "Are you sure you want to remove all Lutris Wine applications from menu?" --no-wrap &>/dev/null
-                                    if [ $? -eq "0" ]
-                                        then
-                                            rm -rfv "$LU_APP"
-                                    fi
-                                    break
-                                else
-                                    rm -rfv "$LU_APP"/"$shrt_rm"
+                                    rm -rfv "$LWSHRTRM"
                             fi
                     done)
-                    update-desktop-database -q "${HOME}/.local/share/applications"
-                    sleep 0.3
-                    zenity --info --title "Shortcuts Remover" --text "Lutris Wine applications deleted from menu!" --no-wrap &>/dev/null
+                    updmenuapp
             fi
         else
             zenity --error --title "Shortcuts Remover" --text "Lutris Wine applications not found in menu!" --no-wrap &>/dev/null
@@ -1526,6 +1536,12 @@ lu_rmapp() {
 }
 
 lu_shortcut() {
+    if [ -z "$(pgrep -fa zenity|grep "Shortcuts Creator"|awk '{print$1}')" ]; then :
+        else
+            print_error "Shortcuts Creator already runing!"
+            zenity --error --title "Shortcuts Creator" --text "Shortcuts Creator already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     if [ -f "$2" ]
         then
             export SHRT_FL="$(readlink -f "$2")"
@@ -1540,10 +1556,10 @@ lu_shortcut() {
                     fi
                 else
                     print_error "Unable to create shortcut for this file!"
-                    zenity --error --text "Unable to create shortcut for this file!" --no-wrap &>/dev/null
+                    zenity --error --title "Shortcuts Creator" --text "Unable to create shortcut for this file!" --no-wrap &>/dev/null
             fi
         else
-            SHRT_EXE="$(zenity --title "Specify the executable file:" --file-selection --file-filter="*.exe")"
+            SHRT_EXE="$(zenity --title "Shortcuts Creator" --file-selection --file-filter="*.exe")"
             if [ -f "$SHRT_EXE" ]
                 then
                     export SHRT_FL="$(readlink -f "$SHRT_EXE")"
@@ -1558,17 +1574,23 @@ lu_shortcut() {
                             fi
                         else
                             print_error "Unable to create shortcut for this file!"
-                            zenity --error --text "Unable to create shortcut for this file!" --no-wrap &>/dev/null
+                            zenity --error --title "Shortcuts Creator" --text "Unable to create shortcut for this file!" --no-wrap &>/dev/null
                     fi
             elif [ -d "$SHRT_EXE" ]
                 then
                     print_error "Specify the executable file to create shortcut!"
-                    zenity --error --text "Specify the executable file to create shortcut!" --no-wrap &>/dev/null
+                    zenity --error --title "Shortcuts Creator" --text "Specify the executable file to create shortcut!" --no-wrap &>/dev/null
             fi
     fi
 }
 
 lu_explorer() {
+    if [ -z "$(pgrep explorer.exe)" ]; then :
+        else
+            print_error "Explorer already runing!"
+            zenity --error --title "Explorer" --text "Explorer already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     UNSET_CMPSTR_SW=1
     unset EXE_ARG
     export DEBUG=0
@@ -1576,8 +1598,14 @@ lu_explorer() {
 }
 
 lu_help() {
+    if [ -z "$(pgrep -fa zenity|grep "Lutris Wine usage info"|awk '{print$1}')" ]; then :
+        else
+            print_error "Lutris Wine usage info already runing!"
+            zenity --error --title "Lutris Wine usage info" --text "Lutris Wine usage info already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
     echo -e "
-        ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by VHSgunzo
+        ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
             $RED└──╼ \$$GREEN lutris-wine $BLUE{lutris-wine argument} ${RED}blabla.exe $BLUE{exe arguments}
@@ -1636,12 +1664,18 @@ lu_help() {
         -tray {noclose}       Open Lutris Wine in tray\n \
         -help                          Show this usage info\n \
         -version                    Show version info\n\n \
-        Lutris Wine v${LW_VERSION} by VHSgunzo \
+        Lutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
         " --no-wrap &>/dev/null &
 }
 
 lu_version() {
-    echo -e "${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by VHSgunzo$RESETCOLOR"
+    if [ -z "$(pgrep -fa zenity|grep "Version info"|awk '{print$1}')" ]; then :
+        else
+            print_error "Version info already runing!"
+            zenity --error --title "Version info" --text "Version info already runing!" --no-wrap &>/dev/null
+            exit 1
+    fi
+    echo -e "${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS $RESETCOLOR"
     if [ ! -z "$version" ]
         then
             export WINE_VER="[ WINE ]       : $version\n"
@@ -1672,7 +1706,7 @@ lu_version() {
             export DGVOODOO2_VER="[ DGVOODOO2 ]  : $dgvoodoo2_version\n"
             echo -en "$DGVOODOO2_VER"
     fi
-    zenity --info --title "Version info" --text "Lutris Wine v${LW_VERSION} by VHSgunzo\n\n${WINE_VER}${DXVK_VER}${VKD3D_VER}${DXVK_NVAPI_VER}${D3DEXTRAS_VER}${DGVOODOO2_VER}" --no-wrap &>/dev/null &
+    zenity --info --title "Version info" --text "Lutris Wine v${LW_VERSION} by $LW_DEVELOPERS\n\n${WINE_VER}${DXVK_VER}${VKD3D_VER}${DXVK_NVAPI_VER}${D3DEXTRAS_VER}${DGVOODOO2_VER}" --no-wrap &>/dev/null &
 }
 
 lu_tray() {
@@ -1779,7 +1813,7 @@ lu_winemgr() {
                 then
                     rm -rf /tmp/*$WGUIDW
                     export SETWINE="1"
-                    setwine
+                    check_def_wine
             fi
             export PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; rm -rf /tmp/PLUSET$WGUIDW)"
             export PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; rm -rf /tmp/PGESET$WGUIDW)"
@@ -1804,7 +1838,7 @@ lu_winemgr() {
                 then
                     rm -rf /tmp/*$WGUIDW
                     export SETWINE="1"
-                    setwine
+                    check_def_wine
             fi
             export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/WDEL_SET$WGUIDW)"
     elif [[ -z "$ILW_LIST" && ! -z "$GITOK" ]]
@@ -1991,7 +2025,7 @@ lu_winemgr() {
                         then
                             print_info "Removed WINE which was selected by default!"
                             zenity --info --title "Wine removing completed!" --text "Removed WINE which was selected by default!" --no-wrap &>/dev/null
-                            setwine
+                            check_def_wine
                             print_info "You need to restart LUTRIS!"
                             zenity --question --title "Wine removing completed!" --text "You need to restart LUTRIS! Press YES to restart" --no-wrap &>/dev/null
                             if [ $? -eq "0" ]
@@ -2012,7 +2046,7 @@ lu_winemgr() {
                         then
                             print_info "Removed WINE which was selected by default!"
                             zenity --info --title "Wine removing completed!" --text "Removed WINE which was selected by default!" --no-wrap &>/dev/null
-                            setwine
+                            check_def_wine
                         else
                             print_info "Removed WINE which was selected by default! WINE is not installed in Lutris, you must download WINE!"
                             zenity --info --title "Wine removing completed!" --text "Removed WINE which was selected by default!\nWINE is not installed in Lutris, you must download WINE!" --no-wrap &>/dev/null
@@ -2048,7 +2082,7 @@ lu_winemgr() {
                 else
                     if [ -z "$WINEINUSEDEL" ]
                         then
-                            setwine
+                            check_def_wine
                             unset WDEL_SET
                     fi
                     unset PLU_INST PK4_INST PPW_INST PGE_INST
@@ -2081,274 +2115,380 @@ lu_themesmgr() {
     fi
 }
 
-if [ $(id -u) -eq 0 ] ; then
-    print_error "Don't run Lutris Wine as root!"
-    zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &>/dev/null &
-    exit 1
-fi
-create_new_dir "$LU_WINE_DIR"
-if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
+us_layout_sw() {
+    if [[ ! -z "$use_us_layout" && "$use_us_layout" == true ]]
+        then
+            if [ ! -z "$(which xkb-switch 2>/dev/null)" ]
+                then
+                    xkb-switch -s us 2>/dev/null
+                else
+                    print_error "xkb-switch not found!"
+            fi
+    fi
+}
+
+check_mangohud() {
+    if [[ ! -z "$mangohud" && ! -z "$(which mangohud 2>/dev/null)" ]]
+        then
+            if [ "$mangohud" == "vk64" ]
+                then
+                    export RUN_MANGOHUD="mangohud"
+                else
+                    export RUN_MANGOHUD="mangohud --dlsym"
+            fi
+        else
+            print_error "MANGOHUD not found in you system or disabled in Lutris!"
+            export DISABLE_MANGOHUD=1
+    fi
+}
+
+check_gamemode() {
+    if [[ ! -z "$gamemode" && "$gamemode" == true && ! -z "$(which gamemoderun 2>/dev/null)" ]]
+        then
+            export RUN_GAMEMODE="gamemoderun"
+        else
+            print_error "GAMEMODE not found in you system or disabled in Lutris!"
+            export RUN_GAMEMODE=""
+    fi
+}
+
+check_gstreamer() {
+    if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
+        then
+            export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0/:$WINEDIR/lib/gstreamer-1.0/"
+            create_new_dir "$HOME/.cache/gstreamer-1.0"
+            export WINE_GST_REGISTRY_DIR="$HOME/.cache/gstreamer-1.0"
+            export MEDIACONV_AUDIO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/audio.foz
+            export MEDIACONV_AUDIO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_audio.foz
+            export MEDIACONV_VIDEO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/video.foz
+            export MEDIACONV_VIDEO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_video.foz
+        else
+            wdllover_upd "winegstreamer="
+    fi
+}
+
+check_dxvk() {
+    if [[ ! -z "$dxvk" && "$dxvk" == true ]]
+        then
+            create_new_dir "$HOME/.cache/dxvk_cache"
+            create_new_dir "$HOME/.cache/gl_shader_cache"
+            export DXVK_STATE_CACHE_PATH=$HOME/.cache/dxvk_cache
+            export DXVK_STATE_CACHE=1
+            export __GL_DXVK_OPTIMIZATIONS=1
+            export __GL_SHADER_DISK_CACHE_PATH=$HOME/.cache/gl_shader_cache
+            export __GL_SHADER_DISK_CACHE=1
+            export __GL_SHADER_DISK_CACHE_SIZE=1000000000
+            wdllover_upd "d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi=n"
+    fi
+}
+
+check_vkd3d() {
+    if [[ ! -z "$vkd3d" && "$vkd3d" == true ]]
+        then
+            wdllover_upd "d3d12=n"
+    fi
+}
+
+check_dxvk_nvapi() {
+    if [[ ! -z "$dxvk_nvapi" && "$dxvk_nvapi" == true ]]
+        then
+            wdllover_upd "nvapi,nvapi64,nvml=n;nvcuda=b"
+            export DXVK_NVAPIHACK="0"
+
+    fi
+}
+
+check_d3d_extras() {
+    if [[ ! -z "$d3d_extras" && "$d3d_extras" == true ]]
+        then
+            wdllover_upd "d3dcompiler_42,d3dcompiler_43,d3dcompiler_46,d3dcompiler_47,d3dx10_33,d3dx10_34,d3dx10_35,d3dx10_36,d3dx10_37,d3dx10_38,d3dx10_39,d3dx10_40,d3dx10_41,d3dx10_42,d3dx10_43,d3dx10,d3dx11_42,d3dx11_43,d3dx9_24,d3dx9_25,d3dx9_26,d3dx9_27,d3dx9_28,d3dx9_29,d3dx9_30,d3dx9_31,d3dx9_32,d3dx9_33,d3dx9_34,d3dx9_35,d3dx9_36,d3dx9_37,d3dx9_38,d3dx9_39,d3dx9_40,d3dx9_41,d3dx9_42,d3dx9_43=n"
+    fi
+}
+
+check_dgvoodoo2() {
+    if [[ ! -z "$dgvoodoo2" && "$dgvoodoo2" == true ]]
+        then
+            true
+    fi
+}
+
+check_battleye() {
+    if [[ ! -z "$battleye" && "$battleye" == true ]]
+        then
+            export PROTON_BATTLEYE_RUNTIME="$LU_RUNTIME/battleye_runtime"
+        else
+            unset PROTON_BATTLEYE_RUNTIME
+    fi
+}
+
+check_wine_inst() {
+    if [[ ! -f "$WINE" && -z "$(ls -1 "$LU_WINE_DIR"|head -1)" ]]
+        then
+            print_error "WINE is not installed in Lutris, you must download WINE!"
+            zenity --info --title "Wine check" --text "WINE is not installed in Lutris, you must download WINE!" --no-wrap &>/dev/null
+            lu_winemgr
+    fi
+}
+
+check_winearch() {
+    if [ -z "$WINEARCH" ]
+        then
+            export WINEARCH="win64"
+    fi
+}
+
+check_winepfx() {
+    if [ -z "$WINEPREFIX" ]
+        then
+            export WINEPREFIX="$HOME/.wine"
+            export WTRX_LOG="$WINEPREFIX/winetricks.log"
+    fi
+}
+
+check_shell() {
+    if [ -z "$SHELL" ]
+        then
+            export SHELL="/usr/bin/bash"
+    fi
+}
+
+check_wdllover() {
+    wdllover_upd "$(echo -n "$(sed -n  '/\(^  overrides\)/,$p' "$LU_WINE_CONF"|grep "    "|sed 's/^ *//g'|tr ':' '='|sed 's/ //g'|sed "s/''//g")"|tr "\n" ";")"
+}
+
+check_vulkan_icd() {
+    export VK_ICD_FILENAMES="$vk_icd"
+}
+
+check_sdl_video() {
+    export SDL_VIDEO_FULLSCREEN_DISPLAY="$sdl_video_fullscreen"
+}
+
+check_prime() {
+    if [[ ! -z "$prime" && "$prime" == true ]]
+        then
+            export __GLX_VENDOR_LIBRARY_NAME=nvidia
+            export __NV_PRIME_RENDER_OFFLOAD=1
+        else
+            unset __GLX_VENDOR_LIBRARY_NAME __NV_PRIME_RENDER_OFFLOAD
+    fi
+}
+
+check_esync() {
+    if [[ ! -z "$esync" && "$esync" == true ]]
+        then
+            export WINEESYNC="1"
+        else
+            unset WINEESYNC
+    fi
+}
+
+check_fsync() {
+    if [[ ! -z "$fsync" && "$fsync" == true ]]
+        then
+            export WINEFSYNC="1"
+            export WINEFSYNC_FUTEX2="1"
+        else
+            unset WINEFSYNC WINEFSYNC_FUTEX2
+    fi
+}
+
+check_fsr() {
+    if [[ ! -z "$fsr" && "$fsr" == true ]]
+        then
+            export WINE_FULLSCREEN_FSR="1"
+            export WINE_FULLSCREEN_FSR_STRENGTH="1"
+        else
+            unset WINE_FULLSCREEN_FSR WINE_FULLSCREEN_FSR_STRENGTH
+    fi
+}
+
+check_runtime() {
+    if [[ ! -z "$disable_runtime" && "$disable_runtime" == true ]]
+        then
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+        else
+            if [[ ! -z "$prefer_libs" && "$prefer_libs" == true ]]
+                then
+                    export LD_LIBRARY_PATH="$WINEDIR/lib:$WINEDIR/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64:/usr/lib/libfakeroot:/usr/lib64:$LU_RUNTIME/Ubuntu-18.04-i686:$LU_RUNTIME/steam/i386/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/lib:$LU_RUNTIME/steam/i386/usr/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/usr/lib:$LU_RUNTIME/Ubuntu-18.04-x86_64:$LU_RUNTIME/steam/amd64/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/lib:$LU_RUNTIME/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/usr/lib::$LD_LIBRARY_PATH"
+                else
+                    export LD_LIBRARY_PATH="$LU_RUNTIME/Ubuntu-18.04-i686:$LU_RUNTIME/steam/i386/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/lib:$LU_RUNTIME/steam/i386/usr/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/usr/lib:$LU_RUNTIME/Ubuntu-18.04-x86_64:$LU_RUNTIME/steam/amd64/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/lib:$LU_RUNTIME/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/usr/lib:$LD_LIBRARY_PATH"
+            fi
+    fi
+}
+
+check_ld_library() {
+    if [ ! -z "$LD_LIBRARY_PATH" ]
+        then
+            if [[ -z "$(echo $LD_LIBRARY_PATH|grep "$WINEDIR/lib64:$WINEDIR/lib")" ]]
+                then
+                    export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:$LD_LIBRARY_PATH"
+            fi
+        else
+            export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib"
+    fi
+}
+
+check_path() {
+    if [ ! -z "$PATH" ]
+        then
+            export PATH="$WINEDIR/bin:$PATH"
+        else
+            export PATH="$WINEDIR/bin"
+    fi
+}
+
+check_terminal() {
+    if [[ ! -z "$terminal" && "$terminal" == true ]]
+        then
+            export TERMINAL=1
+    fi
+}
+
+check_pulse_latency() {
+    if [[ ! -z "$pulse_latency" && "$pulse_latency" == true ]]
+        then
+            export PULSE_LATENCY_MSEC="60"
+    fi
+}
+
+check_reset_pulse() {
+    if [[ ! -z "$reset_pulse" && "$reset_pulse" == true ]]
+        then
+            if [[ ! -z "$(pgrep pulseeffects)" && ! -z "$(pgrep pulseaudio)" ]]
+                then
+                    pkill -15 pulseeffects
+                    pulseaudio -k
+                    if [ -z "$(pgrep pulseaudio)" ]
+                        then
+                            pulseaudio -D
+                    fi
+                    pulseeffects --gapplication-service
+            elif [ ! -z "$(pgrep pulseaudio)" ]
+                then
+                    pulseaudio -k
+                    if [ -z "$(pgrep pulseaudio)" ]
+                        then
+                            pulseaudio -D
+                    fi
+            fi
+    fi
+}
+
+export_all_functions() {
+    export -f yaml_parser print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid \
+        check_luwine_sh_pid check_exes noclosetray check_compositor create_new_dir check_symlink check_mono_gecko try_download \
+        download_error unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death \
+        compositor_sw update_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris \
+        create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_conf check_def_wine lu_prerun lu_run lu_prestart \
+        lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell \
+        lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr lu_themesmgr \
+        us_layout_sw check_mangohud check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk_nvapi check_d3d_extras check_dgvoodoo2 \
+        check_battleye check_wine_inst check_winearch check_winepfx check_shell check_wdllover check_vulkan_icd check_sdl_video \
+        check_prime check_esync check_fsync check_fsr check_runtime check_ld_library check_path check_terminal check_pulse_latency \
+        check_reset_pulse export_all_functions check_win_version check_hold_terminal
+}
+
+check_win_version() {
+    if [ -z "$WIN_VER" ]
+        then
+            export WIN_VER="10"
+    fi
+    if [[ -z $(cat "$WINEPREFIX/system.reg"|grep "Windows $WIN_VER") ]]
+        then
+            if [[ ! -z "$WIN_VER" && $(echo "$WIN_VER"|sed 's/.*/\L&/') == "xp" ]]
+                then
+                    export WIN_VER="xp64"
+            fi
+            "$WINE" winecfg -v $(echo "win$WIN_VER"|sed 's/.*/\L&/')
+            echo "WINDOWS VERSION SET TO WINDOWS $WIN_VER"
+    fi
+}
+
+check_hold_terminal() {
+    if [[ ! -z "$HOLD_TERMINAL" && "$HOLD_TERMINAL" != 0 ]]
+        then
+            export term_hold="--hold"
+    fi
+}
+
+if [ $(id -u) -eq 0 ]
     then
-        unset WINEINUSEDEL WDEL_SET PK4_INST PPW_INST PGE_INST
-        expluwineconf
-        if [[ ! -f "$WINE" && -z "$(ls -1 "$LU_WINE_DIR"|head -1)" ]]
-            then
-                print_error "WINE is not installed in Lutris, you must download WINE!"
-                zenity --info --title "Wine check" --text "WINE is not installed in Lutris, you must download WINE!" --no-wrap &>/dev/null
-                lu_winemgr
-        fi
-        setwine
-        if [ -z "$WINEARCH" ]
-            then
-                export WINEARCH="win64"
-        fi
-        if [ -z "$WINEPREFIX" ]
-            then
-                export WINEPREFIX="$HOME/.wine"
-        fi
-        if [ -z "$SHELL" ]
-            then
-                export SHELL="/usr/bin/bash"
-        fi
-        check_compositor 2>/dev/null
-        wdllover_upd "$(echo -n "$(sed -n  '/\(^  overrides\)/,$p' "$LU_WINE_CONF"|grep "    "|sed 's/^ *//g'|tr ':' '='|sed 's/ //g'|sed "s/''//g")"|tr "\n" ";")"
-        export WINE_MONO_OVERRIDES="Microsoft.Xna.Framework.*,Gac=n"
-        export STAGING_SHARED_MEMORY="1"
-        export WINE_LARGE_ADDRESS_AWARE="1"
-        export VK_ICD_FILENAMES="$vk_icd"
-        export SDL_VIDEO_FULLSCREEN_DISPLAY="$sdl_video_fullscreen"
-        export WTRX_LOG="$WINEPREFIX/winetricks.log"
-        if [[ ! -z "$mangohud" && ! -z "$(which mangohud 2>/dev/null)" ]]
-            then
-                if [ "$mangohud" == "vk64" ]
-                    then
-                        export RUN_MANGOHUD="mangohud"
-                    else
-                        export RUN_MANGOHUD="mangohud --dlsym"
-                fi
-            else
-                print_error "MANGOHUD not found in you system or disabled in Lutris!"
-                export DISABLE_MANGOHUD=1
-        fi
-        if [[ ! -z "$gamemode" && "$gamemode" == true && ! -z "$(which gamemoderun 2>/dev/null)" ]]
-            then
-                export RUN_GAMEMODE="gamemoderun"
-            else
-                print_error "GAMEMODE not found in you system or disabled in Lutris!"
-                export RUN_GAMEMODE=""
-        fi
-        if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
-            then
-                export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0/:$WINEDIR/lib/gstreamer-1.0/"
-                create_new_dir "$HOME/.cache/gstreamer-1.0"
-                export WINE_GST_REGISTRY_DIR="$HOME/.cache/gstreamer-1.0"
-                export MEDIACONV_AUDIO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/audio.foz
-                export MEDIACONV_AUDIO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_audio.foz
-                export MEDIACONV_VIDEO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/video.foz
-                export MEDIACONV_VIDEO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_video.foz
-            else
-                wdllover_upd "winegstreamer="
-        fi
-        if [[ ! -z "$dxvk" && "$dxvk" == true ]]
-            then
-                create_new_dir "$HOME/.cache/dxvk_cache"
-                create_new_dir "$HOME/.cache/gl_shader_cache"
-                export DXVK_STATE_CACHE_PATH=$HOME/.cache/dxvk_cache
-                export DXVK_STATE_CACHE=1
-                export __GL_DXVK_OPTIMIZATIONS=1
-                export __GL_SHADER_DISK_CACHE_PATH=$HOME/.cache/gl_shader_cache
-                export __GL_SHADER_DISK_CACHE=1
-                export __GL_SHADER_DISK_CACHE_SIZE=1000000000
-                wdllover_upd "d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi=n"
-        fi
-        if [[ ! -z "$vkd3d" && "$vkd3d" == true ]]
-            then
-                wdllover_upd "d3d12=n"
-        fi
-        if [[ ! -z "$dxvk_nvapi" && "$dxvk_nvapi" == true ]]
-            then
-                wdllover_upd "nvapi,nvapi64,nvml=n;nvcuda=b"
-                export DXVK_NVAPIHACK="0"
-
-        fi
-        if [[ ! -z "$d3d_extras" && "$d3d_extras" == true ]]
-            then
-                wdllover_upd "d3dcompiler_42,d3dcompiler_43,d3dcompiler_46,d3dcompiler_47,d3dx10_33,d3dx10_34,d3dx10_35,d3dx10_36,d3dx10_37,d3dx10_38,d3dx10_39,d3dx10_40,d3dx10_41,d3dx10_42,d3dx10_43,d3dx10,d3dx11_42,d3dx11_43,d3dx9_24,d3dx9_25,d3dx9_26,d3dx9_27,d3dx9_28,d3dx9_29,d3dx9_30,d3dx9_31,d3dx9_32,d3dx9_33,d3dx9_34,d3dx9_35,d3dx9_36,d3dx9_37,d3dx9_38,d3dx9_39,d3dx9_40,d3dx9_41,d3dx9_42,d3dx9_43=n"
-        fi
-        if [[ ! -z "$dgvoodoo2" && "$dgvoodoo2" == true ]]
-            then
-                true
-        fi
-        if [[ ! -z "$battleye" && "$battleye" == true ]]
-            then
-                export PROTON_BATTLEYE_RUNTIME="$LU_RUNTIME/battleye_runtime"
-            else
-                unset PROTON_BATTLEYE_RUNTIME
-
-        fi
-        if [[ ! -z "$prime" && "$prime" == true ]]
-            then
-                export __GLX_VENDOR_LIBRARY_NAME=nvidia
-                export __NV_PRIME_RENDER_OFFLOAD=1
-            else
-                unset __GLX_VENDOR_LIBRARY_NAME __NV_PRIME_RENDER_OFFLOAD
-
-        fi
-        if [[ ! -z "$esync" && "$esync" == true ]]
-            then
-                export WINEESYNC="1"
-            else
-                unset WINEESYNC
-        fi
-        if [[ ! -z "$fsync" && "$fsync" == true ]]
-            then
-                export WINEFSYNC="1"
-                export WINEFSYNC_FUTEX2="1"
-            else
-                unset WINEFSYNC WINEFSYNC_FUTEX2
-        fi
-        if [[ ! -z "$fsr" && "$fsr" == true ]]
-            then
-                export WINE_FULLSCREEN_FSR="1"
-                export WINE_FULLSCREEN_FSR_STRENGTH="1"
-            else
-                unset WINE_FULLSCREEN_FSR WINE_FULLSCREEN_FSR_STRENGTH
-        fi
-        if [[ ! -z "$use_us_layout" && "$use_us_layout" == true ]]
-            then
-                export SYS_LYT="setxkbmap -query|grep layout|awk '"'{print$2}'"'"
-                export SYS_OTHLYT="$(eval $SYS_LYT|sed 's/us//g'|sed 's/,//g')"
-                export CHK_US="$SYS_LYT|cut -d',' -f1"
-                export CHK_LYT="xset -q|grep LED|grep -o '00000002'"
-                if [ "$(echo "$SYS_OTHLYT"|wc -m)" == "3" ]
-                    then
-                        if [[ "$(eval $CHK_US)" == "us" && ! -z "$(eval $CHK_LYT)" ]]
-                            then :
-                        elif [[ "$(eval $CHK_US)" != "us" && ! -z "$(eval $CHK_LYT)" ]]
-                            then
-                                setxkbmap us,$SYS_OTHLYT
-                        elif [[ "$(eval $CHK_US)" == "us" && -z "$(eval $CHK_LYT)" ]]
-                            then
-                                setxkbmap $SYS_OTHLYT,us
-                        fi
-                fi
-            else
-                unset SYS_LYT SYS_OTHLYT CHK_US CHK_LYT
-        fi
-        if [[ ! -z "$disable_runtime" && "$disable_runtime" == true ]]
-            then
-                export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-            else
-                if [[ ! -z "$prefer_libs" && "$prefer_libs" == true ]]
-                    then
-                        export LD_LIBRARY_PATH="$WINEDIR/lib:$WINEDIR/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64:/usr/lib/libfakeroot:/usr/lib64:$LU_RUNTIME/Ubuntu-18.04-i686:$LU_RUNTIME/steam/i386/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/lib:$LU_RUNTIME/steam/i386/usr/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/usr/lib:$LU_RUNTIME/Ubuntu-18.04-x86_64:$LU_RUNTIME/steam/amd64/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/lib:$LU_RUNTIME/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/usr/lib::$LD_LIBRARY_PATH"
-                    else
-                        export LD_LIBRARY_PATH="$LU_RUNTIME/Ubuntu-18.04-i686:$LU_RUNTIME/steam/i386/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/lib:$LU_RUNTIME/steam/i386/usr/lib/i386-linux-gnu:$LU_RUNTIME/steam/i386/usr/lib:$LU_RUNTIME/Ubuntu-18.04-x86_64:$LU_RUNTIME/steam/amd64/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/lib:$LU_RUNTIME/steam/amd64/usr/lib/x86_64-linux-gnu:$LU_RUNTIME/steam/amd64/usr/lib:$LD_LIBRARY_PATH"
-                fi
-        fi
-        if [ ! -z "$LD_LIBRARY_PATH" ]
-            then
-                if [[ -z "$(echo $LD_LIBRARY_PATH|grep "$WINEDIR/lib64:$WINEDIR/lib")" ]]
-                    then
-                        export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:$LD_LIBRARY_PATH"
-                fi
-            else
-                export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib"
-        fi
-        if [ ! -z "$PATH" ]
-            then
-                export PATH="$WINEDIR/bin:$PATH"
-            else
-                export PATH="$WINEDIR/bin"
-        fi
-        if [[ ! -z "$terminal" && "$terminal" == true ]]
-            then
-                export TERMINAL=1
-            else
-                unset TERMINAL
-
-        fi
-        if [[ ! -z "$pulse_latency" && "$pulse_latency" == true ]]
-            then
-                export PULSE_LATENCY_MSEC="60"
-            else
-                unset PULSE_LATENCY_MSEC
-
-        fi
-        if [[ ! -z "$reset_pulse" && "$reset_pulse" == true ]]
-            then
-                if [[ ! -z "$(pgrep pulseeffects)" && ! -z "$(pgrep pulseaudio)" ]]
-                    then
-                        pkill -15 pulseeffects
-                        pulseaudio -k
-                        if [ -z "$(pgrep pulseaudio)" ]
-                            then
-                                pulseaudio -D
-                        fi
-                        pulseeffects --gapplication-service
-                elif [ ! -z "$(pgrep pulseaudio)" ]
-                    then
-                        pulseaudio -k
-                        if [ -z "$(pgrep pulseaudio)" ]
-                            then
-                                pulseaudio -D
-                        fi
-                fi
-        fi
-        export -f yaml_parser print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid \
-        check_luwine_sh_pid check_exes noclosetray check_compositor create_new_dir check_symlink check_mono_gecko other_fixes \
-        try_download download_error unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death \
-        exes_is_death wine_is_death compositor_sw update_winetricks wdllover_upd reg_edit exe2png add_to_lutris create_shortcut \
-        lu_debug clear_log dis_debug_msg dis_cmd_msg expluwineconf setwine lu_prerun lu_run lu_prestart lu_start lu_cmd lu_shell \
-        lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell lu_killtray lu_killwine \
-        lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr lu_themesmgr check_musthave_dll
-        check_musthave_dll
-        if [ -z "$WIN_VER" ]
-            then
-                export WIN_VER="10"
-        fi
-        if [[ -z $(cat "$WINEPREFIX/system.reg"|grep "Windows $WIN_VER") ]]
-            then
-                if [[ ! -z "$WIN_VER" && $(echo "$WIN_VER"|sed 's/.*/\L&/') == "xp" ]]
-                    then
-                        export WIN_VER="xp64"
-                fi
-                "$WINE" winecfg -v $(echo "win$WIN_VER"|sed 's/.*/\L&/')
-                echo "WINDOWS VERSION SET TO WINDOWS $WIN_VER"
-        fi
-        other_fixes
-        case $1 in
-            -cmd) lu_cmd "$@" ;;
-            -shell) lu_shell "$@" ;;
-            -regedit) lu_regedit ;;
-            -control) lu_control ;;
-            -winecfg) lu_winecfg ;;
-            -taskmgr) lu_taskmgr ;;
-            -winemgr) lu_winemgr ;;
-            -themesmgr) lu_themesmgr ;;
-            -uninstaller) lu_uninstaller ;;
-            -winetricks) winetricks ;;
-            -openpfx) lu_openpfx ;;
-            -killwine) lu_killwine ;;
-            -killtray) lu_killtray ;;
-            -killexe) lu_killexe ;;
-            -killshell) lu_killshell ;;
-            -exit) lu_exit ;;
-            -clearpfx) lu_clearpfx ;;
-            -rmapp) lu_rmapp ;;
-            -shortcut) lu_shortcut "$@" ;;
-            -addtolu) export ADDTOLU=1 ; lu_shortcut "$@" ;;
-            -explorer) lu_explorer ;;
-            -debug) export DEBUG=1 ; lu_start "$@" ;;
-            -help) lu_help ;;
-            -version) lu_version ;;
-            -tray) lu_tray ;;
-            -setwine) export SETWINE="1" ; setwine ;;
-            -*) lu_help ;;
-            *) lu_start "$@" ;;
-        esac
-    else
-        print_error "First you need to configure Wine in Lutris!"
-        zenity --error --text "First you need to configure Wine in Lutris!" --no-wrap &>/dev/null &
+        print_error "Don't run Lutris Wine as root!"
+        zenity --error --text "Don't run Lutris Wine as root!" --no-wrap &>/dev/null &
         exit 1
+    else
+        if [[ -f "$LU_WINE_CONF" && -d "$LU_DIR" ]]
+            then
+                create_new_dir "$LU_WINE_DIR"
+                import_luwine_conf
+                check_wine_inst
+                check_def_wine
+                check_winearch
+                check_winepfx
+                check_shell
+                check_compositor
+                check_mono_gecko
+                check_wdllover
+                check_other_fixes
+                check_vulkan_icd
+                check_sdl_video
+                check_mangohud
+                check_gamemode
+                check_gstreamer
+                check_dxvk
+                check_vkd3d
+                check_dxvk_nvapi
+                check_d3d_extras
+                check_dgvoodoo2
+                check_battleye
+                check_prime
+                check_esync
+                check_fsync
+                check_fsr
+                check_runtime
+                check_ld_library
+                check_path
+                check_terminal
+                check_pulse_latency
+                check_reset_pulse
+                export_all_functions
+                check_musthave_dll
+                check_win_version
+                check_hold_terminal
+                case $1 in
+                    -cmd) lu_cmd "$@" ;;
+                    -shell) lu_shell "$@" ;;
+                    -regedit) lu_regedit ;;
+                    -control) lu_control ;;
+                    -winecfg) lu_winecfg ;;
+                    -taskmgr) lu_taskmgr ;;
+                    -winemgr) lu_winemgr ;;
+                    -themesmgr) lu_themesmgr ;;
+                    -uninstaller) lu_uninstaller ;;
+                    -winetricks) winetricks ;;
+                    -openpfx) lu_openpfx ;;
+                    -killwine) lu_killwine ;;
+                    -killtray) lu_killtray ;;
+                    -killexe) lu_killexe ;;
+                    -killshell) lu_killshell ;;
+                    -exit) lu_exit ;;
+                    -clearpfx) lu_clearpfx ;;
+                    -rmapp) lu_rmapp ;;
+                    -shortcut) lu_shortcut "$@" ;;
+                    -addtolu) export ADDTOLU=1 ; lu_shortcut "$@" ;;
+                    -explorer) lu_explorer ;;
+                    -debug) export DEBUG=1 ; lu_start "$@" ;;
+                    -help) lu_help ;;
+                    -version) lu_version ;;
+                    -tray) lu_tray ;;
+                    -setwine) export SETWINE="1" ; check_def_wine ;;
+                    -*) lu_help ;;
+                    *) lu_start "$@" ;;
+                esac
+            else
+                print_error "First you need to configure Wine in Lutris!"
+                zenity --error --text "First you need to configure Wine in Lutris!" --no-wrap &>/dev/null &
+                exit 1
+        fi
 fi

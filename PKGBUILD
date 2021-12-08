@@ -1,12 +1,12 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname=lutris-wine-git
-pkgver=0.46
+pkgver=0.47
 pkgrel=1
 pkgdesc='Lutris Wine Runner as system Wine and even better'
 arch=('any')
 url='https://github.com/VHSgunzo/lutris-wine'
 license=('MIT')
-depends=('lutris-git' 'zenity' 'yad' 'icoutils' 'imagemagick')
+depends=('lutris-git' 'zenity' 'yad' 'icoutils' 'imagemagick' 'xkb-switch')
 makedepends=('git')
 optdepends=('lutris-wine-meta')
 provides=("${pkgname%-git}")
