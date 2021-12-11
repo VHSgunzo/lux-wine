@@ -1,6 +1,6 @@
 #!/bin/bash
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION=0.47
+export LW_VERSION=0.48
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -47,7 +47,7 @@ yaml_parser() {
 print_var() {
     for varp in $@
         do
-            echo -e "[SET] $varp=\"${!varp}\""
+            echo -e "[VAR] $varp=\"${!varp}\""
     done
 }
 
@@ -125,7 +125,7 @@ check_exes() {
 noclosetray() {
     if [[ ! -z "$FORCE_TRAY" ]]
         then
-            while : ; do sleep 1337 ; done
+            while : ; do sleep 1 ; done
     fi
 }
 
@@ -303,53 +303,102 @@ wine_is_death() {
 compositor_sw() {
     if [[ ! -z "$disable_compositor" && "$disable_compositor" == true && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 ]]
         then
-            if [ ! -z "$CMPSTR_PLASMA_CHECK" ]
+            export CHK_CMPSTROFF_OTH="ls -1 /tmp/CMPSTROFF.* 2>/dev/null"
+            compositor_on() {
+                if exe_is_death && [[ -f "/tmp/CMPSTROFF.$CMPSTROFF" && -z "$(eval $CHK_CMPSTROFF_OTH|grep -v $CMPSTROFF 2>/dev/null)" ]]
+                    then
+                        $CMPSTR_ON
+                        rm -rf /tmp/CMPSTROFF.*
+                    else
+                        rm -rf /tmp/CMPSTROFF.$CMPSTROFF
+                fi
+            }
+            compositor_off() {
+                $CMPSTR_OFF
+                CMPSTROFF=$BASHPID
+                echo 1 > /tmp/CMPSTROFF.$CMPSTROFF
+            }
+            compositor_noff() {
+                CMPSTROFF=$BASHPID
+                echo 1 > /tmp/CMPSTROFF.$CMPSTROFF
+            }
+            cmpstr_dirty_noff() {
+                check_wine_pids
+                if [[ -z "$WINE_PIDS" ]]
+                    then
+                        rm -rf /tmp/CMPSTROFF.*
+                        compositor_noff
+                    else
+                        compositor_noff
+                fi
+            }
+            cmpstr_dirty_off() {
+                check_wine_pids
+                if [[ -z "$WINE_PIDS" && ! -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
+                    then
+                        rm -rf /tmp/CMPSTROFF.*
+                        compositor_off
+                fi
+            }
+            if [[ -f "/tmp/FORCE_EXIT" && ! -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                 then
-                    if [[ "$(eval $CMPSTR_PLASMA)" == true && "$CMPSTR_PLASMA_CHECK" == true ]]
+                    $CMPSTR_ON
+                    rm -rf /tmp/CMPSTROFF.*
+            elif [ ! -z "$CMPSTR_PLASMA_CHECK" ]
+                then
+                    if [[ "$(eval $CMPSTR_PLASMA)" == true && "$CMPSTR_PLASMA_CHECK" == true && -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                         then
-                            $CMPSTR_OFF
-                    elif [[ "$(eval $CMPSTR_PLASMA)" == false && "$CMPSTR_PLASMA_CHECK" == true ]]
+                            compositor_off
+                    elif [[ "$(eval $CMPSTR_PLASMA)" == false && ! -z "$CMPSTROFF" ]]
                         then
-                            if exes_is_death
-                                then
-                                    $CMPSTR_ON
-                            fi
+                            compositor_on
+                    elif [[ "$(eval $CMPSTR_PLASMA)" == false && "$(eval $CHK_CMPSTROFF_OTH|wc -l)" -ge 1 ]]
+                        then
+                            cmpstr_dirty_noff
+                    else
+                        cmpstr_dirty_off
                     fi
             elif [ ! -z "$CMPSTR_MATE_CHECK" ]
                 then
-                    if [[ "$(eval $CMPSTR_MATE)" == true && "$CMPSTR_MATE_CHECK" == true ]]
+                    if [[ "$(eval $CMPSTR_MATE)" == true && "$CMPSTR_MATE_CHECK" == true && -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                         then
-                            $CMPSTR_OFF
-                    elif [[ "$(eval $CMPSTR_MATE)" == false && "$CMPSTR_MATE_CHECK" == true ]]
+                            compositor_off
+                    elif [[ "$(eval $CMPSTR_MATE)" == false && ! -z "$CMPSTROFF" ]]
                         then
-                            if exes_is_death
-                                then
-                                    $CMPSTR_ON
-                            fi
+                            compositor_on
+                    elif [[ "$(eval $CMPSTR_MATE)" == false && "$(eval $CHK_CMPSTROFF_OTH|wc -l)" -ge 1 ]]
+                        then
+                            cmpstr_dirty_noff
+                    else
+                        cmpstr_dirty_off
                     fi
             elif [ ! -z "$CMPSTR_XFCE_CHECK" ]
                 then
-                    if [[ "$(eval $CMPSTR_XFCE)" == true && "$CMPSTR_XFCE_CHECK" == true ]]
+                    if [[ "$(eval $CMPSTR_XFCE)" == true && "$CMPSTR_XFCE_CHECK" == true && -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                         then
-                            $CMPSTR_OFF
-                    elif [[ "$(eval $CMPSTR_XFCE)" == false && "$CMPSTR_XFCE_CHECK" == true ]]
+                            compositor_off
+                    elif [[ "$(eval $CMPSTR_XFCE)" == false && ! -z "$CMPSTROFF" ]]
                         then
-                            if exes_is_death
-                                then
-                                    $CMPSTR_ON
-                            fi
+                            compositor_on
+                    elif [[ "$(eval $CMPSTR_XFCE)" == false && "$(eval $CHK_CMPSTROFF_OTH|wc -l)" -ge 1 ]]
+                        then
+                            cmpstr_dirty_noff
+                    else
+                        cmpstr_dirty_off
                     fi
             elif [ ! -z "$CMPSTR_DEEPIN_CHECK" ]
                 then
-                    if [[ "$(eval $CMPSTR_DEEPIN)" == "deepin wm" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
+                    if [[ "$(eval $CMPSTR_DEEPIN)" == "deepin wm" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" && -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                         then
-                            $CMPSTR_OFF
-                    elif [[ "$(eval $CMPSTR_DEEPIN)" == "deepin metacity" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" ]]
+                            compositor_off
+                    elif [[ "$(eval $CMPSTR_DEEPIN)" == "deepin metacity" && ! -z "$CMPSTROFF" ]]
                         then
-                            if exes_is_death
-                                then
-                                    $CMPSTR_ON
-                            fi
+                            compositor_on
+                    elif [[ "$(eval $CMPSTR_DEEPIN)" == "deepin metacity" && "$(eval $CHK_CMPSTROFF_OTH|wc -l)" -ge 1 ]]
+                        then
+                            cmpstr_dirty_noff
+                    else
+                        cmpstr_dirty_off
                     fi
             fi
     fi
@@ -500,7 +549,7 @@ exe2png() {
                             (IFS=$'\n' ; for ico in $(ls "${SHRT_NAME}"*.ico 2>/dev/null)
                                 do
                                     echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
-                                    icotool -x --output=./ "$ico" 2>/dev/null
+                                    convert "$ico" "$(echo "$ico"|sed 's/ico$/png/g')"  2>/dev/null
                             done)
                             cp -rf "$(ls -S -1 "${SHRT_NAME}"*_*.png|head -1)" "${SHRT_NAME}".png 2>/dev/null
                             convert "${SHRT_NAME}".png "${SHRT_NAME}".jpg 2>/dev/null
@@ -924,12 +973,6 @@ import_luwine_conf() {
 }
 
 check_def_wine() {
-    if [[ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" && -z "$(pgrep -fa zenity|grep "Wine Manager"|awk '{print$1}')" ]]; then :
-        else
-            print_error "Wine Manager already runing!"
-            zenity --error --title "Wine Manager" --text "Wine Manager already runing!" --no-wrap &>/dev/null
-            exit 1
-    fi
     if [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" != 1 ]]
         then
             print_error "Default WINE not selected!"
@@ -963,16 +1006,22 @@ check_def_wine() {
             print_info "WINE $SETWINE select as default!"
             import_luwine_conf
             zenity --info --title "Wine Manager" --text "WINE $SETWINE select as default!" --no-wrap &>/dev/null
-    elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 || "$SETWINE" == 1 ]]
+    elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PPW_INST" == 1 || "$PK4_INST" == 1 || "$SETDEFWINE" == 1 ]]
         then
-            print_info "Selecting default WINE..."
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
-            if [ ! -z "$SETWINE" ]
+            if [[ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" && -z "$(pgrep -fa zenity|grep "Wine Manager"|awk '{print$1}')" ]]
                 then
-                    sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
-                    print_info "WINE $SETWINE select as default!"
-                    import_luwine_conf
+                    print_info "Selecting default WINE..."
+                    SETWINE="$(echo -e "\n$(echo "$(ls "$LU_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+                    zenity --title "Wine Manager" --text "Select default WINE:" --list --radiolist --separator "\n" --column=1 --column=2 --hide-header --width=300 --height=500  2>/dev/null)"
+                    if [ ! -z "$SETWINE" ]
+                        then
+                            sed -i 's/^  version: .*/  version: '$SETWINE'/g' "$LU_WINE_CONF"
+                            print_info "WINE $SETWINE select as default!"
+                            import_luwine_conf
+                    fi
+                else
+                    print_error "Wine Manager already runing!"
+                    zenity --error --title "Wine Manager" --text "Wine Manager already runing!" --no-wrap &>/dev/null
             fi
     elif [[ ! -d "$WINEDIR" && "$(ls -1 "$LU_WINE_DIR"|sed 's/^ *//g'|wc -l)" == 1 ]]
         then
@@ -1034,8 +1083,8 @@ lu_prerun() {
 lu_run() {
     lu_tray
     us_layout_sw
-    compositor_sw
     lu_debug 2>/dev/null
+    compositor_sw 2>/dev/null
     if [[ "$LOG" == 1 && "$TERMINAL" == 1 ]]
         then
             if [ ! -z "$LU_SHELL_EXE" ]
@@ -1048,7 +1097,6 @@ lu_run() {
                     $terminal_app $term_hold -e $SHELL
             else
                 $terminal_app $term_hold -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
-                compositor_sw 2>/dev/null
                 clear_log  2>/dev/null
                 xdg-open "$LOG_FILE" 2>/dev/null
             fi
@@ -1056,7 +1104,6 @@ lu_run() {
         then
             echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
             $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" $EXE_ARG|& tee -a "$LOG_FILE"
-            compositor_sw 2>/dev/null
             clear_log  2>/dev/null
             xdg-open "$LOG_FILE" 2>/dev/null
     elif [ "$TERMINAL" == 1 ]
@@ -1082,22 +1129,23 @@ lu_run() {
                     else
                         $terminal_app $term_hold -e $SHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' '$@' $EXE_ARG"
                 fi
-                compositor_sw 2>/dev/null
             fi
     else
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
         $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" $EXE_ARG
-        compositor_sw 2>/dev/null
     fi
-    rm -rf "$TMP_DEB" "$TMP_OUT" /tmp/*$BASHPID
-    if wine_is_death && shell_is_death
+    compositor_sw 2>/dev/null
+    rm -rf "$TMP_DEB" "$TMP_OUT"
+    check_tray
+    if [[ -z "$FORCE_TRAY" && ! -z "$TRAY_PID" ]]
         then
-            check_tray
-            check_wine_pids
-            check_luwine_sh_pid
-            if [[ -z "$WINE_PIDS" && -z "$FORCE_TRAY" && -z "$LW_SH_PID" && ! -z "$TRAY_PID" ]]
+            if wine_is_death && shell_is_death
                 then
-                    lu_killtray
+                    check_tray; check_wine_pids; check_luwine_sh_pid
+                    if [[ -z "$WINE_PIDS" && -z "$LW_SH_PID" && ! -z "$TRAY_PID" ]]
+                        then
+                            lu_killtray
+                    fi
             fi
     fi
 }
@@ -1330,14 +1378,17 @@ lu_exit() {
     check_tray; check_wine_pids; check_exes; check_luwine_sh_pid
     if [[ ! -z "$WINE_PIDS" || ! -z "$EXE_PIDS" || ! -z "$TRAY_PID" || ! -z "$LW_SH_PID" ]]
         then
-            FORCE_EXIT=1
+            echo 1 > /tmp/FORCE_EXIT
             lu_killtray
             lu_killshell
             lu_killexe
             lu_killwine
+            pkill zenity
+            pkill yad
             print_info "Lutris Wine successfully killed!"
             zenity --info --title "Lutris Wine Killer" --text "Lutris Wine successfully killed!" --no-wrap &>/dev/null &
             sleep 2
+            rm -rf /tmp/FORCE_EXIT
             pkill lutris-wine
         else
             print_error "Lutris Wine not runing!"
@@ -1347,7 +1398,7 @@ lu_exit() {
 
 lu_killshell() {
     check_luwine_sh_pid
-    if [ ! -z "$FORCE_EXIT" ]
+    if [ -f "/tmp/FORCE_EXIT" ]
         then
             while true
                 do
@@ -1381,26 +1432,14 @@ lu_killshell() {
 
 lu_killtray() {
     check_tray
-    check_exes
-    check_wine_pids
-    check_luwine_sh_pid
-    if [ ! -z "$FORCE_EXIT" ]
+    if [ -f "/tmp/FORCE_EXIT" ]
         then
             kill -9 "$TRAY_PID" 2>/dev/null
     elif [ ! -z "$TRAY_PID" ]
         then
-            if [[ ! -z "$EXE_PIDS" || ! -z "$WINE_PIDS" || ! -z "$LW_SH_PID" ]]
-                then
-                    zenity --question --title "Tray Killer" --text "Incomplete processes found! \nClosing the tray will likely kill them or cause operational errors.\nAre you sure you want to close the tray?" --no-wrap &>/dev/null
-                    if [ $? -eq "0" ]
-                        then
-                            kill -9 "$TRAY_PID" 2>/dev/null
-                            pkill lutris-wine
-                    fi
-                else
-                    kill -9 "$TRAY_PID" 2>/dev/null
-                    pkill lutris-wine
-            fi
+            echo 1 > /tmp/FORCE_EXIT
+            kill -9 "$TRAY_PID" 2>/dev/null
+            rm -rf /tmp/FORCE_EXIT
     else
         print_error "Lutris Wine not runing in tray!"
         zenity --error --title "Tray Killer" --text "Lutris Wine not runing in tray!" --no-wrap &>/dev/null &
@@ -1409,14 +1448,16 @@ lu_killtray() {
 
 lu_killwine() {
     check_wine_pids
-    if [ ! -z "$FORCE_EXIT" ]
+    if [ -f "/tmp/FORCE_EXIT" ]
         then
             kill -9 $WINE_PIDS 2>/dev/null
     elif [[ ! -z "$WINE_PIDS" ]]
         then
+            echo 1 > /tmp/FORCE_EXIT
             kill -9 $WINE_PIDS 2>/dev/null
             print_info "Wine processes successfully killed!"
             zenity --info --title "Wine Killer" --text "Wine processes successfully killed!" --no-wrap &>/dev/null &
+            rm -rf /tmp/FORCE_EXIT
     else
         print_error "Wine processes not found!"
         zenity --error --title "Wine Killer" --text "Wine processes not found!" --no-wrap &>/dev/null &
@@ -1425,14 +1466,16 @@ lu_killwine() {
 
 lu_killexe() {
     check_exes
-    if [ ! -z "$FORCE_EXIT" ]
+    if [ -f "/tmp/FORCE_EXIT" ]
         then
             kill -9 $EXE_PIDS 2>/dev/null
     elif [ ! -z "$EXE_PIDS" ]
         then
+            echo 1 > /tmp/FORCE_EXIT
             kill -9 $EXE_PIDS 2>/dev/null
             print_info "Wine EXE processes successfully killed!"
             zenity --info --title "EXE Killer" --text "Wine EXE processes successfully killed!" --no-wrap &>/dev/null &
+            rm -rf /tmp/FORCE_EXIT
     else
         print_error "Wine EXE processes not found!"
         zenity --error --title "EXE Killer" --text "Wine EXE processes not found!" --no-wrap &>/dev/null &
@@ -1585,7 +1628,7 @@ lu_shortcut() {
 }
 
 lu_explorer() {
-    if [ -z "$(pgrep explorer.exe)" ]; then :
+    if [ -z "$(pgrep -fa explorer.exe|grep -v "/desktop"|awk '{print$1}')" ]; then :
         else
             print_error "Explorer already runing!"
             zenity --error --title "Explorer" --text "Explorer already runing!" --no-wrap &>/dev/null
@@ -1812,7 +1855,7 @@ lu_winemgr() {
             if [ "$?" == "2" ]
                 then
                     rm -rf /tmp/*$WGUIDW
-                    export SETWINE="1"
+                    export SETDEFWINE="1"
                     check_def_wine
             fi
             export PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; rm -rf /tmp/PLUSET$WGUIDW)"
@@ -1837,7 +1880,7 @@ lu_winemgr() {
             if [ "$?" == "2" ]
                 then
                     rm -rf /tmp/*$WGUIDW
-                    export SETWINE="1"
+                    export SETDEFWINE="1"
                     check_def_wine
             fi
             export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; rm -rf /tmp/WDEL_SET$WGUIDW)"
@@ -2128,26 +2171,38 @@ us_layout_sw() {
 }
 
 check_mangohud() {
-    if [[ ! -z "$mangohud" && ! -z "$(which mangohud 2>/dev/null)" ]]
+    if [ ! -z "$mangohud" ]
         then
-            if [ "$mangohud" == "vk64" ]
+            if [ ! -z "$(which mangohud 2>/dev/null)" ]
                 then
-                    export RUN_MANGOHUD="mangohud"
+                    if [ "$mangohud" == "vk64" ]
+                        then
+                            export RUN_MANGOHUD="mangohud"
+                        else
+                            export RUN_MANGOHUD="mangohud --dlsym"
+                    fi
                 else
-                    export RUN_MANGOHUD="mangohud --dlsym"
+                    print_error "MANGOHUD not found in you system!"
+                    export DISABLE_MANGOHUD=1
             fi
         else
-            print_error "MANGOHUD not found in you system or disabled in Lutris!"
+            print_info "MANGOHUD disabled in Lutris!"
             export DISABLE_MANGOHUD=1
     fi
 }
 
 check_gamemode() {
-    if [[ ! -z "$gamemode" && "$gamemode" == true && ! -z "$(which gamemoderun 2>/dev/null)" ]]
+    if [[ ! -z "$gamemode" && "$gamemode" == true ]]
         then
-            export RUN_GAMEMODE="gamemoderun"
+            if [ ! -z "$(which gamemoderun 2>/dev/null)" ]
+                then
+                    export RUN_GAMEMODE="gamemoderun"
+                else
+                    print_error "GAMEMODE not found in you system!"
+                    export RUN_GAMEMODE=""
+            fi
         else
-            print_error "GAMEMODE not found in you system or disabled in Lutris!"
+            print_info "GAMEMODE disabled in Lutris!"
             export RUN_GAMEMODE=""
     fi
 }
@@ -2163,6 +2218,7 @@ check_gstreamer() {
             export MEDIACONV_VIDEO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/video.foz
             export MEDIACONV_VIDEO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_video.foz
         else
+            print_info "GSTREAMER not found in WINE!"
             wdllover_upd "winegstreamer="
     fi
 }
@@ -2208,7 +2264,7 @@ check_d3d_extras() {
 check_dgvoodoo2() {
     if [[ ! -z "$dgvoodoo2" && "$dgvoodoo2" == true ]]
         then
-            true
+            wdllover_upd "d3dimm.dll,ddraw.dll,glide2x.dll,glide3x.dll,glide.dll=n"
     fi
 }
 
@@ -2482,7 +2538,7 @@ if [ $(id -u) -eq 0 ]
                     -help) lu_help ;;
                     -version) lu_version ;;
                     -tray) lu_tray ;;
-                    -setwine) export SETWINE="1" ; check_def_wine ;;
+                    -setwine) export SETDEFWINE="1" ; check_def_wine ;;
                     -*) lu_help ;;
                     *) lu_start "$@" ;;
                 esac
