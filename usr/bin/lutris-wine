@@ -32,6 +32,7 @@ export DXR=1
 #export VKD3D_GIT_RELEASE_URL="https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases"
 #export MANGOHUD_CONFIG=font_size=24,position=top-left,toggle_hud=Shift_R+F12,no_display,resolution,wine,gpu_name,vulkan_driver,gpu_stats,vkbasalt
 export MUST_HAVE_DLL="mfc42 vcrun2019 dotnet46"
+export SHELL="/usr/bin/bash"
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
@@ -953,7 +954,7 @@ create_shortcut() {
                             mkdir -p "$LW_APP_DIR"
                     fi
                     try_cp "$DESKF" ${LW_APP_DIR}/
-                    update-desktop-database -q "${HOME}/.local/share/applications"
+                    update-desktop-database -q "$MENUAPPDIR"
                     sleep 0.3
                     zenity --info --title "Shortcuts Creator" --text "Shortcut successfully added to application menu!" --no-wrap &>/dev/null
             fi
@@ -2477,14 +2478,16 @@ check_vkd3d() {
 }
 
 check_dxvk-nvapi() {
-    if [[ ! -z "$dxvk_nvapi" && "$dxvk_nvapi" == true ]]
+    if [[ ! -z "$dxvk_nvapi" && "$dxvk_nvapi" == true && ! -z "$(lspci|grep VGA|grep -o NVIDIA)" ]]
         then
             if dll_manager "dxvk-nvapi" "$dxvk_nvapi_version"
                 then
-                    if [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]]
+                    CPNVNGX="$(find /usr/* -type f -name "nvngx.dll" 2>/dev/null|awk '{print $1}')"
+                    CP_NVNGX="$(find /usr/* -type f -name "_nvngx.dll" 2>/dev/null|awk '{print $1}')"
+                    if [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]] && [[ -f "$CPNVNGX" && -f "$CP_NVNGX" ]]
                         then
-                            try_cp "$(find /usr/* -type f -name "nvngx.dll" 2>/dev/null|awk '{print $1}')" "$PFX_DLL64_PTH/"
-                            try_cp "$(find /usr/* -type f -name "_nvngx.dll" 2>/dev/null|awk '{print $1}')" "$PFX_DLL64_PTH/"
+                            try_cp "$CPNVNGX" "$PFX_DLL64_PTH/"
+                            try_cp "$CP_NVNGX" "$PFX_DLL64_PTH/"
                     fi
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n;nvcuda=b"
                     export DXVK_NVAPIHACK="0"
@@ -2554,13 +2557,6 @@ check_winepfx() {
     try_mkdir "$WINEPREFIX"
     try_mkdir "$PFX_DLL32_PTH"
     try_mkdir "$PFX_DLL64_PTH"
-}
-
-check_shell() {
-    if [ -z "$SHELL" ]
-        then
-            export SHELL="/usr/bin/bash"
-    fi
 }
 
 check_wdllover() {
@@ -2856,7 +2852,7 @@ export_all_functions() {
         lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr \
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr lu_themesmgr \
         us_layout_sw check_mangohud check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
-        check_battleye check_wine_inst check_winearch check_winepfx check_shell check_wdllover check_vulkan_icd check_sdl_video check_crash_dialog \
+        check_battleye check_wine_inst check_winearch check_winepfx check_wdllover check_vulkan_icd check_sdl_video check_crash_dialog \
         check_prime check_esync check_fsync check_fsr check_runtime check_ld_library check_path check_terminal check_pulse_latency check_debug \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release
 }
@@ -2875,7 +2871,6 @@ if [ $(id -u) -eq 0 ]
                 check_def_wine
                 check_winearch
                 check_winepfx
-                check_shell
                 check_compositor
                 check_mono_gecko
                 check_wdllover
