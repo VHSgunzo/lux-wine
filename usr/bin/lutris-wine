@@ -1,6 +1,6 @@
 #!/bin/bash
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.50"
+export LW_VERSION="0.51"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -15,6 +15,7 @@ export RESETCOLOR='\033[1;00m'
 #export HOLD_TERMINAL=1
 #export UNSET_CMPSTR_SW=1
 #export EXE_ARG=""
+export CHK_UPDATE=7
 export LARGE_ADDRESS=1
 #export OLD_GL_STRING=1
 #export NO_WRITE_WATCH=1
@@ -28,8 +29,8 @@ export SHARED_MEMORY=1
 export DIS_LAYER_AMD=1
 export DXR=1
 #export DXR11=1
-#export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
-#export VKD3D_GIT_RELEASE_URL="https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases"
+#export DXVK_GIT_RELEASE_URL="https://github.com/doitsujin/dxvk/releases"
+#export VKD3D_GIT_RELEASE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases"
 #export MANGOHUD_CONFIG=font_size=24,position=top-left,toggle_hud=Shift_R+F12,no_display,resolution,wine,gpu_name,vulkan_driver,gpu_stats,vkbasalt
 export MUST_HAVE_DLL="mfc42 vcrun2019 dotnet46"
 export SHELL="/usr/bin/bash"
@@ -176,36 +177,6 @@ check_compositor() {
     fi
 }
 
-check_git_release() {
-    dll_version="$(echo $2|sed 's/^v//g')"
-    if [ -z "$GIT_RELEASE_URL" ]
-        then
-            GIT_RELEASE_CHK="$(curl -s "https://api.github.com/repos/lutris/$1/releases"|grep -iE "(browser_download_url.*\.tar\.xz|browser_download_url.*\.tar\.gz|browser_download_url.*\.tar\.zst)"|cut -d \" -f 4|grep -iE "($dll_version.tar.xz$|$dll_version.tar.gz$|$dll_version.tar.zst$)")"
-            if [ ! -z "$GIT_RELEASE_CHK" ]
-                then
-                    GIT_RELEASE="$GIT_RELEASE_CHK"
-                    unset GIT_RELEASE_CHK
-                    return 0
-                else
-                    print_error "$1 $2 GIT release not found! Check $1 version in config file!"
-                    zenity --error --text "$1 $2 GIT release not found! Check $1 version in config file!" --no-wrap &>/dev/null &
-                    return 1
-            fi
-        else
-            GIT_RELEASE_CHK="$(curl -s "$GIT_RELEASE_URL"|grep -iE "(browser_download_url.*\.tar\.xz|browser_download_url.*\.tar\.gz|browser_download_url.*\.tar\.zst)"|cut -d \" -f 4|grep -iE "($dll_version.tar.xz$|$dll_version.tar.gz$|$dll_version.tar.zst$)")"
-            if [ -z "$GIT_RELEASE_CHK" ]
-                then
-                    unset GIT_RELEASE_URL
-                    print_error "$1 $2 GIT release not found in custom repository! Try found $1 in Lutris repository..."
-                    check_git_release $1 $2
-                else
-                    GIT_RELEASE="$GIT_RELEASE_CHK"
-                    unset GIT_RELEASE_CHK
-                    return 0
-            fi
-    fi
-}
-
 check_mono_gecko() {
     try_mkdir "$LU_RUNTIME/gecko"
     try_mkdir "$LU_RUNTIME/mono"
@@ -213,69 +184,180 @@ check_mono_gecko() {
         do
             if [ ! -d "$WINEDIR/share/wine/$mono_gecko" ]
                 then
-                    try_rm "$WINEDIR/share/wine/$mono_gecko"
                     try_ln "$LU_RUNTIME/$mono_gecko" "$WINEDIR/share/wine/"
             elif ! check_symlink "$WINEDIR/share/wine/$mono_gecko" && [[ -d "$WINEDIR/share/wine/$mono_gecko" ]]
                 then
-                    try_cp "$WINEDIR/share/wine/$mono_gecko" "$LU_RUNTIME/"
-                    try_rm "$WINEDIR/share/wine/$mono_gecko"
-                    try_ln "$LU_RUNTIME/$mono_gecko" "$WINEDIR/share/wine/"
+                    if try_cp "$WINEDIR/share/wine/$mono_gecko" "$LU_RUNTIME/"
+                        then
+                            try_rm "$WINEDIR/share/wine/$mono_gecko"
+                            try_ln "$LU_RUNTIME/$mono_gecko" "$WINEDIR/share/wine/"
+                    fi
             fi
     done
+}
+
+check_git_release() {
+    if [[ "$2" == "latest" || -z "$2" ]]
+        then
+            CHECKDLLVERS="head -1"
+            LATESTVERS="1"
+        else
+            dll_version="$(echo $2|sed 's/^v//g')"
+            CHECKDLLVERS="grep -iE '($dll_version\.tar\.xz$|$dll_version\.tar\.gz$|$dll_version\.tar\.zst$)'"
+    fi
+    if [ -z "$GIT_RELEASE_URL" ]
+        then
+            GIT_RELEASE_DEFURL="https://github.com/lutris/$1/releases"
+            GREPARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1|awk '{print \"$GIT_RELEASE_DEFURL\" \$0}'|grep '$1'"
+            GIT_RELEASE_CHK="$(curl -s "$GIT_RELEASE_DEFURL"|eval "$GREPARCHURL"|eval "$CHECKDLLVERS")"
+            if [ ! -z "$GIT_RELEASE_CHK" ]
+                then
+                    dll_version="$(basename "$GIT_RELEASE_CHK"|sed "s/$1//"|sed -r 's/^[^0-9]+//'|sed 's/.tar.gz//'|sed 's/.tar.xz//'|sed 's/.tar.zst//')"
+                    GIT_RELEASE="$GIT_RELEASE_CHK"
+                    unset GIT_RELEASE_CHK
+                    if [ "$1" == "dxvk-nvapi" ]
+                        then
+                            if [ -z "$(grep -o "dxvk_nvapi_version" "$LU_WINE_CONF")" ]
+                                then
+                                    sed -i "s/^wine:.*/&\n  dxvk_nvapi_version: v$dll_version/" "$LU_WINE_CONF"
+                                    import_luwine_conf
+                            fi
+                        else
+                            if [ -z "$(grep -o "$1_version" "$LU_WINE_CONF")" ]
+                                then
+                                    sed -i "s/^wine:.*/&\n  $1_version: v$dll_version/" "$LU_WINE_CONF"
+                                    import_luwine_conf
+                            fi
+                    fi
+                    return 0
+                else
+                    print_error "$1 $2 GIT release not found!"
+                    zenity --error --text "$1 $2 GIT release not found!" --no-wrap &>/dev/null &
+                    return 1
+            fi
+        else
+            GREPARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1|awk '{print \"$GIT_RELEASE_URL\" \$0}'|grep '$1'"
+            GIT_RELEASE_CHK="$(curl -s "$GIT_RELEASE_URL"|eval "$GREPARCHURL"|eval "$CHECKDLLVERS")"
+            if [ -z "$GIT_RELEASE_CHK" ]
+                then
+                    if [[ -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" ]]
+                        then
+                            unset GIT_RELEASE_URL
+                            print_error "$1 $2 GIT release not found in custom repository! Try found $1 in Lutris repository..."
+                            check_git_release $1 $2
+                        else
+                            print_error "Unable to check $1 GIT release!"
+                            return 1
+                    fi
+                else
+                    GIT_RELEASE="$GIT_RELEASE_CHK"
+                    if [[ -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" ]]
+                        then
+                            dll_version="$(basename "$GIT_RELEASE_CHK"|sed "s/$1//"|sed -r 's/^[^0-9]+//'|sed 's/.tar.gz//'|sed 's/.tar.xz//'|sed 's/.tar.zst//')"
+                            unset GIT_RELEASE_CHK
+                            if [ "$1" == "dxvk-nvapi" ]
+                                then
+                                    if [ -z "$(grep -o "dxvk_nvapi_version" "$LU_WINE_CONF")" ]
+                                        then
+                                            sed -i "s/^wine:.*/&\n  dxvk_nvapi_version: v$dll_version/" "$LU_WINE_CONF"
+                                            import_luwine_conf
+                                    fi
+                                else
+                                    if [ -z "$(grep -o "$1_version" "$LU_WINE_CONF")" ]
+                                        then
+                                            sed -i "s/^wine:.*/&\n  $1_version: v$dll_version/" "$LU_WINE_CONF"
+                                            import_luwine_conf
+                                    fi
+                            fi
+                            return 0
+                    fi
+                    return 0
+            fi
+    fi
 }
 
 dll_manager() {
     if [ -z "$all_dlls" ]
         then
-            for dlls_arch in "x32" "x86" "x64"
-                do
-                    if [ -d "$LU_RUNTIME/$1/$2/$dlls_arch" ]
+            if [[ -f "$LU_RUNTIME/$1/$2/.all_dlls" || -f "$LU_RUNTIME/$1/v$2/.all_dlls" ]]
+                then
+                    if [ -f "$LU_RUNTIME/$1/$2/.all_dlls" ]
                         then
-                            all_dlls="$(ls $LU_RUNTIME/$1/$2/$dlls_arch/*.dll 2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
-                    fi
-                    if [ -d "$LU_RUNTIME/$1/v$2/$dlls_arch" ]
+                            all_dlls="$(cat "$LU_RUNTIME"/$1/$2/.all_dlls 2>/dev/null)"
+                    elif [ -f "$LU_RUNTIME/$1/v$2/.all_dlls" ]
                         then
-                            all_dlls="$(ls $LU_RUNTIME/$1/v$2/$dlls_arch/*.dll 2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
+                            all_dlls="$(cat "$LU_RUNTIME"/$1/v$2/.all_dlls 2>/dev/null)"
                     fi
-            done
-            all_dlls="$(echo -en "$all_dlls"|sort -u|tr '\n' ' ')"
+                else
+                    for dlls_arch in "x32" "x86" "x64"
+                        do
+                            if [ -d "$LU_RUNTIME/$1/$2/$dlls_arch" ]
+                                then
+                                    all_dlls="$(ls "$LU_RUNTIME"/$1/$2/$dlls_arch/*.dll 2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
+                            fi
+                            if [ -d "$LU_RUNTIME/$1/v$2/$dlls_arch" ]
+                                then
+                                    all_dlls="$(ls "$LU_RUNTIME"/$1/v$2/$dlls_arch/*.dll 2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
+                            fi
+                    done
+                    all_dlls="$(echo -en "$all_dlls"|sort -u)"
+                    if [[ -d "$LU_RUNTIME/$1/$2" && ! -z "$all_dlls" ]]
+                        then
+                            echo "$all_dlls" > "$LU_RUNTIME"/$1/$2/.all_dlls
+                    elif [[ -d "$LU_RUNTIME/$1/v$2" && ! -z "$all_dlls" ]]
+                        then
+                            echo "$all_dlls" > "$LU_RUNTIME"/$1/v$2/.all_dlls
+                    fi
+            fi
     fi
     if [ ! -z "$all_dlls" ]
         then
             check_dlls_slk="$all_dlls"
             unset all_dlls
-            check_dll_symlink $1 $2 $check_dlls_slk
-            return 0
+            if [ ! -z "$NEEDCHKDLL" ]
+                then
+                    check_dll_symlink $1 $2
+            fi
         else
             if check_git_release $1 $2
                 then
-                    print_info "Download and install $1 $2 dlls..."
-                    if try_download "$GIT_RELEASE" "$LU_RUNTIME/"
+                    if [[ ! -z "$LATESTVERS" && -d "$LU_RUNTIME/$1/v$dll_version" ]]
                         then
-                            try_mkdir "$LU_RUNTIME/$1"
-                            for archive_type in "gz" "xz" "zst"
-                                do
-                                    dll_archive="$LU_RUNTIME/$(ls $LU_RUNTIME/|grep "$dll_version.tar.${archive_type}$")"
-                                    if [ -f "$dll_archive" ]
-                                        then
-                                            if unpack_tar_${archive_type} "$dll_archive" "$LU_RUNTIME/$1/"
+                            print_info "Latest $1 v$dll_version dlls already installed!"
+                            dll_manager $1 $dll_version
+                            unset LATESTVERS
+                    elif [ ! -d "$LU_RUNTIME/$1/v$dll_version" ]
+                        then
+                            print_info "Download and install $1 v$dll_version dlls..."
+                            if try_download "$GIT_RELEASE" "$LU_RUNTIME/"
+                                then
+                                    try_mkdir "$LU_RUNTIME/$1"
+                                    for archive_type in "gz" "xz" "zst"
+                                        do
+                                            dll_archive="$LU_RUNTIME/$(ls $LU_RUNTIME/|grep "$dll_version.tar.${archive_type}$")"
+                                            if [ -f "$dll_archive" ]
                                                 then
-                                                    if [ ! -d "$LU_RUNTIME/$1/v$dll_version" ]
+                                                    if unpack_tar_${archive_type} "$dll_archive" "$LU_RUNTIME/$1/"
                                                         then
-                                                            try_mv "$LU_RUNTIME/$1/$(ls $LU_RUNTIME/$1/|grep "$dll_version$")" "$LU_RUNTIME/$1/v$dll_version"
+                                                            if [ ! -d "$LU_RUNTIME/$1/v$dll_version" ]
+                                                                then
+                                                                    try_mv "$LU_RUNTIME/$1/$(ls $LU_RUNTIME/$1/|grep "$dll_version$")" "$LU_RUNTIME/$1/v$dll_version"
+                                                            fi
+                                                            try_rm "$dll_archive"*
+                                                            check_$1 2>/dev/null
+                                                        else
+                                                            try_rm "$dll_archive"*
+                                                            try_rm "$LU_RUNTIME/$1/$(ls $LU_RUNTIME/$1/|grep "$dll_version$")"
+                                                            download_error && check_$1 2>/dev/null
                                                     fi
-                                                    try_rm "$dll_archive"*
-                                                    check_$1
-                                                else
-                                                    try_rm "$dll_archive"*
-                                                    try_rm "$LU_RUNTIME/$1/$(ls $LU_RUNTIME/$1/|grep "$dll_version$")"
-                                                    download_error && check_$1
                                             fi
-                                    fi
-                            done
+                                    done
+                                else
+                                    download_error && check_$1 2>/dev/null
+                            fi
                         else
-                            try_rm "$dll_archive"*
-                            download_error && check_$1
+                            print_info "$1 v$dll_version dlls already installed!"
+                            dll_manager $1 $dll_version
                     fi
                 else
                     return 1
@@ -284,7 +366,7 @@ dll_manager() {
 }
 
 check_dll_symlink() {
-    for dll_check in ${*:3}
+    for dll_check in $check_dlls_slk
         do
             PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH"/$dll_check|sed "s/.*\($1\)/\1/g"|cut -d"/" -f2)"
             PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH"/$dll_check|sed "s/.*\($1\)/\1/g"|cut -d"/" -f2)"
@@ -401,7 +483,7 @@ try_download() {
     zenity --progress --percentage=0 --title="Download $(basename $1)" --text="Starting downloading...\n$1" --auto-close --auto-kill --width=600 --height=90
     if [ "${PIPESTATUS[0]}" != 0 ]
         then
-            print_error "Failed to download $1. Skipping."
+            print_error "Failed to download $1"
             return 1
         else
             return 0
@@ -416,25 +498,25 @@ download_error() {
 unpack_tar_xz() {
     set -o pipefail
     tar -Jxvf "$1" -C "$2"|settingbar
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File unpacking error." && return 1 || return 0
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar_gz() {
     set -o pipefail
     tar -xzvf "$1" -C "$2"|settingbar
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File unpacking error." && return 1 || return 0
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar_zst() {
     set -o pipefail
     tar --use-compress-program=unzstd -xvf "$1" -C "$2"|settingbar
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File unpacking error." && return 1 || return 0
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar() {
     set -o pipefail
     tar -xvf "$1" -C "$2"|settingbar
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File unpacking error." && return 1 || return 0
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
 }
 
 settingbar() {
@@ -447,7 +529,6 @@ shell_is_death() {
             check_luwine_sh_pid
             if  [ ! -z "$LW_SH_PID" ]
                 then
-                    #echo LW_SH_PID=$LW_SH_PID
                     sleep 1
                     continue
                 else
@@ -462,7 +543,6 @@ exe_is_death() {
             check_exes
             if  [ ! -z "$RUN_EXE" ]
                 then
-                    #echo RUN_EXE=$RUN_EXE
                     sleep 1
                     continue
                 else
@@ -477,7 +557,6 @@ exes_is_death() {
             check_exes
             if  [ ! -z "$RUN_EXES" ]
                 then
-                    #echo RUN_EXES=$RUN_EXES
                     sleep 1
                     continue
                 else
@@ -492,7 +571,6 @@ wine_is_death() {
             check_wine_pids
             if  [ ! -z "$WINE_PIDS" ]
                 then
-                    #echo WINE_PIDS=$WINE_PIDS
                     sleep 1
                     continue
                 else
@@ -603,56 +681,6 @@ compositor_sw() {
                     else
                         cmpstr_dirty_off
                     fi
-            fi
-    fi
-}
-
-update_winetricks() {
-    try_mkdir "$WTRX_DIR"
-    WTRX_URL="https://raw.githubusercontent.com/lutris/winetricks/master/src/winetricks"
-    if [ -f "$WTRX_DIR/winetricks" ]
-        then
-            if [ -z "$(find "$WTRX_DIR/" -type f -name winetricks -mtime -1 -print)" ]
-                then
-                    print_info "Check update..."
-                    WTRX_EXT_VER="$(curl -s --list-only $WTRX_URL|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
-                    WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
-                    if [ ! -z "$WTRX_EXT_VER" ]
-                        then
-                            touch "$WTRX_DIR/winetricks"
-                            print_info "Version winetricks on server: $WTRX_EXT_VER"
-                            print_info "Version winetricks in LUTRIS $WTRX_EXT_VER"
-                            if [[ "$WTRX_INT_VER" != "$WTRX_EXT_VER" ]]
-                                then
-                                    print_info "Updating winetricks..."
-                                    try_rm "$WTRX_DIR/winetricks"*
-                                    if try_download "$WTRX_URL" "$WTRX_DIR/"
-                                        then
-                                            WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
-                                            print_info "Winetricks version in LUTRIS has been updated ($WTRX_EXT_VER)"
-                                            chmod u+x "$WTRX_DIR/winetricks"
-                                    fi
-                                else
-                                    print_info "Winetricks doesn't need updating!"
-                            fi
-                        else
-                            print_error "Unable to check winetricks GIT release!"
-                    fi
-            fi
-        else
-            WTRX_EXT_VER="$(curl -s --list-only $WTRX_URL|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
-            if [ ! -z "$WTRX_EXT_VER" ]
-                then
-                    if try_download "$WTRX_URL" "$WTRX_DIR/"
-                        then
-                            WTRX_INT_VER="$(cat "$WTRX_DIR/winetricks"|grep -i 'WINETRICKS_VERSION='|sed 's/WINETRICKS_VERSION=//')"
-                            chmod u+x "$WTRX_DIR/winetricks"
-                            print_info "Winetricks version ($WTRX_EXT_VER) has been installed in LUTRIS!"
-                        else
-                            download_error && update_winetricks
-                    fi
-                else
-                    print_error "Unable to check winetricks GIT release!"
             fi
     fi
 }
@@ -1180,6 +1208,15 @@ import_luwine_conf() {
     export WINE_IN_USE="$version"
     export WINEDIR="$LU_DIR/runners/wine/$WINE_IN_USE"
     export WINE="$WINEDIR/bin/wine"
+    if [ ! -f "$LU_WINE_DIR/.lu_wine_cfg_chksum" ]
+        then
+            export NEEDCHKDLL=1
+            echo "$(md5sum "$LU_WINE_CONF"|awk '{print$1}')" > "$LU_WINE_DIR/.lu_wine_cfg_chksum"
+    elif [[ "$(cat $LU_WINE_DIR/.lu_wine_cfg_chksum 2>/dev/null)" != "$(md5sum "$LU_WINE_CONF"|awk '{print$1}')" ]]
+        then
+            export NEEDCHKDLL=1
+            echo "$(md5sum "$LU_WINE_CONF"|awk '{print$1}')" > "$LU_WINE_DIR/.lu_wine_cfg_chksum"
+    fi
 }
 
 check_def_wine() {
@@ -1347,7 +1384,7 @@ lu_run() {
         $SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" $EXE_ARG
     fi
     compositor_sw 2>/dev/null
-    rm -rf "$TMP_DEB" "$TMP_OUT"
+    try_rm "$TMP_DEB" "$TMP_OUT" &>/dev/null
     check_tray
     if [[ -z "$FORCE_TRAY" && ! -z "$TRAY_PID" ]]
         then
@@ -1572,12 +1609,12 @@ winetricks() {
                 else
                     print_error "Winetricks not found in your system!"
                     print_info "Using LUTRIS winetricks!"
-                    update_winetricks
+                    check_winetricks
                     "$WTRX_DIR/winetricks" "$@"
             fi
         else
             print_info "Using LUTRIS winetricks!"
-            update_winetricks
+            check_winetricks
             "$WTRX_DIR/winetricks" "$@"
     fi
 }
@@ -1744,7 +1781,7 @@ lu_clearpfx() {
 }
 
 lu_rmapp() {
-    if [ -z "$(pgrep -fa zenity|grep "Shortcuts Remover"|awk '{print$1}')" ]; then :
+    if [ -z "$(pgrep -fa yad|grep "Shortcuts Remover"|awk '{print$1}')" ]; then :
         else
             print_error "Shortcuts Remover already runing!"
             zenity --error --title "Shortcuts Remover" --text "Shortcuts Remover already runing!" --no-wrap &>/dev/null
@@ -1863,34 +1900,39 @@ lu_help() {
         ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
-            $RED└──╼ \$$GREEN lutris-wine $BLUE{lutris-wine argument} ${RED}blabla.exe $BLUE{exe arguments}
+            $RED└──╼ \$$GREEN lutris-wine $BLUE{lutris-wine argument} ${RED}blabla.exe $YELLOW{exe arguments}
 
-            ${RED}-explorer $GREEN          Wine Explorer
-            ${RED}-cmd $GREEN               Open CMD or open file in CMD
-            ${RED}-shell $GREEN             Open SHELL or open file in SHELL
-            ${RED}-regedit $GREEN           Registry editor
-            ${RED}-control $GREEN           Control Panel
-            ${RED}-winecfg $GREEN           Wine settings
-            ${RED}-winemgr $GREEN           Wine manager
-            ${RED}-setwine $GREEN           Set default WINE
-            ${RED}-taskmgr $GREEN           Task manager
-            ${RED}-themesmgr $GREEN         Themes manager
-            ${RED}-uninstaller $GREEN       Add/Remove Programs
-            ${RED}-winetricks $GREEN        Winetricks
-            ${RED}-openpfx $GREEN           Open drive C:
-            ${RED}-killwine $GREEN          Kill Wine processes
-            ${RED}-killtray $GREEN          Kill Lutris Wine tray
-            ${RED}-killexe $GREEN           Kill Lutris Wine launch EXE
-            ${RED}-killshell $GREEN         Kill Lutris Wine SHELL
-            ${RED}-exit $GREEN              Lutris Wine Force Exit
-            ${RED}-clearpfx $GREEN          Clear prefix
-            ${RED}-rmapp $GREEN             Remove Lutris Wine shortcuts from menu
-            ${RED}-shortcut $GREEN          Create shortcut
-            ${RED}-addtolu $GREEN           Add to Lutris
-            ${RED}-debug $GREEN             DEBUG
-            ${RED}-tray {noclose}$GREEN     Open Lutris Wine in tray
-            ${RED}-help $GREEN              Show this usage info
-            ${RED}-version $GREEN           Show version info
+            ${RED}-explorer $GREEN              Wine Explorer
+            ${RED}-cmd $GREEN                   Open CMD or open file in CMD
+            ${RED}-shell $GREEN                 Open SHELL or open file in SHELL
+            ${RED}-regedit $GREEN               Registry editor
+            ${RED}-control $GREEN               Control Panel
+            ${RED}-winecfg $GREEN               Wine settings
+            ${RED}-winemgr $GREEN               Wine manager
+            ${RED}-setwine $GREEN               Set default WINE
+            ${RED}-taskmgr $GREEN               Task manager
+            ${RED}-themesmgr $GREEN             Themes manager
+            ${RED}-uninstaller $GREEN           Add/Remove Programs
+            ${RED}-winetricks $GREEN            Winetricks
+            ${RED}-openpfx $GREEN               Open drive C:
+            ${RED}-killwine $GREEN              Kill Wine processes
+            ${RED}-killtray $GREEN              Kill Lutris Wine tray
+            ${RED}-killexe $GREEN               Kill Lutris Wine launch EXE
+            ${RED}-killshell $GREEN             Kill Lutris Wine SHELL
+            ${RED}-exit $GREEN                  Lutris Wine Force Exit
+            ${RED}-clearpfx $GREEN              Clear prefix
+            ${RED}-rmapp $GREEN                 Remove Lutris Wine shortcuts from menu
+            ${RED}-shortcut $GREEN              Create shortcut
+            ${RED}-addtolu $GREEN               Add to Lutris
+            ${RED}-debug $GREEN                 DEBUG
+            ${RED}-help $GREEN                  Show this usage info
+            ${RED}-version $GREEN               Show version info
+            ${RED}-tray $BLUE{noclose}${GREEN}         Open Lutris Wine in tray
+            ${RED}-update$BLUE {all} $GREEN          Update Runtime$BLUE
+            {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}
+            {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}
+            {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}
+            {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
         $RESETCOLOR" >&2
         zenity --info --title "Lutris Wine usage info" --text "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ lutris-wine {lutris-wine argument} blabla.exe {exe arguments} \n\n \
         -explorer                 Wine Explorer\n \
@@ -1916,10 +1958,15 @@ lu_help() {
         -shortcut                  Create shortcut\n \
         -addtolu                   Add to Lutris\n \
         -debug                      DEBUG\n \
-        -tray {noclose}       Open Lutris Wine in tray\n \
         -help                          Show this usage info\n \
-        -version                    Show version info\n\n \
-        Lutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
+        -version                    Show version info\n \
+        -tray {noclose}       Open Lutris Wine in tray\n \
+        -update {all}            Update Runtime\n \
+        {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}\n \
+        {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}\n \
+        {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}\n \
+        {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
+        \nLutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
         " --no-wrap &>/dev/null &
 }
 
@@ -1985,6 +2032,7 @@ Open drive C:\!$BASH -c 'lutris-wine -openpfx'!"/usr/share/lutris/media/default_
 Registry editor!$BASH -c 'lutris-wine -regedit'!"/usr/share/lutris/media/default_icon.png"| \
 Wine settings!$BASH -c 'lutris-wine -winecfg'!"/usr/share/lutris/media/default_icon.png"| \
 Wine manager!$BASH -c 'lutris-wine -winemgr'!"/usr/share/lutris/media/default_icon.png"| \
+Update Runtime!$BASH -c 'lutris-wine -update'!"/usr/share/lutris/media/default_icon.png"| \
 Set default Wine!$BASH -c 'lutris-wine -setwine'!"/usr/share/lutris/media/default_icon.png"| \
 Themes manager!$BASH -c 'lutris-wine -themesmgr'!"/usr/share/lutris/media/default_icon.png"| \
 Winetricks!$BASH -c 'lutris-wine -winetricks'!"/usr/share/lutris/media/default_icon.png"| \
@@ -2069,12 +2117,13 @@ lu_winemgr() {
                     try_rm /tmp/*$WGUIDW
                     export SETDEFWINE="1"
                     check_def_wine
+                else
+                    export PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
+                    export PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
+                    export PPW_SET="$(sed 's/TRUE //g' /tmp/PPWSET$WGUIDW 2>/dev/null ; try_rm /tmp/PPWSET$WGUIDW)"
+                    export PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; try_rm /tmp/PK4SET$WGUIDW)"
+                    export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; try_rm /tmp/WDEL_SET$WGUIDW)"
             fi
-            export PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
-            export PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
-            export PPW_SET="$(sed 's/TRUE //g' /tmp/PPWSET$WGUIDW 2>/dev/null ; try_rm /tmp/PPWSET$WGUIDW)"
-            export PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; try_rm /tmp/PK4SET$WGUIDW)"
-            export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; try_rm /tmp/WDEL_SET$WGUIDW)"
     elif [[ ! -z "$ILW_LIST" && -z "$GITOK" ]]
         then
             if [[ "$(echo "$ILW_LIST"|sed 's/^ *//g'|wc -l)" == 1 && "$ILW_LIST" == "$WINE_IN_USE" ]]
@@ -2093,8 +2142,9 @@ lu_winemgr() {
                     try_rm /tmp/*$WGUIDW
                     export SETDEFWINE="1"
                     check_def_wine
+                else
+                    export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; try_rm /tmp/WDEL_SET$WGUIDW)"
             fi
-            export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; try_rm /tmp/WDEL_SET$WGUIDW)"
     elif [[ -z "$ILW_LIST" && ! -z "$GITOK" ]]
         then
             export PLU_LIST="$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)"
@@ -2445,6 +2495,10 @@ check_dxvk() {
                 then
                     GIT_RELEASE_URL="$DXVK_GIT_RELEASE_URL"
             fi
+            if [[ -f "$LU_RUNTIME/dxvk/$dxvk_version/x64/d3d12.dll" || -f "$LU_RUNTIME/dxvk/$dxvk_version/x32/d3d12.dll" ]]
+                then
+                    try_rm "$LU_RUNTIME/dxvk/$dxvk_version/x64/d3d12.dll" "$LU_RUNTIME/dxvk/$dxvk_version/x32/d3d12.dll"
+            fi
             if dll_manager "dxvk" "$dxvk_version"
                 then
                     try_mkdir "$HOME/.cache/dxvk_cache"
@@ -2482,12 +2536,18 @@ check_dxvk-nvapi() {
         then
             if dll_manager "dxvk-nvapi" "$dxvk_nvapi_version"
                 then
-                    CPNVNGX="$(find /usr/* -type f -name "nvngx.dll" 2>/dev/null|awk '{print $1}')"
-                    CP_NVNGX="$(find /usr/* -type f -name "_nvngx.dll" 2>/dev/null|awk '{print $1}')"
-                    if [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]] && [[ -f "$CPNVNGX" && -f "$CP_NVNGX" ]]
+                    if [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]]
                         then
-                            try_cp "$CPNVNGX" "$PFX_DLL64_PTH/"
-                            try_cp "$CP_NVNGX" "$PFX_DLL64_PTH/"
+                            CPNVNGX="$(find /usr/* -type f -name "*nvngx.dll" 2>/dev/null|awk '{print $1}')"
+                            if [ ! -z "$CPNVNGX" ]
+                                then
+                                    for CPNVNGXFLS in $CPNVNGX
+                                        do
+                                            try_cp "$CPNVNGXFLS" "$PFX_DLL64_PTH/"
+                                    done
+                                else
+                                    print_error "nvngx.dll not found in your system!"
+                            fi
                     fi
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n;nvcuda=b"
                     export DXVK_NVAPIHACK="0"
@@ -2518,11 +2578,63 @@ check_dgvoodoo2() {
 }
 
 check_battleye() {
-    if [[ ! -z "$battleye" && "$battleye" == true && -d "$LU_RUNTIME/battleye_runtime" ]]
+    if [[ ! -z "$battleye" && "$battleye" == true ]]
         then
-            export PROTON_BATTLEYE_RUNTIME="$LU_RUNTIME/battleye_runtime"
+            if runtime_manager "battleye"
+                then
+                    export PROTON_BATTLEYE_RUNTIME="$LU_RUNTIME/battleye_runtime"
+                else
+                    unset PROTON_BATTLEYE_RUNTIME
+            fi
+    fi
+}
+
+runtime_manager() {
+    if [ "$1" == "winetricks" ]
+        then
+            GIT_RELEASE_URL="https://github.com/lutris/winetricks/releases"
         else
-            unset PROTON_BATTLEYE_RUNTIME
+            GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
+    fi
+    if [ -z "$(find "$LU_RUNTIME/" -type d -name "$1"* -print 2>/dev/null)" ]
+        then
+            FORCE_UPDATE=1
+    fi
+    if [[ ! -z "$CHK_UPDATE" && -z "$(find "$LU_RUNTIME/" -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || [ ! -z "$FORCE_UPDATE" ]
+        then
+            try_rm "$(find "$LU_RUNTIME/" -type d -name "$1"* -print 2>/dev/null)" &>/dev/null
+            print_info "Checking updates for $1 runtime..."
+            if check_git_release "$1"
+                then
+                    print_info "Download and install $1 runtime..."
+                    if try_download "$GIT_RELEASE" "$LU_RUNTIME/"
+                        then
+                            for archive_type in "gz" "xz" "zst"
+                                do
+                                    dll_archive="$(ls "$LU_RUNTIME"/"$1"*.tar.${archive_type} 2>/dev/null)"
+                                    if [ -f "$dll_archive" ]
+                                        then
+                                            if unpack_tar_${archive_type} "$dll_archive" "$LU_RUNTIME/"
+                                                then
+                                                    try_rm "$dll_archive"*
+                                                    touch "$(find "$LU_RUNTIME/" -type d -name "$1"* -print 2>/dev/null)"
+                                                    unset FORCE_UPDATE
+                                                    check_$1 2>/dev/null
+                                                else
+                                                    try_rm "$dll_archive"*
+                                                    try_rm "$(find "$LU_RUNTIME/" -type d -name "$1"* -print 2>/dev/null)"
+                                                    download_error && check_$1 2>/dev/null
+                                            fi
+                                    fi
+                            done
+                        else
+                            download_error && check_$1 2>/dev/null
+                    fi
+                else
+                    print_error "$1 not installed!"
+                    unset FORCE_UPDATE
+                    return 1
+            fi
     fi
 }
 
@@ -2625,7 +2737,7 @@ check_fsr() {
 check_runtime() {
     if [[ ! -z "$disable_runtime" && "$disable_runtime" == true ]]
         then
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
         else
             if [[ ! -z "$prefer_libs" && "$prefer_libs" == true ]]
                 then
@@ -2774,6 +2886,204 @@ restore_gamma() {
     fi
 }
 
+check_winetricks() {
+    runtime_manager "winetricks"
+}
+
+check_gamecontrollerdb() {
+    runtime_manager "gamecontrollerdb"
+}
+
+check_innoextract() {
+    runtime_manager "innoextract-1.9-linux"
+}
+
+check_network-tools() {
+    runtime_manager "network-tools"
+}
+
+check_p7zip() {
+    runtime_manager "p7zip"
+}
+
+check_ubuntu1804-i686() {
+    runtime_manager "Ubuntu-18.04-i686"
+}
+
+check_ubuntu1804-x86_64() {
+    runtime_manager "Ubuntu-18.04-x86_64"
+}
+
+upd_battleye() {
+    try_rm "$LU_RUNTIME"/battleye_runtime
+    check_battleye
+}
+upd_gamecontrollerdb() {
+    try_rm "$LU_RUNTIME"/gamecontrollerdb
+    check_gamecontrollerdb
+}
+upd_innoextract() {
+    try_rm "$LU_RUNTIME"/innoextract-1.9-linux
+    check_innoextract
+}
+upd_network-tools() {
+    try_rm "$LU_RUNTIME"/network-tools
+    check_network-tools
+}
+upd_p7zip() {
+    try_rm "$LU_RUNTIME"/p7zip
+    check_p7zip
+}
+upd_ubuntu1804-i686() {
+    try_rm "$LU_RUNTIME"/Ubuntu-18.04-i686
+    check_ubuntu1804-i686
+}
+upd_ubuntu1804-x86_64() {
+    try_rm "$LU_RUNTIME"/Ubuntu-18.04-x86_64
+    check_ubuntu1804-x86_64
+}
+upd_d3d_extras() {
+    if [[ ! -z "$d3d_extras_version" && "$d3d_extras_version" != "latest" ]]
+        then
+            sed -i '/d3d_extras_version/d' "$LU_WINE_CONF"
+            unset d3d_extras_version
+            export d3d_extras="true"
+            export NEEDCHKDLL=1
+            check_d3d_extras
+    fi
+}
+upd_dgvoodoo2() {
+    if [[ ! -z "$dgvoodoo2_version" && "$dgvoodoo2_version" != "latest" ]]
+        then
+            sed -i '/dgvoodoo2_version/d' "$LU_WINE_CONF"
+            unset dgvoodoo2_version
+            export dgvoodoo2="true"
+            export NEEDCHKDLL=1
+            check_dgvoodoo2
+    fi
+}
+upd_dxvk() {
+    if [[ ! -z "$dxvk_version" && "$dxvk_version" != "latest" ]]
+        then
+            sed -i '/dxvk_version/d' "$LU_WINE_CONF"
+            unset dxvk_version
+            export dxvk="true"
+            export NEEDCHKDLL=1
+            check_dxvk
+    fi
+}
+upd_dxvk_nvapi() {
+    if [[ ! -z "$dxvk_nvapi_version" && "$dxvk_nvapi_version" != "latest" ]]
+        then
+            sed -i '/dxvk_nvapi_version/d' "$LU_WINE_CONF"
+            unset dxvk_nvapi_version
+            export dxvk_nvapi="true"
+            export NEEDCHKDLL=1
+            check_dxvk-nvapi
+    fi
+}
+upd_vkd3d() {
+    if [[ ! -z "$vkd3d_version" && "$vkd3d_version" != "latest" ]]
+        then
+            sed -i '/vkd3d_version/d' "$LU_WINE_CONF"
+            unset vkd3d_version
+            export vkd3d="true"
+            export NEEDCHKDLL=1
+            check_vkd3d
+    fi
+}
+upd_all() {
+    upd_battleye &
+    upd_gamecontrollerdb &
+    upd_innoextract &
+    upd_network-tools &
+    upd_p7zip &
+    upd_ubuntu1804-i686 &
+    upd_ubuntu1804-x86_64 &
+    upd_d3d_extras &
+    upd_dgvoodoo2 &
+    upd_dxvk &
+    upd_dxvk_nvapi &
+    upd_vkd3d &
+    wait
+}
+
+lu_update() {
+LWRUNTIMELST="battleye_runtime
+gamecontrollerdb
+innoextract
+network-tools
+p7zip
+ubuntu1804-i686
+ubuntu1804-x86_64
+d3d_extras
+dxvk
+dxvk-nvapi
+vkd3d"
+    if [ "$2" == "all" ]
+        then
+            upd_all
+    elif [ -z "$2" ]
+        then
+            if [ -z "$(pgrep -fa yad|grep "Runtime Updater"|awk '{print$1}')" ]; then :
+                else
+                    print_error "Runtime Updater already runing!"
+                    zenity --error --title "Runtime Updater" --text "Runtime Updater already runing!" --no-wrap &>/dev/null
+                    exit 1
+            fi
+            LW_RUN_UPD="$(echo -e "\n$(echo "$LWRUNTIMELST"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            yad --title "Runtime Updater" --list --checklist --separator "\n" --column="" --column="Select runtime for update:" \
+                --text-align=center --center --window-icon="/usr/share/lutris/media/default_icon.png" \
+                --width=300 --height=500 --button="UPDATE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
+            if [ "$?" == "2" ]
+                then
+                    upd_all
+            elif [ ! -z "$(echo "$LW_RUN_UPD"|head -1)" ]
+                then
+                    LW_RUN_UPD="$(echo "$LW_RUN_UPD"|sed '/^TRUE$/d'|sed '/^$/d')"
+                    (IFS=$'\n' ; for LWRUNUPD in $LW_RUN_UPD
+                        do
+                            case "$LWRUNUPD" in
+                                battleye_runtime) upd_battleye & ;;
+                                gamecontrollerdb) upd_gamecontrollerdb & ;;
+                                innoextract) upd_innoextract & ;;
+                                network-tools) upd_network-tools & ;;
+                                p7zip) upd_p7zip & ;;
+                                ubuntu1804-i686) upd_ubuntu1804-i686 & ;;
+                                ubuntu1804-x86_64) upd_ubuntu1804-x86_64 & ;;
+                                d3d_extras) upd_d3d_extras & ;;
+                                dgvoodoo2) upd_dgvoodoo2 & ;;
+                                dxvk) upd_dxvk & ;;
+                                dxvk-nvapi) upd_dxvk_nvapi & ;;
+                                vkd3d) upd_vkd3d & ;;
+                            esac
+                    done
+                    wait)
+            fi
+        else
+            while [[ ! -z "$2" ]]
+                do
+                    case "$2" in
+                        bat|battleye|battleye_runtime) upd_battleye & ;;
+                        ga|gamecontrollerdb|gamectrlrdb) upd_gamecontrollerdb & ;;
+                        inn|innoextract) upd_innoextract & ;;
+                        net|network-tools) upd_network-tools & ;;
+                        p7|p7zip) upd_p7zip & ;;
+                        ub686|ubuntu1804-i686) upd_ubuntu1804-i686 & ;;
+                        ub8664|ubuntu1804-x86_64) upd_ubuntu1804-x86_64 & ;;
+                        d3d|d3d_extras|d3d-extras) upd_d3d_extras & ;;
+                        dg|dgvoodoo2) upd_dgvoodoo2 & ;;
+                        dx|dxvk) upd_dxvk & ;;
+                        dxnv|dxvk-nvapi|dxvk_nvapi) upd_dxvk_nvapi & ;;
+                        vkd|vkd3d) upd_vkd3d & ;;
+                        *) print_error "Invalid argument: '$2'" ;;
+                    esac
+                    shift
+            done
+            wait
+    fi
+}
+
 check_other_fixes() {
     if [ ! -z "$(cat "$WINEPREFIX/system.reg" 2>/dev/null|grep -wm 1 "Origin.exe"|awk '{print $1}')" ]
         then
@@ -2847,14 +3157,17 @@ export_all_functions() {
     export -f yaml_parser print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid check_vkd3dconfig try_rm \
         check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_mono_gecko try_download check_single_cpu \
         download_error unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp \
-        compositor_sw update_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris restore_gamma vkd3dcfg_upd \
+        compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris restore_gamma vkd3dcfg_upd \
         create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_conf check_def_wine lu_prerun lu_run lu_prestart try_mv \
         lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr \
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr lu_themesmgr \
         us_layout_sw check_mangohud check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
-        check_battleye check_wine_inst check_winearch check_winepfx check_wdllover check_vulkan_icd check_sdl_video check_crash_dialog \
+        check_battleye check_wine_inst check_winearch check_winepfx check_wdllover check_vulkan_icd check_sdl_video check_crash_dialog lu_update \
         check_prime check_esync check_fsync check_fsr check_runtime check_ld_library check_path check_terminal check_pulse_latency check_debug \
-        check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release
+        check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release \
+        runtime_manager check_gamecontrollerdb check_innoextract check_network-tools check_p7zip check_ubuntu1804-i686 upd_battleye upd_gamecontrollerdb \
+        upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
+        upd_ubuntu1804-x86_64 upd_ubuntu1804-i686
 }
 
 if [ $(id -u) -eq 0 ]
@@ -2880,14 +3193,22 @@ if [ $(id -u) -eq 0 ]
                 check_mangohud
                 check_gamemode
                 check_gstreamer
-                check_dxvk
-                check_vkd3d
                 check_vkd3dconfig
                 check_dxr
-                check_dxvk-nvapi
-                check_d3d_extras
-                check_dgvoodoo2
-                check_battleye
+                check_dxvk &
+                check_vkd3d &
+                check_dxvk-nvapi &
+                check_d3d_extras &
+                check_dgvoodoo2 &
+                check_battleye &
+                check_gamecontrollerdb &
+                check_innoextract &
+                check_network-tools &
+                check_p7zip &
+                check_ubuntu1804-i686 &
+                check_ubuntu1804-x86_64 &
+                check_winetricks &
+                wait
                 check_prime
                 check_esync
                 check_fsync
@@ -2932,6 +3253,7 @@ if [ $(id -u) -eq 0 ]
                     -version) lu_version ;;
                     -tray) lu_tray ;;
                     -setwine) export SETDEFWINE="1" ; check_def_wine ;;
+                    -update) lu_update "$@" ;;
                     -*) lu_help ;;
                     *) lu_start "$@" ;;
                 esac
