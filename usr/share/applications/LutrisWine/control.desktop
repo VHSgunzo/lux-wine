@@ -2,7 +2,7 @@
 Categories=Lutris Wine
 Exec=lutris-wine -control
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Control Panel
+Name=Control panel
 Name[ru_RU]=Панель управления
 NoDisplay=false
 StartupNotify=true

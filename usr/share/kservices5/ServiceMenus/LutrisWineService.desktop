@@ -25,7 +25,7 @@ Name[ru_RU]=Редактор реестра
 [Desktop Action control]
 Exec=lutris-wine -control
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Control Panel
+Name=Control panel
 Name[ru_RU]=Панель управления
 
 [Desktop Action winecfg]
@@ -37,7 +37,7 @@ Name[ru_RU]=Настройки Wine
 [Desktop Action taskmgr]
 Exec=lutris-wine -taskmgr
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Task Manager
+Name=Task manager
 Name[ru_RU]=Диспетчер задач
 
 [Desktop Action winemgr]
@@ -55,8 +55,8 @@ Name[ru_RU]=Менеджер тем
 [Desktop Action uninstaller]
 Exec=lutris-wine -uninstaller
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Add/Remove Programs
-Name[ru_RU]=Установка/Удаление программ
+Name=Add/remove programs
+Name[ru_RU]=Установка/удаление программ
 
 [Desktop Action winetricks]
 Exec=lutris-wine -winetricks
@@ -80,7 +80,7 @@ Name[ru_RU]=Убить процессы Wine
 Exec=lutris-wine -killtray
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Kill tray
-Name[ru_RU]=Убить трэй
+Name[ru_RU]=Убить трей
 
 [Desktop Action killexe]
 Exec=lutris-wine -killexe
@@ -128,7 +128,7 @@ Name[ru_RU]=Удалить Lutris Wine ярлыки из меню
 Exec=lutris-wine -tray noclose
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Lutris Wine tray
-Name[ru_RU]=Lutris Wine трэй
+Name[ru_RU]=Lutris Wine трей
 
 [Desktop Action exit]
 Exec=lutris-wine -exit
@@ -142,9 +142,15 @@ Icon=/usr/share/lutris/media/default_icon.png
 Name=Set default Wine
 Name[ru_RU]=Настроить дефолтный Wine
 
+[Desktop Action update]
+Exec=lutris-wine -update
+Icon=/usr/share/lutris/media/default_icon.png
+Name=Update runtime
+Name[ru_RU]=Обновление рантайм
+
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;themesmgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;setwine
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;themesmgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;setwine;update
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine

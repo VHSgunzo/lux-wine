@@ -3069,8 +3069,8 @@ vkd3d"
                         inn|innoextract) upd_innoextract & ;;
                         net|network-tools) upd_network-tools & ;;
                         p7|p7zip) upd_p7zip & ;;
-                        ub686|ubuntu1804-i686) upd_ubuntu1804-i686 & ;;
-                        ub8664|ubuntu1804-x86_64) upd_ubuntu1804-x86_64 & ;;
+                        ub1804_686|ubuntu1804-i686) upd_ubuntu1804-i686 & ;;
+                        ub1804_8664|ubuntu1804-x86_64) upd_ubuntu1804-x86_64 & ;;
                         d3d|d3d_extras|d3d-extras) upd_d3d_extras & ;;
                         dg|dgvoodoo2) upd_dgvoodoo2 & ;;
                         dx|dxvk) upd_dxvk & ;;

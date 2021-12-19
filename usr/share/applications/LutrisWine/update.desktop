@@ -1,10 +1,9 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -shortcut "%f"
+Exec=lutris-wine -update
 Icon=/usr/share/lutris/media/default_icon.png
-MimeType=application/x-ms-dos-executable;application/x-msdos-program
-Name=Create shortcut
-Name[ru_RU]=Cоздать ярлык
+Name=Update runtime
+Name[ru_RU]=Обновление рантайм
 NoDisplay=false
 StartupNotify=true
 Terminal=0

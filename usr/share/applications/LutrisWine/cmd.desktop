@@ -1,9 +1,10 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -cmd
+Exec=lutris-wine -cmd "%f"
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Open CMD
-Name[ru_RU]=Открыть CMD
+MimeType=application/x-ms-dos-executable;application/x-msdos-program
+Name=Lutris Wine CMD
+Name[ru_RU]=Lutris Wine CMD
 NoDisplay=false
 StartupNotify=true
 Terminal=0

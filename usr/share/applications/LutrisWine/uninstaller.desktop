@@ -2,8 +2,8 @@
 Categories=Lutris Wine
 Exec=lutris-wine -uninstaller
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Add/Remove Programs
-Name[ru_RU]=Установка/Удаление программ
+Name=Add/remove programs
+Name[ru_RU]=Установка/удаление программ
 NoDisplay=false
 StartupNotify=true
 Terminal=0

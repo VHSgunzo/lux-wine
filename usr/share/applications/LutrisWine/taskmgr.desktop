@@ -2,7 +2,7 @@
 Categories=Lutris Wine
 Exec=lutris-wine -taskmgr
 Icon=/usr/share/lutris/media/default_icon.png
-Name=Task Manager
+Name=Task manager
 Name[ru_RU]=Диспетчер задач
 NoDisplay=false
 StartupNotify=true
