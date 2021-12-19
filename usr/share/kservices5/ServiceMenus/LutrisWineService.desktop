@@ -143,7 +143,7 @@ Name=Set default Wine
 Name[ru_RU]=Настроить дефолтный Wine
 
 [Desktop Action update]
-Exec=lutris-wine -update
+Exec=lutris-wine -update openupdtr
 Icon=/usr/share/lutris/media/default_icon.png
 Name=Update runtime
 Name[ru_RU]=Обновление рантайм
