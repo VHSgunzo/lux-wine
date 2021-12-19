@@ -3023,7 +3023,7 @@ vkd3d"
     if [ "$2" == "all" ]
         then
             upd_all
-    elif [ -z "$2" ]
+    elif [[ -z "$2" || "$2" == "openupdtr" ]]
         then
             if [ -z "$(pgrep -fa yad|grep "Runtime Updater"|awk '{print$1}')" ]; then :
                 else
