@@ -171,7 +171,7 @@ check_compositor() {
             export CMPSTR_ON="dbus-send --session --dest=com.deepin.WMSwitcher --type=method_call /com/deepin/WMSwitcher com.deepin.WMSwitcher.RequestSwitchWM"
             export CMPSTR_OFF="$CMPSTR_ON"
             export CMPSTR_DEEPIN="dbus-send --session --dest=com.deepin.WMSwitcher --type=method_call --print-reply=literal /com/deepin/WMSwitcher com.deepin.WMSwitcher.CurrentWM"
-            export CMPSTR_DEEPIN_CHECK="$(eval $CMPSTR_DEEPIN)"
+            export CMPSTR_DEEPIN_CHECK="$(eval $CMPSTR_DEEPIN|grep -o "wm")"
     else
         export CMPSTR_NULL=""
     fi
@@ -669,13 +669,13 @@ compositor_sw() {
                     fi
             elif [ ! -z "$CMPSTR_DEEPIN_CHECK" ]
                 then
-                    if [[ "$(eval $CMPSTR_DEEPIN)" == "deepin wm" && "$CMPSTR_DEEPIN_CHECK" == "deepin wm" && -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
+                    if [[ "$(eval $CMPSTR_DEEPIN|grep -o "wm")" == "wm" && "$CMPSTR_DEEPIN_CHECK" == "wm" && -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                         then
                             compositor_off
-                    elif [[ "$(eval $CMPSTR_DEEPIN)" == "deepin metacity" && ! -z "$CMPSTROFF" ]]
+                    elif [[ "$(eval $CMPSTR_DEEPIN|grep -o "metacity")" == "metacity" && ! -z "$CMPSTROFF" ]]
                         then
                             compositor_on
-                    elif [[ "$(eval $CMPSTR_DEEPIN)" == "deepin metacity" && "$(eval $CHK_CMPSTROFF_OTH|wc -l)" -ge 1 ]]
+                    elif [[ "$(eval $CMPSTR_DEEPIN|grep -o "metacity")" == "metacity" && "$(eval $CHK_CMPSTROFF_OTH|wc -l)" -ge 1 ]]
                         then
                             cmpstr_dirty_noff
                     else
