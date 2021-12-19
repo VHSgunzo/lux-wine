@@ -1902,24 +1902,24 @@ lu_help() {
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
             $RED└──╼ \$$GREEN lutris-wine $BLUE{lutris-wine argument} ${RED}blabla.exe $YELLOW{exe arguments}
 
-            ${RED}-explorer $GREEN              Wine Explorer
+            ${RED}-explorer $GREEN              Wine explorer
             ${RED}-cmd $GREEN                   Open CMD or open file in CMD
             ${RED}-shell $GREEN                 Open SHELL or open file in SHELL
             ${RED}-regedit $GREEN               Registry editor
-            ${RED}-control $GREEN               Control Panel
+            ${RED}-control $GREEN               Control panel
             ${RED}-winecfg $GREEN               Wine settings
             ${RED}-winemgr $GREEN               Wine manager
-            ${RED}-setwine $GREEN               Set default WINE
+            ${RED}-setwine $GREEN               Set default Wine
             ${RED}-taskmgr $GREEN               Task manager
             ${RED}-themesmgr $GREEN             Themes manager
-            ${RED}-uninstaller $GREEN           Add/Remove Programs
+            ${RED}-uninstaller $GREEN           Add/remove programs
             ${RED}-winetricks $GREEN            Winetricks
             ${RED}-openpfx $GREEN               Open drive C:
             ${RED}-killwine $GREEN              Kill Wine processes
             ${RED}-killtray $GREEN              Kill Lutris Wine tray
             ${RED}-killexe $GREEN               Kill Lutris Wine launch EXE
             ${RED}-killshell $GREEN             Kill Lutris Wine SHELL
-            ${RED}-exit $GREEN                  Lutris Wine Force Exit
+            ${RED}-exit $GREEN                  Lutris Wine force exit
             ${RED}-clearpfx $GREEN              Clear prefix
             ${RED}-rmapp $GREEN                 Remove Lutris Wine shortcuts from menu
             ${RED}-shortcut $GREEN              Create shortcut
@@ -1928,24 +1928,24 @@ lu_help() {
             ${RED}-help $GREEN                  Show this usage info
             ${RED}-version $GREEN               Show version info
             ${RED}-tray $BLUE{noclose}${GREEN}         Open Lutris Wine in tray
-            ${RED}-update$BLUE {all} $GREEN          Update Runtime$BLUE
+            ${RED}-update$BLUE {all} $GREEN          Update runtime$BLUE
             {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}
             {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}
             {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}
             {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
         $RESETCOLOR" >&2
         zenity --info --title "Lutris Wine usage info" --text "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ lutris-wine {lutris-wine argument} blabla.exe {exe arguments} \n\n \
-        -explorer                 Wine Explorer\n \
+        -explorer                 Wine explorer\n \
         -cmd                          Open CMD or open file in CMD\n \
         -shell                         Open SHELL or open file in SHELL\n \
         -regedit                    Registry editor\n \
-        -control                     Control Panel\n \
+        -control                     Control panel\n \
         -winecfg                   Wine settings\n \
         -winemgr                 Wine manager\n \
         -setwine                   Set default Wine\n \
-        -taskmgr                  Task Manager\n \
-        -themesmgr           Themes Manager\n \
-        -uninstaller              Add/Remove Programs\n \
+        -taskmgr                  Task manager\n \
+        -themesmgr           Themes manager\n \
+        -uninstaller              Add/remove programs\n \
         -winetricks               Winetricks\n \
         -openpfx                  Open drive C:\n \
         -killwine                    Kill Wine processes\n \
@@ -1961,7 +1961,7 @@ lu_help() {
         -help                          Show this usage info\n \
         -version                    Show version info\n \
         -tray {noclose}       Open Lutris Wine in tray\n \
-        -update {all}            Update Runtime\n \
+        -update {all}            Update runtime\n \
         {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}\n \
         {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}\n \
         {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}\n \
@@ -2022,17 +2022,17 @@ lu_tray() {
                 --tooltip="Lutris Wine" \
                 --menu="| \
 Explorer!$BASH -c 'lutris-wine -explorer'!"/usr/share/lutris/media/default_icon.png"| \
-Task Manager!$BASH -c 'lutris-wine -taskmgr'!"/usr/share/lutris/media/default_icon.png"| \
+Task manager!$BASH -c 'lutris-wine -taskmgr'!"/usr/share/lutris/media/default_icon.png"| \
 Open CMD!$BASH -c 'lutris-wine -cmd'!"/usr/share/lutris/media/default_icon.png"| \
 Open SHELL!$BASH -c 'lutris-wine -shell'!"/usr/share/lutris/media/default_icon.png"| \
 DEBUG!$BASH -c 'lutris-wine -debug'!"/usr/share/lutris/media/default_icon.png"| \
-Add/Remove Programs!$BASH -c 'lutris-wine -uninstaller'!"/usr/share/lutris/media/default_icon.png"| \
-Control Panel!$BASH -c 'lutris-wine -control'!"/usr/share/lutris/media/default_icon.png"| \
+Add/remove programs!$BASH -c 'lutris-wine -uninstaller'!"/usr/share/lutris/media/default_icon.png"| \
+Control panel!$BASH -c 'lutris-wine -control'!"/usr/share/lutris/media/default_icon.png"| \
 Open drive C:\!$BASH -c 'lutris-wine -openpfx'!"/usr/share/lutris/media/default_icon.png"| \
 Registry editor!$BASH -c 'lutris-wine -regedit'!"/usr/share/lutris/media/default_icon.png"| \
 Wine settings!$BASH -c 'lutris-wine -winecfg'!"/usr/share/lutris/media/default_icon.png"| \
 Wine manager!$BASH -c 'lutris-wine -winemgr'!"/usr/share/lutris/media/default_icon.png"| \
-Update Runtime!$BASH -c 'lutris-wine -update'!"/usr/share/lutris/media/default_icon.png"| \
+Update runtime!$BASH -c 'lutris-wine -update'!"/usr/share/lutris/media/default_icon.png"| \
 Set default Wine!$BASH -c 'lutris-wine -setwine'!"/usr/share/lutris/media/default_icon.png"| \
 Themes manager!$BASH -c 'lutris-wine -themesmgr'!"/usr/share/lutris/media/default_icon.png"| \
 Winetricks!$BASH -c 'lutris-wine -winetricks'!"/usr/share/lutris/media/default_icon.png"| \
