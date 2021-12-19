@@ -43,6 +43,7 @@ package() {
     install -Dm644 usr/share/applications/LutrisWine/winecfg.desktop ${pkgdir}/usr/share/applications/LutrisWine/winecfg.desktop
     install -Dm644 usr/share/applications/LutrisWine/winetricks.desktop ${pkgdir}/usr/share/applications/LutrisWine/winetricks.desktop
     install -Dm644 usr/share/applications/LutrisWine/killtray.desktop ${pkgdir}/usr/share/applications/LutrisWine/killtray.desktop
+    install -Dm644 usr/share/applications/LutrisWine/update.desktop ${pkgdir}/usr/share/applications/LutrisWine/update.desktop
     install -Dm644 usr/share/applications/LutrisWine/killexe.desktop ${pkgdir}/usr/share/applications/LutrisWine/killexe.desktop
     install -Dm644 usr/share/applications/LutrisWine/tray.desktop ${pkgdir}/usr/share/applications/LutrisWine/tray.desktop
     install -Dm644 usr/share/applications/LutrisWine/exit.desktop ${pkgdir}/usr/share/applications/LutrisWine/exit.desktop
