@@ -3195,20 +3195,19 @@ if [ $(id -u) -eq 0 ]
                 check_gstreamer
                 check_vkd3dconfig
                 check_dxr
-                check_dxvk &
-                check_vkd3d &
-                check_dxvk-nvapi &
-                check_d3d_extras &
-                check_dgvoodoo2 &
-                check_battleye &
-                check_gamecontrollerdb &
-                check_innoextract &
-                check_network-tools &
-                check_p7zip &
-                check_ubuntu1804-i686 &
-                check_ubuntu1804-x86_64 &
-                check_winetricks &
-                wait
+                check_dxvk
+                check_vkd3d
+                check_dxvk-nvapi
+                check_d3d_extras
+                check_dgvoodoo2
+                check_battleye
+                check_gamecontrollerdb
+                check_innoextract
+                check_network-tools
+                check_p7zip
+                check_ubuntu1804-i686
+                check_ubuntu1804-x86_64
+                check_winetricks
                 check_prime
                 check_esync
                 check_fsync
