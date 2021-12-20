@@ -29,11 +29,14 @@ export SHARED_MEMORY=1
 export DIS_LAYER_AMD=1
 export DXR=1
 #export DXR11=1
-#export DXVK_GIT_RELEASE_URL="https://github.com/doitsujin/dxvk/releases"
-#export VKD3D_GIT_RELEASE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases"
 #export MANGOHUD_CONFIG=font_size=24,position=top-left,toggle_hud=Shift_R+F12,no_display,resolution,wine,gpu_name,vulkan_driver,gpu_stats,vkbasalt
 export MUST_HAVE_DLL="mfc42 vcrun2019 dotnet46"
 export SHELL="/usr/bin/bash"
+#export DGVO_GIT_RELEASE_URL=""
+#export D3D_GIT_RELEASE_URL=""
+#export NVAPI_GIT_RELEASE_URL=""
+#export DXVK_GIT_RELEASE_URL="https://github.com/doitsujin/dxvk/releases"
+#export VKD3D_GIT_RELEASE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases"
 
 export LU_WINE_CONF="$HOME/.config/lutris/runners/wine.yml"
 export LU_DIR="$HOME/.local/share/lutris"
@@ -1797,7 +1800,7 @@ lu_rmapp() {
         then
             LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep "^Name=" {}|sed 's/^Name=//g'|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --title "Shortcuts Remover" --list --checklist --separator "\n" --column="" --column="Select shortcuts to remove:" \
-            --text-align=center --center --window-icon="/usr/share/lutris/media/default_icon.png" \
+            --text-align=center --center --window-icon="/usr/share/lutris-wine/icon/default_icon.png" \
             --width=300 --height=500 --button="REMOVE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
                 then
@@ -2016,35 +2019,35 @@ lu_tray() {
     if [[ -z "$TRAY_PID" && "$NO_TRAY" != 1 ]]
         then
             yad --notification --no-middle --text="Lutris Wine" \
-                --window-icon="/usr/share/lutris/media/default_icon.png" \
-                --image="/usr/share/lutris/media/default_icon.png" \
+                --window-icon="/usr/share/lutris-wine/icon/default_icon.png" \
+                --image="/usr/share/lutris-wine/icon/default_icon.png" \
                 --command="$BASH -c lutris-wine" \
                 --tooltip="Lutris Wine" \
                 --menu="| \
-Explorer!$BASH -c 'lutris-wine -explorer'!"/usr/share/lutris/media/default_icon.png"| \
-Task manager!$BASH -c 'lutris-wine -taskmgr'!"/usr/share/lutris/media/default_icon.png"| \
-Open CMD!$BASH -c 'lutris-wine -cmd'!"/usr/share/lutris/media/default_icon.png"| \
-Open SHELL!$BASH -c 'lutris-wine -shell'!"/usr/share/lutris/media/default_icon.png"| \
-DEBUG!$BASH -c 'lutris-wine -debug'!"/usr/share/lutris/media/default_icon.png"| \
-Add/remove programs!$BASH -c 'lutris-wine -uninstaller'!"/usr/share/lutris/media/default_icon.png"| \
-Control panel!$BASH -c 'lutris-wine -control'!"/usr/share/lutris/media/default_icon.png"| \
-Open drive C:\!$BASH -c 'lutris-wine -openpfx'!"/usr/share/lutris/media/default_icon.png"| \
-Registry editor!$BASH -c 'lutris-wine -regedit'!"/usr/share/lutris/media/default_icon.png"| \
-Wine settings!$BASH -c 'lutris-wine -winecfg'!"/usr/share/lutris/media/default_icon.png"| \
-Wine manager!$BASH -c 'lutris-wine -winemgr'!"/usr/share/lutris/media/default_icon.png"| \
-Update runtime!$BASH -c 'lutris-wine -update'!"/usr/share/lutris/media/default_icon.png"| \
-Set default Wine!$BASH -c 'lutris-wine -setwine'!"/usr/share/lutris/media/default_icon.png"| \
-Themes manager!$BASH -c 'lutris-wine -themesmgr'!"/usr/share/lutris/media/default_icon.png"| \
-Winetricks!$BASH -c 'lutris-wine -winetricks'!"/usr/share/lutris/media/default_icon.png"| \
-Create shortcut!$BASH -c 'lutris-wine -shortcut'!"/usr/share/lutris/media/default_icon.png"| \
-Add to Lutris!$BASH -c 'lutris-wine -addtolu'!"/usr/share/lutris/media/default_icon.png"| \
-Remove menu app!$BASH -c 'lutris-wine -rmapp'!"/usr/share/lutris/media/default_icon.png"| \
-Clear prefix!$BASH -c 'lutris-wine -clearpfx'!"/usr/share/lutris/media/default_icon.png"| \
-Kill Wine processes!$BASH -c 'lutris-wine -killwine'!"/usr/share/lutris/media/default_icon.png"| \
-Kill launch EXE!$BASH -c 'lutris-wine -killexe'!"/usr/share/lutris/media/default_icon.png"| \
-Kill SHELL!$BASH -c 'lutris-wine -killshell'!"/usr/share/lutris/media/default_icon.png"| \
-Kill tray!$BASH -c 'lutris-wine -killtray'!"/usr/share/lutris/media/default_icon.png"| \
-FORCE EXIT!$BASH -c 'lutris-wine -exit'!"/usr/share/lutris/media/default_icon.png"|" &
+Explorer!$BASH -c 'lutris-wine -explorer'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Task manager!$BASH -c 'lutris-wine -taskmgr'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Open CMD!$BASH -c 'lutris-wine -cmd'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Open SHELL!$BASH -c 'lutris-wine -shell'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+DEBUG!$BASH -c 'lutris-wine -debug'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Add/remove programs!$BASH -c 'lutris-wine -uninstaller'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Control panel!$BASH -c 'lutris-wine -control'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Open drive C:\!$BASH -c 'lutris-wine -openpfx'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Registry editor!$BASH -c 'lutris-wine -regedit'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Wine settings!$BASH -c 'lutris-wine -winecfg'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Wine manager!$BASH -c 'lutris-wine -winemgr'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Update runtime!$BASH -c 'lutris-wine -update'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Set default Wine!$BASH -c 'lutris-wine -setwine'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Themes manager!$BASH -c 'lutris-wine -themesmgr'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Winetricks!$BASH -c 'lutris-wine -winetricks'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Create shortcut!$BASH -c 'lutris-wine -shortcut'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Add to Lutris!$BASH -c 'lutris-wine -addtolu'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Remove menu app!$BASH -c 'lutris-wine -rmapp'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Clear prefix!$BASH -c 'lutris-wine -clearpfx'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Kill Wine processes!$BASH -c 'lutris-wine -killwine'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Kill launch EXE!$BASH -c 'lutris-wine -killexe'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Kill SHELL!$BASH -c 'lutris-wine -killshell'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Kill tray!$BASH -c 'lutris-wine -killtray'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+FORCE EXIT!$BASH -c 'lutris-wine -exit'!"/usr/share/lutris-wine/icon/default_icon.png"|" &
             noclosetray &
     fi
 }
@@ -2110,7 +2113,7 @@ lu_winemgr() {
             echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
             echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=5 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
-                --window-icon="/usr/share/lutris/media/default_icon.png" --title "Wine Manager" --separator="" \
+                --window-icon="/usr/share/lutris-wine/icon/default_icon.png" --title "Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek" --tab="DELETE" --button="SET DEFAULT WINE:2"  --button="EXIT:1" --button="OK:0"
             if [ "$?" == "2" ]
                 then
@@ -2135,7 +2138,7 @@ lu_winemgr() {
                     echo -e "\n$(echo "$ILW_LIST"|grep -v "$WINE_IN_USE"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             fi
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
-                --window-icon="/usr/share/lutris/media/default_icon.png" --title "Wine Manager" --separator="" \
+                --window-icon="/usr/share/lutris-wine/icon/default_icon.png" --title "Wine Manager" --separator="" \
                 --tab-pos=top --tab="DELETE" --button="SET DEFAULT WINE:2"  --button="EXIT:1" --button="OK:0"
             if [ "$?" == "2" ]
                 then
@@ -2156,7 +2159,7 @@ lu_winemgr() {
             echo -e "\n$(echo "$PPW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PPWSET$WGUIDW" &
             echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
-                --window-icon="/usr/share/lutris/media/default_icon.png" --title "Wine Manager" --separator="" \
+                --window-icon="/usr/share/lutris-wine/icon/default_icon.png" --title "Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="GloriousEggroll" --tab="PortWine" --tab="Kron4ek"
             export PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
             export PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
@@ -2494,6 +2497,8 @@ check_dxvk() {
             if [ ! -z "$DXVK_GIT_RELEASE_URL" ]
                 then
                     GIT_RELEASE_URL="$DXVK_GIT_RELEASE_URL"
+                else
+                    GIT_RELEASE_URL="https://github.com/lutris/dxvk/releases"
             fi
             if [[ -f "$LU_RUNTIME/dxvk/$dxvk_version/x64/d3d12.dll" || -f "$LU_RUNTIME/dxvk/$dxvk_version/x32/d3d12.dll" ]]
                 then
@@ -2521,6 +2526,8 @@ check_vkd3d() {
             if [ ! -z "$VKD3D_GIT_RELEASE_URL" ]
                 then
                     GIT_RELEASE_URL="$VKD3D_GIT_RELEASE_URL"
+                else
+                    GIT_RELEASE_URL="https://github.com/lutris/vkd3d/releases"
             fi
             if dll_manager "vkd3d" "$vkd3d_version"
                 then
@@ -2534,6 +2541,12 @@ check_vkd3d() {
 check_dxvk-nvapi() {
     if [[ ! -z "$dxvk_nvapi" && "$dxvk_nvapi" == true && ! -z "$(lspci|grep VGA|grep -o NVIDIA)" ]]
         then
+            if [ ! -z "$NVAPI_GIT_RELEASE_URL" ]
+                then
+                    GIT_RELEASE_URL="$NVAPI_GIT_RELEASE_URL"
+                else
+                    GIT_RELEASE_URL="https://github.com/lutris/dxvk-nvapi/releases"
+            fi
             if dll_manager "dxvk-nvapi" "$dxvk_nvapi_version"
                 then
                     if [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]]
@@ -2560,6 +2573,12 @@ check_dxvk-nvapi() {
 check_d3d_extras() {
     if [[ ! -z "$d3d_extras" && "$d3d_extras" == true ]]
         then
+            if [ ! -z "$D3D_GIT_RELEASE_URL" ]
+                then
+                    GIT_RELEASE_URL="$D3D_GIT_RELEASE_URL"
+                else
+                    GIT_RELEASE_URL="https://github.com/lutris/d3d_extras/releases"
+            fi
             if dll_manager "d3d_extras" "$d3d_extras_version"
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
@@ -2570,6 +2589,12 @@ check_d3d_extras() {
 check_dgvoodoo2() {
     if [[ ! -z "$dgvoodoo2" && "$dgvoodoo2" == true ]]
         then
+            if [ ! -z "$DGVO_GIT_RELEASE_URL" ]
+                then
+                    GIT_RELEASE_URL="$DGVO_GIT_RELEASE_URL"
+                else
+                    GIT_RELEASE_URL="https://github.com/lutris/dgvoodoo2/releases"
+            fi
             if dll_manager "dgvoodoo2" "$dgvoodoo2_version"
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
@@ -2773,6 +2798,10 @@ check_terminal() {
     if [[ ! -z "$terminal" && "$terminal" == true ]]
         then
             export TERMINAL="1"
+    fi
+    if [[ -z "$terminal_app" ]]
+        then
+            export terminal_app="xterm"
     fi
 }
 
@@ -3033,7 +3062,7 @@ vkd3d"
             fi
             LW_RUN_UPD="$(echo -e "\n$(echo "$LWRUNTIMELST"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --title "Runtime Updater" --list --checklist --separator "\n" --column="" --column="Select runtime for update:" \
-                --text-align=center --center --window-icon="/usr/share/lutris/media/default_icon.png" \
+                --text-align=center --center --window-icon="/usr/share/lutris-wine/icon/default_icon.png" \
                 --width=300 --height=500 --button="UPDATE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
                 then

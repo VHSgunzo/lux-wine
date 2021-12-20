@@ -1,5 +1,5 @@
 [Desktop Entry]
 Type=Directory
-Name=Applications
-Name[ru_RU]=Приложения
+Name=Wine App
+Name[ru_RU]=Wine приложения
 Icon=/usr/share/lutris/media/default_icon.png
