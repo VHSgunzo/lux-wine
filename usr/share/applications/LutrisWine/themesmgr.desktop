@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lutris Wine
 Exec=lutris-wine -themesmgr
-Icon=/usr/share/lutris/media/default_icon.png
+Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Themes manager
 Name[ru_RU]=Менеджер тем
 NoDisplay=false

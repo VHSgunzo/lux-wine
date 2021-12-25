@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lutris Wine
 Exec=lutris-wine -exit
-Icon=/usr/share/lutris/media/default_icon.png
+Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Lutris Wine force exit
 Name[ru_RU]=Закрыть Lutris Wine
 NoDisplay=false

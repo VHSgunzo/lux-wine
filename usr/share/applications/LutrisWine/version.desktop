@@ -1,9 +1,9 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -regedit
+Exec=lutris-wine -version
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Registry editor
-Name[ru_RU]=Редактор реестра
+Name=Version info
+Name[ru_RU]=Версия
 NoDisplay=false
 StartupNotify=true
 Terminal=0

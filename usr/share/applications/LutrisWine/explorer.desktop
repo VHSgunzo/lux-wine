@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lutris Wine
 Exec=lutris-wine -explorer
-Icon=/usr/share/lutris/media/default_icon.png
+Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Wine explorer
 Name[ru_RU]=Рабочий стол
 NoDisplay=false

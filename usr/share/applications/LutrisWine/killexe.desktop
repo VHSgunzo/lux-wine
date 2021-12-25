@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lutris Wine
 Exec=lutris-wine -killexe
-Icon=/usr/share/lutris/media/default_icon.png
+Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Kill launch EXE
 Name[ru_RU]=Убить запущенные EXE
 NoDisplay=false

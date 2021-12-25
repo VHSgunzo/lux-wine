@@ -1,6 +1,6 @@
 #!/bin/bash
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.51"
+export LW_VERSION="0.52"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -11,6 +11,7 @@ export RESETCOLOR='\033[1;00m'
 #export LOG=1
 #export DEBUG=1
 #export NO_TRAY=1
+#export WIN_VER=10
 #export TERMINAL=1
 #export HOLD_TERMINAL=1
 #export UNSET_CMPSTR_SW=1
@@ -24,13 +25,19 @@ export LARGE_ADDRESS=1
 #export HIDE_NVIDIA_GPU=1
 #export HEAP_DELAY_FREE=1
 #export ALLOW_XIM=1
-#export MANGOHUD_USER_CONF=1
+export MANGOHUD_USER_CONF=1
+#export MANGOHUD_CONFIG="font_size=24,position=top-left,toggle_hud=Shift_R+F12,no_display,resolution,wine,gpu_name,vulkan_driver,gpu_stats,vkbasalt"
 export SHARED_MEMORY=1
 export DIS_LAYER_AMD=1
+export USE_GSTREAMER=1
+export USE_VKBASALT=1
+export USE_MANGOHUD=1
+export USE_GAMEMODE=1
+#export VKBASALT_EFFECTS="Tonemap:Colourfulness:FakeHDR:cas"
+#export VKBASALT_FFX_CAS="0.7"
 export DXR=1
 #export DXR11=1
-#export MANGOHUD_CONFIG=font_size=24,position=top-left,toggle_hud=Shift_R+F12,no_display,resolution,wine,gpu_name,vulkan_driver,gpu_stats,vkbasalt
-export MUST_HAVE_DLL="mfc42 vcrun2019 dotnet46"
+export MUST_HAVE_DLL="vcrun2019 mfc42 dotnet46"
 export SHELL="/usr/bin/bash"
 #export DGVO_GIT_RELEASE_URL=""
 #export D3D_GIT_RELEASE_URL=""
@@ -47,6 +54,7 @@ export LU_DB="$LU_DIR/pga.db"
 export MENUAPPDIR="$HOME/.local/share/applications"
 export LW_APP_DIR="$MENUAPPDIR/LutrisWineApp"
 export WTRX_DIR="$LU_RUNTIME/winetricks"
+export VKBASALT_CONFIG_FILE="$HOME/.config/vkBasalt/vkBasalt.conf"
 
 yaml_parser() {
    local prefix=$2
@@ -2043,6 +2051,8 @@ Create shortcut!$BASH -c 'lutris-wine -shortcut'!"/usr/share/lutris-wine/icon/de
 Add to Lutris!$BASH -c 'lutris-wine -addtolu'!"/usr/share/lutris-wine/icon/default_icon.png"| \
 Remove menu app!$BASH -c 'lutris-wine -rmapp'!"/usr/share/lutris-wine/icon/default_icon.png"| \
 Clear prefix!$BASH -c 'lutris-wine -clearpfx'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Usage info!$BASH -c 'lutris-wine -help'!"/usr/share/lutris-wine/icon/default_icon.png"| \
+Version info!$BASH -c 'lutris-wine -version'!"/usr/share/lutris-wine/icon/default_icon.png"| \
 Kill Wine processes!$BASH -c 'lutris-wine -killwine'!"/usr/share/lutris-wine/icon/default_icon.png"| \
 Kill launch EXE!$BASH -c 'lutris-wine -killexe'!"/usr/share/lutris-wine/icon/default_icon.png"| \
 Kill SHELL!$BASH -c 'lutris-wine -killshell'!"/usr/share/lutris-wine/icon/default_icon.png"| \
@@ -2439,7 +2449,7 @@ us_layout_sw() {
 }
 
 check_mangohud() {
-    if [ ! -z "$mangohud" ]
+    if [[ ! -z "$mangohud" || "$USE_MANGOHUD" == 1 ]]
         then
             if [ ! -z "$(which mangohud 2>/dev/null)" ]
                 then
@@ -2449,18 +2459,29 @@ check_mangohud() {
                         else
                             export RUN_MANGOHUD="mangohud --dlsym"
                     fi
+                    if [ -z "$MANGOHUD_CONFIG" ]
+                        then
+export MANGOHUD_CONFIG="no_display,fps_limit=75,toggle_fps_limit=F1,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
+cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
+engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,frame_timing=1,frametime_color=00ff00,show_fps_limit,\
+resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"
+                    fi
+                    if [[ "$MANGOHUD_USER_CONF" == 1 ]]
+                        then
+                            unset MANGOHUD_CONFIG
+                    fi
                 else
                     print_error "MANGOHUD not found in your system!"
                     export DISABLE_MANGOHUD=1
             fi
         else
-            print_info "MANGOHUD disabled in Lutris!"
+            print_info "MANGOHUD disabled!"
             export DISABLE_MANGOHUD=1
     fi
 }
 
 check_gamemode() {
-    if [[ ! -z "$gamemode" && "$gamemode" == true ]]
+    if [[ "$gamemode" == true || "$USE_GAMEMODE" == 1 ]]
         then
             if [ ! -z "$(which gamemoderun 2>/dev/null)" ]
                 then
@@ -2470,24 +2491,27 @@ check_gamemode() {
                     export RUN_GAMEMODE=""
             fi
         else
-            print_info "GAMEMODE disabled in Lutris!"
+            print_info "GAMEMODE disabled!"
             export RUN_GAMEMODE=""
     fi
 }
 
 check_gstreamer() {
-    if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
+    if [ "$USE_GSTREAMER" == 1 ]
         then
-            export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0/:$WINEDIR/lib/gstreamer-1.0/"
-            try_mkdir "$HOME/.cache/gstreamer-1.0"
-            export WINE_GST_REGISTRY_DIR="$HOME/.cache/gstreamer-1.0"
-            export MEDIACONV_AUDIO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/audio.foz
-            export MEDIACONV_AUDIO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_audio.foz
-            export MEDIACONV_VIDEO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/video.foz
-            export MEDIACONV_VIDEO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_video.foz
-        else
-            print_info "WINE GSTREAMER not found!"
-            wdllover_upd "winegstreamer="
+            if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
+                then
+                    export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0/:$WINEDIR/lib/gstreamer-1.0/"
+                    try_mkdir "$HOME/.cache/gstreamer-1.0"
+                    export WINE_GST_REGISTRY_DIR="$HOME/.cache/gstreamer-1.0"
+                    export MEDIACONV_AUDIO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/audio.foz
+                    export MEDIACONV_AUDIO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_audio.foz
+                    export MEDIACONV_VIDEO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/video.foz
+                    export MEDIACONV_VIDEO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_video.foz
+                else
+                    print_error "WINE GSTREAMER not found!"
+                    wdllover_upd "winegstreamer="
+            fi
     fi
 }
 
@@ -2506,15 +2530,11 @@ check_dxvk() {
             fi
             if dll_manager "dxvk" "$dxvk_version"
                 then
+                    wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
                     try_mkdir "$HOME/.cache/dxvk_cache"
-                    try_mkdir "$HOME/.cache/gl_shader_cache"
                     export DXVK_STATE_CACHE_PATH=$HOME/.cache/dxvk_cache
                     export DXVK_STATE_CACHE=1
                     export __GL_DXVK_OPTIMIZATIONS=1
-                    export __GL_SHADER_DISK_CACHE_PATH=$HOME/.cache/gl_shader_cache
-                    export __GL_SHADER_DISK_CACHE=1
-                    export __GL_SHADER_DISK_CACHE_SIZE=1000000000
-                    wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
                     unset GIT_RELEASE_URL
             fi
     fi
@@ -2812,6 +2832,32 @@ check_pulse_latency() {
     fi
 }
 
+check_vkbasalt() {
+    if [[ "$USE_VKBASALT" == 1 && -f "$VKBASALT_CONFIG_FILE" ]]
+        then
+            export ENABLE_VKBASALT=1
+            if [ -z "$VKBASALT_EFFECTS" ]
+                then
+                    export VKBASALT_EFFECTS="Tonemap:Colourfulness:FakeHDR:cas"
+            fi
+            sed -ri "s/effects = .*/effects = $VKBASALT_EFFECTS/g" "$VKBASALT_CONFIG_FILE"
+            if [ -z "$VKBASALT_FFX_CAS" ]
+                then
+                    export VKBASALT_FFX_CAS="0.7"
+            fi
+            sed -ri "s/casSharpness .*/casSharpness = $VKBASALT_FFX_CAS/g" "$VKBASALT_CONFIG_FILE"
+            if [ ! -z "$VK_INSTANCE_LAYERS" ]
+                then
+                    export VK_INSTANCE_LAYERS="VK_LAYER_VKBASALT_post_processing:$VK_INSTANCE_LAYERS"
+                else
+                    export VK_INSTANCE_LAYERS="VK_LAYER_VKBASALT_post_processing"
+            fi
+        else
+            export DISABLE_VKBASALT=1
+    fi
+
+}
+
 check_reset_pulse() {
     if [[ ! -z "$reset_pulse" && "$reset_pulse" == true ]]
         then
@@ -2863,7 +2909,7 @@ check_hold_terminal() {
 }
 
 check_crash_dialog() {
-    if [[ ! -z "$ShowCrashDialog" && "$ShowCrashDialog" == true ]] || [[ ! -z "$WINEDBG_DISABLE" && "$WINEDBG_DISABLE" != 1 ]]
+    if [[ ! -z "$ShowCrashDialog" && "$ShowCrashDialog" == true && "$WINEDBG_DISABLE" != 1 ]]
         then
             wdllover_upd "winedbg.exe=b"
         else
@@ -3164,10 +3210,6 @@ check_other_fixes() {
         else
             export WINE_ALLOW_XIM="0"
     fi
-    if [[ ! -z "$MANGOHUD_USER_CONF" && "$MANGOHUD_USER_CONF" != 0 ]]
-        then
-            unset MANGOHUD_CONFIG
-    fi
     if [ -z "$WINE_MONO_OVERRIDES" ]
         then
             export WINE_MONO_OVERRIDES="Microsoft.Xna.Framework.*,Gac=n"
@@ -3179,6 +3221,40 @@ check_other_fixes() {
     if [[ ! -z "$DIS_LAYER_AMD" && "$DIS_LAYER_AMD" != 0 ]]
         then
             export DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1="1"
+    fi
+    try_mkdir "$HOME/.cache/gl_shader_cache"
+    export __GL_SHADER_DISK_CACHE_PATH=$HOME/.cache/gl_shader_cache
+    export __GL_SHADER_DISK_CACHE=1
+    export __GL_SHADER_DISK_CACHE_SIZE=1000000000
+}
+
+check_opengl() {
+    if [[ "$dxvk" != "true" || "$vkd3d" != "true" ]]
+        then
+            print_info "Running in WineD3D mode!"
+            try_mkdir "$HOME/.cache/mesa_shader_cache"
+            export MESA_GLSL_CACHE_DIR="$HOME/.cache/mesa_shader_cache"
+            export GL_YIELD="NOTHING"
+            if ! try_ln "$WINEDIR"/lib/wine/fakedlls/dxgi.dll "$PFX_DLL32_PTH/dxgi.dll" &>/dev/null
+                then
+                    try_ln "$WINEDIR"/lib/wine/i386-windows/dxgi.dll "$PFX_DLL32_PTH/dxgi.dll" &>/dev/null
+            fi
+            if ! try_ln "$WINEDIR"/lib64/wine/fakedlls/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                then
+                    try_ln "$WINEDIR"/lib64/wine/x86_64-windows/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+            fi
+            for wine_build_dll in d3d11 d3d10 d3d10core d3d10_1 d3d9
+                do
+                    if ! try_ln "$WINEDIR/lib/wine/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                        then
+                            try_ln "$WINEDIR/lib/wine/i386-windows/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                    fi
+                    if ! try_ln "$WINEDIR/lib64/wine/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                        then
+                            try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                    fi
+            done
+            wdllover_upd "d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi=b;d3d12="
     fi
 }
 
@@ -3196,7 +3272,7 @@ export_all_functions() {
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release \
         runtime_manager check_gamecontrollerdb check_innoextract check_network-tools check_p7zip check_ubuntu1804-i686 upd_battleye upd_gamecontrollerdb \
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
-        upd_ubuntu1804-x86_64 upd_ubuntu1804-i686
+        upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_opengl check_vkbasalt
 }
 
 if [ $(id -u) -eq 0 ]
@@ -3222,6 +3298,7 @@ if [ $(id -u) -eq 0 ]
                 check_mangohud
                 check_gamemode
                 check_gstreamer
+                check_vkbasalt
                 check_vkd3dconfig
                 check_dxr
                 check_dxvk
@@ -3230,6 +3307,7 @@ if [ $(id -u) -eq 0 ]
                 check_d3d_extras
                 check_dgvoodoo2
                 check_battleye
+                check_opengl
                 check_gamecontrollerdb
                 check_innoextract
                 check_network-tools
