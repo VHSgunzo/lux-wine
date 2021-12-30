@@ -3354,7 +3354,15 @@ check_other_fixes() {
 }
 
 check_videodrv() {
-    if [[ ! -z "$(glxinfo -B|grep -wo "virgl")" || ! -z "$(glxinfo -B|grep -wo "llvmpipe")" ]]
+    #SYSGLXINFO="$(DISABLE_MANGOHUD=1 glxinfo -B 2>/dev/null|grep "Device")"
+    SYSVKINFO="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 vulkaninfo --summary 2>/dev/null|grep driverName|awk '{print$3}')"
+    if [ -z "$(echo "$SYSVKINFO"|head -1)" ]
+        then
+            export WINED3D=1
+    elif [[ ! -z "$(echo "$SYSVKINFO"|grep -wo "llvmpipe")" && "$(echo "$SYSVKINFO"|wc -l)" == 1 ]]
+        then
+            export WINED3D=1
+    elif [[ ! -z "$(echo "$SYSGLXINFO"|grep -wo "virgl")" && "$(echo "$SYSGLXINFO"|wc -l)" == 1 ]]
         then
             export WINED3D=1
     fi
@@ -3426,7 +3434,7 @@ if [ $(id -u) -eq 0 ]
     else
         check_luwine_conf
         check_def_wine
-        #check_videodrv
+        check_videodrv
         check_winearch
         check_winepfx
         check_compositor
