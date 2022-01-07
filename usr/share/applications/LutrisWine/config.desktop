@@ -1,9 +1,10 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -setwine
+Exec=lutris-wine -config
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Set default Wine
-Name[ru_RU]=Настроить дефолтный Wine
+MimeType=application/x-ms-dos-executable;application/x-msdos-program
+Name=Lutris Wine settings
+Name[ru_RU]=Настройки Lutris Wine
 NoDisplay=false
 StartupNotify=true
 Terminal=0

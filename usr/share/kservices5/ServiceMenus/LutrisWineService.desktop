@@ -46,12 +46,6 @@ Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Wine manager
 Name[ru_RU]=Wine менеджер
 
-[Desktop Action themesmgr]
-Exec=lutris-wine -themesmgr
-Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Themes manager
-Name[ru_RU]=Менеджер тем
-
 [Desktop Action uninstaller]
 Exec=lutris-wine -uninstaller
 Icon=/usr/share/lutris-wine/icon/default_icon.png
@@ -136,12 +130,6 @@ Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Lutris Wine force exit
 Name[ru_RU]=Закрыть Lutris Wine
 
-[Desktop Action setwine]
-Exec=lutris-wine -setwine
-Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Set default Wine
-Name[ru_RU]=Настроить дефолтный Wine
-
 [Desktop Action update]
 Exec=lutris-wine -update openupdtr
 Icon=/usr/share/lutris-wine/icon/default_icon.png
@@ -160,9 +148,15 @@ Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Version info
 Name[ru_RU]=Версия
 
+[Desktop Action config]
+Exec=lutris-wine -config
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Lutris Wine settings
+Name[ru_RU]=Настройки Lutris Wine
+
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;themesmgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;setwine;update;version;help
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;update;version;help;config
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine
