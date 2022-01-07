@@ -2,7 +2,7 @@
 ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.54"
+export LW_VERSION="0.55"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -1962,6 +1962,7 @@ winetricks() {
             print_error yad "Winetricks" "Winetricks already runing!"
             exit 1
     fi
+    loadbar_cover
     if [ "$SYS_WINETRICKS" == 1 ]
         then
             if [ ! -z "$(which winetricks 2>/dev/null)" ]
@@ -2145,7 +2146,7 @@ lu_rmapp() {
     if [[ ! -z "$(echo "$LWAPPSHRT"|head -1)" ]]
         then
             LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep "^Name=" {}|sed 's/^Name=//g'|sort -u|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            yad --title "Shortcuts Remover" --list --checklist --separator "\n" --column="" --column="Select shortcuts to remove:" \
+            yad --title "Shortcuts Remover" --list --checklist --separator "\n" --column="" --column="Select shortcuts for remove:" \
                 --text-align=center --center --window-icon="$DEFICO" \
                 --width=300 --height=500 --button="REMOVE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
@@ -2305,14 +2306,14 @@ lu_help() {
         -update {all}            Runtime updater\n \
         {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}\n \
         {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}\n \
-        {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}\n \
+        {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}\n \
         {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
         \nLutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
         " &>/dev/null &
 }
 
 lu_version() {
-    if [ -z "$(pgrep -fa yad|grep "Version info"|awk '{print$1}')" ]; then :
+    if [ -z "$(pgrep -fa yad|grep "Version Info"|awk '{print$1}')" ]; then :
         else
             print_error yad "Version info" "Version info already runing!"
             exit 1
@@ -2348,7 +2349,7 @@ lu_version() {
             export DGVOODOO2_VER="[ DGVOODOO2 ]  : $DGVOODOO2_VERSION\n"
             echo -en "$DGVOODOO2_VER"
     fi
-    print_info yad "Version info" "Lutris Wine v${LW_VERSION} by $LW_DEVELOPERS\n\n${WINE_VER}${DXVK_VER}${VKD3D_VER}${DXVK_NVAPI_VER}${D3DEXTRAS_VER}${DGVOODOO2_VER}" &>/dev/null &
+    print_info yad "Version Info" "Lutris Wine v${LW_VERSION} by $LW_DEVELOPERS\n\n${WINE_VER}${DXVK_VER}${VKD3D_VER}${DXVK_NVAPI_VER}${D3DEXTRAS_VER}${DGVOODOO2_VER}" &>/dev/null &
 }
 
 lu_tray() {
