@@ -55,7 +55,6 @@ package() {
     install -Dm644 usr/share/kservices5/ServiceMenus/LutrisWineService.desktop ${pkgdir}/usr/share/kservices5/ServiceMenus/LutrisWineService.desktop
     install -Dm644 usr/share/lutris-wine/icon/default_icon.png ${pkgdir}/usr/share/lutris-wine/icon/default_icon.png
     install -Dm644 usr/share/lutris-wine/gif/default_loading.gif ${pkgdir}/usr/share/lutris-wine/gif/default_loading.gif
-    install -Dm644 usr/share/lutris-wine/config/luwine.conf ${pkgdir}/usr/share/lutris-wine/config/luwine.conf
     install -Dm644 "usr/share/lutris-wine/themes/DEFAULT.reg" "${pkgdir}/usr/share/lutris-wine/themes/DEFAULT.reg"
     install -Dm644 "usr/share/lutris-wine/themes/Breeze Dark.reg" "${pkgdir}/usr/share/lutris-wine/themes/Breeze Dark.reg"
     install -Dm644 "usr/share/lutris-wine/themes/Win10 Black.reg" "${pkgdir}/usr/share/lutris-wine/themes/Win10 Black.reg"
