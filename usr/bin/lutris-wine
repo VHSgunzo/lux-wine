@@ -141,12 +141,12 @@ check_luwine_sh_pid() {
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
-    CHK_EXES="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v windows|grep -e ":\\\\" -e ":/"|grep -v grep)"
+    CHK_EXES="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)"|grep -v windows|grep -v 'start.exe'|grep -v "$BASH_SOURCE"|grep -v grep)"
     if [ ! -z "$CHK_EXES" ]
         then
             export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$2}')"
             export RUN_EXES="$(while read exepid ; do ps -p $exepid -o args|cut -d":" -f2|sed '/COMMAND/d'|sed 'y#\\#/#' ; done <<< "$EXE_PIDS")"
-            export RUN_EXE=$(echo "$RUN_EXES"|grep -o "$EXE_DIR" 2>/dev/null)
+            export RUN_EXE=$(echo "$RUN_EXES"|grep -e "$EXE_DIR" -e "$EXE_NAME.exe" 2>/dev/null)
         else
             unset RUN_EXE
     fi
@@ -580,7 +580,7 @@ try_download() {
     check_freespace "$2"
     wget --no-check-certificate --content-disposition -t 3 -T 5 "$1" --directory-prefix="$2" 2>&1 | \
     tr '\r' '\n' | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\/, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./' | \
-    yad --window-icon="$DEFICO" --progress --percentage=0 --title="Download $(basename $1)" --text="Starting downloading...\n$1" --auto-close --auto-kill --width=600 --height=90 --center --on-top --fixed --button="EXIT:1" --button="OK:0"
+    yad --window-icon="$DEFICO" --progress --percentage=0 --title="Download $(basename $1)" --text="Download URL:\n$1" --auto-close --auto-kill --width=600 --height=90 --center --on-top --fixed --button="EXIT:1"
     if [ "$?" != 0 ]
         then
             print_error "Failed to download $1"
@@ -1544,9 +1544,11 @@ check_db_script() {
     if [ -f "$EXE_PATH/$EXE_NAME.lwdb" ]
         then
             export EXE_LWDBFL="$EXE_PATH/$EXE_NAME.lwdb"
+            export EXE_LWDB=1
     elif [[ ! -f "$EXE_LWDBFL" && -f "$LWDBDIR/$EXE_NAME.lwdb" ]]
         then
             export EXE_LWDBFL="$LWDBDIR/$EXE_NAME.lwdb"
+            export EXE_LWDB=1
     fi
     if [ -f "$EXE_LWDBFL" ]
         then
@@ -1575,7 +1577,6 @@ run_db_script() {
             if [ "$?" == 0 ]
                 then
                     print_info "EXE DB script '$EXE_LWDBFL' launched!"
-                    export EXE_LWDBFL_PID="$(pgrep -fa "$EXE_LWDBFL"|awk '{print$1}')"
                 else
                     print_error "EXE DB script '$EXE_LWDBFL' not launched!"
             fi
@@ -1715,7 +1716,7 @@ lu_config() {
     DXRLST="1.0 \n 1.1 \n Disabled"
     SHELLST=""$(which bash 2>/dev/null)""
     VKICDFILESLST="AUTO \n Nvidia \n Intel \n AMD \n Lvp"
-    VKBEFFLST="cas \n Tonemap:Colourfulness:FakeHDR:cas"
+    VKBEFFLST="cas \n Tonemap:FakeHDR:cas"
     DXVKLST="$(ls -I "*.json" -1 -t "$LU_RUNTIME/dxvk" 2>/dev/null) \n v1.9.2L-3e64e1b \n v1.9.2L \n v1.9.1L-2 \n v1.9.1L \n v1.9L-8b6ac52 \n v1.9L \n v1.8.1L \n v1.7.3L-03f11ba \n v1.7.2L-5ca255d \n v1.7.1L-743f309 \n v1.9.2 \n v1.9.1 \n v1.9 \n v1.8.1 \n v1.8 \n v1.7.3 \n v1.7.2 \n v1.7.1 \n v1.7 \n v1.6.1 \n latest"
     DXVKGITLST="https://github.com/lutris/dxvk/releases \n https://github.com/doitsujin/dxvk/releases"
     VKD3DLST="$(ls -I "*.json" -1 -t "$LU_RUNTIME/vkd3d" 2>/dev/null) \n v2.5L-db89d40 \n v2.4L-a19619c \n v2.4L-2 \n v2.4L \n v2.4 \n v2.5 \n v2.3.1 \n v2.3 \n v2.2 \n v2.1 \n v2.0 \n latest"
@@ -2855,7 +2856,7 @@ check_gamemode() {
                 then
                     export RUN_GAMEMODE="gamemoderun"
                 else
-                    print_error "GAMEMODE not found in your system!"
+                    print_error yad "GAMEMODE not found in your system!"
                     unset RUN_GAMEMODE
             fi
         else
@@ -2881,7 +2882,7 @@ check_gstreamer() {
                     export MEDIACONV_VIDEO_DUMP_FILE=$WINE_GST_REGISTRY_DIR/video.foz
                     export MEDIACONV_VIDEO_TRANSCODED_FILE=$WINE_GST_REGISTRY_DIR/transcoded_video.foz
                 else
-                    print_error "WINE GSTREAMER not found!"
+                    print_error yad "Wine GSTREAMER not found!"
                     wdllover_upd "winegstreamer="
             fi
     fi
@@ -2948,7 +2949,7 @@ check_dxvk() {
                 else
                     export DXVK=0
                     wdllover_upd "${ALLDXVKDLLS}=b"
-                    print_error "DXVK is disabled!"
+                    print_error yad "DLL Manager" "DXVK is disabled!"
             fi
         else
             export DXVK=0
@@ -2979,7 +2980,7 @@ check_vkd3d() {
                 else
                     export VKD3D=0
                     wdllover_upd "${ALLVKD3DDLLS}=b"
-                    print_error "VKD3D is disabled!"
+                    print_error yad "DLL Manager" "VKD3D is disabled!"
             fi
         else
             export VKD3D=0
@@ -3023,7 +3024,7 @@ check_dxvk-nvapi() {
                 else
                     export DXVK_NVAPI=0
                     wdllover_upd "${ALLNVAPIDLLS}=b"
-                    print_error "DXVK NVAPI is disabled!"
+                    print_error yad "DLL Manager" "DXVK NVAPI is disabled!"
             fi
         else
             export DXVK_NVAPI=0
@@ -3053,7 +3054,7 @@ check_d3d_extras() {
                 else
                     export D3D_EXTRAS=0
                     wdllover_upd "${ALLD3DEXTRADLLS}=b"
-                    print_error "D3D EXTRAS is disabled!"
+                    print_error yad "DLL Manager" "D3D EXTRAS is disabled!"
             fi
         else
             export D3D_EXTRAS=0
@@ -3083,7 +3084,7 @@ check_dgvoodoo2() {
                 else
                     export DGVOODOO2=0
                     wdllover_upd "${ALLDGVOODOO2DLLS}=b"
-                    print_error "DGVOODOO2 is disabled!"
+                    print_error yad "DLL Manager" "DGVOODOO2 is disabled!"
             fi
         else
             export DGVOODOO2=0
