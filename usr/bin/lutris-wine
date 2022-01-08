@@ -22,6 +22,7 @@ export WTRX_DIR="$LU_RUNTIME/winetricks"
 export VKBASALT_CONFIG_FILE="$HOME/.config/vkBasalt/vkBasalt.conf"
 export DEFICO="/usr/share/lutris-wine/icon/default_icon.png"
 export DEFLOADGIF="/usr/share/lutris-wine/gif/default_loading.gif"
+export LWDBDIR="/usr/share/lutris-wine/db"
 
 print_var() {
     for varp in $@
@@ -1409,8 +1410,9 @@ lu_prerun() {
 }
 
 lu_run() {
-    loadbar_cover
     lu_tray
+    run_db_script
+    loadbar_cover
     us_layout_sw
     lu_debug 2>/dev/null
     compositor_sw 2>/dev/null
@@ -1462,6 +1464,10 @@ lu_run() {
     else
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
         $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" "$@" $EXE_ARG
+    fi
+    if [[ ! -z "$LOADBARPID" && ! -z "$(ps -ef|grep -wo "$LOADBARPID" 2>/dev/null)" ]]
+        then
+            kill "$LOADBARPID" 2>/dev/null
     fi
     compositor_sw 2>/dev/null
     try_rm "$TMP_DEB" "$TMP_OUT" &>/dev/null
@@ -1534,6 +1540,48 @@ check_startfile() {
     fi
 }
 
+check_db_script() {
+    if [[ ! -f "$EXE_LWDBFL" && -f "$EXE_PATH/$EXE_NAME.lwdb" ]]
+        then
+            export EXE_LWDBFL="$EXE_PATH/$EXE_NAME.lwdb"
+    elif [[ ! -f "$EXE_LWDBFL" && -f "$LWDBDIR/$EXE_NAME.lwdb" ]]
+        then
+            export EXE_LWDBFL="$LWDBDIR/$EXE_NAME.lwdb"
+    fi
+    if [ -f "$EXE_LWDBFL" ]
+        then
+            if [ ! -z "$(file "$EXE_LWDBFL"|grep -wo "shell script")" ]
+                then
+                    print_info "Found EXE DB script: '$EXE_LWDBFL'"
+                    if [ -z "$EXE_LWDB" ]
+                        then
+                            export EXE_LWDB=1
+                    fi
+                else
+                    unset EXE_LWDBFL EXE_LWDB
+                    sed -i '/export EXE_LWDBFL.*/d' "$LU_WINE_CONF" 2>/dev/null
+                    sed -i "s/export EXE_LWDB=.*/export EXE_LWDB='0'/" "$LU_WINE_CONF" 2>/dev/null
+                    print_error yad "DB Scripts Launcher" "EXE DB file not a shell script!"
+            fi
+        else
+            unset EXE_LWDB
+    fi
+}
+
+run_db_script() {
+    if [ "$EXE_LWDB" == 1 ]
+        then
+            source "$EXE_LWDBFL"
+            if [ "$?" == 0 ]
+                then
+                    print_info "EXE DB script '$EXE_LWDBFL' launched!"
+                    export EXE_LWDBFL_PID="$(pgrep -fa "$EXE_LWDBFL"|awk '{print$1}')"
+                else
+                    print_error "EXE DB script '$EXE_LWDBFL' not launched!"
+            fi
+    fi
+}
+
 lw_init() {
     if [ "$1" == "noinitbar" ]; then :
         else
@@ -1554,6 +1602,7 @@ lw_init() {
             fi
             check_freespace "$BASH_SOURCE"
             check_luwine_conf
+            check_db_script
             check_network_status
             check_update
             check_shell
@@ -1688,9 +1737,10 @@ lu_config() {
             VKD3D_GIT_RELEASE_URL DXVK_NVAPI DXVK_NVAPI_VERSION NVAPI_GIT_RELEASE_URL D3D_EXTRAS D3D_EXTRAS_VERSION D3D_GIT_RELEASE_URL \
             DGVOODOO2 DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL WDLLOVER WINE_MONO_OVERRIDES MUST_HAVE_DLL DIS_WINEDBG LARGE_ADDRESS \
             OLD_GL_STRING NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD WINED3D \
-            CHK_UPDATE RUNTIME PREF_SYS_LIBS EXE_ARG LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY \
-            TERMINAL HOLD_TERMINAL LW_TERM_APP LWSHELL NO_TRAY US_LAYOUT DXR GSTREAMER VKBASALT VKBASALT_EFFECTS VKBASALT_FFX_CAS \
-            VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC FSR FSR_STRENGTH BATTLEYE PRIME"
+            CHK_UPDATE RUNTIME PREF_SYS_LIBS EXE_ARG EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU RESTORE_GAMMA \
+            DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LWSHELL NO_TRAY US_LAYOUT DXR GSTREAMER VKBASALT \
+            VKBASALT_EFFECTS VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC \
+            FSR FSR_STRENGTH BATTLEYE PRIME"
         WCFGOUT="$(for (( numsett=1; numsett <= "$(echo "$LWCFGPARAM"|wc -l)"; numsett++ ))
             do
                 if [ ! -z "$(echo "$LWCFGPARAM"|sed "$numsett"p -n|sed "s/''//")" ]
@@ -1760,6 +1810,9 @@ lu_config() {
             --field="Lutris runtime:CHK" "$RUNTIME" \
             --field="Prefer system libs:CHK" "$PREF_SYS_LIBS" \
             --field=$"EXE arguments::CBE" "$(echo "$EXE_ARG"|eval $AWKFIX)" \
+            --field="Run EXE DB script:CHK" "$EXE_LWDB" \
+            --field="EXE DB script::FL" "$EXE_LWDBFL" \
+            --file-filter="EXE DB script (*.lwdb)| *.lwdb *.LWDB" \
             --field="Loading bar cover:CHK" "$LOADBAR" \
             --field="Loading bar cover GIF::FL" "$LOADBARGIF" \
             --file-filter="Loading bar cover (*.gif)| *.gif *.GIF" \
@@ -3886,7 +3939,8 @@ export_all_functions() {
         runtime_manager check_gamecontrollerdb check_innoextract check_network-tools check_p7zip check_ubuntu1804-i686 upd_battleye upd_gamecontrollerdb \
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
         upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt check_luwine_conf check_videodrv check_shell check_startfile \
-        settingbar_nostdout check_freespace initbar check_network_status check_update check_no_async print_question print_input loadbar_cover
+        settingbar_nostdout check_freespace initbar check_network_status check_update check_no_async print_question print_input loadbar_cover \
+        run_db_script check_db_script
 }
 
 initbar() {
@@ -3933,7 +3987,8 @@ loadbar_cover() {
             GIF_SIZE_X="$(file "$GIF_FILE"|awk '{print $7 + 20}')"
             GIF_SIZE_Y="$(file "$GIF_FILE"|awk '{print $9 + 20}')"
             yad --picture --filename="$GIF_FILE" --close-on-unfocus --no-buttons --undecorated \
-                --center --skip-taskbar --width="$GIF_SIZE_X" --height="$GIF_SIZE_Y" &>/dev/null &
+                --center --skip-taskbar --width="$GIF_SIZE_X" --height="$GIF_SIZE_Y" $ENVKEY &>/dev/null &
+            export LOADBARPID="$(pgrep -fa yad|grep "$(basename "$GIF_FILE")"|grep "$ENVKEY"|awk '{print$1}')"
     fi
 }
 
