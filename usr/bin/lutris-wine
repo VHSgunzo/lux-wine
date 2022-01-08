@@ -1,5 +1,5 @@
 #!/bin/bash
-ENVKEY=$RANDOM
+export ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
 export LW_VERSION="0.54"
@@ -1412,7 +1412,7 @@ lu_prerun() {
 lu_run() {
     lu_tray
     run_db_script
-    loadbar_cover
+    loadbar_cover 2>/dev/null
     us_layout_sw
     lu_debug 2>/dev/null
     compositor_sw 2>/dev/null
@@ -1541,7 +1541,7 @@ check_startfile() {
 }
 
 check_db_script() {
-    if [[ ! -f "$EXE_LWDBFL" && -f "$EXE_PATH/$EXE_NAME.lwdb" ]]
+    if [ -f "$EXE_PATH/$EXE_NAME.lwdb" ]
         then
             export EXE_LWDBFL="$EXE_PATH/$EXE_NAME.lwdb"
     elif [[ ! -f "$EXE_LWDBFL" && -f "$LWDBDIR/$EXE_NAME.lwdb" ]]
@@ -3986,7 +3986,7 @@ loadbar_cover() {
             fi
             GIF_SIZE_X="$(file "$GIF_FILE"|awk '{print $7 + 20}')"
             GIF_SIZE_Y="$(file "$GIF_FILE"|awk '{print $9 + 20}')"
-            yad --picture --filename="$GIF_FILE" --close-on-unfocus --no-buttons --undecorated \
+            yad --picture --filename="$GIF_FILE" --close-on-unfocus --no-buttons --undecorated --on-top \
                 --center --skip-taskbar --width="$GIF_SIZE_X" --height="$GIF_SIZE_Y" $ENVKEY &>/dev/null &
             export LOADBARPID="$(pgrep -fa yad|grep "$(basename "$GIF_FILE")"|grep "$ENVKEY"|awk '{print$1}')"
     fi
