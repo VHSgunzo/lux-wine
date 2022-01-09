@@ -1,6 +1,8 @@
 #!/bin/bash
+try_mkdir "$WINEPREFIX/drive_c/Program Files (x86)/Steam/userdata/418370/remote/win64_save"
 export GSTREAMER='1'
 export LWMANGOHUD='Disabled'
+export DXR='Disabled'
 check_gstreamer
 check_mangohud
-try_mkdir "$WINEPREFIX/drive_c/Program Files (x86)/Steam/userdata/418370/remote/win64_save"
+check_dxr
