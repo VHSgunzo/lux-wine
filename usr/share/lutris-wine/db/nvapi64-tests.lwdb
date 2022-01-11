@@ -1,0 +1,4 @@
+#!/bin/bash
+export TERMINAL='1'
+export HOLD_TERMINAL='1'
+check_terminal
