@@ -880,7 +880,7 @@ wmonover_upd() {
         then
             if [ -z "$(echo "$WINE_MONO_OVERRIDES"|grep -ow "$1" 2>/dev/null)" ]
                 then
-                    export WINE_MONO_OVERRIDES="${1},${WINE_MONO_OVERRIDES}"
+                    export WINE_MONO_OVERRIDES="${1};${WINE_MONO_OVERRIDES}"
             fi
         else
             export WINE_MONO_OVERRIDES="${1}"
