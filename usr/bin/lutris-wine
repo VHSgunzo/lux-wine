@@ -1931,8 +1931,8 @@ lu_config() {
         fi
         if [ ! -z "$(pgrep -fa yad|grep "Lutris Wine settings"|awk '{print $1}')" ]
             then
-                kill $(pgrep -fa yad|grep "Lutris Wine settings"|awk '{print $1}')
-                kill $(pgrep -fa yad|grep "$LWCFGKEY"|awk '{print $1}')
+                kill $(pgrep -fa yad|grep "Lutris Wine settings"|grep "\-\-key=$LWCFGKEY"|awk '{print $1}')
+                kill $(pgrep -fa yad|grep "\-\-plug=$LWCFGKEY"|awk '{print $1}')
         fi
     }
     export -f btn_clk
