@@ -2,7 +2,7 @@
 export ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.56"
+export LW_VERSION="0.57"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -26,6 +26,8 @@ export DEF_ICO="/usr/share/lutris-wine/icon/default_icon.png"
 export DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
 export DEF_WINEPFX="$LW_DIR/winepfx"
 export DEF_CACHE="$LW_DIR/cache"
+export LW_APPCFG_DIR="$LW_DIR/appcfg"
+export LWNAME="$(basename "$BASH_SOURCE")"
 
 print_var() {
     for varp in $@
@@ -100,7 +102,7 @@ check_lupid() {
 check_tray() {
     unset TRAY_PID FORCE_TRAY CHK_TRAY_PID CHK_FORCE_TRAY
     CHK_TRAY_PID="$(pgrep -fa yad|grep "\-\-notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
-    CHK_FORCE_TRAY="$(pgrep -fa "lutris-wine"|grep -o "noclose")"
+    CHK_FORCE_TRAY="$(pgrep -fa "$LWNAME"|grep -o "noclose")"
     if [ ! -z "$CHK_TRAY_PID" ]
         then
             export TRAY_PID="$CHK_TRAY_PID"
@@ -122,7 +124,7 @@ check_wine_pids() {
 
 check_luwine_pid() {
     unset LU_WINE_PID CHK_LU_WINE_PID
-    CHK_LU_WINE_PID="$(pgrep lutris-wine)"
+    CHK_LU_WINE_PID="$(pgrep "$LWNAME")"
     if [ ! -z "$CHK_LU_WINE_PID" ]
         then
             export LU_WINE_PID="$CHK_LU_WINE_PID"
@@ -131,7 +133,7 @@ check_luwine_pid() {
 
 check_luwine_sh_pid() {
     unset LW_SH_PID CHK_LW_SH_PID CHK_LW_SH_PIDS
-    export CHK_LW_SH_PIDS="$(pgrep -fa lutris-wine|grep "\-shell"|awk '{print$1}' 2>/dev/null)"
+    export CHK_LW_SH_PIDS="$(pgrep -fa "$LWNAME"|grep "\-shell"|awk '{print$1}' 2>/dev/null)"
     for lwshpid in $CHK_LW_SH_PIDS
         do
             export CHK_LW_SH_PID="$(pgrep -faP "$lwshpid"|grep "$(echo "$TERM_APP"|awk '{print$1}')"|awk '{print$1}' 2>/dev/null)"
@@ -144,7 +146,7 @@ check_luwine_sh_pid() {
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
-    CHK_EXES="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)" 2>/dev/null|grep -v 'windows'|grep -v 'start.exe'|grep -v "$BASH_SOURCE"|grep -v 'grep')"
+    CHK_EXES="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)" 2>/dev/null|grep -v 'windows'|grep -v 'start.exe'|grep -v "$LWNAME"|grep -v 'grep')"
     if [ ! -z "$CHK_EXES" ]
         then
             export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$2}')"
@@ -504,8 +506,8 @@ check_symlink() {
             return 0
     elif [ ! -z "$(echo "$CHK_SLK_FILE"|grep "broken symbolic link to"|awk '{print $1}')" ]
         then
-            print_error "remove broken symlink: $CHK_SLK_FILE"
-            try_rm "$CHK_SLK_FILE"
+            print_error "Remove broken symlink: $1"
+            unlink "$1"
             return 1
     else
         return 1
@@ -521,7 +523,7 @@ try_mkdir() {
 }
 
 try_ln() {
-    if [[ -f "$1" || -d "$1" ]]
+    if [[ -f "$1" || -d "$1" || -L "$1" ]]
         then
             ln -sf "$@" 2>/dev/null
             [ "$?" != 0 ] && print_error "Failed to link '$1' to '$2'" || return 0
@@ -535,7 +537,7 @@ try_ln() {
 }
 
 try_cp() {
-    if [[ -f "$1" || -d "$1" ]]
+    if [[ -f "$1" || -d "$1" || -L "$1" ]]
         then
             cp -rf "$@" 2>/dev/null
             [ "$?" != 0 ] && print_error "Failed to copy '$1' to '$2'" || return 0
@@ -549,7 +551,7 @@ try_cp() {
 }
 
 try_mv() {
-    if [[ -f "$1" || -d "$1" ]]
+    if [[ -f "$1" || -d "$1" || -L "$1" ]]
         then
             mv -f "$@" 2>/dev/null
             [ "$?" != 0 ] && print_error "Failed to move '$1' to '$2'" || return 0
@@ -563,7 +565,7 @@ try_mv() {
 }
 
 try_rm() {
-    if [[ -f "$1" || -d "$1" ]]
+    if [[ -f "$1" || -d "$1" || -L "$1" ]]
         then
             rm -rf "$@" 2>/dev/null
             [ "$?" != 0 ] && print_error "Failed to remove '$1'" || return 0
@@ -700,7 +702,7 @@ wine_is_death() {
 }
 
 compositor_sw() {
-    if [[ "$disable_compositor" == true || "$DIS_COPMOSITOR" == 1 && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 ]]
+    if [[ "$DIS_COPMOSITOR" == 1 && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 ]]
         then
             export CHK_CMPSTROFF_OTH="ls -1 /tmp/CMPSTROFF.* 2>/dev/null"
             compositor_on() {
@@ -1045,7 +1047,7 @@ create_shortcut() {
                     fi
             fi
             echo "Name=${SHRT_NAME}" >> "$DESKF"
-            echo "Exec=\"$(which lutris-wine 2>/dev/null)\" \"$LU_EXE\"" >> "$DESKF"
+            echo "Exec=\"$BASH_SOURCE\" \"$LU_EXE\"" >> "$DESKF"
             echo "Type=Application" >> "$DESKF"
             echo "Categories=Lutris Wine App" >> "$DESKF"
             echo "StartupNotify=true" >> "$DESKF"
@@ -1403,6 +1405,7 @@ lu_prerun() {
             fi
             cd "$EXE_PATH"
             export EXE_CFG="$EXE_PATH/$EXE_NAME.wcfg"
+            export LW_APPCFG="$LW_APPCFG_DIR/$EXE_NAME.wcfg"
             export EXE_DIR="$(grep -o '[^/]*$' <<< "$EXE_PATH")"
             if [ "$LOG" == 1 ]
                 then
@@ -1567,6 +1570,26 @@ check_startfile() {
     fi
 }
 
+check_exe_wcfg() {
+    check_startfile "$@"
+    if [[ ! -z "$(file "$(readlink -f "$LU_START")"|grep "for MS Windows"|grep -o "executable")" && ! -z "$(readlink -f "$LU_START"|grep -o ".exe$")" ]]
+        then
+            export LU_EXE="$(readlink -f "$LU_START")"
+            lu_prerun
+            if [ -f "$EXE_CFG" ]
+                then
+                    print_info "Found EXE config: '$EXE_CFG'"
+                    export LW_CFG="$EXE_CFG"
+                    check_symlink "$LW_APPCFG"
+                    if [ ! -L "$LW_APPCFG" ]
+                        then
+                            try_mkdir "$LW_APPCFG_DIR"
+                            try_ln "$EXE_CFG" "$LW_APPCFG_DIR"
+                    fi
+            fi
+    fi
+}
+
 check_db_script() {
     if [ -f "$EXE_PATH/$EXE_NAME.lwdb" ]
         then
@@ -1617,18 +1640,8 @@ lw_init() {
     fi
     if [ "$SKIP_INIT" != 1 ]
         then
-            check_startfile "$@"
-            if [ ! -z "$(file "$(readlink -f "$LU_START")"|grep "for MS Windows"|grep -o "executable")" ]
-                then
-                    export LU_EXE="$(readlink -f "$LU_START")"
-                    lu_prerun
-                    if [ -f "$EXE_CFG" ]
-                        then
-                            print_info "Found EXE config: '$EXE_CFG'"
-                            export LW_CFG="$EXE_CFG"
-                    fi
-            fi
             check_freespace "$BASH_SOURCE"
+            check_exe_wcfg "$@"
             check_luwine_conf
             check_db_script
             check_loadbar_cover
@@ -1771,15 +1784,24 @@ lu_config() {
             VKBASALT_EFFECTS VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC \
             FSR FSR_STRENGTH BATTLEYE PRIME"
         WCFGOUT="$(for (( numsett=1; numsett <= "$(echo "$LWCFGPARAM"|wc -l)"; numsett++ ))
-            do
-                if [ ! -z "$(echo "$LWCFGPARAM"|sed "$numsett"p -n|sed "s/''//")" ]
-                    then
-                        echo "export $(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM|sed "$numsett"p -n)=$(echo "$LWCFGPARAM"|sed "$numsett"p -n)"
-                fi
-        done)"
+                        do
+                            if [ ! -z "$(echo "$LWCFGPARAM"|sed "$numsett"p -n|sed "s/''//")" ]
+                                then
+                                    echo "export $(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM|sed "$numsett"p -n)=$(echo "$LWCFGPARAM"|sed "$numsett"p -n)"
+                            fi
+                    done)"
         if [ ! -z "$(echo "$WCFGOUT"|head -1)" ]
             then
                 echo "$WCFGOUT" > "$LW_CFG"
+                if [ ! -z "$LU_EXE" ]
+                    then
+                        check_symlink "$LW_APPCFG"
+                        if [ ! -L "$LW_APPCFG" ]
+                            then
+                                try_mkdir "$LW_APPCFG_DIR"
+                                try_ln "$LW_CFG" "$LW_APPCFG_DIR"
+                        fi
+                fi
                 if [ "$1" == "init" ]
                     then
                         lw_init noinitbar
@@ -1880,51 +1902,59 @@ lu_config() {
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
-        yad --plug=$LWCFGKEY --tabnum=3 --columns=2 --form \
-            --field="Wine explorer:FBTN" "bash -c 'lu_explorer'" \
-            --field="Task manager:FBTN" "bash -c 'lu_taskmgr'" \
-            --field="Open CMD:FBTN" "bash -c 'lu_cmd'" \
-            --field="Open SHELL:FBTN" "bash -c 'lu_shell'" \
-            --field="Open application:FBTN" "bash -c 'lu_start'" \
-            --field="DEBUG:FBTN" "bash -c 'export DEBUG=1 ; lu_start'" \
-            --field="Open drive C:\:FBTN" "bash -c 'lu_openpfx'" \
-            --field="Wine manager:FBTN" "bash -c 'btn_clk winemgr'" \
-            --field="Runtime updater:FBTN" "bash -c 'btn_clk update'" \
-            --field="Winetricks:FBTN" "bash -c 'winetricks'" \
-            --field="Control panel:FBTN" "bash -c 'lu_control'" \
-            --field="Wine settings:FBTN" "bash -c 'lu_winecfg'" \
-            --field="Registry editor:FBTN" "bash -c 'lu_regedit'" \
-            --field="Wine uninstaller:FBTN" "bash -c 'lu_uninstaller'" \
-            --field="Create shortcut:FBTN" "bash -c 'lu_shortcut'" \
-            --field="Add app to Lutris:FBTN" "bash -c 'export ADDTOLU=1 ; lu_shortcut'" \
-            --field="Remove shortcuts from menu:FBTN" "bash -c 'lu_rmapp'" \
-            --field="Clear prefix:FBTN" "bash -c 'lu_clearpfx'" \
-            --field="Open tray:FBTN" "bash -c 'lutris-wine -tray noclose'" \
-            --field="Kill Wine processes:FBTN" "bash -c 'lu_killwine'" \
-            --field="Kill tray:FBTN" "bash -c 'lu_killtray'" \
-            --field="Kill launch EXE:FBTN" "bash -c 'lu_killexe'" \
-            --field="Kill SHELL:FBTN" "bash -c 'lu_killshell'" \
-            --field="Force Exit:FBTN" "bash -c 'lu_exit'" \
+        yad --plug=$LWCFGKEY --tabnum=3 --columns=3 --form \
+            --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
+            --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
+            --field="Open CMD:FBTN" "$LWSHELL -c 'lu_cmd'" \
+            --field="Open SHELL:FBTN" "$LWSHELL -c 'lu_shell'" \
+            --field="Open application:FBTN" "$LWSHELL -c 'lu_start'" \
+            --field="DEBUG:FBTN" "$LWSHELL -c 'export DEBUG=1 ; lu_start'" \
+            --field="Open drive C:\:FBTN" "$LWSHELL -c 'lu_openpfx'" \
+            --field="Applications settings:FBTN" "$LWSHELL -c 'btn_tools appcfg'" \
+            --field="Wine manager:FBTN" "$LWSHELL -c 'btn_tools winemgr'" \
+            --field="Runtime updater:FBTN" "$LWSHELL -c 'btn_tools update'" \
+            --field="Winetricks:FBTN" "$LWSHELL -c 'winetricks'" \
+            --field="Control panel:FBTN" "$LWSHELL -c 'lu_control'" \
+            --field="Wine settings:FBTN" "$LWSHELL -c 'lu_winecfg'" \
+            --field="Registry editor:FBTN" "$LWSHELL -c 'lu_regedit'" \
+            --field="Wine uninstaller:FBTN" "$LWSHELL -c 'lu_uninstaller'" \
+            --field="Create shortcut:FBTN" "$LWSHELL -c 'lu_shortcut'" \
+            --field="Add app to Lutris:FBTN" "$LWSHELL -c 'export ADDTOLU=1 ; lu_shortcut'" \
+            --field="Open tray:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -tray noclose'" \
+            --field="Clear prefix:FBTN" "$LWSHELL -c 'lu_clearpfx'" \
+            --field="Remove shortcuts from menu:FBTN" "$LWSHELL -c 'lu_rmapp'" \
+            --field="Kill Wine processes:FBTN" "$LWSHELL -c 'lu_killwine'" \
+            --field="Kill tray:FBTN" "$LWSHELL -c 'lu_killtray'" \
+            --field="Kill launch EXE:FBTN" "$LWSHELL -c 'lu_killexe'" \
+            --field="Kill SHELL:FBTN" "$LWSHELL -c 'lu_killshell'" \
+            --field="Force Exit:FBTN" "$LWSHELL -c 'lu_exit'" \
         &>/dev/null &
 
         check_exes
         if [[ ! -z "$LU_EXE" && -z "$RUN_EXE" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings" --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" \
+                    --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
+        elif [[ ! -z "$LU_EXE" && ! -z "$RUN_EXE" ]]
+            then
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" \
+                    --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
+                    --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
             else
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings" --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings" \
+                    --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         fi
         case $? in
             0) lwconfig_save init|settingbar ;;
             3) lwconfig_reset ;;
             4) lwconfig_save|settingbar
-               cleanrun "'$(which lutris-wine 2>/dev/null)' '$LU_EXE'" ;;
+               cleanrun "'$BASH_SOURCE' '$LU_EXE'" ;;
         esac
     }
 
-    btn_clk() {
+    btn_tools() {
         if [ ! -z "$1" ]
             then
                 echo "$1" > "/tmp/settbtn$LWCFGKEY"
@@ -1935,7 +1965,7 @@ lu_config() {
                 kill $(pgrep -fa yad|grep "\-\-plug=$LWCFGKEY"|awk '{print $1}')
         fi
     }
-    export -f btn_clk
+    export -f btn_tools
 
     if [ ! -z "$LU_EXE" ]
         then
@@ -1955,6 +1985,7 @@ lu_config() {
                              cleanrun "$FULLCMDLINE" ;;
                     update) lu_update
                             cleanrun "$FULLCMDLINE" ;;
+                    appcfg) lu_appcfg ;;
             esac
     fi
 }
@@ -2109,7 +2140,7 @@ lu_exit() {
             print_info yad "Lutris Wine Killer" "Lutris Wine successfully killed!" &
             sleep 2
             try_rm /tmp/FORCE_EXIT
-            pkill lutris-wine
+            pkill "$LWNAME"
         else
             print_error yad "Lutris Wine Killer" "Lutris Wine not runing!" &
     fi
@@ -2254,13 +2285,13 @@ lu_rmapp() {
         sleep 0.3
         print_info yad "Shortcuts Remover" "Lutris Wine applications deleted from menu!"
     }
-    export LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$MENU_APP_DIR")"
+    LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$MENU_APP_DIR")"
     if [[ ! -z "$(echo "$LWAPPSHRT"|head -1)" ]]
         then
             LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep "^Name=" {}|sed 's/^Name=//g'|sort -u|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --title "Shortcuts Remover" --list --checklist --separator "\n" --column="" --column="Select shortcuts for remove:" \
                 --text-align=center --center --window-icon="$DEF_ICO" \
-                --width=300 --height=500 --button="REMOVE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
+                --width=300 --height=500 --button="REMOVE ALL:2" --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
                 then
                     sleep 0.3
@@ -2273,10 +2304,10 @@ lu_rmapp() {
                     fi
             elif [ ! -z "$(echo "$LW_APP_RM"|head -1)" ]
                 then
-                    export LW_APP_RM="$(echo "$LW_APP_RM"|sed '/^TRUE$/d'|sed '/^$/d')"
+                    LW_APP_RM="$(echo "$LW_APP_RM"|sed '/^TRUE$/d'|sed '/^$/d')"
                     (IFS=$'\n' ; for LWAPPRM in $LW_APP_RM
                         do
-                            export LWSHRTRM="$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -lo "Name=$LWAPPRM" {} 2>/dev/null)"
+                            LWSHRTRM="$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -lo "Name=$LWAPPRM" {} 2>/dev/null)"
                             if [ ! -z "$LWSHRTRM" ]
                                 then
                                     echo "$LWSHRTRM"|xargs -I {} rm -rfv {}
@@ -2356,12 +2387,13 @@ lu_help() {
         ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
-            $RED└──╼ \$$GREEN lutris-wine $BLUE{lutris-wine argument} ${RED}blabla.exe $YELLOW{exe arguments}
+            $RED└──╼ \$$GREEN $LWNAME $BLUE{$LWNAME argument} ${RED}blabla.exe $YELLOW{exe arguments}
 
             ${RED}-explorer $GREEN              Wine explorer
             ${RED}-cmd $GREEN                   Open CMD or open file in CMD
             ${RED}-shell $GREEN                 Open SHELL or open file in SHELL
             ${RED}-config $GREEN                Lutris Wine settings
+            ${RED}-appcfg $GREEN                Applications Settings
             ${RED}-regedit $GREEN               Registry editor
             ${RED}-control $GREEN               Control panel
             ${RED}-winecfg $GREEN               Wine settings
@@ -2389,11 +2421,12 @@ lu_help() {
             {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}
             {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
         $RESETCOLOR" >&2
-        print_info yad "Lutris Wine usage info" "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ lutris-wine {lutris-wine argument} blabla.exe {exe arguments} \n\n \
+        print_info yad "Lutris Wine usage info" "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LWNAME {$LWNAME argument} blabla.exe {exe arguments} \n\n \
         -explorer                 Wine explorer\n \
         -cmd                          Open CMD or open file in CMD\n \
         -shell                         Open SHELL or open file in SHELL\n \
         -config                      Lutris Wine settings\n \
+        -appcfg                     Applications Settings\n \
         -regedit                    Registry editor\n \
         -control                     Control panel\n \
         -winecfg                   Wine settings\n \
@@ -2402,15 +2435,15 @@ lu_help() {
         -uninstaller              Wine uninstaller\n \
         -winetricks               Winetricks\n \
         -openpfx                  Open drive C:\n \
-        -killwine                    Kill Wine processes\n \
-        -killtray                     Kill Lutris Wine tray\n \
-        -killexe                      Kill Lutris Wine launch EXE\n \
-        -killshell                    Kill Lutris Wine SHELL\n \
-        -exit                           Lutris Wine Force Exit\n \
-        -clearpfx                  Clear prefix\n \
-        -rmapp                     Remove Lutris Wine shortcuts from menu\n \
+        -killwine                     Kill Wine processes\n \
+        -killtray                      Kill Lutris Wine tray\n \
+        -killexe                       Kill Lutris Wine launch EXE\n \
+        -killshell                     Kill Lutris Wine SHELL\n \
+        -exit                            Lutris Wine Force Exit\n \
+        -clearpfx                   Clear prefix\n \
+        -rmapp                      Remove Lutris Wine shortcuts from menu\n \
         -shortcut                  Create shortcut\n \
-        -addtolu                   Add to Lutris\n \
+        -addtolu                    Add to Lutris\n \
         -debug                      DEBUG\n \
         -help                          Show this usage info\n \
         -version                    Show version info\n \
@@ -2471,34 +2504,35 @@ lu_tray() {
             yad --notification --no-middle --text="Lutris Wine" \
                 --window-icon="$DEF_ICO" \
                 --image="$DEF_ICO" \
-                --command="$BASH -c lutris-wine" \
+                --command="$LWSHELL -c '$BASH_SOURCE'" \
                 --tooltip="Lutris Wine" \
                 --menu="| \
-Explorer!$BASH -c 'lutris-wine -explorer'!"$DEF_ICO"| \
-Task manager!$BASH -c 'lutris-wine -taskmgr'!"$DEF_ICO"| \
-Open CMD!$BASH -c 'lutris-wine -cmd'!"$DEF_ICO"| \
-Open SHELL!$BASH -c 'lutris-wine -shell'!"$DEF_ICO"| \
-DEBUG!$BASH -c 'lutris-wine -debug'!"$DEF_ICO"| \
-Open drive C:\!$BASH -c 'lutris-wine -openpfx'!"$DEF_ICO"| \
-Lutris Wine settings!$BASH -c 'lutris-wine -config'!"$DEF_ICO"| \
-Wine manager!$BASH -c 'lutris-wine -winemgr'!"$DEF_ICO"| \
-Runtime updater!$BASH -c 'lutris-wine -update'!"$DEF_ICO"| \
-Winetricks!$BASH -c 'lutris-wine -winetricks'!"$DEF_ICO"| \
-Control panel!$BASH -c 'lutris-wine -control'!"$DEF_ICO"| \
-Wine settings!$BASH -c 'lutris-wine -winecfg'!"$DEF_ICO"| \
-Registry editor!$BASH -c 'lutris-wine -regedit'!"$DEF_ICO"| \
-Wine uninstaller!$BASH -c 'lutris-wine -uninstaller'!"$DEF_ICO"| \
-Create shortcut!$BASH -c 'lutris-wine -shortcut'!"$DEF_ICO"| \
-Add to Lutris!$BASH -c 'lutris-wine -addtolu'!"$DEF_ICO"| \
-Remove menu app!$BASH -c 'lutris-wine -rmapp'!"$DEF_ICO"| \
-Clear prefix!$BASH -c 'lutris-wine -clearpfx'!"$DEF_ICO"| \
-Usage info!$BASH -c 'lutris-wine -help'!"$DEF_ICO"| \
-Version info!$BASH -c 'lutris-wine -version'!"$DEF_ICO"| \
-Kill Wine processes!$BASH -c 'lutris-wine -killwine'!"$DEF_ICO"| \
-Kill launch EXE!$BASH -c 'lutris-wine -killexe'!"$DEF_ICO"| \
-Kill SHELL!$BASH -c 'lutris-wine -killshell'!"$DEF_ICO"| \
-Kill tray!$BASH -c 'lutris-wine -killtray'!"$DEF_ICO"| \
-FORCE EXIT!$BASH -c 'lutris-wine -exit'!"$DEF_ICO"|" &
+Explorer!$LWSHELL -c '"$BASH_SOURCE" -explorer'!"$DEF_ICO"| \
+Task manager!$LWSHELL -c '"$BASH_SOURCE" -taskmgr'!"$DEF_ICO"| \
+Open CMD!$LWSHELL -c '"$BASH_SOURCE" -cmd'!"$DEF_ICO"| \
+Open SHELL!$LWSHELL -c '"$BASH_SOURCE" -shell'!"$DEF_ICO"| \
+DEBUG!$LWSHELL -c '"$BASH_SOURCE" -debug'!"$DEF_ICO"| \
+Open drive C:\!$LWSHELL -c '"$BASH_SOURCE" -openpfx'!"$DEF_ICO"| \
+Lutris Wine settings!$LWSHELL -c '"$BASH_SOURCE" -config'!"$DEF_ICO"| \
+Apps settings!$LWSHELL -c '"$BASH_SOURCE" -appcfg'!"$DEF_ICO"| \
+Wine manager!$LWSHELL -c '"$BASH_SOURCE" -winemgr'!"$DEF_ICO"| \
+Runtime updater!$LWSHELL -c '"$BASH_SOURCE" -update'!"$DEF_ICO"| \
+Winetricks!$LWSHELL -c '"$BASH_SOURCE" -winetricks'!"$DEF_ICO"| \
+Control panel!$LWSHELL -c '"$BASH_SOURCE" -control'!"$DEF_ICO"| \
+Wine settings!$LWSHELL -c '"$BASH_SOURCE" -winecfg'!"$DEF_ICO"| \
+Registry editor!$LWSHELL -c '"$BASH_SOURCE" -regedit'!"$DEF_ICO"| \
+Wine uninstaller!$LWSHELL -c '"$BASH_SOURCE" -uninstaller'!"$DEF_ICO"| \
+Create shortcut!$LWSHELL -c '"$BASH_SOURCE" -shortcut'!"$DEF_ICO"| \
+Add to Lutris!$LWSHELL -c '"$BASH_SOURCE" -addtolu'!"$DEF_ICO"| \
+Remove menu app!$LWSHELL -c '"$BASH_SOURCE" -rmapp'!"$DEF_ICO"| \
+Clear prefix!$LWSHELL -c '"$BASH_SOURCE" -clearpfx'!"$DEF_ICO"| \
+Usage info!$LWSHELL -c '"$BASH_SOURCE" -help'!"$DEF_ICO"| \
+Version info!$LWSHELL -c '"$BASH_SOURCE" -version'!"$DEF_ICO"| \
+Kill Wine processes!$LWSHELL -c '"$BASH_SOURCE" -killwine'!"$DEF_ICO"| \
+Kill launch EXE!$LWSHELL -c '"$BASH_SOURCE" -killexe'!"$DEF_ICO"| \
+Kill SHELL!$LWSHELL -c '"$BASH_SOURCE" -killshell'!"$DEF_ICO"| \
+Kill tray!$LWSHELL -c '"$BASH_SOURCE" -killtray'!"$DEF_ICO"| \
+FORCE EXIT!$LWSHELL -c '"$BASH_SOURCE" -exit'!"$DEF_ICO"|" &
             noclosetray &
     fi
 }
@@ -3968,7 +4002,7 @@ export_all_functions() {
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
         upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt check_luwine_conf check_videodrv check_shell check_startfile \
         settingbar_nostdout check_freespace initbar check_network_status check_update check_no_async print_question print_input loadbar_cover \
-        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd
+        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg lu_appcfg
 }
 
 initbar() {
@@ -4027,6 +4061,47 @@ stop_loadbar() {
     fi
 }
 
+lu_appcfg() {
+    if [ -z "$(pgrep -fa yad|grep "Applications Settings"|awk '{print$1}')" ]; then :
+        else
+            print_error yad "Applications Settings" "Applications Settings already runing!"
+            exit 1
+    fi
+    (IFS=$'\n' ; for CHKLWAPPCFG in $(ls -1 -t "$LW_APPCFG_DIR"/*.wcfg 2>/dev/null)
+        do
+            check_symlink "$CHKLWAPPCFG"
+    done)
+    LWAPPSCFG="$(cd "$LW_APPCFG_DIR" 2>/dev/null && ls -1 -t *.wcfg 2>/dev/null)"
+    if [[ ! -z "$(echo "$LWAPPSCFG"|head -1)" ]]
+        then
+            LW_APP_SETT="$(echo -e "\n$(echo "$LWAPPSCFG"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            yad --title "Applications Settings" --list --radiolist --separator "\n" --column="" --column="Select app config for open:" \
+                --text-align=center --center --window-icon="$DEF_ICO" \
+                --width=300 --height=500 --button="RESET ALL:2" --button="EXIT:1" --button="OK:0" 2>/dev/null)"
+            if [ "$?" == "2" ]
+                then
+                    sleep 0.3
+                    print_question "Applications Settings" "Are you sure you want to reset all Lutris Wine applications config files?"
+                    if [ $? -eq "0" ]
+                        then
+                            (IFS=$'\n' ; for RMLWAPPCFG in $(ls -1 -t "$LW_APPCFG_DIR"/*.wcfg 2>/dev/null)
+                                do
+                                    try_rm "$(readlink -f "$RMLWAPPCFG")"
+                            done)
+                            try_rm "$LW_APPCFG_DIR"
+                            print_info yad "Applications Settings" "Lutris Wine applications config files deleted!"
+                    fi
+            elif [ ! -z "$(echo "$LW_APP_SETT"|head -1)" ]
+                then
+                    LW_APP_SETT="$(echo "$LW_APP_SETT"|sed '/^TRUE$/d'|sed '/^$/d')"
+                    LW_APP_SETT_EXE="$(readlink -f "$LW_APPCFG_DIR/$LW_APP_SETT"|sed 's/.wcfg$/.exe/')"
+                    "$BASH_SOURCE" -config "$LW_APP_SETT_EXE"
+            fi
+        else
+            print_error yad "Applications Settings" "Lutris Wine applications config files not found!"
+    fi
+}
+
 if [ $(id -u) -eq 0 ]
     then
         print_error yad "Don't run Lutris Wine as root!" &
@@ -4060,6 +4135,7 @@ if [ $(id -u) -eq 0 ]
             -tray) lu_tray ;;
             -update) lu_update "$@" ;;
             -config) lu_config "$@" ;;
+            -appcfg) lu_appcfg ;;
             -*) lu_help ;;
             *) lu_start "$@" ;;
         esac

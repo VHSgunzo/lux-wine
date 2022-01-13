@@ -154,9 +154,15 @@ Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Lutris Wine settings
 Name[ru_RU]=Настройки Lutris Wine
 
+[Desktop Action appcfg]
+Exec=lutris-wine -appcfg
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Apps settings
+Name[ru_RU]=Настройки приложений
+
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;update;version;help;config
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;update;version;help;config;appcfg
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine
