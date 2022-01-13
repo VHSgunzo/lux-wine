@@ -4095,7 +4095,7 @@ lu_appcfg() {
                 then
                     LW_APP_SETT="$(echo "$LW_APP_SETT"|sed '/^TRUE$/d'|sed '/^$/d')"
                     LW_APP_SETT_EXE="$(readlink -f "$LW_APPCFG_DIR/$LW_APP_SETT"|sed 's/.wcfg$/.exe/')"
-                    "$BASH_SOURCE" -config "$LW_APP_SETT_EXE"
+                    cleanrun "'$BASH_SOURCE' -config '$LW_APP_SETT_EXE'"
             fi
         else
             print_error yad "Applications Settings" "Lutris Wine applications config files not found!"
