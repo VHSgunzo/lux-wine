@@ -589,7 +589,8 @@ try_download() {
     try_mkdir "$2"
     wget --no-check-certificate --content-disposition -t 3 -T 5 "$1" --directory-prefix="$2/" 2>&1 | \
     tr '\r' '\n' | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\/, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./' | \
-    yad --window-icon="$DEF_ICO" --progress --percentage=0 --title="Download $(basename $1)" --text="Download URL:\n$1" --auto-close --auto-kill --width=600 --height=90 --center --on-top --fixed --no-buttons
+    yad --window-icon="$DEF_ICO" --progress --percentage=0 --text="Download:\t$(basename $1)\n$1" --auto-close \
+        --no-escape --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar
     if [ "$?" != 0 ]
         then
             print_error "Failed to download $1"
@@ -600,7 +601,8 @@ try_download() {
 }
 
 download_error() {
-    yad --window-icon="$DEF_ICO" --image="dialog-error" --button="EXIT:1" --button="OK:0" --title="Network error" --text="You will need to check internet connettion! \nPress OK to repeet downloading" --center --on-top --fixed
+    yad --window-icon="$DEF_ICO" --image="dialog-error" --button="EXIT:1" --button="OK:0" --title="Network error" \
+        --text="You will need to check internet connettion! \nPress OK to repeet downloading" --center --on-top --fixed
     [ "$?" != 0 ] && exit 1 || return 0
 }
 
@@ -3168,15 +3170,15 @@ runtime_manager() {
         else
             GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
     fi
-    if [ -z "$(find "$LW_RUNTIME_DIR/" -type d -name "$1"* -print 2>/dev/null)" ]
+    if [ -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "battleye"* -print 2>/dev/null)" ]
         then
             FORCE_UPDATE=1
     fi
-    if [[ ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && -z "$(find "$LW_RUNTIME_DIR/" -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || [ ! -z "$FORCE_UPDATE" ]
+    if [[ ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || [ ! -z "$FORCE_UPDATE" ]
         then
             if [[ "$NETSTATUS" == 1 ]]
                 then
-                    try_rm "$(find "$LW_RUNTIME_DIR/" -type d -name "$1"* -print 2>/dev/null)" &>/dev/null
+                    try_rm "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" &>/dev/null
                     print_info "Checking updates for $1 runtime..."
                     if check_git_release "$1"
                         then
@@ -3191,12 +3193,12 @@ runtime_manager() {
                                                     if unpack_tar_${archive_type} "$dll_archive" "$LW_RUNTIME_DIR/"
                                                         then
                                                             try_rm "$dll_archive"*
-                                                            touch "$(find "$LW_RUNTIME_DIR/" -type d -name "$1"* -print 2>/dev/null)"
+                                                            touch "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)"
                                                             unset FORCE_UPDATE
                                                             check_$1 2>/dev/null
                                                         else
                                                             try_rm "$dll_archive"*
-                                                            try_rm "$(find "$LW_RUNTIME_DIR/" -type d -name "$1"* -print 2>/dev/null)"
+                                                            try_rm "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)"
                                                             download_error && check_$1 2>/dev/null
                                                     fi
                                             fi
@@ -3210,7 +3212,10 @@ runtime_manager() {
                             return 1
                     fi
             else
-                print_error yad "Runtime Manager" "No internet connection, it is not possible to download $1"
+                if [ "$NETSTATUS" == 0 ]
+                    then
+                        print_error yad "Runtime Manager" "No internet connection, it is not possible to download $1"
+                fi
                 return 1
         fi
     fi
