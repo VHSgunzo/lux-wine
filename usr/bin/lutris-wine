@@ -1109,7 +1109,7 @@ lu_debug() {
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ WINE version in LUTRIS ] : $WINE_IN_USE" >> "$TMP_DEB"
+            echo "[ WINE version ] : $WINE_IN_USE" >> "$TMP_DEB"
             [ -f "$WINEDIR/version" ] && cat "$WINEDIR/version" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DEB"
@@ -1299,7 +1299,7 @@ check_luwine_conf() {
     try_mkdir "$LW_WINE_DIR"
     if [ ! -f "$LW_CFG" ]
         then
-            try_mkdir "$HOME/.config/lutris/runners"
+            try_mkdir "$LW_DIR"
     fi
     if [ -z "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ]
         then
@@ -1634,11 +1634,12 @@ run_db_script() {
 }
 
 lw_init() {
+    export_all_functions
     if [ "$1" == "noinitbar" ]; then :
         else
             initbar
     fi
-    if [ "$SKIP_INIT" != 1 ]
+    if [[ "$SKIP_INIT" != 1 && "$1" != "-tray" ]]
         then
             check_freespace "$BASH_SOURCE"
             check_exe_wcfg "$@"
@@ -1684,7 +1685,6 @@ lw_init() {
             check_terminal
             check_pulse_latency
             check_reset_pulse
-            export_all_functions
             check_musthave_dll
             check_win_version
             check_themes
@@ -1693,7 +1693,10 @@ lw_init() {
             check_no_async
             check_us_switcher
         else
-            print_info "Lutris Wine startup initialization is disabled! Unexpected errors may occur..."
+            if [ "$SKIP_INIT" == 1 ]
+                then
+                    print_info "Lutris Wine startup initialization is disabled! Unexpected errors may occur..."
+            fi
     fi
     try_rm "$INIPRGRS" &>/dev/null
 }
@@ -2498,6 +2501,7 @@ lu_version() {
 }
 
 lu_tray() {
+    check_shell
     check_tray
     if [[ -z "$TRAY_PID" && "$NO_TRAY" != 1 ]]
         then
