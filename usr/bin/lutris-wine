@@ -3170,7 +3170,7 @@ runtime_manager() {
         else
             GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
     fi
-    if [ -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "battleye"* -print 2>/dev/null)" ]
+    if [ -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ]
         then
             FORCE_UPDATE=1
     fi
