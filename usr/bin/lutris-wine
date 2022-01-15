@@ -2,7 +2,7 @@
 export ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.57"
+export LW_VERSION="0.58"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -20,7 +20,8 @@ export LW_APP_DIR="$MENU_APP_DIR/LutrisWineApp"
 export WTRX_DIR="$LW_RUNTIME_DIR/winetricks"
 export LW_DB_DIR="/usr/share/lutris-wine/db"
 export LU_DB="$LU_DIR/pga.db"
-export LW_CFG="$LW_DIR/luwine.wcfg"
+export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
+export LW_CFG="$LW_DEF_CFG"
 export VKBASALT_CONFIG_FILE="$HOME/.config/vkBasalt/vkBasalt.conf"
 export DEF_ICO="/usr/share/lutris-wine/icon/default_icon.png"
 export DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
@@ -115,7 +116,12 @@ check_tray() {
 
 check_wine_pids() {
     unset WINE_PIDS CHK_WINE_PIDS
-    export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+    if [ "$WINE_VERSION" == "System" ]
+        then
+            export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$(dirname "$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)")"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+        else
+            export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+    fi
     if [ ! -z "$CHK_WINE_PIDS" ]
         then
             export WINE_PIDS="$CHK_WINE_PIDS"
@@ -195,22 +201,25 @@ check_compositor() {
 }
 
 check_mono_gecko() {
-    try_mkdir "$LW_RUNTIME_DIR/gecko"
-    try_mkdir "$LW_RUNTIME_DIR/mono"
-    for mono_gecko in "mono" "gecko"
-        do
-            if [ ! -d "$WINEDIR/share/wine/$mono_gecko" ]
-                then
-                    try_ln "$LW_RUNTIME_DIR/$mono_gecko" "$WINEDIR/share/wine/"
-            elif ! check_symlink "$WINEDIR/share/wine/$mono_gecko" && [[ -d "$WINEDIR/share/wine/$mono_gecko" ]]
-                then
-                    if try_cp "$WINEDIR/share/wine/$mono_gecko" "$LW_RUNTIME_DIR/"
+    if [ "$WINE_VERSION" != "System" ]
+        then
+            try_mkdir "$LW_RUNTIME_DIR/gecko"
+            try_mkdir "$LW_RUNTIME_DIR/mono"
+            for mono_gecko in "mono" "gecko"
+                do
+                    if [ ! -d "$WINEDIR/share/wine/$mono_gecko" ]
                         then
-                            try_rm "$WINEDIR/share/wine/$mono_gecko"
                             try_ln "$LW_RUNTIME_DIR/$mono_gecko" "$WINEDIR/share/wine/"
+                    elif ! check_symlink "$WINEDIR/share/wine/$mono_gecko" && [[ -d "$WINEDIR/share/wine/$mono_gecko" ]]
+                        then
+                            if try_cp "$WINEDIR/share/wine/$mono_gecko" "$LW_RUNTIME_DIR/"
+                                then
+                                    try_rm "$WINEDIR/share/wine/$mono_gecko"
+                                    try_ln "$LW_RUNTIME_DIR/$mono_gecko" "$WINEDIR/share/wine/"
+                            fi
                     fi
-            fi
-    done
+            done
+    fi
 }
 
 check_git_release() {
@@ -1111,7 +1120,12 @@ lu_debug() {
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ WINE version ] : $WINE_IN_USE" >> "$TMP_DEB"
+            if [ "$WINE_VERSION" == "System" ]
+                then
+                    echo "[ WINE version ] : System $("$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)" --version)" >> "$TMP_DEB"
+                else
+                    echo "[ WINE version ] : $WINE_IN_USE" >> "$TMP_DEB"
+            fi
             [ -f "$WINEDIR/version" ] && cat "$WINEDIR/version" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DEB"
@@ -1305,16 +1319,30 @@ check_luwine_conf() {
     fi
     if [ -z "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ]
         then
-            echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
+            if [ ! -z "$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)" ]
+                then
+                    echo "export WINE_VERSION='System'" >> "$LW_CFG"
+                else
+                    echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
+            fi
     fi
     import_luwine_conf
 }
 
 import_luwine_conf() {
     source "$LW_CFG"
+    if [ "$WINE_VERSION" == "Default" ]
+        then
+            export "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+    fi
     export WINE_IN_USE="$WINE_VERSION"
     export WINEDIR="$LW_WINE_DIR/$WINE_IN_USE"
     export WINE="$WINEDIR/bin/wine"
+    if [ "$WINE_VERSION" == "System" ]
+        then
+            unset WINEDIR
+            export WINE="$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)"
+    fi
     updcfgchksum
 }
 
@@ -1331,20 +1359,25 @@ updcfgchksum() {
 }
 
 check_def_wine() {
-    if [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 0 ]]
+    if [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 0 && ! -z "$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)" ]]
+        then
+            sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'System\'/g" "$LW_CFG"
+            import_luwine_conf
+            print_info yad "Wine Manager" "System Wine selected as default!"
+    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 0 ]]
         then
             print_info yad "Wine Manager" "Wine is not installed, you must download Wine!"
             lu_winemgr
     elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" != 1 ]]
         then
             print_error "Default Wine not selected!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$(if [ ! -z "$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)" ]; then echo -e '\nSystem'; fi)"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --window-icon="$DEF_ICO" --title "Wine Manager" --column="" --column="Select default Wine:" \
                 --width=300 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
             if [ ! -z "$SETWINE" ]
                 then
                     sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-                    print_info yad "Wine Manager" "Wine $SETWINE select as default!"
+                    print_info yad "Wine Manager" "Wine $SETWINE selected as default!"
                     import_luwine_conf
                 else
                     check_def_wine
@@ -1352,37 +1385,37 @@ check_def_wine() {
     elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             print_error "Default Wine not selected!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$(if [ ! -z "$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)" ]; then echo -e '\nSystem'; fi)"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --window-icon="$DEF_ICO" --title "Wine Manager" --column="" --column="Select default Wine:" \
                 --width=300 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
             if [ ! -z "$SETWINE" ]
                 then
                     sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-                    print_info yad "Wine Manager" "Wine $SETWINE select as default!"
+                    print_info yad "Wine Manager" "Wine $SETWINE selected as default!"
                     import_luwine_conf
                 else
                     check_def_wine
             fi
-    elif [[ -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 && "$WINE_VERSION" != "System" ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then :
     elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             export SETWINE="$(ls -1 "$LW_WINE_DIR" 2>/dev/null|head -1)"
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
             import_luwine_conf
-            print_info yad "Wine Manager" "Wine $SETWINE select as default!"
+            print_info yad "Wine Manager" "Wine $SETWINE selected as default!"
     elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             if [ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" ]
                 then
                     print_info "Selecting default Wine..."
-                    SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+                    SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$(if [ ! -z "$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)" ]; then echo -e '\nSystem'; fi)"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
                     yad --window-icon="$DEF_ICO" --title "Wine Manager" --column="" --column="Select default Wine:" \
                         --width=300 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
                     if [ ! -z "$SETWINE" ]
                         then
                             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-                            print_info yad "Wine Manager" "Wine $SETWINE select as default!"
+                            print_info yad "Wine Manager" "Wine $SETWINE selected as default!"
                             import_luwine_conf
                     fi
                 else
@@ -1393,7 +1426,7 @@ check_def_wine() {
             export SETWINE="$(ls -1 "$LW_WINE_DIR" 2>/dev/null|head -1)"
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
             import_luwine_conf
-            print_info yad "Wine Manager" "Wine $SETWINE select as default!"
+            print_info yad "Wine Manager" "Wine $SETWINE selected as default!"
     fi
 }
 
@@ -1749,7 +1782,7 @@ lu_config() {
             exit 1
     fi
     export LWCFGKEY=$RANDOM
-    WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
+    WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null) $(if [ ! -z "$LU_EXE" ]; then echo '\n Default'; fi) $(if [ ! -z "$(which -a wine 2>/dev/null|grep -v "$(dirname "$LW_DIR")"|head -1)" ]; then echo '\n System'; fi)"
     WINETHEMESLST="$(ls -1 "$THEMES_DIR" 2>/dev/null|sed 's/.reg//g')"
     WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe= \n Disabled"
     WMONOOVERLST="Microsoft.Xna.Framework.*,Gac=n \n Disabled"
@@ -1974,6 +2007,13 @@ lu_config() {
 
     if [ ! -z "$LU_EXE" ]
         then
+            if [ -z "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null)" ]
+                then
+                    export WINE_VERSION="Default"
+            elif [ "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null|sed 's/WINE_VERSION=//'|tr -d \')" == "Default" ]
+                then
+                    export WINE_VERSION="Default"
+            fi
             export LW_CFG="$EXE_CFG"
             lwconfig_menu
         else
@@ -2612,7 +2652,7 @@ lu_winemgr() {
                     print_error yad "Wine Manager" "Lutris has one WINE installed and it selected by default! Can't run Wine Manager!"
                     exit 1
                 else
-                    echo -e "\n$(echo "$ILW_LIST"|grep -v "$WINE_IN_USE"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
+                    echo -e "\n$(echo "$ILW_LIST"|grep -wv "$WINE_IN_USE" 2>/dev/null|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             fi
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$DEF_ICO" --title "Wine Manager" --separator="" \
@@ -2927,20 +2967,23 @@ check_gstreamer() {
     fi
     if [ "$GSTREAMER" == 1 ]
         then
+            try_mkdir "$DEF_CACHE/gstreamer-1.0"
+            export WINE_GST_REGISTRY_DIR="$DEF_CACHE/gstreamer-1.0"
+            export MEDIACONV_AUDIO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/audio.foz"
+            export MEDIACONV_AUDIO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_audio.foz"
+            export MEDIACONV_VIDEO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/video.foz"
+            export MEDIACONV_VIDEO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_video.foz"
             if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
                 then
-                    try_mkdir "$DEF_CACHE/gstreamer-1.0"
                     export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
-                    export WINE_GST_REGISTRY_DIR="$DEF_CACHE/gstreamer-1.0"
-                    export MEDIACONV_AUDIO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/audio.foz"
-                    export MEDIACONV_AUDIO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_audio.foz"
-                    export MEDIACONV_VIDEO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/video.foz"
-                    export MEDIACONV_VIDEO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_video.foz"
-                else
-                    unset GSTREAMER
-                    sed -i "s/export GSTREAMER=.*/export GSTREAMER='0'/" "$LW_CFG" 2>/dev/null
-                    wdllover_upd "winegstreamer="
-                    print_error yad "Wine GSTREAMER not found! GSTREAMER is disabled!"
+            elif [ -d "/lib64/gstreamer-1.0" ]
+                then
+                    export GST_PLUGIN_SYSTEM_PATH_1_0="/lib64/gstreamer-1.0:/lib/gstreamer-1.0"
+            else
+                unset GSTREAMER
+                sed -i "s/export GSTREAMER=.*/export GSTREAMER='0'/" "$LW_CFG" 2>/dev/null
+                wdllover_upd "winegstreamer="
+                print_error yad "GSTREAMER not found! GSTREAMER is disabled!"
             fi
     fi
 }
@@ -3249,18 +3292,23 @@ check_winepfx() {
     try_mkdir "$WINEPREFIX/drive_c/users/steamuser"
     [ ! -d "$WINEPREFIX/dosdevices/c:" ] && try_ln "$WINEPREFIX/drive_c/" "$WINEPREFIX/dosdevices/c:"
     [ ! -d "$WINEPREFIX/dosdevices/z:" ] && try_ln "/" "$WINEPREFIX/dosdevices/z:"
-    try_ln "$WINEDIR/share/fonts/"LiberationSans-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arial.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"LiberationSans-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arialbd.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"LiberationSerif-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"times.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"LiberationMono-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"cour.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"LiberationMono-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"courbd.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"msyh.ttf "$WINEPREFIX/drive_c/windows/Fonts/"msyh.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"malgun.ttf "$WINEPREFIX/drive_c/windows/Fonts/"malgun.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"micross.ttf "$WINEPREFIX/drive_c/windows/Fonts/"micross.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"nirmala.ttf "$WINEPREFIX/drive_c/windows/Fonts/"nirmala.ttf &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"simsun.ttc "$WINEPREFIX/drive_c/windows/Fonts/"simsun.ttc &>/dev/null
-    try_ln "$WINEDIR/share/fonts/"msgothic.ttc "$WINEPREFIX/drive_c/windows/Fonts/"msgothic.ttc &>/dev/null
-    try_ln "$WINEDIR/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
+    if [ "$WINE_VERSION" == "System" ]
+        then
+            try_ln "/usr/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
+        else
+            try_ln "$WINEDIR/share/fonts/"LiberationSans-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arial.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationSans-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arialbd.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationSerif-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"times.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationMono-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"cour.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationMono-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"courbd.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"msyh.ttf "$WINEPREFIX/drive_c/windows/Fonts/"msyh.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"malgun.ttf "$WINEPREFIX/drive_c/windows/Fonts/"malgun.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"micross.ttf "$WINEPREFIX/drive_c/windows/Fonts/"micross.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"nirmala.ttf "$WINEPREFIX/drive_c/windows/Fonts/"nirmala.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"simsun.ttc "$WINEPREFIX/drive_c/windows/Fonts/"simsun.ttc &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"msgothic.ttc "$WINEPREFIX/drive_c/windows/Fonts/"msgothic.ttc &>/dev/null
+            try_ln "$WINEDIR/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
+    fi
     [ ! -d "$WINEPREFIX/drive_c/users/$USER" ] && try_ln "$WINEPREFIX/drive_c/users/steamuser" "$WINEPREFIX/drive_c/users/$USER"
     try_mkdir "$WINEPREFIX/drive_c/users/Public/Documents/Steam"
     try_mkdir "$WINEPREFIX/drive_c/users/steamuser/Documents/Steam"
