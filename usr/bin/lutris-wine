@@ -1765,6 +1765,7 @@ lw_init() {
             check_winearch
             check_winepfx
             check_def_wine
+            check_winepfx_fonts
             check_videodrv
             check_compositor
             check_mono_gecko
@@ -3411,6 +3412,26 @@ check_winearch() {
     fi
 }
 
+check_winepfx_fonts() {
+    if [ "$WINE_VERSION" == "System" ]
+        then
+            try_ln "/usr/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
+        else
+            try_ln "$WINEDIR/share/fonts/"LiberationSans-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arial.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationSans-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arialbd.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationSerif-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"times.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationMono-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"cour.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"LiberationMono-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"courbd.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"msyh.ttf "$WINEPREFIX/drive_c/windows/Fonts/"msyh.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"malgun.ttf "$WINEPREFIX/drive_c/windows/Fonts/"malgun.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"micross.ttf "$WINEPREFIX/drive_c/windows/Fonts/"micross.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"nirmala.ttf "$WINEPREFIX/drive_c/windows/Fonts/"nirmala.ttf &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"simsun.ttc "$WINEPREFIX/drive_c/windows/Fonts/"simsun.ttc &>/dev/null
+            try_ln "$WINEDIR/share/fonts/"msgothic.ttc "$WINEPREFIX/drive_c/windows/Fonts/"msgothic.ttc &>/dev/null
+            try_ln "$WINEDIR/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
+    fi
+}
+
 check_winepfx() {
     if [ -z "$WINEPREFIX" ]
         then
@@ -3432,23 +3453,6 @@ check_winepfx() {
     try_mkdir "$WINEPREFIX/drive_c/users/steamuser"
     [ ! -d "$WINEPREFIX/dosdevices/c:" ] && try_ln "$WINEPREFIX/drive_c/" "$WINEPREFIX/dosdevices/c:"
     [ ! -d "$WINEPREFIX/dosdevices/z:" ] && try_ln "/" "$WINEPREFIX/dosdevices/z:"
-    if [ "$WINE_VERSION" == "System" ]
-        then
-            try_ln "/usr/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
-        else
-            try_ln "$WINEDIR/share/fonts/"LiberationSans-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arial.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationSans-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arialbd.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationSerif-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"times.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationMono-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"cour.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationMono-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"courbd.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"msyh.ttf "$WINEPREFIX/drive_c/windows/Fonts/"msyh.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"malgun.ttf "$WINEPREFIX/drive_c/windows/Fonts/"malgun.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"micross.ttf "$WINEPREFIX/drive_c/windows/Fonts/"micross.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"nirmala.ttf "$WINEPREFIX/drive_c/windows/Fonts/"nirmala.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"simsun.ttc "$WINEPREFIX/drive_c/windows/Fonts/"simsun.ttc &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"msgothic.ttc "$WINEPREFIX/drive_c/windows/Fonts/"msgothic.ttc &>/dev/null
-            try_ln "$WINEDIR/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
-    fi
     [ ! -d "$WINEPREFIX/drive_c/users/$USER" ] && try_ln "$WINEPREFIX/drive_c/users/steamuser" "$WINEPREFIX/drive_c/users/$USER"
     try_mkdir "$WINEPREFIX/drive_c/users/Public/Documents/Steam"
     try_mkdir "$WINEPREFIX/drive_c/users/steamuser/Documents/Steam"
@@ -4208,7 +4212,7 @@ export_all_functions() {
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
         upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt check_luwine_conf check_videodrv check_shell check_startfile \
         settingbar_nostdout check_freespace initbar check_network_status check_update check_no_async print_question print_input loadbar_cover \
-        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg lu_appcfg try_fix_wrtx wine_shutdown
+        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg lu_appcfg try_fix_wrtx wine_shutdown check_winepfx_fonts
 }
 
 initbar() {
