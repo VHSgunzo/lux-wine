@@ -909,7 +909,7 @@ wine_shutdown() {
     fi
 }
 
-fix_wrtx() {
+try_fix_wrtx() {
     if [ ! -z "$(grep -o 'a3f1bf98-18f3-4036-9b68-8e6de530ce0a' "$WTRX_DIR/winetricks")" ]
         then
             sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$WTRX_DIR/winetricks"
@@ -1370,12 +1370,7 @@ check_luwine_conf() {
     fi
     if [ -z "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ]
         then
-            if [ ! -z "$SYS_WINE" ]
-                then
-                    echo "export WINE_VERSION='System'" >> "$LW_CFG"
-                else
-                    echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
-            fi
+            echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
     fi
     import_luwine_conf
 }
@@ -3381,7 +3376,7 @@ runtime_manager() {
                                                         then
                                                             try_rm "$dll_archive"*
                                                             touch "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)"
-                                                            if [ "$1" == "winetricks" ]; then fix_wrtx; fi
+                                                            if [ "$1" == "winetricks" ]; then try_fix_wrtx; fi
                                                             unset FORCE_UPDATE
                                                             check_$1 2>/dev/null
                                                         else
@@ -4213,7 +4208,7 @@ export_all_functions() {
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
         upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt check_luwine_conf check_videodrv check_shell check_startfile \
         settingbar_nostdout check_freespace initbar check_network_status check_update check_no_async print_question print_input loadbar_cover \
-        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg lu_appcfg fix_wrtx wine_shutdown
+        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg lu_appcfg try_fix_wrtx wine_shutdown
 }
 
 initbar() {
