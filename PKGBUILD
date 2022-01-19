@@ -1,6 +1,6 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname=lutris-wine-git
-pkgver=0.58
+pkgver=0.59
 pkgrel=1
 pkgdesc='Lutris Wine Runner as system Wine and even better'
 arch=('any')
