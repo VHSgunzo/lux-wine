@@ -1767,10 +1767,10 @@ lw_init() {
             check_update
             check_shell
             check_crash_dialog
-            check_def_wine
-            check_videodrv
             check_winearch
             check_winepfx
+            check_def_wine
+            check_videodrv
             check_compositor
             check_mono_gecko
             check_wdllover
