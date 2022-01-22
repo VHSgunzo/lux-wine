@@ -117,9 +117,10 @@ sudo pacman -Sy lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-i
 ```
 yay --needed --noconfirm -Sy base-devel lutris-wine-git && lutris-wine -help
 ```
-[![Alt text](https://img.youtube.com/vi/pozypVaPK0Y/0.jpg)](https://www.youtube.com/watch?v=pozypVaPK0Y)
+## Installation video:
+[![Lutris Wine installation process](https://img.youtube.com/vi/pozypVaPK0Y/0.jpg)](https://www.youtube.com/watch?v=pozypVaPK0Y)
 
-* Terminal usage:
+## Terminal usage:
 ```
 ┌──[user@arch]─[~]
 └──╼ $ lutris-wine {lutris-wine argument} blabla.exe {exe arguments}
