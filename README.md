@@ -4,7 +4,6 @@
 All Arch-based distributions
 ```
 ## Features:
-```
 - [x] Easy setup
 - [x] Quick initialization and launch
 - [x] Launch *.exe *.lnk *.bat *.msi *.reg files in one click
@@ -29,21 +28,25 @@ All Arch-based distributions
 - [x] Quick add applications to Lutris (if installed)
 - [x] Add/remove applications in the menu
 - [x] Quick access to Wine stuff:
-   - [x] Wine explorer
-   - [x] Control panel
-   - [x] Wine settings
-   - [x] Task manager
-   - [x] Wine uninstaller
-   - [x] Registry editor
+```
+      * Wine explorer
+      * Control panel
+      * Wine settings
+      * Task manager
+      * Wine uninstaller
+      * Registry editor
+```
 - [x] GUI for custom apps configs
 - [x] Built-in fixed Winetricks
 - [x] Quick open drive C:\
 - [x] Killer stuff:
-   - [x] Kill Wine processes
-   - [x] Kill tray
-   - [x] Kill Lutris Wine running EXE
-   - [x] Kill SHELL
-   - [x] Force exit (kill all)
+```
+      * Kill Wine processes
+      * Kill tray
+      * Kill Lutris Wine running EXE
+      * Kill SHELL
+      * Force exit (kill all)
+```
 - [x] Ability to clear a prefix without completely recreating it
 - [x] Mouse context menu for Dolphin
 - [x] Ability to run applications from the terminal (see lutris-wine -help)
@@ -57,48 +60,49 @@ All Arch-based distributions
 - [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/usr/share/lutris-wine/db/LeagueClient.lwdb)
 - [x] Custom loading bar animation
 - [x] Lots of settings in GUI:
-   - [x] DXR/RTX Version (if video adapter suports)
-   - [x] Gstreamer
-   - [x] VkBasalt Effects
-   - [x] AMD FidelityFX Contrast Adaptive Sharpening
-   - [x] GameMode
-   - [x] MangoHud (With custom config)
-   - [x] FPS Limit
-   - [x] Esync
-   - [x] Fsync
-   - [x] Vsync
-   - [x] AMD FidelityFX Super Resolution (if Wine supports)
-   - [x] BattleEye Runtime
-   - [x] NVIDIA Prime Render Offload
-   - [x] Switch to US keyboard layout
-   - [x] Reset PulseAudio (+PulseEffects)
-   - [x] Reduce PulseAudio latency
-   - [x] Restore gamma
-   - [x] Single CPU mode
-   - [x] Show Crash Dialog
-   - [x] OLD GL STRING
-   - [x] NO WRITE WATCH
-   - [x] VULKAN NO ASYNC
-   - [x] HIDE NVIDIA GPU
-   - [x] HEAP DELAY FREE
-   - [x] STAGING SHARED MEMORY
-   - [x] ALLOW XIM
-   - [x] DISABLE LAYER AMD SWITCHABLE GRAPHICS
-   - [x] WineD3D (OpenGL) Mode
-   - [x] Disable MONO (.NET Core)
-   - [x] DXVK
-   - [x] VKD3D
-   - [x] DXVK-NVAPI/DLSS
-   - [x] D3D EXTRAS
-   - [x] DGVOODOO2
-   - [x] WINE MONO OVERRIDES
-   - [x] Hold terminal
-   - [ ] And much more
 ```
+      * DXR/RTX Version (if video adapter suports)
+      * Gstreamer
+      * VkBasalt Effects
+      * AMD FidelityFX Contrast Adaptive Sharpening
+      * GameMode
+      * MangoHud (With custom config)
+      * FPS Limit
+      * Esync
+      * Fsync
+      * Vsync
+      * AMD FidelityFX Super Resolution (if Wine supports)
+      * BattleEye Runtime
+      * NVIDIA Prime Render Offload
+      * Switch to US keyboard layout
+      * Reset PulseAudio (+PulseEffects)
+      * Reduce PulseAudio latency
+      * Restore gamma
+      * Single CPU mode
+      * Show Crash Dialog
+      * OLD GL STRING
+      * NO WRITE WATCH
+      * VULKAN NO ASYNC
+      * HIDE NVIDIA GPU
+      * HEAP DELAY FREE
+      * STAGING SHARED MEMORY
+      * ALLOW XIM
+      * DISABLE LAYER AMD SWITCHABLE GRAPHICS
+      * WineD3D (OpenGL) Mode
+      * Disable MONO (.NET Core)
+      * DXVK
+      * VKD3D
+      * DXVK-NVAPI/DLSS
+      * D3D EXTRAS
+      * DGVOODOO2
+      * WINE MONO OVERRIDES
+      * Hold terminal
+```
+- [ ] And much more
 ## To get started:
-* **Install the latest video drivers for your video card:**
+* **Install the latest video drivers for your video adapter:**
 ```
-!!!Make sure your video card supports Vulkan API!!!
+!!!Make sure your video adapter supports Vulkan API!!!
 
 ## NVIDIA ##
 sudo pacman -Sy lib32-nvidia-utils lib32-opencl-nvidia libxnvctrl nvidia nvidia-dkms nvidia-settings nvidia-utils opencl-nvidia
@@ -109,6 +113,12 @@ sudo pacman -Sy lib32-vulkan-radeon vulkan-radeon xf86-video-amdgpu
 ## INTEL ##
 sudo pacman -Sy lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-intel-driver libva-utils xf86-video-intel
 ```
+* **Install Lutris Wine using your favorite aur package manager**
+```
+yay --needed --noconfirm -Sy base-devel lutris-wine-git && lutris-wine -help
+```
+[![Alt text](https://img.youtube.com/vi/pozypVaPK0Y/0.jpg)](https://www.youtube.com/watch?v=pozypVaPK0Y)
+
 * Terminal usage:
 ```
 ┌──[user@arch]─[~]
@@ -146,9 +156,3 @@ sudo pacman -Sy lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-i
 {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}
 {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
 ```
-* **Install Lutris Wine using your favorite aur package manager**
-```
-yay --needed --noconfirm -Sy base-devel lutris-wine-git && lutris-wine -help
-```
-[![Alt text](https://img.youtube.com/vi/pozypVaPK0Y/0.jpg)](https://www.youtube.com/watch?v=pozypVaPK0Y)
-
