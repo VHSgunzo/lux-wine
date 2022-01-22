@@ -21,11 +21,12 @@ All Arch-based distributions
 - [x] Shell mode or open file in SHELL (with access to all lutris-wine functions)
 - [x] CMD mode or open file in CMD
 - [x] Wine Manager (Lutris, GloriousEggroll, Kron4ek)
+- [x] System Wine Support
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
 - [x] Custom URL for runtime repo
 - [x] Custom Wine themes
 - [x] Runtime updater
-- [x] Quick add applications to Lutris (if installed)
+- [x] Quick add applications to Lutris (if Lutris installed)
 - [x] Add/remove applications in the menu
 - [x] Quick access to Wine stuff:
 ```
@@ -38,6 +39,7 @@ All Arch-based distributions
 ```
 - [x] GUI for custom apps configs
 - [x] Built-in fixed Winetricks
+- [x] System Winetricks Support
 - [x] Quick open drive C:\
 - [x] Killer stuff:
 ```
@@ -54,9 +56,9 @@ All Arch-based distributions
 - [x] Wine prefix management
 - [x] Wine architecture management
 - [x] Windows Version management
-- [x] DLL overrides
+- [x] Wine DLL overrides
 - [x] Various optimizations for better gaming performance
-- [x] Lutris Runtime
+- [x] Lutris Runtime (with system library priority if needed)
 - [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/usr/share/lutris-wine/db/LeagueClient.lwdb)
 - [x] Custom loading bar animation
 - [x] Lots of settings in GUI:
