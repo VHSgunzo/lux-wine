@@ -113,7 +113,7 @@ sudo pacman -Sy lib32-vulkan-radeon vulkan-radeon xf86-video-amdgpu
 ## INTEL ##
 sudo pacman -Sy lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-intel-driver libva-utils xf86-video-intel
 ```
-* **Install Lutris Wine using your favorite aur package manager**
+* **Install Lutris Wine using your favorite aur package manager:**
 ```
 yay --needed --noconfirm -Sy base-devel lutris-wine-git && lutris-wine -help
 ```
