@@ -2,7 +2,7 @@
 unset -f loadbar_cover
 
 check_deps() {
-    if [ -z "$(which openssl)" ]
+    if [ -z "$(which openssl 2>/dev/null)" ]
         then
             dialog --warning --text="Install openssl in your system!"
             return 1

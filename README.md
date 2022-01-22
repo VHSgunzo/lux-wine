@@ -18,7 +18,7 @@ All Arch-based distributions
 - [x] Debug mode
 - [x] Terminal mode (various terminals supported)
 - [x] Logging mode
-- [x] Shell mode or open file in SHELL (with access to all lutris-wine functions)
+- [x] SHELL mode or open file in SHELL (with access to all lutris-wine functions)
 - [x] CMD mode or open file in CMD
 - [x] Wine Manager (Lutris, GloriousEggroll, Kron4ek)
 - [x] System Wine Support
