@@ -2262,7 +2262,7 @@ lu_config() {
                     --field="Remove shortcuts from menu:FBTN" "$LWSHELL -c 'lu_rmapp'" \
                     --field="Kill Wine processes:FBTN" "$LWSHELL -c 'lu_killwine'" \
                     --field="Kill tray:FBTN" "$LWSHELL -c 'lu_killtray'" \
-                    --field="Kill launch EXE:FBTN" "$LWSHELL -c 'lu_killexe'" \
+                    --field="Kill running EXE:FBTN" "$LWSHELL -c 'lu_killexe'" \
                     --field="Kill SHELL:FBTN" "$LWSHELL -c 'lu_killshell'" \
                     --field="Force Exit:FBTN" "$LWSHELL -c 'lu_exit'" \
                 &>/dev/null &
@@ -2780,7 +2780,7 @@ lu_help() {
             ${RED}-openpfx $GREEN               Open drive C:
             ${RED}-killwine $GREEN              Kill Wine processes
             ${RED}-killtray $GREEN              Kill Lutris Wine tray
-            ${RED}-killexe $GREEN               Kill Lutris Wine launch EXE
+            ${RED}-killexe $GREEN               Kill Lutris Wine running EXE
             ${RED}-killshell $GREEN             Kill Lutris Wine SHELL
             ${RED}-exit $GREEN                  Lutris Wine force exit
             ${RED}-clearpfx $GREEN              Clear prefix
@@ -2813,7 +2813,7 @@ lu_help() {
         -openpfx                  Open drive C:\n \
         -killwine                     Kill Wine processes\n \
         -killtray                      Kill Lutris Wine tray\n \
-        -killexe                       Kill Lutris Wine launch EXE\n \
+        -killexe                       Kill Lutris Wine running EXE\n \
         -killshell                     Kill Lutris Wine SHELL\n \
         -exit                            Lutris Wine Force Exit\n \
         -clearpfx                   Clear prefix\n \
@@ -2913,7 +2913,7 @@ Clear prefix!$LWSHELL -c '"$BASH_SOURCE" -clearpfx'!"$DEF_ICO"| \
 Usage info!$LWSHELL -c '"$BASH_SOURCE" -help'!"$DEF_ICO"| \
 Version info!$LWSHELL -c '"$BASH_SOURCE" -version'!"$DEF_ICO"| \
 Kill Wine processes!$LWSHELL -c '"$BASH_SOURCE" -killwine'!"$DEF_ICO"| \
-Kill launch EXE!$LWSHELL -c '"$BASH_SOURCE" -killexe'!"$DEF_ICO"| \
+Kill running EXE!$LWSHELL -c '"$BASH_SOURCE" -killexe'!"$DEF_ICO"| \
 Kill SHELL!$LWSHELL -c '"$BASH_SOURCE" -killshell'!"$DEF_ICO"| \
 Kill tray!$LWSHELL -c '"$BASH_SOURCE" -killtray'!"$DEF_ICO"| \
 FORCE EXIT!$LWSHELL -c '"$BASH_SOURCE" -exit'!"$DEF_ICO"|" &
