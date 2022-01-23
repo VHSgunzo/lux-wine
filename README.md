@@ -5,15 +5,18 @@ All Arch-based distributions
 ```
 ## Features:
 - [x] Easy setup
+- [x] Full system integration
 - [x] Quick initialization and launch
+- [x] Does not use containerization like steam runtime
+- [x] This is not another game launcher
 - [x] Launch *.exe *.lnk *.bat *.msi *.reg files in one click
 - [x] Ability to specify EXE arguments and save them in settings
-- [x] Tray launch
-- [x] Full system integration
+- [x] Tray mode
 - [x] Automatic download of necessary Wine libraries
 - [x] Checking for updates for libraries in a given period of time
 - [x] Ability to create separate configuration files for different EXEs
 - [x] Automatic enable WineD3D (OpenGL) mode if Vulkan API is not available
+- [x] Manual enabling WineD3D (OpenGL) mode (Disables DXVK, DXVK-NVAPI, VKD3D, DXR)
 - [x] Supports running on virtual machines with GL acceleration (tested on KVM, see installation video)
 - [x] Debug mode
 - [x] Terminal mode (various terminals supported)
@@ -21,9 +24,31 @@ All Arch-based distributions
 - [x] SHELL mode or open file in SHELL (with access to all lutris-wine functions)
 - [x] CMD mode or open file in CMD
 - [x] Wine Manager (Lutris, GloriousEggroll, Kron4ek)
-- [x] System Wine Support
+- [x] System Wine supports (selected automatically if no other versions of Wine are installed)
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
+- [x] Switching DXR/RTX Version (if the video adapter support and depends on VKD3D)
 - [x] Custom URL for runtime repo
+- [x] Custom VKD3D config
+- [x] MangoHud settings (with custom config support)
+- [x] VkBasalt settings
+- [x] Reshade Shaders settings (VkBasalt Effects, depends on VkBasalt)
+- [x] Vulkan ICD loader automatic and manual settings
+- [x] AMD FidelityFX Contrast Adaptive Sharpening settings (depends on VkBasalt)
+- [x] Gstreamer (if Wine support, system Gstreamer in priority)
+- [x] GameMode
+- [x] Esync
+- [x] Fsync (if linux kernel support)
+- [x] Vsync settings
+- [x] AMD FidelityFX Super Resolution settings (if Wine support)
+- [x] BattleEye Runtime (if Wine support)
+- [x] NVIDIA Prime Render Offload
+- [x] US keyboard layout switcher
+- [x] Reset PulseAudio (+PulseEffects)
+- [x] Reduce PulseAudio latency
+- [x] Restore gamma
+- [x] Single CPU mode
+- [x] Show Crash Dialog (WINEDBG)
+- [x] FPS limit settings (with MangoHud or libstrangle)
 - [x] Custom Wine themes
 - [x] Runtime updater
 - [x] Quick add applications to Lutris (if Lutris installed)
@@ -39,7 +64,7 @@ All Arch-based distributions
 ```
 - [x] GUI for custom apps configs
 - [x] Built-in fixed Winetricks
-- [x] System Winetricks Support
+- [x] System Winetricks support
 - [x] Quick open drive C:\
 - [x] Killer stuff:
 ```
@@ -52,36 +77,21 @@ All Arch-based distributions
 - [x] Ability to clear a prefix without completely recreating it
 - [x] Mouse context menu for Dolphin
 - [x] Ability to run applications from the terminal (see lutris-wine -help)
+- [x] Terminal hold
 - [x] Window compositing management (KDE, MATE, XFCE, Deepin)
 - [x] Wine prefix management
 - [x] Wine architecture management
 - [x] Windows Version management
 - [x] Wine DLL overrides
+- [x] Wine MONO overrides
+- [x] Disabling MONO (.NET Core)
 - [x] Various optimizations for better gaming performance
 - [x] Lutris Runtime (with system library priority if needed)
 - [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/usr/share/lutris-wine/db/LeagueClient.lwdb)
+- [x] EXE DB launch helper script automatically starts if located in the application folder and has the same name, but with the extension *.lwdb
 - [x] Custom loading bar animation
-- [x] Lots of settings in GUI:
+- [x] Redefining Wine options in settings GUI:
 ```
-      * DXR/RTX Version (if video adapter suports)
-      * Gstreamer
-      * VkBasalt Effects
-      * AMD FidelityFX Contrast Adaptive Sharpening
-      * GameMode
-      * MangoHud (With custom config)
-      * FPS Limit
-      * Esync
-      * Fsync
-      * Vsync
-      * AMD FidelityFX Super Resolution (if Wine supports)
-      * BattleEye Runtime
-      * NVIDIA Prime Render Offload
-      * Switch to US keyboard layout
-      * Reset PulseAudio (+PulseEffects)
-      * Reduce PulseAudio latency
-      * Restore gamma
-      * Single CPU mode
-      * Show Crash Dialog
       * OLD GL STRING
       * NO WRITE WATCH
       * VULKAN NO ASYNC
@@ -90,15 +100,6 @@ All Arch-based distributions
       * STAGING SHARED MEMORY
       * ALLOW XIM
       * DISABLE LAYER AMD SWITCHABLE GRAPHICS
-      * WineD3D (OpenGL) Mode
-      * Disable MONO (.NET Core)
-      * DXVK
-      * VKD3D
-      * DXVK-NVAPI/DLSS
-      * D3D EXTRAS
-      * DGVOODOO2
-      * WINE MONO OVERRIDES
-      * Hold terminal
 ```
 - [ ] And much more
 ## To get started:

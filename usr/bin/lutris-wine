@@ -2,7 +2,7 @@
 export ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.60"
+export LW_VERSION="0.61"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -22,7 +22,8 @@ export LW_DB_DIR="/usr/share/lutris-wine/db"
 export LU_DB="$LU_DIR/pga.db"
 export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
 export LW_CFG="$LW_DEF_CFG"
-export VKBASALT_CONFIG_FILE="$HOME/.config/vkBasalt/vkBasalt.conf"
+export VKBASALT_CONFIG_FILE="$LW_DIR/vkBasalt.conf"
+export RESHADE_DIR="/usr/share/reshade"
 export DEF_ICO="/usr/share/lutris-wine/icon/default_icon.png"
 export DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
 export DEF_WINEPFX="$LW_DIR/winepfx"
@@ -1374,7 +1375,7 @@ lu_debug() {
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ GLIBC version ] : $(ldd --version|grep -m1 ldd|awk '{print $NF}')" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Desktop Environment ] : $XDG_CURRENT_DESKTOP - $DESKTOP_SESSION" >> "$TMP_DEB"
+            echo "[ Desktop Environment ] : $XDG_CURRENT_DESKTOP - $DESKTOP_SESSION $XDG_SESSION_TYPE" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Kernel ] : $(uname -r)" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
@@ -1952,6 +1953,7 @@ check_first_run() {
                 do
                     xdg-mime default shell.desktop "$shellmimetype"
             done
+            update-desktop-database -q "$MENU_APP_DIR"
             touch "$LW_DIR/.firstrun"
     fi
 }
@@ -2084,7 +2086,6 @@ lu_config() {
     DXRLST="1.0 \n 1.1 \n Disabled"
     SHELLST="$(which bash 2>/dev/null)"
     VKICDFILESLST="AUTO \n Nvidia \n Intel \n AMD \n Lvp"
-    VKBEFFLST="cas \n Tonemap:FakeHDR:cas"
     DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null) \n v1.9.2L-3e64e1b \n v1.9.3 \n latest $(if [ ! -z "$LU_EXE" ]; then echo '\n Default'; fi)"
     DXVKGITLST="https://github.com/lutris/dxvk/releases \n https://github.com/doitsujin/dxvk/releases"
     VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null) \n v2.5L-db89d40 \n v2.5 \n latest $(if [ ! -z "$LU_EXE" ]; then echo '\n Default'; fi)"
@@ -2101,25 +2102,38 @@ lu_config() {
     TRLWPRM="awk '!x[\$0]++'|tr '\n' '!'|sed 's/.$//'"
     SRTLWPRM="sort -u"
     lwconfig_save() {
-        LWCFGPARAM="$(echo -e "$(cat /tmp/winesett$LWCFGKEY 2>/dev/null|eval $SEDLWPRM)\n$(cat /tmp/syssett$LWCFGKEY|eval $SEDLWPRM)")"
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME DXVK DXVK_VERSION DXVK_GIT_RELEASE_URL VKD3D VKD3D_VERSION VKD3DCFG \
             VKD3D_GIT_RELEASE_URL DXVK_NVAPI DXVK_NVAPI_VERSION NVAPI_GIT_RELEASE_URL D3D_EXTRAS D3D_EXTRAS_VERSION D3D_GIT_RELEASE_URL \
             DGVOODOO2 DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL WDLLOVER WMONOVER MUST_HAVE_DLL SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD WINED3D DIS_NETCORE \
             CHK_UPDATE RUNTIME PREF_SYS_LIBS EXE_ARG EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU RESTORE_GAMMA \
             DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LWSHELL NO_TRAY US_LAYOUT DXR GSTREAMER VKBASALT \
-            VKBASALT_EFFECTS VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC \
+            VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC \
             FSR FSR_STRENGTH BATTLEYE PRIME"
-        WCFGOUT="$(for (( numsett=1; numsett <= "$(echo "$LWCFGPARAM"|wc -l)"; numsett++ ))
+        WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
-                            if [ ! -z "$(echo "$LWCFGPARAM"|sed "$numsett"p -n|sed "s/''//")" ]
+                            if [ ! -z "$(echo "$CFGPARAM"|sed "s/''//")" ]
                                 then
-                                    echo "export $(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM|sed "$numsett"p -n)=$(echo "$LWCFGPARAM"|sed "$numsett"p -n)"
+                                    echo "$CFGVAR=$CFGPARAM"
                             fi
-                    done)"
+                    done 3< <(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM|sed 's/^/export /') \
+                         4< <(echo -e "$(cat /tmp/winesett$LWCFGKEY 2>/dev/null|eval $SEDLWPRM)\n$(cat /tmp/syssett$LWCFGKEY|eval $SEDLWPRM)"))"
+
+        COUNT_FX=0
+        for read_list_fx in $(cat /tmp/ressett$LWCFGKEY 2>/dev/null)
+            do
+                if [[ "$read_list_fx" == 1 ]]
+                    then
+                        export FX_RESULT+=":${RES_LST[$COUNT_FX]}"
+                fi
+                export COUNT_FX=$(( $COUNT_FX + 1 ))
+        done
+        FX_RESULT="cas$FX_RESULT"
+
         if [ ! -z "$(echo "$WCFGOUT"|head -1)" ]
             then
                 echo "$WCFGOUT" > "$LW_CFG"
+                echo "export VKBASALT_EFFECTS='$FX_RESULT'" >> "$LW_CFG"
                 if [ "$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')" != "$(cat "$WINEPREFIX/.defwine")" ]
                     then
                         export NEW_WINE_VERSION="$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')"
@@ -2195,7 +2209,7 @@ lu_config() {
             --field="Check update days (0-disabled)::NUM" "$CHK_UPDATE" \
             --field="Lutris runtime:CHK" "$RUNTIME" \
             --field="Prefer system libs:CHK" "$PREF_SYS_LIBS" \
-            --field=$"EXE arguments::CBE" "$(echo "$EXE_ARG"|eval $AWKFIX)" \
+            --field="EXE arguments::CBE" "$(echo "$EXE_ARG"|eval $AWKFIX)" \
             --field="Run EXE DB script:CHK" "$EXE_LWDB" \
             --field="EXE DB script::FL" "$EXE_LWDBFL" \
             --file-filter="EXE DB script (*.lwdb)| *.lwdb *.LWDB" \
@@ -2219,7 +2233,6 @@ lu_config() {
             --field="DXR/RTX Version::CB" "$(echo -e "$DXR\n$(echo -e "$DXR\n$DXRLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Gstreamer:CHK" "$GSTREAMER" \
             --field="VkBasalt:CHK" "$VKBASALT" \
-            --field="VkBasalt Effects::CBE" "$(echo -e "$VKBASALT_EFFECTS\n$(echo -e "$VKBASALT_EFFECTS\n$VKBEFFLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="AMD FidelityFX Contrast Adaptive Sharpening STRENGTH::CB" "$(echo -e "$VKBASALT_FFX_CAS\n$(echo -e "$VKBASALT_FFX_CAS\n$(seq -f "%0.1f" 0.1 0.1 1|tr ',' '.')"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Vulkan ICD loader::CB" "$(echo -e "$VKICDFILES\n$(echo -e "$VKICDFILES\n$VKICDFILESLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="GameMode:CHK" "$GAMEMODE" \
@@ -2237,9 +2250,24 @@ lu_config() {
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
+        RES_LST=($(grep ".fx$" "$VKBASALT_CONFIG_FILE"|awk '{print $1}'))
+        RES_CFG=($(echo "$VKBASALT_EFFECTS"|sed 's/cas//'|sed 's/^://'|sed 's/:$//'|sed 's/::/:/'|sed 's/:/ /'))
+        for add_relst in ${RES_LST[@]}
+            do
+                if [[ ! -z "$(echo "${RES_CFG[@]}"|grep -o "$add_relst")" ]]
+                    then
+                        RESHADE_SETT+="--field=$add_relst:CHK%TRUE%"
+                    else
+                        RESHADE_SETT+="--field=$add_relst:CHK%FALSE%"
+                fi
+        done
+        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
+            $RESHADE_SETT \
+        1> /tmp/ressett$LWCFGKEY & )
+
         if [ -z "$FIRST_RUN" ]
             then
-                yad --plug=$LWCFGKEY --tabnum=3 --columns=3 --form \
+                yad --plug=$LWCFGKEY --tabnum=4 --columns=3 --form \
                     --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
                     --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
                     --field="Open CMD:FBTN" "$LWSHELL -c 'lu_cmd'" \
@@ -2271,21 +2299,21 @@ lu_config() {
         check_exes
         if [[ ! -z "$LU_EXE" && -z "$RUN_EXE" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" \
                     --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
         elif [[ ! -z "$LU_EXE" && ! -z "$RUN_EXE" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" \
                     --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ ! -z "$FIRST_RUN" ]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --title="Lutris Wine settings" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --title="Lutris Wine settings" \
                     --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
-            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Tools" --title="Lutris Wine settings" \
+            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --tab="Tools" --title="Lutris Wine settings" \
                 --width=1000 --height=500 --text-align=center --center --window-icon="$DEF_ICO" \
                 --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         fi
@@ -2343,6 +2371,7 @@ lu_config() {
     fi
     try_rm "/tmp/syssett$LWCFGKEY" &>/dev/null
     try_rm "/tmp/winesett$LWCFGKEY" &>/dev/null
+    try_rm "/tmp/ressett$LWCFGKEY" &>/dev/null
     if [ -f "/tmp/settbtn$LWCFGKEY" ]
         then
             SETTBTN="$(cat "/tmp/settbtn$LWCFGKEY")"
@@ -3794,7 +3823,15 @@ check_vkbasalt() {
             try_mkdir "$(dirname "$VKBASALT_CONFIG_FILE")"
             if [ ! -f "$VKBASALT_CONFIG_FILE" ]
                 then
-                    touch "$VKBASALT_CONFIG_FILE"
+                    if [ -d "$RESHADE_DIR" ]
+                        then
+                            echo -e "reshadeTexturePath = "$RESHADE_DIR"/textures\nreshadeIncludePath = "$RESHADE_DIR"/shaders" > "$VKBASALT_CONFIG_FILE"
+                            (while read RES_NAME <&3 && read RES_FLPTH <&4
+                                do
+                                    echo "$RES_NAME = $RES_FLPTH"
+                            done 3< <(ls -1 "$RESHADE_DIR"/shaders/*.fx|sed 's/.fx$//'|xargs -I {} basename {}) \
+                                 4< <(ls -1 "$RESHADE_DIR"/shaders/*.fx)) >> "$VKBASALT_CONFIG_FILE"
+                    fi
                     echo "toggleKey = Home" >> "$VKBASALT_CONFIG_FILE"
             fi
             if [ -z "$(grep -wo "effects" "$VKBASALT_CONFIG_FILE")" ]
