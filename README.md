@@ -110,7 +110,7 @@ All Arch-based distributions
 ```
 sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 ```
-* **Upgrade Your system:**
+* **Upgrade your system:**
 ```
 sudo pacman -Syu
 ```
@@ -127,7 +127,7 @@ sudo pacman -S lib32-vulkan-radeon vulkan-radeon xf86-video-amdgpu
 ## INTEL ##
 sudo pacman -S lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-intel-driver libva-utils xf86-video-intel
 ```
-* **Reboot Your system:**
+* **Reboot your system:**
 ```
 sudo reboot
 ```
