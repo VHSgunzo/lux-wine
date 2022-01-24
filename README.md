@@ -1,5 +1,27 @@
 # Lutris Wine
-
+## Screenshots:
+[![appcfg.png](./screenshots/appcfg.png?raw=true "appcfg")]
+[![rmapp.png](./screenshots/rmapp.png?raw=true "rmapp")]
+[![update.png](./screenshots/update.png?raw=true "update")]
+[![tray.png](./screenshots/cmd.png?raw=true "cmd")]
+[![config1.png](./screenshots/config1.png?raw=true "config1")]
+[![config2.png](./screenshots/config2.png?raw=true "config2")]
+[![config3.png](./screenshots/config3.png?raw=true "config3")]
+[![config4.png](./screenshots/config4.png?raw=true "config4")]
+[![configforapp.png](./screenshots/configforapp.png?raw=true "configforapp")]
+[![contextmenu.png](./screenshots/contextmenu.png?raw=true "contextmenu")]
+[![control.png](./screenshots/control.png?raw=true "control")]
+[![explorer.png](./screenshots/explorer.png?raw=true "explorer")]
+[![help.png](./screenshots/help.png?raw=true "help")]
+[![menu.png](./screenshots/menu.png?raw=true "menu")]
+[![tray.png](./screenshots/tray.png?raw=true "tray")]
+[![openwith.png](./screenshots/openwith.png?raw=true "openwith")]
+[![regedit.png](./screenshots/regedit.png?raw=true "regedit")]
+[![taskmgr.png](./screenshots/taskmgr.png?raw=true "taskmgr")]
+[![uninstaller.png](./screenshots/uninstaller.png?raw=true "uninstaller")]
+[![wineapp.png](./screenshots/wineapp.png?raw=true "wineapp")]
+[![winecfg.png](./screenshots/winecfg.png?raw=true "winecfg")]
+[![winemgr.png](./screenshots/winemgr.png?raw=true "winemgr")]
 ## Supports:
 ```
 All Arch-based distributions
