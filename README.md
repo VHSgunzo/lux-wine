@@ -1,8 +1,10 @@
 # Lutris Wine
+
 ## Supports:
 ```
 All Arch-based distributions
 ```
+
 ## Features:
 - [x] Easy setup
 - [x] Full system integration
@@ -23,7 +25,7 @@ All Arch-based distributions
 - [x] Logging mode
 - [x] SHELL mode or open file in SHELL (with access to all lutris-wine functions)
 - [x] CMD mode or open file in CMD
-- [x] Wine Manager (Lutris, GloriousEggroll, Kron4ek)
+- [x] Wine Manager (Lutris, Proton GE , Wine GE, Kron4ek)
 - [x] System Wine supports (selected automatically if no other versions of Wine are installed)
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
 - [x] Switching DXR/RTX Version (if the video adapter support and depends on VKD3D)
@@ -76,7 +78,7 @@ All Arch-based distributions
 ```
 - [x] Ability to clear a prefix without completely recreating it
 - [x] Mouse context menu for Dolphin
-- [x] Ability to run applications from the terminal (see lutris-wine -help)
+- [x] Ability to run applications from the terminal (see Terminal usage)
 - [x] Terminal hold
 - [x] Window compositing management (KDE, MATE, XFCE, Deepin)
 - [x] Wine prefix management
@@ -102,25 +104,38 @@ All Arch-based distributions
       * DISABLE LAYER AMD SWITCHABLE GRAPHICS
 ```
 - [ ] And much more
+
 ## To get started:
+* **Enable multilib in the pacman config:**
+```
+sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+```
+* **Upgrade Your system:**
+```
+sudo pacman -Syu
+```
 * **Install the latest video drivers for your video adapter:**
 ```
 !!!Make sure your video adapter supports Vulkan API!!!
 
 ## NVIDIA ##
-sudo pacman -Sy lib32-nvidia-utils lib32-opencl-nvidia libxnvctrl nvidia nvidia-dkms nvidia-settings nvidia-utils opencl-nvidia
+sudo pacman -S lib32-nvidia-utils lib32-opencl-nvidia libxnvctrl nvidia nvidia-dkms nvidia-settings nvidia-utils opencl-nvidia
 
 ## AMD ##
-sudo pacman -Sy lib32-vulkan-radeon vulkan-radeon xf86-video-amdgpu
+sudo pacman -S lib32-vulkan-radeon vulkan-radeon xf86-video-amdgpu
 
 ## INTEL ##
-sudo pacman -Sy lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-intel-driver libva-utils xf86-video-intel
+sudo pacman -S lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-intel-driver libva-utils xf86-video-intel
+```
+* **Reboot Your system:**
+```
+sudo reboot
 ```
 * **Install Lutris Wine using your favorite AUR package manager:**
 ```
-yay --needed --noconfirm -Sy base-devel lutris-wine-git && lutris-wine -help
+yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -help
 ```
-## Installation video:
+## Video with the installation process:
 [![Lutris Wine installation process](https://img.youtube.com/vi/pozypVaPK0Y/0.jpg)](https://www.youtube.com/watch?v=pozypVaPK0Y)
 
 ## Terminal usage:

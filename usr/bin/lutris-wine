@@ -2,7 +2,7 @@
 export ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.61"
+export LW_VERSION="0.62"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -179,7 +179,7 @@ init_def_config() {
     fi
     if [ -z "$VKBASALT_EFFECTS" ]
         then
-            export VKBASALT_EFFECTS="cas"
+            export VKBASALT_EFFECTS="cas:Colourfulness:Tonemap"
     fi
     if [ -z "$VKBASALT_FFX_CAS" ]
         then
@@ -1624,7 +1624,7 @@ check_def_wine() {
                 else
                     check_def_wine
             fi
-    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             print_error yad "Wine Manager" "Default Wine not selected, you must select default Wine!"
             SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$(if [ ! -z "$SYS_WINE" ]; then echo -e '\nSystem'; fi)"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
@@ -1641,9 +1641,9 @@ check_def_wine() {
                 else
                     check_def_wine
             fi
-    elif [[ -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 && "$WINE_VERSION" != "System" ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 && "$WINE_VERSION" != "System" ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then :
-    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             export SETWINE="$(ls -1 "$LW_WINE_DIR" 2>/dev/null|head -1)"
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
@@ -1652,7 +1652,7 @@ check_def_wine() {
             export OLD_WINE="$WINE"
             import_luwine_conf
             print_info yad "Wine Manager" "Wine $SETWINE selected as default!"
-    elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             if [ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" ]
                 then
@@ -2508,15 +2508,15 @@ winetricks() {
         then
             if [ ! -z "$(which winetricks 2>/dev/null)" ]
                 then
-                    print_info "Using SYSTEM winetricks!"
+                    print_info "Using System winetricks!"
                     "$(which winetricks)" "$@"
                 else
-                    print_error yad "Winetricks" "Winetricks not found in your system. Using LUTRIS winetricks!"
+                    print_error yad "Winetricks" "Winetricks not found in your system. Using Lutris Wine winetricks!"
                     check_winetricks
                     "$WTRX_DIR/winetricks" "$@"
             fi
         else
-            print_info "Using LUTRIS winetricks!"
+            print_info "Using Lutris Wine winetricks!"
             check_winetricks
             "$WTRX_DIR/winetricks" "$@"
     fi
@@ -2964,15 +2964,17 @@ lu_winemgr() {
             GREPWARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1"
             PLU_GIT="https://github.com/lutris/wine/releases"
             PGE_GIT="https://github.com/GloriousEggroll/proton-ge-custom/releases"
+            WGE_GIT="https://github.com/GloriousEggroll/wine-ge-custom/releases"
             PK4_GIT="https://github.com/Kron4ek/Wine-Builds/releases"
             curl -s "$PLU_GIT"|eval "$GREPWARCHURL"|awk '{print "'$PLU_GIT'" $0}' 1> "/tmp/PLUGITLIST$WGUIDW" &
             curl -s "$PGE_GIT"|eval "$GREPWARCHURL"|awk '{print "'$PGE_GIT'" $0}' 1> "/tmp/PGEGITLIST$WGUIDW" &
+            curl -s "$WGE_GIT"|eval "$GREPWARCHURL"|awk '{print "'$WGE_GIT'" $0}' 1> "/tmp/WGEGITLIST$WGUIDW" &
             curl -s "$PK4_GIT"|eval "$GREPWARCHURL"|awk '{print "'$PK4_GIT'" $0}' 1> "/tmp/PK4GITLIST$WGUIDW" &
             while true
                 do
                     sleep 0.2
-                    export GITLISTOK=0
-                    for curlgit in $PLU_GIT $PGE_GIT $PK4_GIT
+                    GITLISTOK=0
+                    for curlgit in $PLU_GIT $PGE_GIT $WGE_GIT $PK4_GIT
                             do
                                 echo
                                 sleep 0.2
@@ -2980,15 +2982,16 @@ lu_winemgr() {
                                     then
                                         GITLISTOK=$(($GITLISTOK + 1))
                                 fi
-                                if [ "$GITLISTOK" == 3 ]; then break; fi
+                                if [ "$GITLISTOK" == 4 ]; then break; fi
                         done
-                    if [ "$GITLISTOK" == 3 ]; then break; fi
+                    if [ "$GITLISTOK" == 4 ]; then break; fi
             done|settingbar_nostdout
             PLU_GIT_LIST="$(cat /tmp/PLUGITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/PLUGITLIST$WGUIDW)"
             PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/PGEGITLIST$WGUIDW)"
+            WGE_GIT_LIST="$(cat /tmp/WGEGITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/WGEGITLIST$WGUIDW)"
             PK4_GIT_LIST="$(cat /tmp/PK4GITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/PK4GITLIST$WGUIDW)"
     fi
-    if [[ ! -z "$PLU_GIT_LIST" || ! -z "$PGE_GIT_LIST" || ! -z  "$PK4_GIT_LIST" ]]
+    if [[ ! -z "$PLU_GIT_LIST" || ! -z "$PGE_GIT_LIST" || ! -z "$WGE_GIT_LIST" || ! -z  "$PK4_GIT_LIST" ]]
         then
             export GITOK="1"
             print_info "Сhecking new WINE versions on GitHub complete!"
@@ -3000,23 +3003,26 @@ lu_winemgr() {
         then
             PLU_LIST="$(echo -e "$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
             PGE_LIST="$(echo -e "$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
+            WGE_LIST="$(echo -e "$(for WGEGIT in $WGE_GIT_LIST ; do echo $WGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
             PK4_LIST="$(echo -e "$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
             echo -e "\n$(echo "$PLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PLUSET$WGUIDW" &
             echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
-            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
-            echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
+            echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WGESET$WGUIDW" &
+            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
+            echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=5 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$DEF_ICO" --title "Wine Manager" --separator="" \
-                --tab-pos=top --tab="Lutris" --tab="GloriousEggroll" --tab="Kron4ek" --tab="DELETE" --button="EXIT:1" --button="OK:0"
+                --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" --tab="DELETE" --button="EXIT:1" --button="OK:0"
             PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
             PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
+            WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null ; try_rm /tmp/WGESET$WGUIDW)"
             PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; try_rm /tmp/PK4SET$WGUIDW)"
             WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; try_rm /tmp/WDEL_SET$WGUIDW)"
     elif [[ ! -z "$ILW_LIST" && -z "$GITOK" ]]
         then
             if [[ "$(echo "$ILW_LIST"|sed 's/^ *//g'|wc -l)" == 1 && "$ILW_LIST" == "$WINE_IN_USE" ]]
                 then
-                    print_error yad "Wine Manager" "Lutris has one WINE installed and it selected by default! Can't run Wine Manager!"
+                    print_error yad "Wine Manager" "Lutris Wine has one WINE installed and it selected by default! Can't run Wine Manager!"
                     exit 1
                 else
                     echo -e "\n$(echo "$ILW_LIST"|grep -wv "$WINE_IN_USE" 2>/dev/null|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
@@ -3032,12 +3038,14 @@ lu_winemgr() {
             PK4_LIST="$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')"
             echo -e "\n$(echo "$PLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PLUSET$WGUIDW" &
             echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
-            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
+            echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WGESET$WGUIDW" &
+            echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$DEF_ICO" --title "Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="GloriousEggroll" --tab="Kron4ek"
             PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
             PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
+            WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null ; try_rm /tmp/WGESET$WGUIDW)"
             PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; try_rm /tmp/PK4SET$WGUIDW)"
     elif [[ -z "$ILW_LIST" && -z "$GITOK" ]]
         then
@@ -3121,6 +3129,40 @@ lu_winemgr() {
                     fi
             done
     fi
+    if [ ! -z "$(echo "$WGE_SET"|head -1)" ]
+        then
+            for WGE_DW in $WGE_SET
+                do
+                    unset WGE_DW_URL
+                    export WGE_DW_URL="$(echo "$WGE_GIT_LIST"|grep $WGE_DW)"
+                    if [ ! -z "$WGE_DW_URL" ]
+                        then
+                            print_info "Download and install $WGE_DW"
+                            if try_download "$WGE_DW_URL" "$LW_WINE_DIR"
+                                then
+                                    for archive_type in "gz" "xz"
+                                        do
+                                            if [ -f "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}" ]
+                                                then
+                                                    if unpack_tar_${archive_type} "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
+                                                        then
+                                                            export WGE_INST="1"
+                                                            try_rm "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}"
+                                                            print_info "Installing $WGE_DW complete!"
+                                                        else
+                                                            try_rm "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_WINE_DIR/${WGE_DW}"
+                                                            download_error && lu_winemgr
+                                                    fi
+                                            fi
+                                    done
+                                else
+                                    try_rm "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}"
+                                    download_error && lu_winemgr
+                            fi
+                    fi
+            done
+    fi
     if [ ! -z "$(echo "$PK4_SET"|head -1)" ]
         then
             for PK4_DW in $PK4_SET
@@ -3183,14 +3225,14 @@ lu_winemgr() {
                     print_info yad "Wine remove" "Wine removing completed!"
             fi
     fi
-    if [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    if [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
             if [ -z "$WINEINUSEDEL" ]
                 then
                     check_def_wine
                     unset WDEL_SET
             fi
-            unset PLU_INST PK4_INST PGE_INST
+            unset PLU_INST PK4_INST PGE_INST WGE_INST
             print_info yad "Wine Manager" "Wine installation completed!"
     fi
 }
