@@ -534,7 +534,7 @@ check_git_release() {
 }
 
 check_network_status() {
-    ping -4 -q -c1 -W0.5 github.com &>/dev/null && export NETSTATUS=1 || export NETSTATUS=0
+    curl -Is "http://www.github.com" &>/dev/null && export NETSTATUS=1 || export NETSTATUS=0
 }
 
 dll_manager() {
@@ -796,7 +796,7 @@ check_freespace() {
 try_download() {
     check_freespace "$2"
     try_mkdir "$2"
-    wget --no-check-certificate --content-disposition -t 3 -T 5 "$1" --directory-prefix="$2/" 2>&1 | \
+    wget --no-check-certificate --content-disposition -t 3 -T 5 -w 0.5 "$1" --directory-prefix="$2/" 2>&1 | \
     tr '\r' '\n' | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\/, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./' | \
     yad --window-icon="$DEF_ICO" --progress --percentage=0 --text="Download:\t$(basename $1)\n$1" --auto-close \
         --no-escape --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar
@@ -1510,7 +1510,7 @@ lu_debug() {
                     echo "[ PROTON BATTLEYE ] : OFF" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
-            echo "[ Network status ] : $(ping -4 -q -c1 -W0.5 google.com &>/dev/null && echo ONLINE || echo OFFLINE)" >> "$TMP_DEB"
+            echo "[ Network status ] : $(curl -Is "http://www.github.com" &>/dev/null && echo ONLINE || echo OFFLINE)" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo " -------------------------------------------" >> "$TMP_DEB"
             echo "|[             Starting logging            ]|" >> "$TMP_DEB"
@@ -1948,10 +1948,6 @@ check_first_run() {
             for winemimetype in {application/x-ms-dos-executable,application/x-wine-extension-msp,application/x-msi,application/x-msdos-program,text/win-bat,application/x-ms-shortcut,text/x-ms-regedit}
                 do
                     xdg-mime default LutrisWine.desktop "$winemimetype"
-            done
-            for shellmimetype in {application/x-shellscript,text/x-shellscript,application/x-executable}
-                do
-                    xdg-mime default shell.desktop "$shellmimetype"
             done
             update-desktop-database -q "$MENU_APP_DIR"
             touch "$LW_DIR/.firstrun"
@@ -3012,7 +3008,8 @@ lu_winemgr() {
             echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=5 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$DEF_ICO" --title "Wine Manager" --separator="" \
-                --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" --tab="DELETE" --button="EXIT:1" --button="OK:0"
+                --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" --tab="DELETE" \
+                --button="EXIT:1" --button="OK:0"
             PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
             PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
             WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null ; try_rm /tmp/WGESET$WGUIDW)"
@@ -3035,6 +3032,7 @@ lu_winemgr() {
         then
             PLU_LIST="$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)"
             PGE_LIST="$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')"
+            WGE_LIST="$(for WGEGIT in $WGE_GIT_LIST ; do echo $WGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)"
             PK4_LIST="$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')"
             echo -e "\n$(echo "$PLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PLUSET$WGUIDW" &
             echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
@@ -3042,7 +3040,8 @@ lu_winemgr() {
             echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$DEF_ICO" --title "Wine Manager" --separator="" \
-                --tab-pos=top --tab="Lutris" --tab="GloriousEggroll" --tab="Kron4ek"
+                --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" \
+                --button="EXIT:1" --button="OK:0"
             PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
             PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
             WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null ; try_rm /tmp/WGESET$WGUIDW)"
