@@ -50,7 +50,7 @@ Name[ru_RU]=Wine менеджер
 Exec=lutris-wine -uninstaller %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Add/remove programs
-Name[ru_RU]=Установка/удаление программ
+Name[ru_RU]=Устан/удал программ
 
 [Desktop Action winetricks]
 Exec=lutris-wine -winetricks %f
@@ -115,8 +115,8 @@ Name[ru_RU]=Добавить в Lutris
 [Desktop Action rmapp]
 Exec=lutris-wine -rmapp
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Remove Lutris Wine shortcuts from menu
-Name[ru_RU]=Удалить Lutris Wine ярлыки из меню
+Name=Remove menu apps
+Name[ru_RU]=Удалить приложения из меню
 
 [Desktop Action tray]
 Exec=lutris-wine -tray noclose
