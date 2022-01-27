@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -config
+Exec=lutris-wine -config %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
 MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Name=Lutris Wine settings

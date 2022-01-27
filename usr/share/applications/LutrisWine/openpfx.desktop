@@ -1,7 +1,8 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -openpfx
+Exec=lutris-wine -openpfx %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
+MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Name=Open drive C:\\
 Name[ru_RU]=Открыть диск C:\\
 NoDisplay=false

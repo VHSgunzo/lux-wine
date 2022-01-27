@@ -1,6 +1,7 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -version
+Exec=lutris-wine -version %f
+MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Version info
 Name[ru_RU]=Версия

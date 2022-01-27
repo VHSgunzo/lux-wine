@@ -2122,7 +2122,7 @@ lu_config() {
                     then
                         export FX_RESULT+=":${RES_LST[$COUNT_FX]}"
                 fi
-                export COUNT_FX=$(( $COUNT_FX + 1 ))
+                COUNT_FX=$(( $COUNT_FX + 1 ))
         done
         FX_RESULT="cas$FX_RESULT"
 
@@ -3334,7 +3334,7 @@ resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=
 }
 
 check_gamemode() {
-    if [[ "$GAMEMODE" == 1 && -z "$(cat /etc/os-release|grep -i "red hat")" ]]
+    if [ "$GAMEMODE" == 1 ]
         then
             if [ ! -z "$(which gamemoderun 2>/dev/null)" ]
                 then

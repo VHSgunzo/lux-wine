@@ -1,7 +1,8 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -regedit
+Exec=lutris-wine -regedit %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
+MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Name=Registry editor
 Name[ru_RU]=Редактор реестра
 NoDisplay=false

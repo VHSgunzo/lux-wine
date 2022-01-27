@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -shell "%f"
+Exec=lutris-wine -shell %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
 MimeType=application/x-shellscript;text/x-shellscript;application/x-executable
 Name=Lutris Wine SHELL

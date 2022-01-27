@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -debug "%f"
+Exec=lutris-wine -debug %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
 MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Name=Lutris Wine DEBUG

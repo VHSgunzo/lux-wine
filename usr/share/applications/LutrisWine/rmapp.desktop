@@ -2,8 +2,8 @@
 Categories=Lutris Wine
 Exec=lutris-wine -rmapp
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Remove Lutris Wine shortcuts from menu
-Name[ru_RU]=Удалить Lutris Wine ярлыки из меню
+Name=Remove menu apps
+Name[ru_RU]=Удалить приложения из меню
 NoDisplay=false
 StartupNotify=true
 Terminal=0
