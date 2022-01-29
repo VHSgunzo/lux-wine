@@ -1,4 +1,5 @@
 #!/bin/bash
+check_win_version '10'
 unset -f loadbar_cover
 
 check_deps() {

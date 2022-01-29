@@ -1,4 +1,4 @@
 #!/bin/bash
-export TERMINAL='1'
 export HOLD_TERMINAL='1'
-check_terminal
+check_terminal '1'
+check_win_version '10'

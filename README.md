@@ -102,6 +102,9 @@ All Arch-based distributions
       * ALLOW XIM
       * DISABLE LAYER AMD SWITCHABLE GRAPHICS
 ```
+- [x] Wine virtual desktop
+- [x] Disable no primary displays
+- [x] Restore resolution
 - [ ] And much more
 
 ## To get started:
