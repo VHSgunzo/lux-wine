@@ -101,6 +101,7 @@ All Arch-based distributions
       * STAGING SHARED MEMORY
       * ALLOW XIM
       * DISABLE LAYER AMD SWITCHABLE GRAPHICS
+      * DXVK ASYNC
 ```
 - [x] Wine virtual desktop
 - [x] Disable no primary displays

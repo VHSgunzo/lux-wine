@@ -99,6 +99,10 @@ init_def_config() {
         then
             export DXR="1.1"
     fi
+    if [ -z "$DXVKASYNC" ]
+        then
+            export DXVKASYNC="1"
+    fi
     if [ -z "$LARGE_ADDRESS" ]
         then
             export LARGE_ADDRESS="1"
@@ -1894,14 +1898,12 @@ lu_run() {
         then
             if [ ! -z "$LU_SHELL_EXE" ]
                 then
-                    export OPEN_SHELL=1
                     unset LU_SHELL_PTH TERMINAL LU_SHELL_EXE
                     $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
                     clear_log  2>/dev/null
                     xdg-open "$LOG_FILE" 2>/dev/null
             elif [ ! -z "$LU_SHELL_PTH" ]
                 then
-                    export OPEN_SHELL=1
                     unset LU_SHELL_PTH TERMINAL
                     $TERM_APP $LWSHELL
             else
@@ -1921,7 +1923,6 @@ lu_run() {
                 then
                     if [ "$LOG" == 1 ]
                         then
-                            export OPEN_SHELL=1
                             unset LU_SHELL_EXE TERMINAL
                             $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
                             clear_log  2>/dev/null
@@ -1932,7 +1933,6 @@ lu_run() {
                     fi
             elif [ ! -z "$LU_SHELL_PTH" ]
                 then
-                    export OPEN_SHELL=1
                     unset LU_SHELL_PTH TERMINAL
                     $TERM_APP $LWSHELL
             else
@@ -1955,7 +1955,7 @@ lu_run() {
     resol_sw 2>/dev/null
     try_rm "$TMP_DEB" "$TMP_OUT" &>/dev/null
     check_tray
-    if [[ -z "$FORCE_TRAY" && ! -z "$TRAY_PID" && -z "$OPEN_SHELL" ]]
+    if [[ -z "$FORCE_TRAY" && ! -z "$TRAY_PID" ]]
         then
             if wine_is_death && shell_is_death
                 then
@@ -2157,6 +2157,7 @@ lw_init() {
             check_gamemode
             check_gstreamer
             check_dxvk
+            check_dxvk_async
             check_dxvk-nvapi
             check_vkd3d
             check_d3d_extras
@@ -2271,7 +2272,7 @@ lu_config() {
     TRLWPRM="awk '!x[\$0]++'|tr '\n' '!'|sed 's/.$//'"
     SRTLWPRM="sort -u"
     lwconfig_save() {
-        LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME DXVK DXVK_VERSION DXVK_GIT_RELEASE_URL VKD3D VKD3D_VERSION DXR VKD3DCFG \
+        LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME DXVK DXVKASYNC DXVK_VERSION DXVK_GIT_RELEASE_URL VKD3D VKD3D_VERSION DXR VKD3DCFG \
             VKD3D_GIT_RELEASE_URL DXVK_NVAPI DXVK_NVAPI_VERSION NVAPI_GIT_RELEASE_URL D3D_EXTRAS D3D_EXTRAS_VERSION D3D_GIT_RELEASE_URL \
             DGVOODOO2 DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL WDLLOVER WMONOVER MUST_HAVE_DLL SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD WINED3D DIS_NETCORE VIRTUAL_DESKTOP \
@@ -2342,6 +2343,7 @@ lu_config() {
             --field="Wine prefix::DIR" "$WINEPREFIX" \
             --field="Wine theme::CB" "$(echo -e "$WINE_THEME\n$(echo -e "$WINE_THEME\n$WINETHEMESLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="DXVK:CHK" "$DXVK" \
+            --field="DXVK ASYNC:CHK" "$DXVKASYNC" \
             --field="DXVK Version::CBE" "$(echo -e "$DXVK_VERSION\n$(echo -e "$DXVK_VERSION\n$DXVKLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="DXVK GIT::CBE" "$(echo -e "$DXVK_GIT_RELEASE_URL\n$(echo -e "$DXVK_GIT_RELEASE_URL\n$DXVKGITLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="VKD3D:CHK" "$VKD3D" \
@@ -3581,6 +3583,16 @@ check_wined3d() {
                             try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
                     fi
             done
+    fi
+}
+
+check_dxvk_async() {
+    if [ ! -z "$1" ] ; then export DXVKASYNC="$1" ; fi
+    if [[ "$DXVKASYNC" == 1 && "$WINED3D" != 1 && "$DXVK" == 1 ]]
+        then
+            export DXVK_ASYNC="1"
+        else
+            unset DXVK_ASYNC DXVKASYNC
     fi
 }
 
