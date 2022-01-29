@@ -63,6 +63,8 @@ package() {
     install -Dm644 "usr/share/lutris-wine/themes/Wine Dark.reg" "${pkgdir}/usr/share/lutris-wine/themes/Wine Dark.reg"
     install -Dm644 usr/share/lutris-wine/db/LeagueClient.lwdb ${pkgdir}/usr/share/lutris-wine/db/LeagueClient.lwdb
     install -Dm644 usr/share/lutris-wine/db/re8.lwdb ${pkgdir}/usr/share/lutris-wine/db/re8.lwdb
+    install -Dm644 usr/share/lutris-wine/db/bms.lwdb ${pkgdir}/usr/share/lutris-wine/db/bms.lwdb
+    install -Dm644 usr/share/lutris-wine/db/DOOMEternalx64vk.lwdb ${pkgdir}/usr/share/lutris-wine/db/DOOMEternalx64vk.lwdb
     install -Dm644 usr/share/lutris-wine/db/nvapi64-tests.lwdb ${pkgdir}/usr/share/lutris-wine/db/nvapi64-tests.lwdb
     install -Dm644 usr/share/lutris-wine/gif/league-of-legends.gif ${pkgdir}/usr/share/lutris-wine/gif/league-of-legends.gif
     install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/lutris-wine/LICENSE
