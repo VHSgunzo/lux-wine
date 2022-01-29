@@ -2144,6 +2144,7 @@ lw_init() {
             check_winepfx
             check_def_wine
             check_winepfx_fonts
+            check_vkbasalt
             check_first_run
             check_videodrv
             check_compositor
@@ -2155,7 +2156,6 @@ lw_init() {
             check_mangohud
             check_gamemode
             check_gstreamer
-            check_vkbasalt
             check_dxvk
             check_dxvk-nvapi
             check_vkd3d
