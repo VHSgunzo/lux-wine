@@ -73,7 +73,7 @@ init_def_config() {
     fi
     if [ -z "$FSR" ]
         then
-            export FSR="1"
+            export FSR="2"
     fi
     if [ -z "$PREF_SYS_LIBS" ]
         then
@@ -176,10 +176,6 @@ init_def_config() {
             #export MUST_HAVE_DLL='Disabled'
             export MUST_HAVE_DLL='mfc42 vcrun2019'
             #export MUST_HAVE_DLL='dotnet46 xna40 dotnet20 mfc120 mfc42 msvcirt vcrun2010 vcrun2012 vcrun2013 vcrun2019 vcrun6 vcrun6sp6'
-    fi
-    if [ -z "$FSR_STRENGTH" ]
-        then
-            export FSR_STRENGTH="2"
     fi
     if [[ -z "$VKBASALT_EFFECTS" && -d "$RESHADE_DIR" ]]
         then
@@ -2281,10 +2277,9 @@ lu_config() {
             VKD3D_GIT_RELEASE_URL DXVK_NVAPI DXVK_NVAPI_VERSION NVAPI_GIT_RELEASE_URL D3D_EXTRAS D3D_EXTRAS_VERSION D3D_GIT_RELEASE_URL \
             DGVOODOO2 DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL WDLLOVER WMONOVER MUST_HAVE_DLL SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD WINED3D DIS_NETCORE VIRTUAL_DESKTOP \
-            CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU DIS_OTH_DISPL \
-            RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LWSHELL NO_TRAY US_LAYOUT \
-            GSTREAMER VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC \
-            FSR FSR_STRENGTH BATTLEYE PRIME"
+            BATTLEYE CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU DIS_OTH_DISPL \
+            RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY HOLD_TERMINAL TERMINAL LW_TERM_APP LWSHELL NO_TRAY US_LAYOUT \
+            GSTREAMER VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC FSR PRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ ! -z "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2381,6 +2376,7 @@ lu_config() {
             --field="WineD3D Mode (OpenGL):CHK" "$WINED3D" \
             --field="Disable MONO (.NET Core):CHK" "$DIS_NETCORE" \
             --field="Virtual Desktop:CHK" "$VIRTUAL_DESKTOP" \
+            --field="BattleEye Runtime:CHK" "$BATTLEYE" \
         1> /tmp/winesett$LWCFGKEY &
 
         yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 720 ] ; then echo "--scroll" ; fi) \
@@ -2404,15 +2400,15 @@ lu_config() {
             --field="Disable compositor:CHK" "$DIS_COPMOSITOR" \
             --field="Reset PulseAudio:CHK" "$RESET_PULSE" \
             --field="Reduce PulseAudio latency:CHK" "$PULSE_LTCY" \
-            --field="Open in terminal:CHK" "$TERMINAL" \
             --field="Hold terminal:CHK" "$HOLD_TERMINAL" \
+            --field="Open in terminal:CHK" "$TERMINAL" \
             --field="Terminal app::CBE" "$(echo -e "$LW_TERM_APP\n$(echo -e "$LW_TERM_APP\n$TERMAPPLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="SHELL::CBE" "$(echo -e "$LWSHELL\n$(echo -e "$LWSHELL\n$SHELLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="Don't launch tray:CHK" "$NO_TRAY" \
             --field="Switch to US keyboard layout:CHK" "$US_LAYOUT" \
             --field="Gstreamer:CHK" "$GSTREAMER" \
             --field="VkBasalt:CHK" "$VKBASALT" \
-            --field="AMD FidelityFX Contrast Adaptive Sharpening STRENGTH::CB" "$(echo -e "$VKBASALT_FFX_CAS\n$(echo -e "$VKBASALT_FFX_CAS\n$(seq -f "%0.1f" 0.1 0.1 1|tr ',' '.')"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(echo -e "$VKBASALT_FFX_CAS\n$(echo -e "$VKBASALT_FFX_CAS\n$(seq -f "%0.1f" 0.1 0.1 1|tr ',' '.')\n Disabled"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Vulkan ICD loader::CB" "$(echo -e "$VKICDFILES\n$(echo -e "$VKICDFILES\n$VKICDFILESLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="GameMode:CHK" "$GAMEMODE" \
             --field="MangoHud::CB" "$(echo -e "$LWMANGOHUD\n$(echo -e "$LWMANGOHUD\n$MANGOHUDLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
@@ -2422,9 +2418,7 @@ lu_config() {
             --field="Esync:CHK" "$ESYNC" \
             --field="Fsync:CHK" "$FSYNC" \
             --field="Vsync::CB" "$(echo -e "$VSYNC\n$(echo -e "$VSYNC\n$VSYNCLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="AMD FidelityFX Super Resolution:CHK" "$FSR" \
-            --field="AMD FidelityFX Super Resolution STRENGTH::CB" "$(echo -e "$FSR_STRENGTH\n$(echo -e "$FSR_STRENGTH\n$(seq 5)"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="BattleEye Runtime:CHK" "$BATTLEYE" \
+            --field="AMD FidelityFX Super Resolution::CB" "$(echo -e "$FSR\n$(echo -e "$FSR\n$(seq 5)\n Disabled"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="NVIDIA Prime Render Offload:CHK" "$PRIME" \
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
@@ -3948,13 +3942,10 @@ check_vsync() {
 
 check_fsr() {
     if [ ! -z "$1" ] ; then export FSR="$1" ; fi
-    if [ "$FSR" == 1 ]
+    if [[ ! -z "$FSR" && "$FSR" != "Disabled" ]]
         then
             export WINE_FULLSCREEN_FSR="1"
-            if [[ ! -z "$FSR_STRENGTH" && -z "$WINE_FULLSCREEN_FSR_STRENGTH" ]]
-                then
-                    export WINE_FULLSCREEN_FSR_STRENGTH="$FSR_STRENGTH"
-            fi
+            export WINE_FULLSCREEN_FSR_STRENGTH="$FSR"
         else
             unset WINE_FULLSCREEN_FSR WINE_FULLSCREEN_FSR_STRENGTH
     fi
@@ -4112,19 +4103,34 @@ check_vkbasalt_eff() {
                 then
                     echo "effects = $VKBASALT_EFFECTS" >> "$VKBASALT_CONFIG_FILE"
                 else
-                    if [ -z "$(grep "effects = $VKBASALT_EFFECTS" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
+                    if [ "$(grep "effects = $VKBASALT_EFFECTS" "$VKBASALT_CONFIG_FILE" 2>/dev/null|sed 's/effects = //')" != "$VKBASALT_EFFECTS" ]
                         then
                             sed -i "s/effects = .*/effects = $VKBASALT_EFFECTS/g" "$VKBASALT_CONFIG_FILE"
                     fi
             fi
-            if [ -z "$(grep -wo "casSharpness" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
+            if [ "$VKBASALT_FFX_CAS" != "Disabled" ]
                 then
-                    echo "casSharpness = $VKBASALT_FFX_CAS" >> "$VKBASALT_CONFIG_FILE"
-                else
-                    if [ -z "$(grep "casSharpness = $VKBASALT_FFX_CAS" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
+                    if [ -z "$(grep -wo "casSharpness" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
                         then
-                            sed -i "s/casSharpness.*/casSharpness = $VKBASALT_FFX_CAS/g" "$VKBASALT_CONFIG_FILE"
+                            echo "casSharpness = $VKBASALT_FFX_CAS" >> "$VKBASALT_CONFIG_FILE"
+                        else
+                            if [ "$(grep "casSharpness = $VKBASALT_FFX_CAS" "$VKBASALT_CONFIG_FILE" 2>/dev/null|sed 's/casSharpness = //')" != "$VKBASALT_FFX_CAS" ]
+                                then
+                                    sed -i "s/casSharpness.*/casSharpness = $VKBASALT_FFX_CAS/g" "$VKBASALT_CONFIG_FILE"
+                            fi
                     fi
+                else
+                    VKBASALT_OTHEFF="$(grep -w "effects" "$VKBASALT_CONFIG_FILE" 2>/dev/null|sed 's/effects = //'|sed 's/cas//'|sed 's/::/:/'|sed 's/^://'|sed 's/:$//')"
+                    if [ ! -z "$VKBASALT_OTHEFF" ]
+                        then
+                            sed -i "s/effects = .*/effects = $VKBASALT_OTHEFF/" "$VKBASALT_CONFIG_FILE"
+                        else
+                            sed -i "/effects.*/d" "$VKBASALT_CONFIG_FILE" 2>/dev/null
+                            sed -i "s/export VKBASALT.*/export VKBASALT='0'/" "$LW_CFG" 2>/dev/null
+                            export DISABLE_VKBASALT="1"
+                            unset VKBASALT
+                    fi
+                    sed -i "/casSharpness.*/d" "$VKBASALT_CONFIG_FILE" 2>/dev/null
             fi
             if [ ! -z "$VK_INSTANCE_LAYERS" ]
                 then
@@ -4133,7 +4139,8 @@ check_vkbasalt_eff() {
                     export VK_INSTANCE_LAYERS="VK_LAYER_VKBASALT_post_processing"
             fi
         else
-            export DISABLE_VKBASALT=1
+            export DISABLE_VKBASALT="1"
+            unset VKBASALT
     fi
 }
 
