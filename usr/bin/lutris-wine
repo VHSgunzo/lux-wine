@@ -918,24 +918,24 @@ wine_is_death() {
 check_display() {
     if [ ! -z "$(which xrandr 2>/dev/null)" ]
         then
-            CHK_PRIMDISPL_OUT="xrandr --current|grep -w 'connected'|grep -w 'primary'|grep '[0-9]x[0-9]'"
-            CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep '[0-9]x[0-9]'"
-            PRIMDISPL_OUT="$(eval $CHK_PRIMDISPL_OUT|awk '{print$1}')"
-            PRIMDISPL_RES="$(xrandr --current|sed -n -e 's/.* connected primary \([^ +]*\).*/\1/p')"
-            OTHDISPL_OUT="$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')"
-            PRIMDISPLCFG="$(eval $CHK_PRIMDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--primary","--mode "$4,"--pos "$5"x"$6,"--rotate "$7}' 2>/dev/null)"
-            OTHDISPLCFG="$(eval $CHK_OTHDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--mode "$3,"--pos "$4"x"$5,"--rotate "$6}' 2>/dev/null)"
+            export CHK_PRIMDISPL_OUT="xrandr --current|grep -w 'connected'|grep -w 'primary'|grep '[0-9]x[0-9]'"
+            export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep '[0-9]x[0-9]'"
+            export PRIMDISPL_OUT="$(eval $CHK_PRIMDISPL_OUT|awk '{print$1}')"
+            export PRIMDISPL_RES="$(xrandr --current|sed -n -e 's/.* connected primary \([^ +]*\).*/\1/p')"
+            export OTHDISPL_OUT="$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')"
+            export PRIMDISPLCFG="$(eval $CHK_PRIMDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--primary","--mode "$4,"--pos "$5"x"$6,"--rotate "$7}' 2>/dev/null)"
+            export OTHDISPLCFG="$(eval $CHK_OTHDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--mode "$3,"--pos "$4"x"$5,"--rotate "$6}' 2>/dev/null)"
         else
             print_error yad "Check Display" "xrandr not found in your system!"
     fi
 }
 
 dis_displ_sw() {
-    if [[ "$DIS_OTH_DISPL" == 1 && -f "$LU_EXE" && "$UNSET_DISOTHDISP_SW" != 1 && ! -z "$OTHDISPL_OUT" ]]
+    if [[ "$DIS_OTH_DISPL" == 1 && -f "$LU_EXE" && "$UNSET_DISOTHDISP_SW" != 1 ]]
         then
-            CHK_DISOTHDISP_OTH="ls -1 /tmp/DISOTHDISP.* 2>/dev/null"
-            DISOTHDISP=$BASHPID
+            export CHK_DISOTHDISP_OTH="ls -1 /tmp/DISOTHDISP.* 2>/dev/null"
             displ_on() {
+                echo "$(eval $CHK_DISOTHDISP_OTH|grep -v $DISOTHDISP 2>/dev/null)"
                 if exe_is_death && [[ -f "/tmp/DISOTHDISP.$DISOTHDISP" && -z "$(eval $CHK_DISOTHDISP_OTH|grep -v $DISOTHDISP 2>/dev/null)" ]]
                     then
                         restore_resol
@@ -946,6 +946,7 @@ dis_displ_sw() {
             }
             displ_off() {
                 unset DISOTHDISPLS
+                DISOTHDISP=$BASHPID
                 for disdispl in $OTHDISPL_OUT
                     do
                         DISOTHDISPLS="--output $disdispl --off $DISOTHDISPLS"
@@ -955,9 +956,11 @@ dis_displ_sw() {
                         xrandr $DISOTHDISPLS
                         DISPLOFF=1
                         echo 1 > /tmp/DISOTHDISP.$DISOTHDISP
+                        echo "$PRIMDISPLCFG $OTHDISPLCFG" > /tmp/SYSDISPLCFG
                 fi
             }
             displ_noff() {
+                DISOTHDISP=$BASHPID
                 echo 1 > /tmp/DISOTHDISP.$DISOTHDISP
             }
             displ_dirty_noff() {
@@ -986,7 +989,7 @@ dis_displ_sw() {
                 if [[ ! -z "$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')" && ! -z "$OTHDISPL_OUT" && -z "$(eval $CHK_DISOTHDISP_OTH)" ]]
                     then
                         displ_off
-                elif [[ -z "$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')" && ! -z "$DISPLOFF" ]]
+                elif [[ -z "$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')" && ! -z "$DISOTHDISP" ]]
                     then
                         displ_on
                 elif [[ -z "$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')" && "$(eval $CHK_DISOTHDISP_OTH|wc -l)" -ge 1 ]]
@@ -1001,7 +1004,7 @@ dis_displ_sw() {
 
 check_restore_resol() {
     if [ ! -z "$1" ] ; then export RESTORE_RESOL="$1" ; fi
-    if [[ "$RESTORE_RESOL" == 1 && -f "$LU_EXE" && "$UNSET_RESRESOL_SW" != 1 ]]
+    if [[ "$RESTORE_RESOL" == 1 && -f "$LU_EXE" && "$UNSET_RESRESOL_SW" != 1 && "$DIS_OTH_DISPL" == 0 ]]
         then
             CHK_RESRESOL_OTH="ls -1 /tmp/RESRESOL.* 2>/dev/null"
             RESRESOL=$BASHPID
@@ -1010,19 +1013,23 @@ check_restore_resol() {
 }
 
 restore_resol() {
-    if [[ ! -z "$PRIMDISPL_OUT" && ! -z "$OTHDISPL_OUT" ]]
+    if [[ ! -z "$PRIMDISPL_OUT" && ! -z "$OTHDISPL_OUT" && ! -f "/tmp/SYSDISPLCFG" ]]
         then
             xrandr $PRIMDISPLCFG $OTHDISPLCFG
-    elif [[ ! -z "$PRIMDISPL_OUT" && -z "$OTHDISPL_OUT" ]]
+    elif [[ ! -z "$PRIMDISPL_OUT" && -z "$OTHDISPL_OUT" && ! -f "/tmp/SYSDISPLCFG" ]]
         then
             xrandr $PRIMDISPLCFG
+    elif [ -f "/tmp/SYSDISPLCFG" ]
+        then
+            xrandr $(cat '/tmp/SYSDISPLCFG')
+            try_rm '/tmp/SYSDISPLCFG'
     else
         print_error yad "Restore Resolution" "Unable to change resolution!"
     fi
 }
 
 resol_sw() {
-    if [[ -f "/tmp/FORCE_EXIT" && ! -z "$(eval $CHK_RESRESOL_OTH)" ]]
+    if [[ -f "/tmp/FORCE_EXIT" && ! -z "$(eval $CHK_RESRESOL_OTH)" && "$DIS_OTH_DISPL" == 0 ]]
         then
             restore_resol
             try_rm /tmp/RESRESOL.*
