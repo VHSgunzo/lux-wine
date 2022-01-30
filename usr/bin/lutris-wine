@@ -1075,7 +1075,6 @@ compositor_sw() {
                 if exe_is_death && [[ -f "/tmp/CMPSTROFF.$CMPSTROFF" && -z "$(eval $CHK_CMPSTROFF_OTH|grep -v $CMPSTROFF 2>/dev/null)" ]]
                     then
                         $CMPSTR_ON
-                        restore_gamma
                         try_rm /tmp/CMPSTROFF.*
                     else
                         try_rm /tmp/CMPSTROFF.$CMPSTROFF
@@ -1111,7 +1110,6 @@ compositor_sw() {
             if [[ -f "/tmp/FORCE_EXIT" && ! -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                 then
                     $CMPSTR_ON
-                    restore_gamma
                     try_rm /tmp/CMPSTROFF.*
             elif [ ! -z "$CMPSTR_PLASMA_CHECK" ]
                 then
