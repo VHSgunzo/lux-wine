@@ -181,9 +181,12 @@ init_def_config() {
         then
             export FSR_STRENGTH="2"
     fi
-    if [ -z "$VKBASALT_EFFECTS" ]
+    if [[ -z "$VKBASALT_EFFECTS" && -d "$RESHADE_DIR" ]]
         then
             export VKBASALT_EFFECTS="cas:Colourfulness:Tonemap"
+    elif [[ -z "$VKBASALT_EFFECTS" && ! -d "$RESHADE_DIR" ]]
+        then
+            export VKBASALT_EFFECTS="cas"
     fi
     if [ -z "$VKBASALT_FFX_CAS" ]
         then
@@ -2144,16 +2147,18 @@ lw_init() {
             check_winepfx
             check_def_wine
             check_winepfx_fonts
-            check_vkbasalt
+            check_vkbasalt_cfg
             check_first_run
             check_videodrv
             check_compositor
             check_mono_gecko
             check_wdllover
             check_wmonover
+            check_exe_args
             check_other_fixes
             check_vulkan_icd
             check_mangohud
+            check_vkbasalt_eff
             check_gamemode
             check_gstreamer
             check_dxvk
@@ -2276,7 +2281,7 @@ lu_config() {
             VKD3D_GIT_RELEASE_URL DXVK_NVAPI DXVK_NVAPI_VERSION NVAPI_GIT_RELEASE_URL D3D_EXTRAS D3D_EXTRAS_VERSION D3D_GIT_RELEASE_URL \
             DGVOODOO2 DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL WDLLOVER WMONOVER MUST_HAVE_DLL SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD WINED3D DIS_NETCORE VIRTUAL_DESKTOP \
-            CHK_UPDATE RUNTIME PREF_SYS_LIBS EXE_ARG EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU DIS_OTH_DISPL \
+            CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU DIS_OTH_DISPL \
             RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LWSHELL NO_TRAY US_LAYOUT \
             GSTREAMER VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT MANGOHUDCFG ESYNC FSYNC VSYNC \
             FSR FSR_STRENGTH BATTLEYE PRIME"
@@ -2298,7 +2303,7 @@ lu_config() {
                 fi
                 COUNT_FX=$(( $COUNT_FX + 1 ))
         done
-        FX_RESULT="cas$FX_RESULT"
+        FX_RESULT="$(echo "cas$FX_RESULT"|sed 's/:://')"
 
         if [ ! -z "$(echo "$WCFGOUT"|head -1)" ]
             then
@@ -2424,18 +2429,22 @@ lu_config() {
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
-        RES_LST=($(grep ".fx$" "$VKBASALT_CONFIG_FILE"|awk '{print $1}'))
-        RES_CFG=($(echo "$VKBASALT_EFFECTS"|sed 's/cas//'|sed 's/^://'|sed 's/:$//'|sed 's/::/:/'|sed 's/:/ /'))
-        for add_relst in ${RES_LST[@]}
-            do
-                if [[ ! -z "$(echo "${RES_CFG[@]}"|grep -o "$add_relst")" ]]
-                    then
-                        RESHADE_SETT+="--field=$add_relst:CHK%TRUE%"
-                    else
-                        RESHADE_SETT+="--field=$add_relst:CHK%FALSE%"
-                fi
-        done
-        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 720 ] ; then echo "--scroll" ; fi) \
+        if [ -d "$RESHADE_DIR" ]
+            then
+                RES_LST=($(grep ".fx$" "$VKBASALT_CONFIG_FILE" 2>/dev/null|awk '{print $1}'))
+                RES_CFG=($(echo "$VKBASALT_EFFECTS"|sed 's/cas//'|sed 's/^://'|sed 's/:$//'|sed 's/::/:/'|sed 's/:/ /'))
+                for add_relst in ${RES_LST[@]}
+                    do
+                        if [[ ! -z "$(echo "${RES_CFG[@]}"|grep -o "$add_relst")" ]]
+                            then
+                                RESHADE_SETT+="--field=$add_relst:CHK%TRUE%"
+                            else
+                                RESHADE_SETT+="--field=$add_relst:CHK%FALSE%"
+                        fi
+                done
+        fi
+        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
+            $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 720 ] ; then echo "--scroll" ; fi) \
             $RESHADE_SETT \
         1> /tmp/ressett$LWCFGKEY & )
 
@@ -2449,7 +2458,7 @@ lu_config() {
                     --field="Open application:FBTN" "$LWSHELL -c 'lu_start'" \
                     --field="DEBUG:FBTN" "$LWSHELL -c 'export DEBUG=1 ; lu_start'" \
                     --field="Open drive C:\:FBTN" "$LWSHELL -c 'lu_openpfx'" \
-                    --field="Applications settings:FBTN" "$LWSHELL -c 'btn_tools appcfg'" \
+                    --field="Apps settings:FBTN" "$LWSHELL -c 'btn_tools appcfg'" \
                     --field="Wine manager:FBTN" "$LWSHELL -c 'btn_tools winemgr'" \
                     --field="Runtime updater:FBTN" "$LWSHELL -c 'btn_tools update'" \
                     --field="Winetricks:FBTN" "$LWSHELL -c 'winetricks'" \
@@ -2459,9 +2468,9 @@ lu_config() {
                     --field="Wine uninstaller:FBTN" "$LWSHELL -c 'lu_uninstaller'" \
                     --field="Create shortcut:FBTN" "$LWSHELL -c 'lu_shortcut'" \
                     --field="Add app to Lutris:FBTN" "$LWSHELL -c 'export ADDTOLU=1 ; lu_shortcut'" \
-                    --field="Open tray:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -tray noclose'" \
+                    --field="Tray:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -tray noclose'" \
                     --field="Clear prefix:FBTN" "$LWSHELL -c 'lu_clearpfx'" \
-                    --field="Remove shortcuts from menu:FBTN" "$LWSHELL -c 'lu_rmapp'" \
+                    --field="Remove menu apps:FBTN" "$LWSHELL -c 'lu_rmapp'" \
                     --field="Kill Wine processes:FBTN" "$LWSHELL -c 'lu_killwine'" \
                     --field="Kill tray:FBTN" "$LWSHELL -c 'lu_killtray'" \
                     --field="Kill running EXE:FBTN" "$LWSHELL -c 'lu_killexe'" \
@@ -2971,8 +2980,8 @@ lu_help() {
             ${RED}-explorer $GREEN              Wine explorer
             ${RED}-cmd $GREEN                   Open CMD or open file in CMD
             ${RED}-shell $GREEN                 Open SHELL or open file in SHELL
-            ${RED}-config $GREEN                Lutris Wine settings
-            ${RED}-appcfg $GREEN                Applications Settings
+            ${RED}-config $GREEN                Settings
+            ${RED}-appcfg $GREEN                Apps Settings
             ${RED}-regedit $GREEN               Registry editor
             ${RED}-control $GREEN               Control panel
             ${RED}-winecfg $GREEN               Wine settings
@@ -2982,18 +2991,18 @@ lu_help() {
             ${RED}-winetricks $GREEN            Winetricks
             ${RED}-openpfx $GREEN               Open drive C:
             ${RED}-killwine $GREEN              Kill Wine processes
-            ${RED}-killtray $GREEN              Kill Lutris Wine tray
-            ${RED}-killexe $GREEN               Kill Lutris Wine running EXE
-            ${RED}-killshell $GREEN             Kill Lutris Wine SHELL
-            ${RED}-exit $GREEN                  Lutris Wine force exit
+            ${RED}-killtray $GREEN              Kill tray
+            ${RED}-killexe $GREEN               Kill running EXE
+            ${RED}-killshell $GREEN             Kill SHELL
+            ${RED}-exit $GREEN                  Force exit
             ${RED}-clearpfx $GREEN              Clear prefix
-            ${RED}-rmapp $GREEN                 Remove Lutris Wine shortcuts from menu
+            ${RED}-rmapp $GREEN                 Remove menu apps
             ${RED}-shortcut $GREEN              Create shortcut
             ${RED}-addtolu $GREEN               Add to Lutris
             ${RED}-debug $GREEN                 DEBUG
             ${RED}-help $GREEN                  Show this usage info
             ${RED}-version $GREEN               Show version info
-            ${RED}-tray $BLUE{noclose}${GREEN}         Open Lutris Wine in tray
+            ${RED}-tray $BLUE{noclose}${GREEN}         Tray
             ${RED}-update$BLUE {all} $GREEN          Runtime updater$BLUE
             {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}
             {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}
@@ -3004,8 +3013,8 @@ lu_help() {
         -explorer                 Wine explorer\n \
         -cmd                          Open CMD or open file in CMD\n \
         -shell                         Open SHELL or open file in SHELL\n \
-        -config                      Lutris Wine settings\n \
-        -appcfg                     Applications Settings\n \
+        -config                      Settings\n \
+        -appcfg                     Apps Settings\n \
         -regedit                    Registry editor\n \
         -control                     Control panel\n \
         -winecfg                   Wine settings\n \
@@ -3015,18 +3024,18 @@ lu_help() {
         -winetricks               Winetricks\n \
         -openpfx                  Open drive C:\n \
         -killwine                     Kill Wine processes\n \
-        -killtray                      Kill Lutris Wine tray\n \
-        -killexe                       Kill Lutris Wine running EXE\n \
-        -killshell                     Kill Lutris Wine SHELL\n \
-        -exit                            Lutris Wine Force Exit\n \
+        -killtray                      Kill tray\n \
+        -killexe                       Kill running EXE\n \
+        -killshell                     Kill SHELL\n \
+        -exit                            Force Exit\n \
         -clearpfx                   Clear prefix\n \
-        -rmapp                      Remove Lutris Wine shortcuts from menu\n \
+        -rmapp                      Remove menu apps\n \
         -shortcut                  Create shortcut\n \
         -addtolu                    Add to Lutris\n \
         -debug                      DEBUG\n \
         -help                          Show this usage info\n \
         -version                    Show version info\n \
-        -tray {noclose}       Open Lutris Wine in tray\n \
+        -tray {noclose}       Tray\n \
         -update {all}            Runtime updater\n \
         {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}\n \
         {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}\n \
@@ -4070,36 +4079,52 @@ check_pulse_latency() {
     fi
 }
 
-check_vkbasalt() {
+check_vkbasalt_cfg() {
+    try_mkdir "$(dirname "$VKBASALT_CONFIG_FILE")"
+    if [[ ! -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" ]] || [[ -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" && -z "$(grep -wo 'reshadeTexturePath' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
+        then
+            echo -e "reshadeTexturePath = "$RESHADE_DIR"/textures\nreshadeIncludePath = "$RESHADE_DIR"/shaders" > "$VKBASALT_CONFIG_FILE"
+            (while read RES_NAME <&3 && read RES_FLPTH <&4
+                do
+                    echo "$RES_NAME = $RES_FLPTH"
+            done 3< <(ls -1 "$RESHADE_DIR"/shaders/*.fx|sed 's/.fx$//'|xargs -I {} basename {}) \
+                 4< <(ls -1 "$RESHADE_DIR"/shaders/*.fx)) >> "$VKBASALT_CONFIG_FILE"
+    elif [[ -f "$VKBASALT_CONFIG_FILE" && ! -d "$RESHADE_DIR" && ! -z "$(grep -wo 'reshadeTexturePath' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
+        then
+            try_rm "$VKBASALT_CONFIG_FILE"
+            export VKBASALT_EFFECTS="cas"
+    elif [[ ! -f "$VKBASALT_CONFIG_FILE" && ! -d "$RESHADE_DIR" ]]
+        then
+            export VKBASALT_EFFECTS="cas"
+    fi
+    if [ -z "$(grep -wo 'toggleKey' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
+        then
+            echo "toggleKey = Home" >> "$VKBASALT_CONFIG_FILE"
+    fi
+}
+
+check_vkbasalt_eff() {
     if [ ! -z "$1" ] ; then export VKBASALT="$1" ; fi
     if [[ "$VKBASALT" == 1 ]]
         then
             export ENABLE_VKBASALT=1
-            try_mkdir "$(dirname "$VKBASALT_CONFIG_FILE")"
-            if [ ! -f "$VKBASALT_CONFIG_FILE" ]
-                then
-                    if [ -d "$RESHADE_DIR" ]
-                        then
-                            echo -e "reshadeTexturePath = "$RESHADE_DIR"/textures\nreshadeIncludePath = "$RESHADE_DIR"/shaders" > "$VKBASALT_CONFIG_FILE"
-                            (while read RES_NAME <&3 && read RES_FLPTH <&4
-                                do
-                                    echo "$RES_NAME = $RES_FLPTH"
-                            done 3< <(ls -1 "$RESHADE_DIR"/shaders/*.fx|sed 's/.fx$//'|xargs -I {} basename {}) \
-                                 4< <(ls -1 "$RESHADE_DIR"/shaders/*.fx)) >> "$VKBASALT_CONFIG_FILE"
-                    fi
-                    echo "toggleKey = Home" >> "$VKBASALT_CONFIG_FILE"
-            fi
-            if [ -z "$(grep -wo "effects" "$VKBASALT_CONFIG_FILE")" ]
+            if [ -z "$(grep -wo "effects" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
                 then
                     echo "effects = $VKBASALT_EFFECTS" >> "$VKBASALT_CONFIG_FILE"
                 else
-                    sed -i "s/effects = .*/effects = $VKBASALT_EFFECTS/g" "$VKBASALT_CONFIG_FILE"
+                    if [ -z "$(grep "effects = $VKBASALT_EFFECTS" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
+                        then
+                            sed -i "s/effects = .*/effects = $VKBASALT_EFFECTS/g" "$VKBASALT_CONFIG_FILE"
+                    fi
             fi
-            if [ -z "$(grep -wo "casSharpness" "$VKBASALT_CONFIG_FILE")" ]
+            if [ -z "$(grep -wo "casSharpness" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
                 then
                     echo "casSharpness = $VKBASALT_FFX_CAS" >> "$VKBASALT_CONFIG_FILE"
                 else
-                    sed -i "s/casSharpness.*/casSharpness = $VKBASALT_FFX_CAS/g" "$VKBASALT_CONFIG_FILE"
+                    if [ -z "$(grep "casSharpness = $VKBASALT_FFX_CAS" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
+                        then
+                            sed -i "s/casSharpness.*/casSharpness = $VKBASALT_FFX_CAS/g" "$VKBASALT_CONFIG_FILE"
+                    fi
             fi
             if [ ! -z "$VK_INSTANCE_LAYERS" ]
                 then
@@ -4538,6 +4563,26 @@ check_videodrv() {
     fi
 }
 
+exeargs_upd() {
+    if [ ! -z "$EXE_ARG" ]
+        then
+            if [ -z "$(echo "$EXE_ARG"|grep -ow "$1" 2>/dev/null)" ]
+                then
+                    export EXE_ARG="$1 $EXE_ARG"
+            fi
+        else
+            export EXE_ARG="$1"
+    fi
+}
+
+check_exe_args() {
+    if [ ! -z "$1" ] ; then export EXEARGS="$1" ; fi
+    if [ ! -z "$EXEARGS" ]
+        then
+            exeargs_upd "$EXEARGS"
+    fi
+}
+
 check_wmonover() {
     if [ ! -z "$1" ] ; then export WMONOVER="$1" ; fi
     if [[ ! -z "$WMONOVER" && "$WMONOVER" != "Disabled" && "$DIS_NETCORE" != "1" ]]
@@ -4568,10 +4613,10 @@ export_all_functions() {
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
         runtime_manager check_gamecontrollerdb check_innoextract check_network-tools check_p7zip check_ubuntu1804-i686 upd_battleye upd_gamecontrollerdb \
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
-        upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt check_luwine_conf check_videodrv check_startfile init_def_config \
+        upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt_eff check_luwine_conf check_videodrv check_startfile init_def_config \
         settingbar_nostdout check_freespace initbar check_network_status check_no_async print_question print_input loadbar_cover check_first_run \
         run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg lu_appcfg try_fix_wrtx try_shutdown_wine check_winepfx_fonts \
-        check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop
+        check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args
 }
 
 initbar() {

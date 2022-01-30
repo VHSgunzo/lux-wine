@@ -121,14 +121,14 @@ Name[ru_RU]=Удалить приложения из меню
 [Desktop Action tray]
 Exec=lutris-wine -tray noclose
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Lutris Wine tray
-Name[ru_RU]=Lutris Wine трей
+Name=Tray
+Name[ru_RU]=Трей
 
 [Desktop Action exit]
 Exec=lutris-wine -exit %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Lutris Wine force exit
-Name[ru_RU]=Закрыть Lutris Wine
+Name=Force exit
+Name[ru_RU]=Закрыть всё
 
 [Desktop Action update]
 Exec=lutris-wine -update openupdtr
@@ -151,8 +151,8 @@ Name[ru_RU]=Версия
 [Desktop Action config]
 Exec=lutris-wine -config %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Lutris Wine settings
-Name[ru_RU]=Настройки Lutris Wine
+Name=Settings
+Name[ru_RU]=Настройки
 
 [Desktop Action appcfg]
 Exec=lutris-wine -appcfg
