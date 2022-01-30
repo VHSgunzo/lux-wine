@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 export ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
@@ -1068,14 +1069,14 @@ gamma_sw() {
 }
 
 compositor_sw() {
-    if [[ "$DIS_COPMOSITOR" == 1 && -f "$LU_EXE" && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 ]]
+    if [[ "$DIS_COPMOSITOR" == 1 && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 ]]
         then
-            CHK_CMPSTROFF_OTH="ls -1 /tmp/CMPSTROFF.* 2>/dev/null"
-            CMPSTROFF=$BASHPID
+            export CHK_CMPSTROFF_OTH="ls -1 /tmp/CMPSTROFF.* 2>/dev/null"
             compositor_on() {
                 if exe_is_death && [[ -f "/tmp/CMPSTROFF.$CMPSTROFF" && -z "$(eval $CHK_CMPSTROFF_OTH|grep -v $CMPSTROFF 2>/dev/null)" ]]
                     then
                         $CMPSTR_ON
+                        restore_gamma
                         try_rm /tmp/CMPSTROFF.*
                     else
                         try_rm /tmp/CMPSTROFF.$CMPSTROFF
@@ -1083,9 +1084,11 @@ compositor_sw() {
             }
             compositor_off() {
                 $CMPSTR_OFF
+                CMPSTROFF=$BASHPID
                 echo 1 > /tmp/CMPSTROFF.$CMPSTROFF
             }
             compositor_noff() {
+                CMPSTROFF=$BASHPID
                 echo 1 > /tmp/CMPSTROFF.$CMPSTROFF
             }
             cmpstr_dirty_noff() {
@@ -1109,6 +1112,7 @@ compositor_sw() {
             if [[ -f "/tmp/FORCE_EXIT" && ! -z "$(eval $CHK_CMPSTROFF_OTH)" ]]
                 then
                     $CMPSTR_ON
+                    restore_gamma
                     try_rm /tmp/CMPSTROFF.*
             elif [ ! -z "$CMPSTR_PLASMA_CHECK" ]
                 then
