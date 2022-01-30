@@ -3110,7 +3110,7 @@ Open CMD!$LWSHELL -c '"$BASH_SOURCE" -cmd'!"$DEF_ICO"| \
 Open SHELL!$LWSHELL -c '"$BASH_SOURCE" -shell'!"$DEF_ICO"| \
 DEBUG!$LWSHELL -c '"$BASH_SOURCE" -debug'!"$DEF_ICO"| \
 Open drive C:\!$LWSHELL -c '"$BASH_SOURCE" -openpfx'!"$DEF_ICO"| \
-Lutris Wine settings!$LWSHELL -c '"$BASH_SOURCE" -config'!"$DEF_ICO"| \
+Settings!$LWSHELL -c '"$BASH_SOURCE" -config'!"$DEF_ICO"| \
 Apps settings!$LWSHELL -c '"$BASH_SOURCE" -appcfg'!"$DEF_ICO"| \
 Wine manager!$LWSHELL -c '"$BASH_SOURCE" -winemgr'!"$DEF_ICO"| \
 Runtime updater!$LWSHELL -c '"$BASH_SOURCE" -update'!"$DEF_ICO"| \
