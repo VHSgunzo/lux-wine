@@ -1068,7 +1068,7 @@ gamma_sw() {
 }
 
 compositor_sw() {
-    if [[ "$DIS_COPMOSITOR" == 1 && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 ]]
+    if [[ "$DIS_COPMOSITOR" == 1 && -z "$CMPSTR_NULL" && "$UNSET_CMPSTR_SW" != 1 && -f "$LU_EXE" ]]
         then
             export CHK_CMPSTROFF_OTH="ls -1 /tmp/CMPSTROFF.* 2>/dev/null"
             compositor_on() {
