@@ -935,7 +935,6 @@ dis_displ_sw() {
         then
             export CHK_DISOTHDISP_OTH="ls -1 /tmp/DISOTHDISP.* 2>/dev/null"
             displ_on() {
-                echo "$(eval $CHK_DISOTHDISP_OTH|grep -v $DISOTHDISP 2>/dev/null)"
                 if exe_is_death && [[ -f "/tmp/DISOTHDISP.$DISOTHDISP" && -z "$(eval $CHK_DISOTHDISP_OTH|grep -v $DISOTHDISP 2>/dev/null)" ]]
                     then
                         restore_resol
