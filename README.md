@@ -102,10 +102,12 @@ All Arch-based distributions
       * ALLOW XIM
       * DISABLE LAYER AMD SWITCHABLE GRAPHICS
       * DXVK ASYNC
+      * GL THREADED OPTIMIZATIONS
 ```
 - [x] Wine virtual desktop
 - [x] Disable no primary displays
 - [x] Restore resolution
+- [x] Wine prefix sandbox
 - [ ] And much more
 
 ## To get started:

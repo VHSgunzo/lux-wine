@@ -49,7 +49,7 @@ Name[ru_RU]=Wine менеджер
 [Desktop Action uninstaller]
 Exec=lutris-wine -uninstaller %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Add/remove programs
+Name=Wine uninstaller
 Name[ru_RU]=Устан/удал программ
 
 [Desktop Action winetricks]
