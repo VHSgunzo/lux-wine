@@ -1,4 +1,5 @@
 # Lutris Wine
+### [Discord](https://discord.gg/cCSubhfYQw) 
 ## Supports:
 ```
 All Arch-based distributions
