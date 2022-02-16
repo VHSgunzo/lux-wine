@@ -1,8 +1,7 @@
 # Lutris Wine
-### [Discord](https://discord.gg/cCSubhfYQw) 
 ## Supports:
 ```
-All Arch-based distributions
+All Arch-based distributions with X11 display server
 ```
 
 ## Features:
@@ -19,6 +18,7 @@ All Arch-based distributions
 - [x] Ability to create separate configuration files for different EXEs
 - [x] Automatic enable WineD3D (OpenGL) mode if Vulkan API is not available
 - [x] Manual enabling WineD3D (OpenGL) mode (Disables DXVK, DXVK-NVAPI, VKD3D, DXR)
+- [x] DXVK with Wine DXGI mode
 - [x] Supports running on virtual machines with GL acceleration (tested on KVM, see installation video)
 - [x] Debug mode
 - [x] Terminal mode (various terminals supported)
@@ -36,7 +36,7 @@ All Arch-based distributions
 - [x] Reshade Shaders settings (VkBasalt Effects, depends on VkBasalt)
 - [x] Vulkan ICD loader automatic and manual settings
 - [x] AMD FidelityFX Contrast Adaptive Sharpening settings (depends on VkBasalt)
-- [x] Gstreamer (if Wine support, system Gstreamer in priority)
+- [x] Gstreamer (if Wine support)
 - [x] GameMode
 - [x] Esync
 - [x] Fsync (if linux kernel support)
@@ -93,22 +93,24 @@ All Arch-based distributions
 - [x] EXE DB launch helper script automatically starts if located in the application folder and has the same name, but with the extension *.lwdb
 - [x] Custom loading bar animation
 - [x] Redefining Wine options in settings GUI:
+- [x] Old OpenGL String
+- [x] Disable Vulkan Async
 ```
-      * OLD GL STRING
-      * NO WRITE WATCH
-      * VULKAN NO ASYNC
-      * HIDE NVIDIA GPU
-      * HEAP DELAY FREE
-      * STAGING SHARED MEMORY
-      * ALLOW XIM
-      * DISABLE LAYER AMD SWITCHABLE GRAPHICS
-      * DXVK ASYNC
-      * GL THREADED OPTIMIZATIONS
+      * WINE_HIDE_NVIDIA_GPU
+      * WINE_HEAP_DELAY_FREE
+      * STAGING_SHARED_MEMORY
+      * WINE_ALLOW_XIM
+      * DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1
+      * DXVK_ASYNC
+      * WINE_LARGE_ADDRESS_AWARE
+      * WINE_DISABLE_WRITE_WATCH
+      * __GL_THREADED_OPTIMIZATIONS
 ```
 - [x] Wine virtual desktop
 - [x] Disable no primary displays
 - [x] Restore resolution
 - [x] Wine prefix sandbox
+- [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [ ] And much more
 
 ## To get started:
@@ -152,8 +154,8 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -help
 -explorer               Wine explorer
 -cmd                    Open CMD or open file in CMD
 -shell                  Open SHELL or open file in SHELL
--config                 Lutris Wine settings
--appcfg                 Applications Settings
+-config                 Settings
+-appcfg                 Apps Settings
 -regedit                Registry editor
 -control                Control panel
 -winecfg                Wine settings
@@ -161,20 +163,20 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -help
 -taskmgr                Task manager
 -uninstaller            Wine uninstaller
 -winetricks             Winetricks
--openpfx                Open drive C:
+-openpfx                Open drive C:\
 -killwine               Kill Wine processes
--killtray               Kill Lutris Wine tray
--killexe                Kill Lutris Wine running EXE
--killshell              Kill Lutris Wine SHELL
--exit                   Lutris Wine force exit
+-killtray               Kill tray
+-killexe                Kill running EXE
+-killshell              Kill SHELL
+-exit                   Force exit
 -clearpfx               Clear prefix
--rmapp                  Remove Lutris Wine shortcuts from menu
+-rmapp                  Remove menu apps
 -shortcut               Create shortcut
 -addtolu                Add to Lutris
 -debug                  DEBUG
 -help                   Show this usage info
 -version                Show version info
--tray {noclose}         Open Lutris Wine in tray
+-tray {noclose}         Tray
 -update {all}           Runtime updater
 {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}
 {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}
