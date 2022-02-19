@@ -156,6 +156,10 @@ init_def_config() {
         then
             export WINE_SANDBOX=1
     fi
+    if [ -z "$PREF_SYS_LIBS" ]
+        then
+            export PREF_SYS_LIBS=1
+    fi
     if [ -z "$D3D_EXTRAS" ]
         then
             export D3D_EXTRAS=1
@@ -1322,6 +1326,30 @@ wdllover_upd() {
     fi
 }
 
+ld_lib_upd() {
+    if [ ! -z "$LD_LIBRARY_PATH" ]
+        then
+            if [ -z "$(echo "$LD_LIBRARY_PATH"|grep -ow "$1" 2>/dev/null)" ]
+                then
+                    export LD_LIBRARY_PATH="${1}:${LD_LIBRARY_PATH}"
+            fi
+        else
+            export LD_LIBRARY_PATH="${1}"
+    fi
+}
+
+path_upd() {
+    if [ ! -z "$PATH" ]
+        then
+            if [ -z "$(echo "$PATH"|grep -ow "$1" 2>/dev/null)" ]
+                then
+                    export PATH="${1}:${PATH}"
+            fi
+        else
+            export PATH="${1}"
+    fi
+}
+
 wmonover_upd() {
     if [ ! -z "$WINE_MONO_OVERRIDES" ]
         then
@@ -1934,6 +1962,8 @@ lu_run() {
     us_layout_sw
     lu_debug 2>/dev/null
     compositor_sw 2>/dev/null
+    check_runtime
+    check_ld_library
     if [[ "$LOG" == 1 && "$TERMINAL" == 1 ]]
         then
             if [ ! -z "$LU_SHELL_EXE" ]
@@ -2215,8 +2245,6 @@ lw_init() {
             check_fsync
             check_vsync
             check_fsr
-            check_runtime
-            check_ld_library
             check_path
             check_terminal
             check_pulse_latency
@@ -2410,7 +2438,7 @@ lu_config() {
             --field="DGVOODOO2 GIT::CBE" "$(echo -e "$DGVO_GIT_RELEASE_URL\n$(echo -e "$DGVO_GIT_RELEASE_URL\n$DGVOOGITLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="MUST HAVE DLL::CBE" "$(echo -e "$MUST_HAVE_DLL\n$(echo -e "$MUST_HAVE_DLL\n$MHAVEDLLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="AMD FidelityFX Super Resolution::CB" "$(echo -e "$FSR\n$(echo -e "$FSR\n$(seq 5)\n Disabled"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="WINE__FULLSCREEN__FAKE__CURRENT__RES::CB" "$(echo -e "$FAKE_CUR_RES\n$(echo -e "$FAKE_CUR_RES \n $PRIMDISPL_RESES \n Disabled"|eval $SEDLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="WINE__FULLSCREEN__FAKE__CURRENT__RES::CBE" "$(echo -e "$FAKE_CUR_RES\n$(echo -e "$FAKE_CUR_RES \n $PRIMDISPL_RESES \n Disabled"|eval $SEDLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="DXVK_ASYNC:CHK" "$DXVKASYNC" \
             --field="DXVK with Wine DXGI:CHK" "$WINE_DXGI" \
             --field="Esync:CHK" "$ESYNC" \
@@ -3590,41 +3618,20 @@ check_gstreamer() {
     if [ ! -z "$1" ] ; then export GSTREAMER="$1" ; fi
     if [ "$GSTREAMER" == 1 ]
         then
-            dis_gstreamer() {
-                unset GSTREAMER
-                sed -i "s/export GSTREAMER=.*/export GSTREAMER='0'/" "$LW_CFG" 2>/dev/null
-                wdllover_upd "winegstreamer="
-                print_error yad "GSTREAMER not found! GSTREAMER is disabled!"
-            }
             try_mkdir "$DEF_CACHE/gstreamer-1.0"
             export WINE_GST_REGISTRY_DIR="$DEF_CACHE/gstreamer-1.0"
             export MEDIACONV_AUDIO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/audio.foz"
             export MEDIACONV_AUDIO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_audio.foz"
             export MEDIACONV_VIDEO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/video.foz"
             export MEDIACONV_VIDEO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_video.foz"
-            if [ "$PREF_SYS_LIBS" == 1 ]
+            if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
                 then
-                    if [ -d "/lib64/gstreamer-1.0" ]
-                        then
-                            export GST_PLUGIN_SYSTEM_PATH_1_0="/lib64/gstreamer-1.0:/lib/gstreamer-1.0"
-                    elif [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
-                        then
-                            print_info notify "System Gstreamer not found! Used Wine Gstreamer!"
-                            export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
-                    else
-                        dis_gstreamer
-                    fi
+                    export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
                 else
-                    if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
-                        then
-                            export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
-                    elif [ -d "/lib64/gstreamer-1.0" ]
-                        then
-                            print_info notify "Wine Gstreamer not found! Used System Gstreamer!"
-                            export GST_PLUGIN_SYSTEM_PATH_1_0="/lib64/gstreamer-1.0:/lib/gstreamer-1.0"
-                    else
-                        dis_gstreamer
-                    fi
+                    unset GSTREAMER
+                    sed -i "s/export GSTREAMER=.*/export GSTREAMER='0'/" "$LW_CFG" 2>/dev/null
+                    wdllover_upd "winegstreamer="
+                    print_error yad "Wine GSTREAMER not found! GSTREAMER is disabled!"
             fi
         else
             print_info notify "GSTREAMER is disabled!"
@@ -4142,10 +4149,8 @@ check_fsr() {
 
 check_runtime() {
     if [ ! -z "$1" ] ; then export RUNTIME="$1" ; if [ ! -z "$2" ] ; then export PREF_SYS_LIBS="$2" ; fi ; fi
-    if [ "$RUNTIME" != 1 ]
+    if [ "$RUNTIME" == 1 ]
         then
-            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
-        else
             #check_gamecontrollerdb
             #check_innoextract
             #check_network-tools
@@ -4154,15 +4159,15 @@ check_runtime() {
             check_ubuntu1804-x86_64
             if [ "$PREF_SYS_LIBS" == 1 ]
                 then
-                    export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64:/usr/lib/libfakeroot:/usr/lib64:$LW_RUNTIME_DIR/Ubuntu-18.04-i686:$LW_RUNTIME_DIR/steam/i386/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/lib:$LW_RUNTIME_DIR/steam/i386/usr/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/usr/lib:$LW_RUNTIME_DIR/Ubuntu-18.04-x86_64:$LW_RUNTIME_DIR/steam/amd64/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/lib:$LW_RUNTIME_DIR/steam/amd64/usr/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/usr/lib"
+                    export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:/usr/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64:$LW_RUNTIME_DIR/Ubuntu-18.04-i686:$LW_RUNTIME_DIR/steam/i386/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/lib:$LW_RUNTIME_DIR/steam/i386/usr/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/usr/lib:$LW_RUNTIME_DIR/Ubuntu-18.04-x86_64:$LW_RUNTIME_DIR/steam/amd64/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/lib:$LW_RUNTIME_DIR/steam/amd64/usr/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/usr/lib"
                 else
-                    export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:$LW_RUNTIME_DIR/Ubuntu-18.04-i686:$LW_RUNTIME_DIR/steam/i386/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/lib:$LW_RUNTIME_DIR/steam/i386/usr/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/usr/lib:$LW_RUNTIME_DIR/Ubuntu-18.04-x86_64:$LW_RUNTIME_DIR/steam/amd64/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/lib:$LW_RUNTIME_DIR/steam/amd64/usr/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/usr/lib:$LD_LIBRARY_PATH"
+                    export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:$LW_RUNTIME_DIR/Ubuntu-18.04-i686:$LW_RUNTIME_DIR/steam/i386/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/lib:$LW_RUNTIME_DIR/steam/i386/usr/lib/i386-linux-gnu:$LW_RUNTIME_DIR/steam/i386/usr/lib:$LW_RUNTIME_DIR/Ubuntu-18.04-x86_64:$LW_RUNTIME_DIR/steam/amd64/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/lib:$LW_RUNTIME_DIR/steam/amd64/usr/lib/x86_64-linux-gnu:$LW_RUNTIME_DIR/steam/amd64/usr/lib:/usr/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64"
             fi
     fi
 }
 
 check_ld_library() {
-    if [ ! -z "$1" ] ; then export LD_LIBRARY_PATH="$1" ; fi
+    if [ ! -z "$1" ] ; then ld_lib_upd "$1" ; fi
     if [ ! -z "$LD_LIBRARY_PATH" ]
         then
             if [ -z "$(echo $LD_LIBRARY_PATH|grep "$WINEDIR/lib64:$WINEDIR/lib")" ]
@@ -4170,18 +4175,13 @@ check_ld_library() {
                     export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:$LD_LIBRARY_PATH"
             fi
         else
-            export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib"
+            ld_lib_upd "$WINEDIR/lib64:$WINEDIR/lib:/usr/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64"
     fi
 }
 
 check_path() {
-    if [ ! -z "$1" ] ; then export PATH="$1" ; fi
-    if [ ! -z "$PATH" ]
-        then
-            export PATH="$WINEDIR/bin:$PATH"
-        else
-            export PATH="$WINEDIR/bin"
-    fi
+    if [ ! -z "$1" ] ; then path_upd "$1" ; fi
+    path_upd "$WINEDIR/bin"
 }
 
 check_hold_terminal() {
@@ -4796,10 +4796,10 @@ check_wdllover() {
 
 export_all_functions() {
     export -f print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid check_vkd3dconfig try_rm check_themes \
-        check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_mono_gecko try_download check_single_cpu \
+        check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_mono_gecko try_download check_single_cpu ld_lib_upd \
         download_error unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher \
         compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris gamma_sw vkd3dcfg_upd \
-        create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_conf check_def_wine lu_prerun lu_run lu_prestart try_mv \
+        create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_conf check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd \
         lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr \
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr updcfgchksum \
         us_layout_sw check_mangohud check_wd3dmode check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \

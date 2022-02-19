@@ -92,9 +92,14 @@ All Arch-based distributions with X11 display server
 - [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/usr/share/lutris-wine/db/LeagueClient.lwdb)
 - [x] EXE DB launch helper script automatically starts if located in the application folder and has the same name, but with the extension *.lwdb
 - [x] Custom loading bar animation
-- [x] Redefining Wine options in settings GUI:
 - [x] Old OpenGL String
 - [x] Disable Vulkan Async
+- [x] Wine virtual desktop
+- [x] Disable no primary displays
+- [x] Restore resolution
+- [x] Wine prefix sandbox
+- [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
+- [x] Redefining Wine options in settings GUI:
 ```
       * WINE_HIDE_NVIDIA_GPU
       * WINE_HEAP_DELAY_FREE
@@ -106,11 +111,6 @@ All Arch-based distributions with X11 display server
       * WINE_DISABLE_WRITE_WATCH
       * __GL_THREADED_OPTIMIZATIONS
 ```
-- [x] Wine virtual desktop
-- [x] Disable no primary displays
-- [x] Restore resolution
-- [x] Wine prefix sandbox
-- [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [ ] And much more
 
 ## To get started:
