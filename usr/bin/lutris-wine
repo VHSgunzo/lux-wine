@@ -1300,6 +1300,14 @@ try_fix_wrtx() {
         then
             sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$WTRX_DIR/winetricks"
     fi
+    if [ -z "$(grep -o 'check_ld_library' "$WTRX_DIR/winetricks")" ]
+        then
+            sed -i "$(( $(sed -n '/w_do_call()$/=' "$WTRX_DIR/winetricks") + 1))a\\    check_ld_library" "$WTRX_DIR/winetricks"
+    fi
+    if [ -z "$(grep -o 'unset LD_LIBRARY_PATH' "$WTRX_DIR/winetricks")" ]
+        then
+            sed -i "$(( $(sed -n '/subshell must/=' "$WTRX_DIR/winetricks") + 1))a\\    unset LD_LIBRARY_PATH" "$WTRX_DIR/winetricks"
+    fi
 }
 
 vkd3dcfg_upd() {
@@ -2018,6 +2026,7 @@ lu_run() {
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
         $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
+    unset LD_LIBRARY_PATH
     stop_loadbar
     compositor_sw 2>/dev/null
     gamma_sw 2>/dev/null
