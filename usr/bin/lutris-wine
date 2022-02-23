@@ -3509,6 +3509,7 @@ check_themes() {
         then
             if [ "$(cat "$WINEPREFIX/.lwtheme" 2>/dev/null)" != "$WINE_THEME" ]
                 then
+                    check_ld_library
                     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                         then
                             "$OLD_WINE" regedit "$THEMES_DIR/$WINE_THEME.reg" &>/dev/null
@@ -3522,6 +3523,7 @@ check_themes() {
                     echo "$WINE_THEME" > "$WINEPREFIX/.lwtheme"
                     print_info notify "Wine theme successfully changed to $WINE_THEME"
                     try_shutdown_wine
+                    unset LD_LIBRARY_PATH
             fi
         else
             print_error yad "Themes Manager" "Wine theme not found!" &
@@ -3990,12 +3992,15 @@ check_winepfx() {
     done
     if [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
         then
+            check_ld_library
             if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
                     "$OLD_WINE" wineboot -i &>/dev/null
+                    unset LD_LIBRARY_PATH
             elif [ -f "$WINE" ]
                 then
                     "$WINE" wineboot -i &>/dev/null
+                    unset LD_LIBRARY_PATH
             else
                 print_error yad "Wine prefix initialization completed with error!"
                 return 1
@@ -4379,6 +4384,7 @@ check_win_version() {
                 then
                     export WIN_VER="xp64"
             fi
+            check_ld_library
             if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
                     "$OLD_WINE" winecfg -v win$WIN_VER &>/dev/null
@@ -4391,6 +4397,7 @@ check_win_version() {
             fi
             print_info notify "Windows version changed to Windows $WIN_VER"
             try_shutdown_wine
+            unset LD_LIBRARY_PATH
         else
             return 1
     fi
