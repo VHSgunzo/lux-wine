@@ -43,6 +43,7 @@ All Arch-based distributions with X11 display server
 - [x] Vsync settings
 - [x] AMD FidelityFX Super Resolution settings (if Wine support)
 - [x] BattleEye Runtime (if Wine support)
+- [x] EasyAntiCheat runtime (if Wine support)
 - [x] NVIDIA Prime Render Offload
 - [x] US keyboard layout switcher
 - [x] Reset PulseAudio (+PulseEffects)
@@ -141,7 +142,7 @@ sudo reboot
 ```
 * **Install Lutris Wine using your favorite AUR package manager:**
 ```
-yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -help
+yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 ```
 ## Video with the installation process:
 [![Lutris Wine installation process](https://img.youtube.com/vi/pozypVaPK0Y/0.jpg)](https://www.youtube.com/watch?v=pozypVaPK0Y)
@@ -177,9 +178,10 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -help
 -help                   Show this usage info
 -version                Show version info
 -tray {noclose}         Tray
+-init                   Forced initialization
 -update {all}           Runtime updater
 {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}
-{inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras}
+{inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
 {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}
 {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
 ```
