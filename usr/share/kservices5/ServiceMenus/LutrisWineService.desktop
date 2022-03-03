@@ -79,7 +79,7 @@ Name[ru_RU]=Убить трей
 [Desktop Action killexe]
 Exec=lutris-wine -killexe %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-Name=Kill launch EXE
+Name=Kill running EXE
 Name[ru_RU]=Убить запущенные EXE
 
 [Desktop Action killshell]
@@ -160,9 +160,15 @@ Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Apps settings
 Name[ru_RU]=Настройки приложений
 
+[Desktop Action init]
+Exec=lutris-wine -init %f
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Forced initialization
+Name[ru_RU]=Принудительная инициализация
+
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;update;version;help;config;appcfg
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;update;version;help;config;appcfg;init
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine

@@ -51,6 +51,7 @@ package() {
     install -Dm644 usr/share/applications/LutrisWine/appcfg.desktop ${pkgdir}/usr/share/applications/LutrisWine/appcfg.desktop
     install -Dm644 usr/share/applications/LutrisWine/help.desktop ${pkgdir}/usr/share/applications/LutrisWine/help.desktop
     install -Dm644 usr/share/applications/LutrisWine/version.desktop ${pkgdir}/usr/share/applications/LutrisWine/version.desktop
+    install -Dm644 usr/share/applications/LutrisWine/init.desktop ${pkgdir}/usr/share/applications/LutrisWine/init.desktop
     install -Dm644 usr/share/desktop-directories/LutrisWineApp.directory ${pkgdir}/usr/share/desktop-directories/LutrisWineApp.directory
     install -Dm644 usr/share/desktop-directories/LutrisWine.directory ${pkgdir}/usr/share/desktop-directories/LutrisWine.directory
     install -Dm644 usr/share/kservices5/ServiceMenus/LutrisWineService.desktop ${pkgdir}/usr/share/kservices5/ServiceMenus/LutrisWineService.desktop

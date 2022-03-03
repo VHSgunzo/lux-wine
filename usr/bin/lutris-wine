@@ -2036,7 +2036,6 @@ check_first_run() {
                     if [ "$?" -eq 0 ]
                         then
                             export FIRST_RUN=1 ; lu_config
-                            unset FIRST_RUN
                             import_luwine_conf
                     fi
             fi
@@ -2046,6 +2045,8 @@ check_first_run() {
             done
             update-desktop-database -q "$MENU_APP_DIR"
             touch "$LW_DIR/.firstrun"
+            [ "$1" != "-init" ] && full_init
+            unset FIRST_RUN
     fi
 }
 
@@ -2064,6 +2065,13 @@ lite_init() {
     if [[ "$1" != "-killwine" && "$1" != "-killtray" && "$1" != "-killexe" \
         && "$1" != "-killshell" && "$1" != "-exit" && "$1" != "-tray" ]]
         then
+            if [[ ! -z "$(pgrep -fa 'zenity'|grep -w 'Startup initialization'|awk '{print$1}')" \
+                || ! -z "$(pgrep -fa 'zenity'|grep -w 'Updating parameters'|awk '{print$1}')" ]]
+                then
+                    print_info yad "Initialization is in progress! Please wait..."
+                    while pgrep -fa 'zenity'|grep -w 'Startup initialization' &>/dev/null ; do sleep 1 ; done
+                    while pgrep -fa 'zenity'|grep -w 'Updating parameters' &>/dev/null ; do sleep 1 ; done
+            fi
             check_freespace "$BASH_SOURCE"
             check_exe_wcfg "$@"
             check_luwine_conf
@@ -2077,8 +2085,8 @@ lite_init() {
             check_path
             check_terminal
             check_vkbasalt_cfg
-            check_first_run
             check_exe_args
+            check_first_run "$@"
     fi
 }
 
@@ -2086,27 +2094,14 @@ full_init() {
     if [ "$SKIP_INIT" != 1 ]
         then
             [ "$1" != "noinitbar" ] && initbar
-            #check_freespace "$BASH_SOURCE"
-            #check_exe_wcfg "$@"
-            #check_luwine_conf
-            #init_def_config
-            #check_db_script
-            #check_loadbar_cover
-            #check_network_status
-            #check_display
-            #check_shell
             check_crash_dialog
-            #check_def_wine
             check_winepfx
-            #check_vkbasalt_cfg
-            #check_first_run
             check_wd3dmode
             check_videodrv
             check_compositor
             check_mono_gecko
             check_wdllover
             check_wmonover
-            #check_exe_args
             check_other_fixes
             check_vulkan_icd
             check_mangohud
@@ -2130,8 +2125,6 @@ full_init() {
             check_fsync
             check_vsync
             check_fsr
-            #check_path
-            #check_terminal
             check_pulse_latency
             check_reset_pulse
             check_musthave_dll
@@ -2146,7 +2139,7 @@ full_init() {
             check_virt_desktop
             check_fake_cur_res
             try_rm "$INIPRGRS" &>/dev/null
-            [ "$1" == "-init" ] && print_info notify "Lutris Wine full initialization completed!"
+            [[ "$1" == "-init" || "$FIRST_RUN" == 1 ]] && print_info notify "Lutris Wine full initialization completed!"
         else
             print_info notify "Lutris Wine full startup initialization is disabled! Unexpected errors may occur..."
     fi
@@ -2282,6 +2275,7 @@ lu_config() {
                 fi
                 if [[ "$1" == "init" && -z "$FIRST_RUN" ]]
                     then
+                        import_luwine_conf
                         full_init noinitbar
                 fi
         fi
@@ -4721,11 +4715,6 @@ export_all_functions() {
 }
 
 initbar() {
-    if [ ! -z "$(pgrep -fa 'zenity'|grep -w 'Startup initialization'|awk '{print$1}')" ]
-        then
-            print_info yad "Lutris Wine Startup initialization" "Startup initialization is in progress! Please wait..."
-            while pgrep -fa 'zenity'|grep -w 'Startup initialization' &>/dev/null ; do sleep 1 ; done
-    fi
     INIPRGRS="/tmp/iniprgrs$ENVKEY"
     touch "$INIPRGRS"
     while [ -f "$INIPRGRS" ]; do echo; sleep 0.1; done| \

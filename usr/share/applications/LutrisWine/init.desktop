@@ -1,10 +1,10 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -killexe %f
+Exec=lutris-wine -init %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
 MimeType=application/x-ms-dos-executable;application/x-msdos-program
-Name=Kill running EXE
-Name[ru_RU]=Убить запущенные EXE
+Name=Forced initialization
+Name[ru_RU]=Принудительная инициализация
 NoDisplay=false
 StartupNotify=true
 Terminal=0
