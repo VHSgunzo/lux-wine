@@ -3095,6 +3095,7 @@ Create shortcut!$LWSHELL -c '"$BASH_SOURCE" -shortcut'!"$DEF_ICO"| \
 $( if [ ! -z "$SYS_LU" ]; then echo "Add to Lutris!$LWSHELL -c '"$BASH_SOURCE" -addtolu'!"$DEF_ICO"|"; fi) \
 Remove menu app!$LWSHELL -c '"$BASH_SOURCE" -rmapp'!"$DEF_ICO"| \
 Clear prefix!$LWSHELL -c '"$BASH_SOURCE" -clearpfx'!"$DEF_ICO"| \
+Forced init!$LWSHELL -c '"$BASH_SOURCE" -init'!"$DEF_ICO"| \
 Usage info!$LWSHELL -c '"$BASH_SOURCE" -help'!"$DEF_ICO"| \
 Version info!$LWSHELL -c '"$BASH_SOURCE" -version'!"$DEF_ICO"| \
 Kill Wine processes!$LWSHELL -c '"$BASH_SOURCE" -killwine'!"$DEF_ICO"| \
