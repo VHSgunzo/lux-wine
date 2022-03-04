@@ -145,7 +145,7 @@ sudo reboot
 yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 ```
 ## Video with the installation process:
-[![Lutris Wine installation process](https://img.youtube.com/vi/pozypVaPK0Y/0.jpg)](https://www.youtube.com/watch?v=pozypVaPK0Y)
+[![Lutris Wine installation process](https://img.youtube.com/vi/sO28AcVQonM/0.jpg)](https://www.youtube.com/watch?v=sO28AcVQonM)
 
 ## Terminal usage:
 ```
