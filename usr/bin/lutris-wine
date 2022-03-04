@@ -4170,7 +4170,7 @@ check_pulse_latency() {
 
 check_vkbasalt_cfg() {
     try_mkdir "$(dirname "$VKBASALT_CONFIG_FILE")"
-    if [[ ! -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" ]] || [[ -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" && -z "$(grep -wo 'reshadeTexturePath' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
+    if [[ ! -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" ]] || [[ -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" && -z "$(grep -wo "$RESHADE_DIR" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
         then
             echo -e "reshadeTexturePath = "$RESHADE_DIR"/textures\nreshadeIncludePath = "$RESHADE_DIR"/shaders" > "$VKBASALT_CONFIG_FILE"
             (while read RES_NAME <&3 && read RES_FLPTH <&4
