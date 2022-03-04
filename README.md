@@ -180,7 +180,7 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 -tray {noclose}         Tray
 -init                   Forced initialization
 -update {all}           Runtime updater
-{dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}
+{dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
 {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
 {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}
 {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}

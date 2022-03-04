@@ -23,7 +23,7 @@ export LU_DB="$LU_DIR/pga.db"
 export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
 export LW_CFG="$LW_DEF_CFG"
 export VKBASALT_CONFIG_FILE="$LW_DIR/vkBasalt.conf"
-export RESHADE_DIR="/usr/share/reshade"
+export RESHADE_DIR="$LW_RUNTIME_DIR/reshade"
 export DEF_ICO="/usr/share/lutris-wine/icon/default_icon.png"
 export DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
 export DEF_WINEPFX="$LW_DIR/winepfx"
@@ -82,14 +82,13 @@ init_def_config() {
     [ -z "$WTRX_GIT_RELEASE_URL" ] && export WTRX_GIT_RELEASE_URL="https://github.com/lutris/winetricks/releases"
     [ -z "$EAC_GIT_RELEASE_URL" ] && export EAC_GIT_RELEASE_URL="https://github.com/VHSgunzo/eac_runtime/releases"
     [ -z "$BUILD_GIT_RELEASE_URL" ] && export BUILD_GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
+    [ -z "$RESHADE_GIT_RELEASE_URL" ] && export RESHADE_GIT_RELEASE_URL="https://github.com/VHSgunzo/reshade/releases"
     [ -z "$DXVK_VERSION" ] && export DXVK_VERSION="latest"
     [ -z "$VKD3D_VERSION" ] && export VKD3D_VERSION="latest"
     [ -z "$DXVK_NVAPI_VERSION" ] && export DXVK_NVAPI_VERSION="latest"
     [ -z "$D3D_EXTRAS_VERSION" ] && export D3D_EXTRAS_VERSION="latest"
     [ -z "$DGVOODOO2_VERSION" ] && export DGVOODOO2_VERSION="latest"
-    if [[ -z "$VKBASALT_EFFECTS" && -d "$RESHADE_DIR" ]]; then export VKBASALT_EFFECTS="cas:Colourfulness:Tonemap"
-    elif [[ -z "$VKBASALT_EFFECTS" && ! -d "$RESHADE_DIR" ]]; then export VKBASALT_EFFECTS="cas"
-    fi
+    [ -z "$VKBASALT_EFFECTS" ] && export VKBASALT_EFFECTS="cas:Colourfulness:Tonemap"
 }
 
 print_var() {
@@ -229,12 +228,12 @@ check_luwine_sh_pid() {
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
-    CHK_EXES="$(ps -ef|grep "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)" 2>/dev/null|grep -v 'windows'|grep -v "$LWNAME"|grep -v 'grep'|grep -v 'yad')"
+    CHK_EXES="$(ps -ef|grep -i "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)" 2>/dev/null|grep -v 'windows'|grep -v "$LWNAME"|grep -v 'grep'|grep -v 'yad')"
     if [ ! -z "$CHK_EXES" ]
         then
             export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$2}')"
             export RUN_EXES="$(while read exepid ; do ps -p $exepid -o args|cut -d":" -f2|sed '/COMMAND/d'|sed 'y#\\#/#' ; done <<< "$EXE_PIDS")"
-            export RUN_EXE=$(echo "$RUN_EXES"|grep -e "$EXE_DIR" -e "$EXE_NAME.exe" 2>/dev/null)
+            export RUN_EXE=$(echo "$RUN_EXES"|grep -ie "$EXE_DIR" -ie "$EXE_NAME.exe" 2>/dev/null)
         else
             unset RUN_EXE
     fi
@@ -1890,6 +1889,7 @@ lu_run() {
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
         $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
+    post_launch &>/dev/null
     unset LD_LIBRARY_PATH
     stop_loadbar
     compositor_sw 2>/dev/null
@@ -2084,6 +2084,7 @@ lite_init() {
             check_def_wine
             check_path
             check_terminal
+            check_reshade
             check_vkbasalt_cfg
             check_exe_args
             check_first_run "$@"
@@ -2975,7 +2976,7 @@ lu_help() {
             ${RED}-tray $BLUE{noclose}${GREEN}         Tray
             ${RED}-init $GREEN                  Forced initialization
             ${RED}-update$BLUE {all} $GREEN          Runtime updater$BLUE
-            {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}
+            {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
             {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
             {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}
             {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
@@ -3009,7 +3010,7 @@ lu_help() {
         -tray {noclose}       Tray\n \
         -init                             Forced initialization\n \
         -update {all}            Runtime updater\n \
-        {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64}\n \
+        {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}\n \
         {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}\n \
         {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}\n \
         {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
@@ -3798,14 +3799,10 @@ check_eac() {
 
 runtime_manager() {
     try_mkdir "$LW_RUNTIME_DIR"
-    if [ "$1" == "winetricks" ]
-        then
-            GIT_RELEASE_URL="$WTRX_GIT_RELEASE_URL"
-    elif [ "$1" == "eac" ]
-        then
-            GIT_RELEASE_URL="$EAC_GIT_RELEASE_URL"
-    else
-        GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
+    if [ "$1" == "winetricks" ]; then GIT_RELEASE_URL="$WTRX_GIT_RELEASE_URL"
+    elif [ "$1" == "reshade" ]; then GIT_RELEASE_URL="$RESHADE_GIT_RELEASE_URL"
+    elif [ "$1" == "eac" ]; then GIT_RELEASE_URL="$EAC_GIT_RELEASE_URL"
+    else GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
     fi
     if [ -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ]
         then
@@ -4345,6 +4342,10 @@ check_dxr() {
     fi
 }
 
+check_reshade() {
+    runtime_manager "reshade"
+}
+
 check_winetricks() {
     runtime_manager "winetricks"
 }
@@ -4371,6 +4372,11 @@ check_ubuntu1804-i686() {
 
 check_ubuntu1804-x86_64() {
     runtime_manager "Ubuntu-18.04-x86_64"
+}
+
+upd_reshade() {
+    export FORCE_UPDATE=1
+    check_reshade
 }
 
 upd_winetricks() {
@@ -4476,12 +4482,14 @@ upd_all() {
     sleep 0.2
     upd_vkd3d &
     sleep 0.2
+    upd_reshade &
+    sleep 0.2
     upd_winetricks $
     wait
 }
 
 lu_update() {
-    LWRUNTIMELST="dxvk vkd3d dxvk-nvapi d3d_extras dgvoodoo2 battleye_runtime eac_runtime winetricks gamecontrollerdb innoextract network-tools p7zip ubuntu1804-i686 ubuntu1804-x86_64"
+    LWRUNTIMELST="dxvk vkd3d dxvk-nvapi d3d_extras dgvoodoo2 battleye_runtime eac_runtime reshade winetricks gamecontrollerdb innoextract network-tools p7zip ubuntu1804-i686 ubuntu1804-x86_64"
     check_winepfx
     if [ "$2" == "all" ]
         then
@@ -4532,11 +4540,14 @@ lu_update() {
                                             sleep 0.2 ;;
                                 vkd3d) upd_vkd3d &
                                        sleep 0.2 ;;
+                                reshade) upd_reshade &
+                                         sleep 0.2 ;;
                                 winetricks) upd_winetricks &
                                             sleep 0.2 ;;
                             esac
                     done
                     wait)|settingbar
+                    print_info notify "Runtime update completed!"
             fi
         else
             (while [[ ! -z "$2" ]]
@@ -4568,6 +4579,8 @@ lu_update() {
                                                     sleep 0.2 ;;
                         vkd|vkd3d) upd_vkd3d &
                                    sleep 0.2 ;;
+                        resh|reshade) upd_reshade &
+                                      sleep 0.2 ;;
                         wtrx|winetricks) upd_winetricks &
                                          sleep 0.2 ;;
                         *) print_error "Invalid argument: '$2'" ;;
@@ -4575,6 +4588,7 @@ lu_update() {
                     shift
             done
             wait)|settingbar
+            print_info notify "Runtime update completed!"
     fi
 }
 
