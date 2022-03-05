@@ -1889,8 +1889,8 @@ lu_run() {
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
         $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
-    post_launch &>/dev/null
     unset LD_LIBRARY_PATH
+    post_launch &>/dev/null
     stop_loadbar
     compositor_sw 2>/dev/null
     gamma_sw 2>/dev/null
@@ -3372,8 +3372,6 @@ lu_winemgr() {
                             unset WINEINUSEDEL WDEL_SET
                             lu_winemgr
                     fi
-                else
-                    print_info notify "Wine removing completed!"
             fi
     fi
     if [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]

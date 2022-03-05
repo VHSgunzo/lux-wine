@@ -7,12 +7,11 @@ check_deps() {
         then
             dialog --warning --text="Install openssl in your system!"
             return 1
-
     fi
 }
 
 dialog() {
-    zenity "$@" --window-icon="$DEFICO" --width="400" --title="League of Legends compatibility check"
+    zenity "$@" --window-icon="$DEFICO" --width="400" --title="Lutris Wine LOL compatibility check"
 }
 
 final_check() {
@@ -76,7 +75,7 @@ syscall_check() {
 launch_helper() {
     GIF_FILE="/usr/share/lutris-wine/gif/league-of-legends.gif"
     yad --picture --filename="$GIF_FILE" --no-buttons --undecorated --center --skip-taskbar --on-top \
-        --width="$(file "$GIF_FILE"|awk '{print $7 + 20}')" --height="$(file "$GIF_FILE"|awk '{print $9 + 20}')" $ENVKEY &>/dev/null &
+        --width="$(file "$GIF_FILE"|awk '{print $7 + 20}')" --height="$(file "$GIF_FILE"|awk '{print $9 + 20}')" $ENVKEY  Lutris Wine &>/dev/null &
     LOADBARPID="$(pgrep -fa yad|grep "$(basename "$GIF_FILE")"|grep "$ENVKEY"|awk '{print$1}')"
     process=LeagueClientUx.exe
     uxpid=$(timeout 4m sh -c "until pidof ${process}; do sleep 1; done")
