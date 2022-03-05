@@ -69,5 +69,6 @@ package() {
     install -Dm644 usr/share/lutris-wine/db/nvapi64-tests.lwdb ${pkgdir}/usr/share/lutris-wine/db/nvapi64-tests.lwdb
     install -Dm644 usr/share/lutris-wine/gif/league-of-legends.gif ${pkgdir}/usr/share/lutris-wine/gif/league-of-legends.gif
     install -Dm644 usr/share/lutris-wine/db/GenshinImpact.lwdb ${pkgdir}/usr/share/lutris-wine/db/GenshinImpact.lwdb
+    install -Dm644 usr/share/lutris-wine/db/steam.lwdb ${pkgdir}/usr/share/lutris-wine/db/steam.lwdb
     install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/lutris-wine/LICENSE
 }
