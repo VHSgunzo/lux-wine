@@ -2,7 +2,7 @@
 export ENVKEY=$RANDOM
 export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.66"
+export LW_VERSION="0.67"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
