@@ -75,7 +75,7 @@ init_def_config() {
     [ -z "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='mfc42 vcrun2019'
     [ -z "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
     [ -z "$DXVK_GIT_RELEASE_URL" ] && export DXVK_GIT_RELEASE_URL="https://github.com/doitsujin/dxvk/releases"
-    [ -z "$VKD3D_GIT_RELEASE_URL" ] && export VKD3D_GIT_RELEASE_URL="https://github.com/lutris/vkd3d/releases"
+    [ -z "$VKD3D_GIT_RELEASE_URL" ] && export VKD3D_GIT_RELEASE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases"
     [ -z "$NVAPI_GIT_RELEASE_URL" ] && export NVAPI_GIT_RELEASE_URL="https://github.com/VHSgunzo/nvapi/releases"
     [ -z "$D3D_GIT_RELEASE_URL" ] && export D3D_GIT_RELEASE_URL="https://github.com/lutris/d3d_extras/releases"
     [ -z "$DGVO_GIT_RELEASE_URL" ] && export DGVO_GIT_RELEASE_URL="https://github.com/lutris/dgvoodoo2/releases"
@@ -114,10 +114,10 @@ print_error() {
     elif [[ "$1" == "yad" && ! -z "$2" && -z "$3" ]]
         then
             yad --window-icon="$DEF_ICO" --image="dialog-error" --button="OK:0" --title="Lutris Wine Error" --text="$2" --center --on-top --fixed --timeout="15" --timeout-indicator="top" Lutris Wine
-    elif [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" ]]
+    elif [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
             notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2" "$3"
-    elif [[ "$1" == "notify" && ! -z "$2" && -z "$3" ]]
+    elif [[ "$1" == "notify" && ! -z "$2" && -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
             notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2"
     fi
@@ -139,10 +139,10 @@ print_info() {
     elif [[ "$1" == "yad" && ! -z "$2" && -z "$3" ]]
         then
             yad --window-icon="$DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lutris Wine Info" --text="$2" --center --on-top --fixed --timeout="15" --timeout-indicator="top" Lutris Wine
-    elif [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" ]]
+    elif [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
             notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2" "$3"
-    elif [[ "$1" == "notify" && ! -z "$2" && -z "$3" ]]
+    elif [[ "$1" == "notify" && ! -z "$2" && -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
             notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2"
     fi
@@ -159,12 +159,12 @@ print_question() {
 }
 
 print_input() {
-    if [[ ! -z "$1" && ! -z "$2" ]]
+    if [[ ! -z "$1" && ! -z "$2" && ! -z "$3" ]]
         then
-            yad --window-icon="$DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="$1" --text="$2" --center --on-top --fixed
-    elif [[ ! -z "$1" && -z "$2" ]]
+            yad --window-icon="$DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="$1" --text="$2" --center --on-top --fixed --entry-text="$3"
+    elif [[ ! -z "$1" && ! -z "$2" && -z "$3"  ]]
         then
-            yad --window-icon="$DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="Lutris Wine Input" --text="$1" --center --on-top --fixed
+            yad --window-icon="$DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="Lutris Wine Input" --text="$1" --center --on-top --fixed --entry-text="$2"
     fi
 }
 
@@ -1105,7 +1105,7 @@ check_musthave_dll() {
                 then
                     export UPDPFX_LOG="$WINEPREFIX/update_pfx.log"
                     print_info notify "Try to install DLL in prefix: $NEED_INSTALL_DLLS"
-                    $TERM_APP $LWSHELL -c "print_info 'Try to install DLL in prefix: $NEED_INSTALL_DLLS'|& tee -a '$UPDPFX_LOG' ; winetricks -q -f -r $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
+                    $TERM_APP $LWSHELL -c "print_info 'Try to install DLL in prefix: $NEED_INSTALL_DLLS'|& tee -a '$UPDPFX_LOG' && winetricks -q -f -r $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
                     try_shutdown_wine
             fi
     fi
@@ -1114,22 +1114,31 @@ check_musthave_dll() {
 try_shutdown_wine() {
     check_wine_pids
     check_exes
+    [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
     if [[ ! -z "$WINE_PIDS" && ! -z "$EXE_PIDS" ]]
         then
-            print_question "Shutdown Wine" "For the changes to take effect, you will need to restart Wine! \nSave all unsaved changes in all opened applications and сlick YES to end the current session."
-            if [ "$?" -eq 0 ]
+            if print_question "Shutdown Wine" "For the changes to take effect, you will need to restart Wine! \nSave all unsaved changes in all opened applications and сlick YES to end the current session."
                 then
                     print_info yad "Wine and running apps will be turned off now!"
                     kill $EXE_PIDS 2>/dev/null
+                    check_ld_library
                     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                         then
-                            "$OLD_WINE" wineboot -e
+                            if ! "$OLD_WINE" wineboot -e
+                                then
+                                    kill -9 $WINE_PIDS 2>/dev/null
+                            fi
+                            unset OLD_WINE
                     elif [ -f "$WINE" ]
                         then
-                            "$WINE" wineboot -e
+                            if ! "$WINE" wineboot -e
+                                then
+                                    kill -9 $WINE_PIDS 2>/dev/null
+                            fi
                     else
                         kill -9 $WINE_PIDS 2>/dev/null
                     fi
+                    unset LD_LIBRARY_PATH
                     wine_is_death
                 else
                     return 1
@@ -1137,15 +1146,24 @@ try_shutdown_wine() {
     elif [[ ! -z "$WINE_PIDS" && -z "$EXE_PIDS" ]]
         then
             print_info notify "For the changes to take effect, Wine will be turned off now!"
+            check_ld_library
             if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
-                    "$OLD_WINE" wineboot -e
+                    if ! "$OLD_WINE" wineboot -e
+                        then
+                            kill -9 $WINE_PIDS 2>/dev/null
+                    fi
+                    unset OLD_WINE
             elif [ -f "$WINE" ]
                 then
-                    "$WINE" wineboot -e
+                    if ! "$WINE" wineboot -e
+                        then
+                            kill -9 $WINE_PIDS 2>/dev/null
+                    fi
             else
                 kill -9 $WINE_PIDS 2>/dev/null
             fi
+            unset LD_LIBRARY_PATH
             wine_is_death
     fi
 }
@@ -1226,8 +1244,7 @@ wmonover_upd() {
 }
 
 reg_edit() {
-    print_question "Lutris Wine Registry Editor" "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in "$1" do not add it to the registry.\nAre you sure you want to continue?"
-    if [ $? -eq "0" ]
+    if print_question "Lutris Wine Registry Editor" "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in "$1" do not add it to the registry.\nAre you sure you want to continue?"
         then
             REG_BC_DIR="$WINEPREFIX/registry_$(date +'%Y-%m-%d_%H%M%S')"
             echo "Registry backup to '$REG_BC_DIR'"
@@ -1287,10 +1304,9 @@ add_to_lutris() {
             export YMLTOLU="${SHRT_PATH}/${SHRT_NAME}.yaml"
             if [ -z "$ADD_APP_NAME" ]
                 then
-                    print_question "Shortcuts Creator" "Change application name [ $SHRT_NAME ] ?"
-                    if [ $? -eq "0" ]
+                    if print_question "Shortcuts Creator" "Change application name [ $SHRT_NAME ] ?"
                         then
-                            ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lutris Wine application")"
+                            ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lutris Wine application" "$SHRT_NAME")"
                     fi
             fi
             try_mkdir "$LU_DIR/banners"
@@ -1312,8 +1328,7 @@ add_to_lutris() {
             if [ -z "$ADD_EXE_ARG" ]
                 then
                     sleep 0.3
-                    print_question "Shortcuts Creator" "Add launch arguments for EXE?"
-                    if [ $? -eq "0" ]
+                    if print_question "Shortcuts Creator" "Add launch arguments for EXE?"
                         then
                             sleep 0.3
                             ADD_EXE_ARG="$(print_input "Enter EXE arguments" "Specify additional launch arguments for Lutris Wine EXE:")"
@@ -1343,8 +1358,7 @@ add_to_lutris() {
                                     LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                                     if [ ! -z "$LUADDPID" ]
                                         then
-                                            print_question "Shortcuts Creator" "Application successfully added to Lutris! \nDo you want to close Lutris?"
-                                            if [ $? -eq "0" ]
+                                            if print_question "Shortcuts Creator" "Application successfully added to Lutris! \nDo you want to close Lutris?"
                                                 then
                                                     kill -9 "$LUADDPID" 2>/dev/null
                                             fi
@@ -1355,8 +1369,7 @@ add_to_lutris() {
                             LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                             if [ ! -z "$LUADDPID" ]
                                 then
-                                    print_question "Shortcuts Creator" "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else. \nDo you want to close Lutris?"
-                                    if [ $? -eq "0" ]
+                                    if print_question "Shortcuts Creator" "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else. \nDo you want to close Lutris?"
                                         then
                                             kill "$LUADDPID" 2>/dev/null
                                     fi
@@ -1373,10 +1386,9 @@ create_shortcut() {
             exe2png "$LU_EXE"
             export DESKF="${SHRT_PATH}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
-            print_question "Shortcuts Creator" "Change application name [ $SHRT_NAME ] ?"
-            if [ $? -eq "0" ]
+            if print_question "Shortcuts Creator" "Change application name [ $SHRT_NAME ] ?"
                 then
-                    ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lutris Wine application")"
+                    ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lutris Wine application" "$SHRT_NAME")"
                     if [ ! -z "$ADD_APP_NAME" ]
                         then
                             export SHRT_NAME="$ADD_APP_NAME"
@@ -1391,23 +1403,20 @@ create_shortcut() {
             echo "Icon="$LUPNG"" >> "$DESKF"
             chmod u+x "$DESKF"
             echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}completed!\n$RESETCOLOR"
-            print_question "Shortcuts Creator" "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file. \nDo you want to add it to application menu?"
-            if [ $? -eq "0" ]
+            if print_question "Shortcuts Creator" "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file. \nDo you want to add it to application menu?"
                 then
                     try_mkdir "$LW_APP_DIR"
                     try_cp "$DESKF" ${LW_APP_DIR}/
                     update-desktop-database -q "$MENU_APP_DIR"
             fi
             sleep 0.3
-            print_question "Shortcuts Creator" "Do you want to change EXE settings?"
-            if [ $? -eq "0" ]
+            if print_question "Shortcuts Creator" "Do you want to change EXE settings?"
                 then
                     lu_config
             fi
             if [ ! -z "$SYS_LU" ]
                 then
-                    print_question "Shortcuts Creator" "Do you want to add it to Lutris?"
-                    if [ $? -eq "0" ]
+                    if print_question "Shortcuts Creator" "Do you want to add it to Lutris?"
                         then
                             add_to_lutris
                     fi
@@ -1546,7 +1555,7 @@ lu_debug() {
                     echo "[ VKD3D version ] : $VKD3D_VERSION" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
-            if [[ "$DXVK_NVAPI" == 1 && ! -z "$(lspci|grep VGA|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
+            if [[ "$DXVK_NVAPI" == 1 && ! -z "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
                 then
                     echo "[ DXVK-NVAPI ] : ON" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
@@ -1645,31 +1654,20 @@ dis_cmd_msg() {
 
 check_luwine_conf() {
     try_mkdir "$LW_WINE_DIR"
-    if [ ! -f "$LW_CFG" ]
-        then
-            try_mkdir "$LW_DIR"
-    fi
-    if [ -z "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ]
-        then
-            echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
-    fi
+    [ -z "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ] \
+    && echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
     import_luwine_conf
 }
 
 import_luwine_conf() {
     source "$LW_CFG"
-    if [ "$WINE_VERSION" == "Default" ]
-        then
-            export "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
-    fi
+    [ "$WINE_VERSION" == "Default" ] \
+    && export "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     export WINE_IN_USE="$WINE_VERSION"
     export WINEDIR="$LW_WINE_DIR/$WINE_IN_USE"
     export WINE="$WINEDIR/bin/wine"
-    if [ "$WINE_VERSION" == "System" ]
-        then
-            unset WINEDIR
-            export WINE="$SYS_WINE"
-    fi
+    [ "$WINE_VERSION" == "System" ] \
+    && unset WINEDIR && export WINE="$SYS_WINE"
     updcfgchksum
 }
 
@@ -1779,7 +1777,12 @@ check_def_wine() {
         then
             if try_shutdown_wine
                 then
-                    echo "$NEW_WINE_VERSION" > "$WINEPREFIX/.defwine"
+                    if [ "$NEW_WINE_VERSION" == "Default" ]
+                        then
+                            echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
+                        else
+                            echo "$NEW_WINE_VERSION" > "$WINEPREFIX/.defwine"
+                    fi
             fi
     elif [ ! -f "$WINEPREFIX/.defwine" ]
         then
@@ -1903,11 +1906,7 @@ lu_run() {
             if wine_is_death && shell_is_death
                 then
                     check_tray; check_wine_pids; check_luwine_sh_pid
-                    if [[ -z "$WINE_PIDS" && -z "$LW_SH_PID" && ! -z "$TRAY_PID" ]]
-                        then
-                            try_rm /tmp/envbackup* /tmp/syssett* /tmp/winesett* &>/dev/null
-                            lu_killtray
-                    fi
+                    [[ -z "$WINE_PIDS" && -z "$LW_SH_PID" && ! -z "$TRAY_PID" ]] && lu_killtray
             fi
     fi
 }
@@ -1979,7 +1978,7 @@ check_exe_wcfg() {
             elif [[ -f "$EXE_CFG" && ! -f "$LW_DEF_CFG" ]]
                 then
                     print_info notify "Found EXE config: '$EXE_CFG'"
-                    print_error yad "EXE config not imported! You must first configure Lutris Wine!"
+                    print_error yad "EXE config not imported! First you need to set up Lutris Wine!"
             fi
     fi
 }
@@ -2032,8 +2031,7 @@ check_first_run() {
         then
             if [ -z "$(echo "$FULLCMDLINE"|grep -w "$LWNAME -config")" ]
                 then
-                    print_question "Lutris Wine First Run" "It looks like you are running Lutris Wine for the first time. \nWould you like to adjust the settings before the first initialization?"
-                    if [ "$?" -eq 0 ]
+                    if print_question "Lutris Wine First Run" "It looks like you are running Lutris Wine for the first time. \nWould you like to adjust the settings before the first initialization?"
                         then
                             export FIRST_RUN=1 ; lu_config
                             import_luwine_conf
@@ -2048,6 +2046,7 @@ check_first_run() {
             [ "$1" != "-init" ] && full_init
             unset FIRST_RUN
     fi
+    [ ! -L "$HOME/LutrisWine" ] && try_ln "$LW_DIR" "$HOME/"
 }
 
 check_virt_desktop() {
@@ -2066,7 +2065,7 @@ lite_init() {
         && "$1" != "-killshell" && "$1" != "-exit" && "$1" != "-tray" ]]
         then
             if [[ ! -z "$(pgrep -fa 'zenity'|grep -w 'Startup initialization'|awk '{print$1}')" \
-                || ! -z "$(pgrep -fa 'zenity'|grep -w 'Updating parameters'|awk '{print$1}')" ]]
+                || ! -z "$(pgrep -fa 'zenity'|grep -w 'Updating parameters'|awk '{print$1}')" && "$1" != "initsett" ]]
                 then
                     print_info yad "Initialization is in progress! Please wait..."
                     while pgrep -fa 'zenity'|grep -w 'Startup initialization' &>/dev/null ; do sleep 1 ; done
@@ -2208,9 +2207,9 @@ lu_config() {
                         $(if [ ! -z "$(find "$VLK_ICD_DIR"/intel* -type f 2>/dev/null)" ]; then echo '\n Intel'; fi) \
                         $(if [ ! -z "$(find "$VLK_ICD_DIR"/radeon* -type f 2>/dev/null)" ]; then echo '\n AMD'; fi) \
                         $(if [ ! -z "$(find "$VLK_ICD_DIR"/lvp* -type f 2>/dev/null)" ]; then echo '\n Lvp'; fi)"
-    DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null|grep -v '.*.tar.*') \n v1.9.4L-2 \n v1.9.4 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
+    DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null|grep -v '.*.tar.*') \n v1.9.4L-2 \n v1.9.4 \n v1.10 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
     DXVKGITLST="https://github.com/lutris/dxvk/releases \n https://github.com/doitsujin/dxvk/releases"
-    VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null|grep -v '.*.tar.*') \n v2.5L-c0a3fa8 \n v2.5 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
+    VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null|grep -v '.*.tar.*') \n v2.5L-c0a3fa8 \n v2.5 \n v2.6 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
     VKD3DCFGLST="force_bindless_texel_buffer,multi_queue \n Disabled"
     VKD3DGITLST="https://github.com/lutris/vkd3d/releases \n https://github.com/HansKristian-Work/vkd3d-proton/releases"
     D3DXTRLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/d3d_extras" 2>/dev/null|grep -v '.*.tar.*') \n v2 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
@@ -2255,15 +2254,15 @@ lu_config() {
             then
                 echo "$WCFGOUT" > "$LW_CFG"
                 echo "export VKBASALT_EFFECTS='$FX_RESULT'" >> "$LW_CFG"
-                if [ "$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')" != "$(cat "$WINEPREFIX/.defwine")" ]
+                WINEWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')"
+                CURDEFWINE="$(cat "$WINEPREFIX/.defwine")"
+                if [[ "$WINEWCFGOUT" != "$CURDEFWINE" && "$WINEWCFGOUT" != "Default" ]] \
+                    || [[ "$WINEWCFGOUT" == "Default" && "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \'|cut -d'=' -f2)" != "$CURDEFWINE" ]]
                     then
-                        export NEW_WINE_VERSION="$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')"
-                        export OLD_WINE_VERSION="$(cat "$WINEPREFIX/.defwine")"
+                        export NEW_WINE_VERSION="$WINEWCFGOUT"
+                        export OLD_WINE_VERSION="$CURDEFWINE"
                         export OLD_WINE="$WINE"
-                        if [ "$NEW_WINE_VERSION" != "$WINE_VERSION" ]
-                            then
-                                print_info notify "Wine version changed to $NEW_WINE_VERSION"
-                        fi
+                        print_info "Wine version changed to $NEW_WINE_VERSION"
                 fi
                 if [ ! -z "$LU_EXE" ]
                     then
@@ -2276,8 +2275,8 @@ lu_config() {
                 fi
                 if [[ "$1" == "init" && -z "$FIRST_RUN" ]]
                     then
-                        import_luwine_conf
-                        full_init noinitbar
+                        NO_NOTIFY=1 lite_init initsett
+                        NO_NOTIFY=1 full_init noinitbar
                 fi
         fi
     }
@@ -2417,7 +2416,7 @@ lu_config() {
                     --field="Registry editor:FBTN" "$LWSHELL -c 'lu_regedit'" \
                     --field="Wine uninstaller:FBTN" "$LWSHELL -c 'lu_uninstaller'" \
                     --field="Create shortcut:FBTN" "$LWSHELL -c 'lu_shortcut'" \
-                    --field="Add app to Lutris:FBTN" "$LWSHELL -c 'export ADDTOLU=1 ; lu_shortcut'" \
+                    --field="Add app to Lutris:FBTN" "$LWSHELL -c 'ADDTOLU=1 lu_shortcut'" \
                     --field="Tray:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -tray noclose'" \
                     --field="Clear prefix:FBTN" "$LWSHELL -c 'lu_clearpfx'" \
                     --field="Remove menu apps:FBTN" "$LWSHELL -c 'lu_rmapp'" \
@@ -2514,7 +2513,7 @@ lu_config() {
                              cleanrun "$FULLCMDLINE" ;;
                     update) lu_update
                             cleanrun "$FULLCMDLINE" ;;
-                    appcfg) lu_appcfg ;;
+                    appcfg) if ! lu_appcfg ; then cleanrun "$FULLCMDLINE" ; fi ;;
             esac
     fi
 }
@@ -2629,10 +2628,9 @@ winetricks() {
             exit 1
     fi
     check_winepfx
-    if [ -z "$READY_INSTALL_DLL" ]
-        then
-            loadbar_cover 2>/dev/null
-    fi
+    [ -z "$READY_INSTALL_DLL" ] && loadbar_cover 2>/dev/null
+    check_wine_pids
+    [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
         then
             export NEW_WINE="$WINE"
@@ -2682,7 +2680,7 @@ lu_exit() {
             kill $(pgrep -fa 'aria2c'|grep 'LutrisWine'|awk '{print$1}') 2>/dev/null
             print_info notify "Lutris Wine successfully killed!" &
             sleep 2
-            try_rm /tmp/FORCE_EXIT
+            try_rm /tmp/FORCE_EXIT /tmp/envbackup* /tmp/syssett* /tmp/winesett* /tmp/ressett* /tmp/settbtn* &>/dev/null
             pkill "$LWNAME" 2>/dev/null
         else
             print_error yad "Lutris Wine Killer" "Lutris Wine not runing!" &
@@ -2781,8 +2779,7 @@ lu_clearpfx() {
             print_error yad "Lutris Wine Prefix Cleaner" "Lutris Wine Prefix Cleaner already runing!"
             exit 1
     fi
-    print_question "Lutris Wine Prefix Cleaner" "Do you really want to clear prefix ["$WINEPREFIX"] ?"
-    if [ $? -eq "0" ]
+    if print_question "Lutris Wine Prefix Cleaner" "Do you really want to clear prefix ["$WINEPREFIX"] ?"
         then
             touch /tmp/FORCE_EXIT
             lu_killwine "$@"
@@ -2824,8 +2821,7 @@ lu_clearpfx() {
             try_rm "$LW_DIR/.lwcfgchksum"
             try_rm /tmp/FORCE_EXIT
             print_info notify "Prefix "$WINEPREFIX" cleared successfully!"
-            print_question "Lutris Wine Prefix Cleaner" "Do you want to initialize prefix right now?"
-            if [ $? -eq "0" ]
+            if print_question "Lutris Wine Prefix Cleaner" "Do you want to initialize prefix right now?"
                 then
                     lite_init "$@"
                     full_init
@@ -2854,8 +2850,7 @@ lu_rmapp() {
             if [ "$?" == "2" ]
                 then
                     sleep 0.3
-                    print_question "Lutris Wine Shortcuts Remover" "Are you sure you want to remove all Lutris Wine applications from menu?"
-                    if [ $? -eq "0" ]
+                    if print_question "Lutris Wine Shortcuts Remover" "Are you sure you want to remove all Lutris Wine applications from menu?"
                         then
                             echo "$LWAPPSHRT"|xargs -I {} rm -rfv {}
                             try_rm "$LW_APP_DIR"
@@ -3392,21 +3387,25 @@ check_themes() {
         then
             if [ "$(cat "$WINEPREFIX/.lwtheme" 2>/dev/null)" != "$WINE_THEME" ]
                 then
+                    check_wine_pids
+                    [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
                     check_ld_library
                     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                         then
                             "$OLD_WINE" regedit "$THEMES_DIR/$WINE_THEME.reg" &>/dev/null
+                            unset LD_LIBRARY_PATH
                     elif [ -f "$WINE" ]
                         then
                             "$WINE" regedit "$THEMES_DIR/$WINE_THEME.reg" &>/dev/null
+                            unset LD_LIBRARY_PATH
                     else
+                        unset LD_LIBRARY_PATH
                         print_error yad "Lutris Wine theme not changed to $WINE_THEME"
                         return 1
                     fi
                     echo "$WINE_THEME" > "$WINEPREFIX/.lwtheme"
                     print_info notify "Lutris Wine theme successfully changed to $WINE_THEME"
                     try_shutdown_wine
-                    unset LD_LIBRARY_PATH
             fi
         else
             print_error yad "Lutris Wine themes not found!" &
@@ -3678,7 +3677,7 @@ check_dxvk-nvapi() {
         then
             export "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     fi
-    if [[ "$DXVK_NVAPI" == 1 && "$DXVK" != 0 && ! -z "$(lspci|grep VGA|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
+    if [[ "$DXVK_NVAPI" == 1 && "$DXVK" != 0 && ! -z "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
         then
             if [ ! -z "$NVAPI_GIT_RELEASE_URL" ]
                 then
@@ -3885,6 +3884,8 @@ check_winepfx() {
     done
     if [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
         then
+            check_wine_pids
+            [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
             check_ld_library
             if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
@@ -4273,24 +4274,25 @@ check_win_version() {
     if [ ! -z "$1" ] ; then export WIN_VER="$1" ; fi
     if [ -z "$(cat "$WINEPREFIX/system.reg" 2>/dev/null|grep -i "Microsoft Windows $WIN_VER" 2>/dev/null)" ]
         then
-            if [[ ! -z "$WIN_VER" && "$WIN_VER" == "xp" ]]
-                then
-                    export WIN_VER="xp64"
-            fi
+            [[ ! -z "$WIN_VER" && "$WIN_VER" == "xp" ]] && export WIN_VER="xp64"
+            check_wine_pids
+            [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
             check_ld_library
             if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
                     "$OLD_WINE" winecfg -v win$WIN_VER &>/dev/null
+                    unset LD_LIBRARY_PATH
             elif [ -f "$WINE" ]
                 then
                     "$WINE" winecfg -v win$WIN_VER &>/dev/null
+                    unset LD_LIBRARY_PATH
             else
+                unset LD_LIBRARY_PATH
                 print_error yad "Windows version not changed to Windows $WIN_VER"
                 return 1
             fi
             print_info notify "Windows version changed to Windows $WIN_VER"
             try_shutdown_wine
-            unset LD_LIBRARY_PATH
         else
             return 1
     fi
@@ -4795,8 +4797,7 @@ lu_appcfg() {
             if [ "$?" == "2" ]
                 then
                     sleep 0.3
-                    print_question "Applications Settings" "Are you sure you want to reset all Lutris Wine applications config files?"
-                    if [ $? -eq "0" ]
+                    if print_question "Applications Settings" "Are you sure you want to reset all Lutris Wine applications config files?"
                         then
                             (IFS=$'\n' ; for RMLWAPPCFG in $(ls -1 -t "$LW_APPCFG_DIR"/*.wcfg 2>/dev/null)
                                 do
@@ -4810,6 +4811,8 @@ lu_appcfg() {
                     LW_APP_SETT="$(echo "$LW_APP_SETT"|sed '/^TRUE$/d'|sed '/^$/d')"
                     LW_APP_SETT_EXE="$(readlink -f "$LW_APPCFG_DIR/$LW_APP_SETT"|sed 's/.wcfg$/.exe/')"
                     cleanrun "'$BASH_SOURCE' -config '$LW_APP_SETT_EXE'"
+            else
+                return 1
             fi
         else
             print_error yad "Lutris Wine Applications Settings" "Lutris Wine applications config files not found!"
@@ -4818,7 +4821,7 @@ lu_appcfg() {
 
 if [ $(id -u) -eq 0 ]
     then
-        print_error yad "Don't run Lutris Wine as root!" &
+        print_error yad "Don't run Lutris Wine as root!"
         exit 1
     else
         lite_init "$@"
@@ -4832,7 +4835,7 @@ if [ $(id -u) -eq 0 ]
             -winecfg) full_init "$@" ; lu_winecfg "$@" ;;
             -taskmgr) full_init "$@" ; lu_taskmgr "$@" ;;
             -uninstaller) full_init "$@" ; lu_uninstaller "$@" ;;
-            -debug) full_init "$@" ; export DEBUG=1 ; lu_start "$@" ;;
+            -debug) full_init "$@" ; DEBUG=1 lu_start "$@" ;;
             -winetricks) winetricks ;;
             -winemgr) lu_winemgr ;;
             -openpfx) lu_openpfx ;;
@@ -4844,7 +4847,7 @@ if [ $(id -u) -eq 0 ]
             -clearpfx) lu_clearpfx "$@" ;;
             -rmapp) lu_rmapp ;;
             -shortcut) lu_shortcut "$@" ;;
-            -addtolu) export ADDTOLU=1 ; lu_shortcut "$@" ;;
+            -addtolu) ADDTOLU=1 lu_shortcut "$@" ;;
             -help) lu_help ;;
             -version) lu_version "$@" ;;
             -tray) lu_tray ;;
