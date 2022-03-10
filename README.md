@@ -1,7 +1,7 @@
 # Lutris Wine
 ## Supports:
 ```
-All Arch-based distributions with X11 display server
+All Arch-based distributions
 ```
 
 ## Features:

@@ -30,6 +30,7 @@ export DEF_WINEPFX="$LW_DIR/winepfx"
 export DEF_CACHE="$LW_DIR/cache"
 export LW_APPCFG_DIR="$LW_DIR/appcfg"
 export VLK_ICD_DIR="/usr/share/vulkan/icd.d"
+export GDK_BACKEND="x11"
 
 export LWNAME="$(basename "$BASH_SOURCE")"
 export SYS_WINE="$(which -a wine 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)"
