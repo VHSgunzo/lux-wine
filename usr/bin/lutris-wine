@@ -3119,10 +3119,11 @@ lu_winemgr() {
             PGE_GIT="https://github.com/GloriousEggroll/proton-ge-custom/releases"
             WGE_GIT="https://github.com/GloriousEggroll/wine-ge-custom/releases"
             PK4_GIT="https://github.com/Kron4ek/Wine-Builds/releases"
-            curl -s "$PLU_GIT"|eval "$GREPWARCHURL"|awk '{print "'$PLU_GIT'" $0}' 1> "/tmp/PLUGITLIST$WGUIDW" &
-            curl -s "$PGE_GIT"|eval "$GREPWARCHURL"|awk '{print "'$PGE_GIT'" $0}' 1> "/tmp/PGEGITLIST$WGUIDW" &
-            curl -s "$WGE_GIT"|eval "$GREPWARCHURL"|awk '{print "'$WGE_GIT'" $0}' 1> "/tmp/WGEGITLIST$WGUIDW" &
-            curl -s "$PK4_GIT"|eval "$GREPWARCHURL"|awk '{print "'$PK4_GIT'" $0}' 1> "/tmp/PK4GITLIST$WGUIDW" &
+            print_info notify "Сhecking new WINE versions on GitHub..."
+            for git_page in {1..3}; do curl -s "$PLU_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PLU_GIT'" $0}' 1>> "/tmp/PLUGITLIST$WGUIDW" ; done &
+            for git_page in {1..3}; do curl -s "$PGE_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PGE_GIT'" $0}' 1>> "/tmp/PGEGITLIST$WGUIDW" ; done &
+            for git_page in {1..3}; do curl -s "$WGE_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WGE_GIT'" $0}' 1>> "/tmp/WGEGITLIST$WGUIDW" ; done &
+            for git_page in {1..3}; do curl -s "$PK4_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PK4_GIT'" $0}' 1>> "/tmp/PK4GITLIST$WGUIDW" ; done &
             while true
                 do
                     sleep 0.2
@@ -3139,10 +3140,11 @@ lu_winemgr() {
                         done
                     if [ "$GITLISTOK" == 4 ]; then break; fi
             done|settingbar_nostdout
-            PLU_GIT_LIST="$(cat /tmp/PLUGITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/PLUGITLIST$WGUIDW)"
-            PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/PGEGITLIST$WGUIDW)"
-            WGE_GIT_LIST="$(cat /tmp/WGEGITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/WGEGITLIST$WGUIDW)"
-            PK4_GIT_LIST="$(cat /tmp/PK4GITLIST$WGUIDW 2>/dev/null ; try_rm /tmp/PK4GITLIST$WGUIDW)"
+            PLU_GIT_LIST="$(cat /tmp/PLUGITLIST$WGUIDW 2>/dev/null)"
+            PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null)"
+            WGE_GIT_LIST="$(cat /tmp/WGEGITLIST$WGUIDW 2>/dev/null)"
+            PK4_GIT_LIST="$(cat /tmp/PK4GITLIST$WGUIDW 2>/dev/null)"
+            try_rm /tmp/PLUGITLIST$WGUIDW /tmp/PGEGITLIST$WGUIDW /tmp/WGEGITLIST$WGUIDW /tmp/PK4GITLIST$WGUIDW &>/dev/null
     fi
     if [[ ! -z "$PLU_GIT_LIST" || ! -z "$PGE_GIT_LIST" || ! -z "$WGE_GIT_LIST" || ! -z  "$PK4_GIT_LIST" ]]
         then
@@ -3154,10 +3156,10 @@ lu_winemgr() {
     fi
     if [[ ! -z "$ILW_LIST" && ! -z "$GITOK" ]]
         then
-            PLU_LIST="$(echo -e "$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
-            PGE_LIST="$(echo -e "$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
-            WGE_LIST="$(echo -e "$(for WGEGIT in $WGE_GIT_LIST ; do echo $WGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
-            PK4_LIST="$(echo -e "$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')" "\n$ILW_LIST"|sort|uniq -u|grep -v "$ILW_LIST")"
+            PLU_LIST="$(echo -e "$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)\n$ILW_LIST"|awk '!seen[$0]++'|grep -v "$ILW_LIST")"
+            PGE_LIST="$(echo -e "$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done)\n$ILW_LIST"|awk '!seen[$0]++'|grep -v "$ILW_LIST")"
+            WGE_LIST="$(echo -e "$(for WGEGIT in $WGE_GIT_LIST ; do echo $WGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)\n$ILW_LIST"|awk '!seen[$0]++'|grep -v "$ILW_LIST")"
+            PK4_LIST="$(echo -e "$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')\n$ILW_LIST"|awk '!seen[$0]++'|grep -v "$ILW_LIST")"
             echo -e "\n$(echo "$PLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PLUSET$WGUIDW" &
             echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
             echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WGESET$WGUIDW" &
@@ -3167,11 +3169,12 @@ lu_winemgr() {
                 --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" --tab="DELETE" \
                 --button="EXIT:1" --button="OK:0"
-            PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
-            PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
-            WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null ; try_rm /tmp/WGESET$WGUIDW)"
-            PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; try_rm /tmp/PK4SET$WGUIDW)"
-            WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; try_rm /tmp/WDEL_SET$WGUIDW)"
+            PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null)"
+            PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null)"
+            WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null)"
+            PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null)"
+            WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null)"
+            try_rm /tmp/PLUSET$WGUIDW /tmp/PGESET$WGUIDW /tmp/WGESET$WGUIDW /tmp/PK4SET$WGUIDW /tmp/WDEL_SET$WGUIDW &>/dev/null
     elif [[ ! -z "$ILW_LIST" && -z "$GITOK" ]]
         then
             if [[ "$(echo "$ILW_LIST"|sed 's/^ *//g'|wc -l)" == 1 && "$ILW_LIST" == "$WINE_IN_USE" ]]
@@ -3184,11 +3187,12 @@ lu_winemgr() {
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="DELETE"  --button="EXIT:1" --button="OK:0"
-            export WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null ; try_rm /tmp/WDEL_SET$WGUIDW)"
+            WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null)"
+            try_rm /tmp/WDEL_SET$WGUIDW &>/dev/null
     elif [[ -z "$ILW_LIST" && ! -z "$GITOK" ]]
         then
             PLU_LIST="$(for PLUGIT in $PLU_GIT_LIST ; do echo $PLUGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)"
-            PGE_LIST="$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done|sed '/Proton-6.5-GE-2/,$d'|sed '/github-action/d')"
+            PGE_LIST="$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.gz//' ; done)"
             WGE_LIST="$(for WGEGIT in $WGE_GIT_LIST ; do echo $WGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done)"
             PK4_LIST="$(for PK4GIT in $PK4_GIT_LIST ; do echo $PK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//' ; done|sed '/-x86/d')"
             echo -e "\n$(echo "$PLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PLUSET$WGUIDW" &
@@ -3199,10 +3203,11 @@ lu_winemgr() {
                 --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" \
                 --button="EXIT:1" --button="OK:0"
-            PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null ; try_rm /tmp/PLUSET$WGUIDW)"
-            PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null ; try_rm /tmp/PGESET$WGUIDW)"
-            WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null ; try_rm /tmp/WGESET$WGUIDW)"
-            PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null ; try_rm /tmp/PK4SET$WGUIDW)"
+            PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null)"
+            PGE_SET="$(sed 's/TRUE //g' /tmp/PGESET$WGUIDW 2>/dev/null)"
+            WGE_SET="$(sed 's/TRUE //g' /tmp/WGESET$WGUIDW 2>/dev/null)"
+            PK4_SET="$(sed 's/TRUE //g' /tmp/PK4SET$WGUIDW 2>/dev/null)"
+            try_rm /tmp/PLUSET$WGUIDW /tmp/PGESET$WGUIDW /tmp/WGESET$WGUIDW /tmp/PK4SET$WGUIDW &>/dev/null
     elif [[ -z "$ILW_LIST" && -z "$GITOK" ]]
         then
             print_error yad "Lutris Wine Manager" "Can't run Lutris Wine Manager!"
@@ -3347,16 +3352,15 @@ lu_winemgr() {
     if [ ! -z "$(echo "$WDEL_SET"|head -1)" ]
         then
             unset WINEINUSEDEL
-            while read winedel
+            (while read winedel
                 do
-                    print_info notify "Remove $winedel..."
                     try_rm "$LW_WINE_DIR/$winedel"
                     print_info notify "Removing $winedel completed!"
                     if [ "$WINE_IN_USE" == "$winedel" ]
                         then
                             export WINEINUSEDEL=1
                     fi
-            done <<< $WDEL_SET
+            done <<< $WDEL_SET)|settingbar
             if [ ! -z "$WINEINUSEDEL" ]
                 then
                     if [ ! -z "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|head -1)" ]
