@@ -25,7 +25,7 @@ All Arch-based distributions
 - [x] Logging mode
 - [x] SHELL mode or open file in SHELL (with access to all lutris-wine functions)
 - [x] CMD mode or open file in CMD
-- [x] Wine Manager (Lutris, Proton GE , Wine GE, Kron4ek)
+- [x] Wine Manager (Lutris, Proton GE, Wine GE, Kron4ek)
 - [x] System Wine supports (selected automatically if no other versions of Wine are installed)
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
 - [x] Switching DXR/RTX Version (if the video adapter support and depends on VKD3D)

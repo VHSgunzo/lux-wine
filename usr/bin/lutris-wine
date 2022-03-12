@@ -374,7 +374,7 @@ check_git_release() {
                             unset GIT_RELEASE_URL
                             print_error yad "$1 $2 GIT release not found in HansKristian-Work repository! Try found $1 in Lutris repository..."
                             check_git_release $1 $2
-                    elif [[ ! ! -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" ]]
+                    elif [[ ! -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" && "$1" != "reshade" && "$1" != "eac" ]]
                         then
                             unset GIT_RELEASE_URL
                             print_error yad "$1 $2 GIT release not found in custom repository! Try found $1 in Lutris repository..."
@@ -385,7 +385,7 @@ check_git_release() {
                     fi
                 else
                     GIT_RELEASE="$GIT_RELEASE_CHK"
-                    if [[ -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" ]]
+                    if [[ -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" && "$1" != "reshade" && "$1" != "eac" ]]
                         then
                             dll_version="$(basename "$GIT_RELEASE_CHK"|sed "s/$1//"|sed -r 's/^[^0-9]+//'|sed 's/.tar.gz//'|sed 's/.tar.xz//'|sed 's/.tar.zst//')"
                             unset GIT_RELEASE_CHK
