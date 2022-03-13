@@ -417,7 +417,10 @@ check_git_release() {
 }
 
 check_network_status() {
-    curl -Is "http://www.github.com" &>/dev/null && export NETSTATUS=1 || export NETSTATUS=0
+    if ping -4 -q -c1 -W0.5 8.8.8.8 &>/dev/null
+        then curl -Is "http://www.github.com" &>/dev/null && export NETSTATUS=1 || export NETSTATUS=0
+        else export NETSTATUS=0
+    fi
 }
 
 dll_manager() {
