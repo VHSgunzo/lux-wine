@@ -482,7 +482,7 @@ dll_manager() {
             fi
     elif [[ -z "$all_dlls" && "$NETSTATUS" == 0 ]]
         then
-            print_error yad "Lutris Wine DLL Manager" "No internet connection, it is not possible to download $1 $2"
+            print_error yad "No internet connection, it is not possible to download $1 $2"
             return 1
     elif [[ ! -z "$all_dlls" && ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && -z "$(find "$LW_RUNTIME_DIR/$1" -type d -name "$2" -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || [ ! -z "$FORCE_DLL_UPDATE" ]
         then
@@ -3640,12 +3640,12 @@ check_dxvk() {
                 else
                     export DXVK=0
                     wdllover_upd "${ALLDXVKDLLS}=b"
-                    print_error yad "Lutris Wine DLL Manager" "Lutris Wine DXVK is disabled!"
+                    print_error yad "DXVK is disabled!"
             fi
         else
             export DXVK=0
             wdllover_upd "${ALLDXVKDLLS}=b"
-            print_info "Lutris Wine DXVK is disabled!"
+            print_info "DXVK is disabled!"
     fi
 }
 
@@ -3669,12 +3669,12 @@ check_vkd3d() {
                 else
                     export VKD3D=0
                     wdllover_upd "${ALLVKD3DDLLS}=b"
-                    print_error yad "Lutris Wine DLL Manager" "Lutris Wine VKD3D is disabled!"
+                    print_error yad "VKD3D is disabled!"
             fi
         else
             export VKD3D=0
             wdllover_upd "${ALLVKD3DDLLS}=b"
-            print_info "Lutris Wine VKD3D is disabled!"
+            print_info "VKD3D is disabled!"
     fi
 }
 
@@ -3703,7 +3703,7 @@ check_dxvk-nvapi() {
                                             try_ln "$CPNVNGXFLS" "$PFX_DLL64_PTH/"
                                     done
                                 else
-                                    print_error yad "Lutris Wine DLL Manager" "nvngx.dll not found in your system!"
+                                    print_error yad "nvngx.dll not found in your system!"
                             fi
                     fi
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n;nvcuda=b"
@@ -3711,12 +3711,12 @@ check_dxvk-nvapi() {
                 else
                     export DXVK_NVAPI=0
                     wdllover_upd "${ALLNVAPIDLLS}=b"
-                    print_error yad "Lutris Wine DLL Manager" "Lutris Wine DXVK NVAPI is disabled!"
+                    print_error yad "DXVK NVAPI is disabled!"
             fi
         else
             export DXVK_NVAPI=0
             wdllover_upd "${ALLNVAPIDLLS}=b"
-            print_info "Lutris Wine DXVK NVAPI is disabled!"
+            print_info "DXVK NVAPI is disabled!"
     fi
 }
 
@@ -3739,12 +3739,12 @@ check_d3d_extras() {
                 else
                     export D3D_EXTRAS=0
                     wdllover_upd "${ALLD3DEXTRADLLS}=b"
-                    print_error yad "Lutris Wine DLL Manager" "Lutris Wine D3D EXTRAS is disabled!"
+                    print_error yad "D3D EXTRAS is disabled!"
             fi
         else
             export D3D_EXTRAS=0
             wdllover_upd "${ALLD3DEXTRADLLS}=b"
-            print_info "Lutris Wine D3D EXTRAS is disabled!"
+            print_info "D3D EXTRAS is disabled!"
     fi
 }
 
@@ -3767,7 +3767,7 @@ check_dgvoodoo2() {
                 else
                     export DGVOODOO2=0
                     wdllover_upd "${ALLDGVOODOO2DLLS}=b"
-                    print_error yad "Lutris Wine DLL Manager" "Lutris Wine DGVOODOO2 is disabled!"
+                    print_error yad "DGVOODOO2 is disabled!"
             fi
         else
             export DGVOODOO2=0
