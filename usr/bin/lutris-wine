@@ -2729,30 +2729,39 @@ winetricks() {
             if [ ! -z "$(which winetricks 2>/dev/null)" ]
                 then
                     print_info notify "Using System winetricks!"
-                    if [ -z "$WTRX_ARG" ]
+                    if [[ ! -z "$LU_EXE" && ! -z "$(echo "$FULLCMDLINE"|grep -o '\-winetricks')" ]]
+                        then
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" || return 1
+                    elif [ -z "$WTRX_ARG" ]
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $@ || return 1
-                        else
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $WTRX_ARG || return 1
+                    else
+                        DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $WTRX_ARG || return 1
                     fi
                 else
                     print_error yad "Winetricks" "Winetricks not found in your system. Using Lutris Wine winetricks!"
                     check_winetricks
-                    if [ -z "$WTRX_ARG" ]
+                    if [[ ! -z "$LU_EXE" && ! -z "$(echo "$FULLCMDLINE"|grep -o '\-winetricks')" ]]
+                        then
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" || return 1
+                    elif [ -z "$WTRX_ARG" ]
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
-                        else
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
+                    else
+                        DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
                     fi
             fi
         else
             print_info notify "Using Lutris Wine winetricks!"
             check_winetricks
-            if [ -z "$WTRX_ARG" ]
+            if [[ ! -z "$LU_EXE" && ! -z "$(echo "$FULLCMDLINE"|grep -o '\-winetricks')" ]]
+                then
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" || return 1
+            elif [ -z "$WTRX_ARG" ]
                 then
                     DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
-                else
-                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
+            else
+                DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
             fi
     fi
     [[ ! -z "$NEW_WINE" && -f "$NEW_WINE" ]] && export WINE="$NEW_WINE"
@@ -3064,7 +3073,7 @@ lu_help() {
             ${RED}-winemgr $BLUE{delonly}$GREEN       Wine manager
             ${RED}-taskmgr $GREEN                Task manager
             ${RED}-uninstaller $GREEN            Wine uninstaller
-            ${RED}-winetricks $GREEN {arguments} Winetricks
+            ${RED}-winetricks $GREEN{arguments}  Winetricks
             ${RED}-openpfx $GREEN                Open drive C:
             ${RED}-killwine $GREEN               Kill Wine processes
             ${RED}-killtray $GREEN               Kill tray
