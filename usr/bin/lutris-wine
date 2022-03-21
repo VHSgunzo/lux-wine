@@ -3073,7 +3073,7 @@ lu_help() {
             ${RED}-winemgr $BLUE{delonly}$GREEN       Wine manager
             ${RED}-taskmgr $GREEN                Task manager
             ${RED}-uninstaller $GREEN            Wine uninstaller
-            ${RED}-winetricks $GREEN{arguments}  Winetricks
+            ${RED}-winetricks $BLUE{arguments}$GREEN  Winetricks
             ${RED}-openpfx $GREEN                Open drive C:
             ${RED}-killwine $GREEN               Kill Wine processes
             ${RED}-killtray $GREEN               Kill tray
