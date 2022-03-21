@@ -2596,7 +2596,7 @@ lu_config() {
                               cleanrun "$FULLCMDLINE" ;;
                     update) lu_update
                             cleanrun "$FULLCMDLINE" ;;
-                    winetricks) winetricks
+                    winetricks) cleanrun "LW_CFG='$LW_CFG' '$BASH_SOURCE' -winetricks"
                                 cleanrun "$FULLCMDLINE" ;;
                     appcfg) if ! lu_appcfg ; then cleanrun "$FULLCMDLINE" ; fi ;;
             esac
@@ -2712,11 +2712,11 @@ winetricks() {
             print_error yad "Winetricks" "Winetricks already runing!"
             exit 1
     fi
-    unset WTRX_ARG
+    unset WTRX_ARG WTRX_RUN
+    WTRX_RUN="$(echo "$FULLCMDLINE"|grep -o '\-winetricks')"
     [[ -z "$NEED_INSTALL_DLLS" && ! -z "$2" && ! -f "$2" \
     && ! -d "$2" && ! -L "$2" ]] && export WTRX_ARG="${*:2}"
     check_winepfx
-    [[ -z "$NEED_INSTALL_DLLS" && -z "$WTRX_ARG" ]] && loadbar_cover 2>/dev/null
     check_wine_pids
     [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
@@ -2729,10 +2729,11 @@ winetricks() {
             if [ ! -z "$(which winetricks 2>/dev/null)" ]
                 then
                     print_info notify "Using System winetricks!"
-                    if [[ ! -z "$LU_EXE" && ! -z "$(echo "$FULLCMDLINE"|grep -o '\-winetricks')" ]]
+                    if [[ -z "$WTRX_ARG" && ! -z "$WTRX_RUN" ]]
                         then
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" || return 1
-                    elif [ -z "$WTRX_ARG" ]
+                            $TERM_APP $LWSHELL -c "print_info 'Using System winetricks!!' \
+                            && DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$(which winetricks)'"
+                    elif [[ -z "$WTRX_ARG" && -z "$WTRX_RUN" ]]
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $@ || return 1
                     else
@@ -2741,10 +2742,11 @@ winetricks() {
                 else
                     print_error yad "Winetricks" "Winetricks not found in your system. Using Lutris Wine winetricks!"
                     check_winetricks
-                    if [[ ! -z "$LU_EXE" && ! -z "$(echo "$FULLCMDLINE"|grep -o '\-winetricks')" ]]
+                    if [[ -z "$WTRX_ARG" && ! -z "$WTRX_RUN" ]]
                         then
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" || return 1
-                    elif [ -z "$WTRX_ARG" ]
+                            $TERM_APP $LWSHELL -c "print_info 'Using Lutris Wine winetricks!' \
+                            && DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
+                    elif [[ -z "$WTRX_ARG" && -z "$WTRX_RUN" ]]
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
                     else
@@ -2754,10 +2756,11 @@ winetricks() {
         else
             print_info notify "Using Lutris Wine winetricks!"
             check_winetricks
-            if [[ ! -z "$LU_EXE" && ! -z "$(echo "$FULLCMDLINE"|grep -o '\-winetricks')" ]]
+            if [[ -z "$WTRX_ARG" && ! -z "$WTRX_RUN" ]]
                 then
-                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" || return 1
-            elif [ -z "$WTRX_ARG" ]
+                    $TERM_APP $LWSHELL -c "print_info 'Using Lutris Wine winetricks!' \
+                    && DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
+            elif [[ -z "$WTRX_ARG" && -z "$WTRX_RUN" ]]
                 then
                     DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
             else
@@ -2786,6 +2789,7 @@ lu_exit() {
             kill $(pgrep -fa 'zenity'|grep 'Lutris Wine'|awk '{print$1}') 2>/dev/null
             kill $(pgrep -fa 'yad'|grep 'Lutris Wine'|awk '{print$1}') 2>/dev/null
             kill $(pgrep -fa 'Winetricks'|awk '{print$1}') 2>/dev/null
+            pkill winetricks 2>/dev/null
             kill $(pgrep -fa 'aria2c'|grep 'LutrisWine'|awk '{print$1}') 2>/dev/null
             print_info notify "Lutris Wine successfully killed!" &
             sleep 2
