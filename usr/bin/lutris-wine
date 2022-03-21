@@ -2343,7 +2343,12 @@ lu_config() {
         try_rm "$LW_CFG" "$LW_DIR/.lwcfgchksum" "$LW_CENV" &>/dev/null
         if [ ! -z "$(echo "$FULLCMDLINE"|grep -wo '\-shortcut')" ]
             then
-                cleanrun "$(echo "$FULLCMDLINE"|sed 's/-shortcut /-config /')"
+                if [ -z "$LU_EXE" ]
+                    then
+                        cleanrun "$(echo "$FULLCMDLINE"|sed 's/-shortcut/-config/')"
+                    else
+                        cleanrun "$(echo "$FULLCMDLINE"|sed 's/-shortcut/-config/') '$LU_EXE'"
+                fi
             else
                 cleanrun "$FULLCMDLINE"
         fi
@@ -2596,7 +2601,12 @@ lu_config() {
                               cleanrun "$FULLCMDLINE" ;;
                     update) lu_update
                             cleanrun "$FULLCMDLINE" ;;
-                    winetricks) cleanrun "LW_CFG='$LW_CFG' '$BASH_SOURCE' -winetricks"
+                    winetricks) if [[ -f "$EXE_CFG" && ! -z "$LU_EXE" ]]
+                                    then
+                                        cleanrun "LW_CFG='$EXE_CFG' '$BASH_SOURCE' -winetricks"
+                                    else
+                                        cleanrun "LW_CFG='$LW_DEF_CFG' '$BASH_SOURCE' -winetricks"
+                                fi
                                 cleanrun "$FULLCMDLINE" ;;
                     appcfg) if ! lu_appcfg ; then cleanrun "$FULLCMDLINE" ; fi ;;
             esac
@@ -3026,6 +3036,7 @@ lu_shortcut() {
                     if [ ! -z "$(file "$SHRT_FL"|grep "for MS Windows"|grep -o "executable")" ]
                         then
                             export LU_EXE="$SHRT_FL"
+                            lite_init "$LU_EXE"
                             if [[ ! -z "$ADDTOLU" && "$ADDTOLU" != 0 ]]
                                 then
                                     add_to_lutris "$LU_EXE"
@@ -3034,10 +3045,12 @@ lu_shortcut() {
                             fi
                         else
                             print_error yad "Lutris Wine Shortcuts Creator" "Unable to create Lutris Wine shortcut for this file!"
+                            lu_shortcut
                     fi
             elif [ -d "$SHRT_EXE" ]
                 then
                     print_error yad "Lutris Wine Shortcuts Creator" "Specify the executable file to create Lutris Wine shortcut!"
+                    lu_shortcut
             fi
     fi
 }
