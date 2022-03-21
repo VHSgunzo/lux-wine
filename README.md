@@ -21,7 +21,8 @@ All Arch-based distributions
 - [x] DXVK with Wine DXGI mode
 - [x] Supports running on virtual machines with GL acceleration (tested on KVM, see installation video)
 - [x] Debug mode
-- [x] Terminal mode (various terminals supported)
+- [x] Terminal mode (various terminals supported) (see Terminal usage)
+- [x] Terminal hold
 - [x] Logging mode
 - [x] SHELL mode or open file in SHELL (with access to all lutris-wine functions)
 - [x] CMD mode or open file in CMD
@@ -29,6 +30,7 @@ All Arch-based distributions
 - [x] System Wine supports (selected automatically if no other versions of Wine are installed)
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
 - [x] Switching DXR/RTX Version (if the video adapter support and depends on VKD3D)
+- [x] DLSS (if the video adapter and game support and depends on [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi) + [WINE-NVML](https://github.com/Saancreed/wine-nvml))
 - [x] Custom URL for runtime repo
 - [x] Custom VKD3D config
 - [x] MangoHud settings (with custom config support)
@@ -49,7 +51,7 @@ All Arch-based distributions
 - [x] Reset PulseAudio (+PulseEffects)
 - [x] Reduce PulseAudio latency
 - [x] Restore gamma
-- [x] Single CPU mode
+- [x] CPU limitation mode
 - [x] Show Crash Dialog (WINEDBG)
 - [x] FPS limit settings (with MangoHud or libstrangle)
 - [x] Custom Wine themes
@@ -79,8 +81,6 @@ All Arch-based distributions
 ```
 - [x] Ability to clear a prefix without completely recreating it
 - [x] Mouse context menu for Dolphin
-- [x] Ability to run applications from the terminal (see Terminal usage)
-- [x] Terminal hold
 - [x] Window compositing management (KDE, MATE, XFCE, Deepin)
 - [x] Wine prefix management
 - [x] Wine architecture management
@@ -99,6 +99,13 @@ All Arch-based distributions
 - [x] Disable no primary displays
 - [x] Restore resolution
 - [x] Wine prefix sandbox
+- [x] Wayland supports (experimental)
+- [x] Downloader selection (aria2c or wget, aria2c in priority)
+- [x] Ability to use the built-in Proton D3D DLLs (DXVK, DXVK-NVAPI and VKD3D)
+- [x] Selecting different D3D DLLs from different versions of Proton
+- [x] Custom Environment (globally and separately for EXE)
+- [x] pre_launch and post_launch functions
+- [x] [WINE-NVML](https://github.com/Saancreed/wine-nvml) (automatic download if it does not exist in dxvk-nvapi)
 - [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [x] Redefining Wine options in settings GUI:
 ```
@@ -160,7 +167,7 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 -regedit                Registry editor
 -control                Control panel
 -winecfg                Wine settings
--winemgr                Wine manager
+-winemgr {delonly}      Wine manager
 -taskmgr                Task manager
 -uninstaller            Wine uninstaller
 -winetricks             Winetricks
@@ -182,8 +189,9 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 -update {all}           Runtime updater
 {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
 {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
-{dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}
+{dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
 {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
+{nvml|wine_nvml}
 ```
 ## Screenshots:
 [![appcfg.png](./screenshots/appcfg.png?raw=true "appcfg")]

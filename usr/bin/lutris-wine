@@ -1,8 +1,9 @@
 #!/bin/bash
 export ENVKEY=$RANDOM
-export > /tmp/envbackup$ENVKEY
 export LW_DEVELOPERS="VHSgunzo"
-export LW_VERSION="0.67"
+export LW_VERSION="0.68"
+export GDK_BACKEND="x11"
+export LW_NAME="$(basename "$BASH_SOURCE")"
 
 export BLUE='\033[1;94m'
 export RED='\033[1;91m'
@@ -10,38 +11,39 @@ export GREEN='\033[1;92m'
 export YELLOW='\033[1;33m'
 export RESETCOLOR='\033[1;00m'
 
-export LW_DIR="$HOME/.local/share/LutrisWine"
-export LU_DIR="$HOME/.local/share/lutris"
-export THEMES_DIR="/usr/share/lutris-wine/themes"
-export LW_WINE_DIR="$LW_DIR/runners/wine"
-export LW_RUNTIME_DIR="$LW_DIR/runtime"
-export MENU_APP_DIR="$HOME/.local/share/applications"
-export LW_APP_DIR="$MENU_APP_DIR/LutrisWineApp"
-export WTRX_DIR="$LW_RUNTIME_DIR/winetricks"
-export LW_DB_DIR="/usr/share/lutris-wine/db"
-export LU_DB="$LU_DIR/pga.db"
-export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
-export LW_CFG="$LW_DEF_CFG"
-export VKBASALT_CONFIG_FILE="$LW_DIR/vkBasalt.conf"
-export RESHADE_DIR="$LW_RUNTIME_DIR/reshade"
-export DEF_ICO="/usr/share/lutris-wine/icon/default_icon.png"
-export DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
-export DEF_WINEPFX="$LW_DIR/winepfx"
-export DEF_CACHE="$LW_DIR/cache"
-export LW_APPCFG_DIR="$LW_DIR/appcfg"
-export VLK_ICD_DIR="/usr/share/vulkan/icd.d"
-export GDK_BACKEND="x11"
-
-export LWNAME="$(basename "$BASH_SOURCE")"
-export SYS_WINE="$(which -a wine 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)"
-export SYS_LU="$(which lutris 2>/dev/null)"
+[ -z "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LutrisWine"
+[ -z "$LU_DIR" ] && export LU_DIR="$HOME/.local/share/lutris"
+[ -z "$LW_THEMES_DIR" ] && export LW_THEMES_DIR="/usr/share/lutris-wine/themes"
+[ -z "$LW_WINE_DIR" ] && export LW_WINE_DIR="$LW_DIR/runners/wine"
+[ -z "$LW_RUNTIME_DIR" ] && export LW_RUNTIME_DIR="$LW_DIR/runtime"
+[ -z "$LW_MENU_APP_DIR" ] && export LW_MENU_APP_DIR="$HOME/.local/share/applications"
+[ -z "$LW_APP_DIR" ] && export LW_APP_DIR="$LW_MENU_APP_DIR/LutrisWineApp"
+[ -z "$LW_WTRX_DIR" ] && export LW_WTRX_DIR="$LW_RUNTIME_DIR/winetricks"
+[ -z "$LW_DB_DIR" ] && export LW_DB_DIR="/usr/share/lutris-wine/db"
+[ -z "$LU_DB" ] && export LU_DB="$LU_DIR/pga.db"
+[ -z "$LW_DEF_CFG" ] && export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
+[ -z "$LW_CFG" ] && export LW_CFG="$LW_DEF_CFG"
+[ -z "$VKBASALT_CONFIG_FILE" ] && export VKBASALT_CONFIG_FILE="$LW_DIR/vkBasalt.conf"
+[ -z "$LW_RESHADE_DIR" ] && export LW_RESHADE_DIR="$LW_RUNTIME_DIR/reshade"
+[ -z "$LW_DEF_ICO" ] && export LW_DEF_ICO="/usr/share/lutris-wine/icon/default_icon.png"
+[ -z "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
+[ -z "$LW_DEF_WINEPFX" ] && export LW_DEF_WINEPFX="$LW_DIR/winepfx"
+[ -z "$LW_DEF_CACHE" ] && export LW_DEF_CACHE="$LW_DIR/cache"
+[ -z "$LW_DEF_CENV" ] && export LW_DEF_CENV="$LW_DIR/luwine.cenv"
+[ -z "$LW_CENV" ] && export LW_CENV="$LW_DEF_CENV"
+[ -z "$LW_APPCFG_DIR" ] && export LW_APPCFG_DIR="$LW_DIR/appcfg"
+[ -z "$VLK_ICD_DIR" ] && export VLK_ICD_DIR="/usr/share/vulkan/icd.d"
+[ -z "$SYS_WINE" ] && export SYS_WINE="$(which -a wine 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)"
+[ -z "$SYS_LU" ] && export SYS_LU="$(which lutris 2>/dev/null)"
+export > /tmp/envbackup$ENVKEY
 
 init_def_config() {
     [ -z "$LOADBAR" ] && export LOADBAR=1
-    [ -z "$LOADBARGIF" ] && export LOADBARGIF="$DEF_LOAD_GIF"
+    [ -z "$LOADBARGIF" ] && export LOADBARGIF="$LW_DEF_LOAD_GIF"
     [ -z "$CHK_UPDATE" ] && export CHK_UPDATE="7"
     [ -z "$WINEARCH" ] && export WINEARCH="win64"
-    [ -z "$WINEPREFIX" ] && export WINEPREFIX="$DEF_WINEPFX"
+    [ -z "$WINEPREFIX" ] && export WINEPREFIX="$LW_DEF_WINEPFX"
+    [ -z "$WTRX_LOG" ] && export WTRX_LOG="$WINEPREFIX/winetricks.log"
     [ -z "$VKICDFILES" ] && export VKICDFILES="AUTO"
     [ -z "$ESYNC" ] && export ESYNC=1
     [ -z "$FSYNC" ] && export FSYNC=1
@@ -73,23 +75,26 @@ init_def_config() {
     [ -z "$BATTLEYE" ] && export BATTLEYE=1
     [ -z "$EAC" ] && export EAC=1
     [ -z "$GL_THRD_OPTI" ] && export GL_THRD_OPTI=1
-    [ -z "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='mfc42 vcrun2019'
+    [ -z "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='vcrun2019 mfc42'
     [ -z "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
-    [ -z "$DXVK_GIT_RELEASE_URL" ] && export DXVK_GIT_RELEASE_URL="https://github.com/doitsujin/dxvk/releases"
-    [ -z "$VKD3D_GIT_RELEASE_URL" ] && export VKD3D_GIT_RELEASE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases"
-    [ -z "$NVAPI_GIT_RELEASE_URL" ] && export NVAPI_GIT_RELEASE_URL="https://github.com/VHSgunzo/nvapi/releases"
+    [ -z "$DXVK_GIT_RELEASE_URL" ] && export DXVK_GIT_RELEASE_URL="https://github.com/lutris/dxvk/releases"
+    [ -z "$VKD3D_GIT_RELEASE_URL" ] && export VKD3D_GIT_RELEASE_URL="https://github.com/lutris/vkd3d/releases"
+    [ -z "$NVAPI_GIT_RELEASE_URL" ] && export NVAPI_GIT_RELEASE_URL="https://github.com/lutris/dxvk-nvapi/releases"
     [ -z "$D3D_GIT_RELEASE_URL" ] && export D3D_GIT_RELEASE_URL="https://github.com/lutris/d3d_extras/releases"
     [ -z "$DGVO_GIT_RELEASE_URL" ] && export DGVO_GIT_RELEASE_URL="https://github.com/lutris/dgvoodoo2/releases"
     [ -z "$WTRX_GIT_RELEASE_URL" ] && export WTRX_GIT_RELEASE_URL="https://github.com/lutris/winetricks/releases"
-    [ -z "$EAC_GIT_RELEASE_URL" ] && export EAC_GIT_RELEASE_URL="https://github.com/VHSgunzo/eac_runtime/releases"
     [ -z "$BUILD_GIT_RELEASE_URL" ] && export BUILD_GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
     [ -z "$RESHADE_GIT_RELEASE_URL" ] && export RESHADE_GIT_RELEASE_URL="https://github.com/VHSgunzo/reshade/releases"
+    [ -z "$NVML_GIT_RELEASE_URL" ] && export NVML_GIT_RELEASE_URL="https://github.com/VHSgunzo/nvml/releases"
     [ -z "$DXVK_VERSION" ] && export DXVK_VERSION="latest"
     [ -z "$VKD3D_VERSION" ] && export VKD3D_VERSION="latest"
     [ -z "$DXVK_NVAPI_VERSION" ] && export DXVK_NVAPI_VERSION="latest"
     [ -z "$D3D_EXTRAS_VERSION" ] && export D3D_EXTRAS_VERSION="latest"
     [ -z "$DGVOODOO2_VERSION" ] && export DGVOODOO2_VERSION="latest"
+    [ -z "$WINE_NVML_VERSION" ] && export WINE_NVML_VERSION="latest"
     [ -z "$VKBASALT_EFFECTS" ] && export VKBASALT_EFFECTS="cas:Colourfulness:Tonemap"
+    [ ! -f "$LW_DEF_CENV" ] && echo -e "#pre_launch() { commands ; }\n#post_launch() { commands ; }" > "$LW_DEF_CENV"
+    [ -z "$CPU_LIMIT" ] && export CPU_LIMIT=0
 }
 
 print_var() {
@@ -102,70 +107,78 @@ print_var() {
 print_error() {
     if [[ "$1" == "yad" && ! -z "$2" && ! -z "$3" ]] || [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" ]]
         then
-            echo -e "${RED}ERROR: $3 $RESETCOLOR"
+            echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
     elif [[ "$1" == "yad" && ! -z "$2" && -z "$3" ]] || [[ "$1" == "notify" && ! -z "$2" && -z "$3" ]]
         then
-            echo -e "${RED}ERROR: $2 $RESETCOLOR"
+            echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
     else
-        echo -e "${RED}ERROR: $1 $RESETCOLOR"
+        echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
     fi
     if [[ "$1" == "yad" && ! -z "$2" && ! -z "$3" ]]
         then
-            yad --window-icon="$DEF_ICO" --image="dialog-error" --button="OK:0" --title="$2" --text="$3" --center --on-top --fixed --timeout="15" --timeout-indicator="top" Lutris Wine
+            yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0" --title="$2" --text="$3" \
+                --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
     elif [[ "$1" == "yad" && ! -z "$2" && -z "$3" ]]
         then
-            yad --window-icon="$DEF_ICO" --image="dialog-error" --button="OK:0" --title="Lutris Wine Error" --text="$2" --center --on-top --fixed --timeout="15" --timeout-indicator="top" Lutris Wine
+            yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0" --title="Lutris Wine Error" \
+                --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
     elif [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
-            notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2" "$3"
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" "$3"
     elif [[ "$1" == "notify" && ! -z "$2" && -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
-            notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2"
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2"
     fi
 }
 
 print_info() {
     if [[ "$1" == "yad" && ! -z "$2" && ! -z "$3" ]] || [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" ]]
         then
-            echo -e "${GREEN}INFO: $3 $RESETCOLOR"
+            echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
     elif [[ "$1" == "yad" && ! -z "$2" && -z "$3" ]] || [[ "$1" == "notify" && ! -z "$2" && -z "$3" ]]
         then
-            echo -e "${GREEN}INFO: $2 $RESETCOLOR"
+            echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
     else
-        echo -e "${GREEN}INFO: $1 $RESETCOLOR"
+        echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
     fi
     if [[ "$1" == "yad" && ! -z "$2" && ! -z "$3" ]]
         then
-            yad --window-icon="$DEF_ICO" --image="dialog-information" --button="OK:0" --title="$2" --text="$3" --center --on-top --fixed --timeout="15" --timeout-indicator="top" Lutris Wine
+            yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="$2" --text="$3" \
+                --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
     elif [[ "$1" == "yad" && ! -z "$2" && -z "$3" ]]
         then
-            yad --window-icon="$DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lutris Wine Info" --text="$2" --center --on-top --fixed --timeout="15" --timeout-indicator="top" Lutris Wine
+            yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lutris Wine Info" \
+                --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
     elif [[ "$1" == "notify" && ! -z "$2" && ! -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
-            notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2" "$3"
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" "$3"
     elif [[ "$1" == "notify" && ! -z "$2" && -z "$3" && "$NO_NOTIFY" != 1 ]]
         then
-            notify-send -i "$DEF_ICO" -a 'Lutris Wine' "$2"
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2"
     fi
 }
 
 print_question() {
     if [[ ! -z "$1" && ! -z "$2" ]]
         then
-            yad --window-icon="$DEF_ICO" --image="dialog-question" --button="NO:1" --button="YES:0" --title="$1" --text="$2" --center --on-top --fixed Lutris Wine
+            yad --window-icon="$LW_DEF_ICO" --image="dialog-question" --button="NO:1" --button="YES:0" --title="$1" \
+                --text="$2" --center --on-top --fixed --selectable-labels Lutris Wine
     elif [[ ! -z "$1" && -z "$2" ]]
         then
-            yad --window-icon="$DEF_ICO" --image="dialog-question" --button="NO:1" --button="YES:0" --title="Lutris Wine Question" --text="$1" --center --on-top --fixed Lutris Wine
+            yad --window-icon="$LW_DEF_ICO" --image="dialog-question" --button="NO:1" --button="YES:0" \
+                --title="Lutris Wine Question" --text="$1" --center --on-top --fixed --selectable-labels Lutris Wine
     fi
 }
 
 print_input() {
     if [[ ! -z "$1" && ! -z "$2" && ! -z "$3" ]]
         then
-            yad --window-icon="$DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="$1" --text="$2" --center --on-top --fixed --entry-text="$3"
+            yad --window-icon="$LW_DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="$1" --text="$2" \
+                --center --on-top --fixed --entry-text="$3"
     elif [[ ! -z "$1" && ! -z "$2" && -z "$3"  ]]
         then
-            yad --window-icon="$DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="Lutris Wine Input" --text="$1" --center --on-top --fixed --entry-text="$2"
+            yad --window-icon="$LW_DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="Lutris Wine Input" \
+                --text="$1" --center --on-top --fixed --entry-text="$2"
     fi
 }
 
@@ -177,7 +190,7 @@ check_lupid() {
 check_tray() {
     unset TRAY_PID FORCE_TRAY CHK_TRAY_PID CHK_FORCE_TRAY
     CHK_TRAY_PID="$(pgrep -fa yad|grep "\-\-notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
-    CHK_FORCE_TRAY="$(pgrep -fa "$LWNAME"|grep -o "noclose")"
+    CHK_FORCE_TRAY="$(pgrep -fa "$LW_NAME"|grep -o "noclose")"
     if [ ! -z "$CHK_TRAY_PID" ]
         then
             export TRAY_PID="$CHK_TRAY_PID"
@@ -189,25 +202,23 @@ check_tray() {
 }
 
 check_wine_pids() {
-    unset WINE_PIDS CHK_WINE_PIDS
+    unset WINE_PIDS CHK_WINE_PIDS WINEINUSEPIDS
+    WINEINUSEPIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
     if [[ "$WINE_VERSION" == "System" || "$OLD_WINE_VERSION" == "System" ]] && [[ "$NEW_WINE_VERSION" != "System" ]]
         then
             export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$(dirname "$SYS_WINE")"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
-    elif [[ ! -z "$OLD_WINE_VERSION" && "$OLD_WINE_VERSION" != "System" ]]
+    elif [[ -z "$WINEINUSEPIDS" && ! -z "$OLD_WINE_VERSION" && "$OLD_WINE_VERSION" != "System" ]]
         then
             export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$OLD_WINE_VERSION"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
     else
-        export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$WINE_IN_USE"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+        export CHK_WINE_PIDS="$WINEINUSEPIDS"
     fi
-    if [ ! -z "$CHK_WINE_PIDS" ]
-        then
-            export WINE_PIDS="$CHK_WINE_PIDS"
-    fi
+    [ ! -z "$CHK_WINE_PIDS" ] && export WINE_PIDS="$CHK_WINE_PIDS"
 }
 
 check_luwine_pid() {
     unset LU_WINE_PID CHK_LU_WINE_PID
-    CHK_LU_WINE_PID="$(pgrep "$LWNAME")"
+    CHK_LU_WINE_PID="$(pgrep "$LW_NAME")"
     if [ ! -z "$CHK_LU_WINE_PID" ]
         then
             export LU_WINE_PID="$CHK_LU_WINE_PID"
@@ -216,20 +227,17 @@ check_luwine_pid() {
 
 check_luwine_sh_pid() {
     unset LW_SH_PID CHK_LW_SH_PID CHK_LW_SH_PIDS
-    export CHK_LW_SH_PIDS="$(pgrep -fa "$LWNAME"|grep "\-shell"|awk '{print$1}' 2>/dev/null)"
+    export CHK_LW_SH_PIDS="$(pgrep -fa "$LW_NAME"|grep "\-shell"|awk '{print$1}' 2>/dev/null)"
     for lwshpid in $CHK_LW_SH_PIDS
         do
             export CHK_LW_SH_PID="$(pgrep -faP "$lwshpid"|grep "$(echo "$TERM_APP"|awk '{print$1}')"|awk '{print$1}' 2>/dev/null)"
-            if [ ! -z "$CHK_LW_SH_PID" ]
-                then
-                    export LW_SH_PID="$CHK_LW_SH_PID"
-            fi
+            [ ! -z "$CHK_LW_SH_PID" ] && export LW_SH_PID="$CHK_LW_SH_PID"
     done
 }
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
-    CHK_EXES="$(ps -ef|grep -i "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)" 2>/dev/null|grep -v 'windows'|grep -v "$LWNAME"|grep -v 'grep'|grep -v 'yad')"
+    CHK_EXES="$(ps -ef|grep -i "$(ps -eo args|grep -iF ".exe"|rev|cut -d"\\" -f1|rev)" 2>/dev/null|grep -v 'windows'|grep -v "$LW_NAME"|grep -v 'grep'|grep -v 'yad')"
     if [ ! -z "$CHK_EXES" ]
         then
             export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$2}')"
@@ -314,15 +322,14 @@ check_git_release() {
             dll_version="$(echo $2|sed 's/^v//g')"
             CHECKDLLVERS="grep -iE '($dll_version\.tar\.xz$|$dll_version\.tar\.gz$|$dll_version\.tar\.zst$)'"
     fi
-    if [ -z "$GIT_RELEASE_URL" ]
+    GREPARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1|awk '{print \"$GIT_RELEASE_URL\" \$0}'|grep '$1'"
+    GIT_RELEASE_CHK="$(curl -s "$GIT_RELEASE_URL"|eval "$GREPARCHURL"|eval "$CHECKDLLVERS")"
+    if [ ! -z "$GIT_RELEASE_CHK" ]
         then
-            GIT_RELEASE_DEFURL="https://github.com/lutris/$1/releases"
-            GREPARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1|awk '{print \"$GIT_RELEASE_DEFURL\" \$0}'|grep '$1'"
-            GIT_RELEASE_CHK="$(curl -s "$GIT_RELEASE_DEFURL"|eval "$GREPARCHURL"|eval "$CHECKDLLVERS")"
-            if [ ! -z "$GIT_RELEASE_CHK" ]
+            GIT_RELEASE="$GIT_RELEASE_CHK"
+            if [[ -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" && "$1" != "reshade" ]]
                 then
                     dll_version="$(basename "$GIT_RELEASE_CHK"|sed "s/$1//"|sed -r 's/^[^0-9]+//'|sed 's/.tar.gz//'|sed 's/.tar.xz//'|sed 's/.tar.zst//')"
-                    GIT_RELEASE="$GIT_RELEASE_CHK"
                     unset GIT_RELEASE_CHK
                     if [ "$1" == "dxvk-nvapi" ]
                         then
@@ -345,73 +352,18 @@ check_git_release() {
                             fi
                     fi
                     return 0
-                else
-                    print_error yad "$1 $2 GIT release not found! Try to Install latest Lutris release."
-                    check_git_release $1
             fi
+            return 0
         else
-            GREPARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1|awk '{print \"$GIT_RELEASE_URL\" \$0}'|grep '$1'"
-            GIT_RELEASE_CHK="$(curl -s "$GIT_RELEASE_URL"|eval "$GREPARCHURL"|eval "$CHECKDLLVERS")"
-            if [ -z "$GIT_RELEASE_CHK" ]
+            if [ "$TRYLATEST" != 1 ]
                 then
-                    if [[ ! -z "$(echo "$GIT_RELEASE_URL"|grep -o "lutris")" && "$1" == "dxvk" ]]
-                        then
-                            GIT_RELEASE_URL="https://github.com/doitsujin/dxvk/releases"
-                            print_error yad "$1 $2 GIT release not found in Lutris repository! Try found $1 in doitsujin repository..."
-                            check_git_release $1 $2
-                    elif [[ ! -z "$(echo "$GIT_RELEASE_URL"|grep -o "doitsujin")" && "$1" == "dxvk" ]]
-                        then
-                            unset GIT_RELEASE_URL
-                            print_error yad "$1 $2 GIT release not found in doitsujin repository! Try found $1 in Lutris repository..."
-                            check_git_release $1 $2
-                    elif [[ ! -z "$(echo "$GIT_RELEASE_URL"|grep -o "lutris")" && "$1" == "vkd3d" ]]
-                        then
-                            GIT_RELEASE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases"
-                            print_error yad "$1 $2 GIT release not found in Lutris repository! Try found $1 in custom repository..."
-                            check_git_release $1 $2
-                    elif [[ ! -z "$(echo "$GIT_RELEASE_URL"|grep -o "HansKristian-Work")" && "$1" == "vkd3d" ]]
-                        then
-                            unset GIT_RELEASE_URL
-                            print_error yad "$1 $2 GIT release not found in HansKristian-Work repository! Try found $1 in Lutris repository..."
-                            check_git_release $1 $2
-                    elif [[ ! -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" && "$1" != "reshade" && "$1" != "eac" ]]
-                        then
-                            unset GIT_RELEASE_URL
-                            print_error yad "$1 $2 GIT release not found in custom repository! Try found $1 in Lutris repository..."
-                            check_git_release $1 $2
-                    else
-                        print_error yad "Unable to check $1 GIT release!"
-                        return 1
-                    fi
+                    print_error yad "$1 $2 not found in [ $GIT_RELEASE_URL ] repository! Try to install latest release..."
+                    TRYLATEST=1
+                    check_git_release $1 latest
                 else
-                    GIT_RELEASE="$GIT_RELEASE_CHK"
-                    if [[ -z "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" && "$1" != "reshade" && "$1" != "eac" ]]
-                        then
-                            dll_version="$(basename "$GIT_RELEASE_CHK"|sed "s/$1//"|sed -r 's/^[^0-9]+//'|sed 's/.tar.gz//'|sed 's/.tar.xz//'|sed 's/.tar.zst//')"
-                            unset GIT_RELEASE_CHK
-                            if [ "$1" == "dxvk-nvapi" ]
-                                then
-                                    if [ -z "$(grep -o "DXVK_NVAPI_VERSION" "$LW_CFG")" ]
-                                        then
-                                            echo "export DXVK_NVAPI_VERSION='v$dll_version'" >> "$LW_CFG"
-                                            import_luwine_conf
-                                        else
-                                            sed -i "s/export DXVK_NVAPI_VERSION.*/export DXVK_NVAPI_VERSION='v$dll_version'/" "$LW_CFG"
-                                            import_luwine_conf
-                                    fi
-                                else
-                                    if [ -z "$(grep -io "$1_version" "$LW_CFG")" ]
-                                        then
-                                            echo "export $(echo "$1_version"|tr [:lower:] [:upper:])='v$dll_version'" >> "$LW_CFG"
-                                            import_luwine_conf
-                                        else
-                                            sed -i "s/export $(echo "$1_version"|tr [:lower:] [:upper:]).*/export $(echo "$1_version"|tr [:lower:] [:upper:])='v$dll_version'/" "$LW_CFG"
-                                            import_luwine_conf
-                                    fi
-                            fi
-                            return 0
-                    fi
-                    return 0
+                    print_error yad "Unable to check and install $1 GIT release!"
+                    unset TRYLATEST
+                    return 1
             fi
     fi
 }
@@ -484,7 +436,9 @@ dll_manager() {
         then
             print_error yad "No internet connection, it is not possible to download $1 $2"
             return 1
-    elif [[ ! -z "$all_dlls" && ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && -z "$(find "$LW_RUNTIME_DIR/$1" -type d -name "$2" -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || [ ! -z "$FORCE_DLL_UPDATE" ]
+    elif [[ ! -z "$all_dlls" && ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 \
+        && -z "$(find "$LW_RUNTIME_DIR/$1" -type d -name "$2" -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
+        || [ ! -z "$FORCE_DLL_UPDATE" ]
         then
             export NEEDCHKDLL=1
             if download_dll_release $1 latest
@@ -560,33 +514,36 @@ download_dll_release() {
 check_dll_symlink() {
     for dll_check in $check_dlls_slk
         do
-            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH"/$dll_check|sed "s/.*\($1\)/\1/g"|cut -d"/" -f2)"
-            PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH"/$dll_check|sed "s/.*\($1\)/\1/g"|cut -d"/" -f2)"
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH"/$dll_check|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
             for x32_x86 in "x32" "x86"
                 do
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" "$PFX_DLL32_PTH/"
-                                then print_info "$dll_check version of $1 $2 doesn't match with prefix version, new link to syswow64 created!"
+                                then print_info "New link to $(basename "$PFX_DLL32_PTH") for $dll_check from $1 $2 created!"
                             fi
                     fi
                     if [[ -f "$LW_RUNTIME_DIR/$1/v$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "v$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/v$2/$x32_x86/$dll_check" "$PFX_DLL32_PTH/"
-                                then print_info "$dll_check version of $1 v$2 doesn't match with prefix version, new link to syswow64 created!"
+                                then print_info "New link to $(basename "$PFX_DLL32_PTH") for $dll_check from $1 v$2 created!"
                             fi
                     fi
             done
-            if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" ]]
+            if [ "$WINEARCH" != "win32" ]
                 then
-                    if try_ln "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" "$PFX_DLL64_PTH/"
-                        then print_info "$dll_check version of $1 $2 doesn't match with prefix version, new link to system32 created!"
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH"/$dll_check|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
+                    if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" ]]
+                        then
+                            if try_ln "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" "$PFX_DLL64_PTH/"
+                                then print_info "New link to system32 for $dll_check from $1 $2 created!"
+                            fi
                     fi
-            fi
-            if [[ -f "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" && "$PFX_DLL64_VER" != "v$2" ]]
-                then
-                    if try_ln "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" "$PFX_DLL64_PTH/"
-                        then print_info "$dll_check version of $1 v$2 doesn't match with prefix version, new link to system32 created!"
+                    if [[ -f "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" && "$PFX_DLL64_VER" != "v$2" ]]
+                        then
+                            if try_ln "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" "$PFX_DLL64_PTH/"
+                                then print_info "New link to system32 for $dll_check from $1 v$2 created!"
+                            fi
                     fi
             fi
     done
@@ -682,14 +639,23 @@ try_download() {
     if [ -z "$2" ]; then DLPTH="./" ; else DLPTH="$2" ; fi
     check_freespace "$DLPTH"
     try_mkdir "$DLPTH"
-    aria2c -x 13 -s 13 --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|grep --line-buffered 'ETA'| \
-    sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'| \
-    yad --progress --percentage=0 --text="Download:\t$DLFLNAME\n$1" --auto-close --no-escape \
-        --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar Lutris Wine
+    if [ "$LW_DOWNLOADER" == "aria2c" ]
+        then
+            aria2c -x 13 -s 13 --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|grep --line-buffered 'ETA'| \
+            sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'| \
+            yad --progress --percentage=0 --text="Download:\t$DLFLNAME\n$1" --auto-close --no-escape --selectable-labels \
+                --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar Lutris Wine
+    elif [ "$LW_DOWNLOADER" == "wget" ]
+        then
+            wget --no-check-certificate --content-disposition -t 3 -T 5 -w 0.5 "$1" --directory-prefix="$DLPTH"|& \
+            tr '\r' '\n'|sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./'| \
+            yad --progress --percentage=0 --text="Download:\t$DLFLNAME\n$1" --auto-close --no-escape --selectable-labels \
+                --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar Lutris Wine
+    fi
     if [ "${PIPESTATUS[0]}" != 0 ]
         then
             try_rm "$DLPTH/$DLFLNAME" "$DLPTH/"*.aria2 &>/dev/null
-            yad --window-icon="$DEF_ICO" --image="dialog-error" --button="CANCEL:1" --button="REPEAT:0" --title="Download interrupted!" \
+            yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="CANCEL:1" --button="REPEAT:0" --title="Download interrupted!" \
                 --text="Failed to download : $DLFLNAME" --center --on-top --fixed Lutris Wine
             if [ "$?" == 1 ]
                 then
@@ -705,42 +671,67 @@ try_download() {
 unpack_tar_xz() {
     set -o pipefail
     try_mkdir "$2"
-    tar -Jxf "$1" -C "$2"|settingbar_nostdout
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
+    TAR_NAME="$(basename "$1")"
+    tar -Jxf "$1" -C "$2"|settingbar_nostdout "Unpacking $TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar_gz() {
     set -o pipefail
     try_mkdir "$2"
-    tar -xzvf "$1" -C "$2"|settingbar_nostdout
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
+    TAR_NAME="$(basename "$1")"
+    tar -xzvf "$1" -C "$2"|settingbar_nostdout "Unpacking $TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar_zst() {
     set -o pipefail
     try_mkdir "$2"
-    tar --use-compress-program=unzstd -xvf "$1" -C "$2"|settingbar_nostdout
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
+    TAR_NAME="$(basename "$1")"
+    tar --use-compress-program=unzstd -xvf "$1" -C "$2"|settingbar_nostdout "Unpacking $TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar() {
     set -o pipefail
     try_mkdir "$2"
-    tar -xvf "$1" -C "$2"|settingbar_nostdout
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File '$1' unpacked with error!" && return 1 || return 0
+    TAR_NAME="$(basename "$1")"
+    tar -xvf "$1" -C "$2"|settingbar_nostdout "$TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
+    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 settingbar() {
     SETTBARKEY="$RANDOM"
     SETTOUTFILE="/tmp/lwsettout$SETTBARKEY"
-    tee "$SETTOUTFILE"|& zenity --window-icon="$DEF_ICO" --progress --title="Settings" --text="Updating parameters is in progress. Please wait..." --pulsate --auto-close --width=500 --height=40 --no-cancel "$SETTBARKEY" Lutris Wine &
+    if [[ ! -z "$1" && ! -z "$2" ]]
+        then
+            tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
+                --width=500 --height=40 --no-cancel --title="$1" --text="$2" "$SETTBARKEY" Lutris Wine &
+    elif [[ ! -z "$1" && -z "$2" ]]
+        then
+            tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
+                --width=500 --height=40 --no-cancel --title="Settings" --text="$1" "$SETTBARKEY" Lutris Wine &
+    else
+        tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
+            --width=500 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." "$SETTBARKEY" Lutris Wine &
+    fi
     tail --pid="$(pgrep -fa zenity|grep -w "$SETTBARKEY"|awk '{print$1}')" -q -f "$SETTOUTFILE"
     try_rm "$SETTOUTFILE"
 }
 
 settingbar_nostdout() {
-    zenity --window-icon="$DEF_ICO" --progress --title="Settings" --text="Updating parameters is in progress. Please wait..." --pulsate --auto-close --width=500 --height=40 --no-cancel Lutris Wine
-    #yad --progress --text="Updating parameters is in progress. Please wait..." --pulsate --width=500 --height=50 --no-buttons --undecorated --center --no-escape --auto-close --skip-taskbar --on-top Lutris Wine
+    if [[ ! -z "$1" && ! -z "$2" ]]
+        then
+            zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
+                --width=500 --height=40 --no-cancel --title="$1" --text="$2" Lutris Wine
+    elif [[ ! -z "$1" && -z "$2" ]]
+        then
+            zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
+                --width=500 --height=40 --no-cancel --title="Settings" --text="$1" Lutris Wine
+    else
+        zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
+            --width=500 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." Lutris Wine
+    fi
 }
 
 shell_is_death() {
@@ -887,7 +878,7 @@ dis_displ_sw() {
 }
 
 check_restore_resol() {
-    if [ ! -z "$1" ] ; then export RESTORE_RESOL="$1" ; fi
+    [ ! -z "$1" ] && export RESTORE_RESOL="$1"
     if [[ "$RESTORE_RESOL" == 1 && -f "$LU_EXE" && "$UNSET_RESRESOL_SW" != 1 && "$DIS_OTH_DISPL" == 0 ]]
         then
             CHK_RESRESOL_OTH="ls -1 /tmp/RESRESOL.* 2>/dev/null"
@@ -897,7 +888,7 @@ check_restore_resol() {
 }
 
 check_fake_cur_res() {
-    if [ ! -z "$1" ] ; then export FAKE_CUR_RES="$1" ; fi
+    [ ! -z "$1" ] && export FAKE_CUR_RES="$1"
     if [[ ! -z "$FAKE_CUR_RES" && "$FAKE_CUR_RES" != "Disabled" && ! -z "$FSR" && "$FSR" != "Disabled" ]]
         then
             export WINE_FULLSCREEN_FAKE_CURRENT_RES="$FAKE_CUR_RES"
@@ -937,7 +928,7 @@ resol_sw() {
 }
 
 check_restore_gamma() {
-    if [ ! -z "$1" ] ; then export RESTORE_GAMMA="$1" ; fi
+    [ ! -z "$1" ] && export RESTORE_GAMMA="$1"
     if [[ "$RESTORE_GAMMA" == 1 && -f "$LU_EXE" && "$UNSET_RESGAMMA_SW" != 1 ]]
         then
             CHK_RESGAMMA_OTH="ls -1 /tmp/RESGAMMA.* 2>/dev/null"
@@ -1073,14 +1064,11 @@ compositor_sw() {
 }
 
 check_musthave_dll() {
-    if [ ! -z "$1" ] ; then export MUST_HAVE_DLL="$1" ; fi
+    [ ! -z "$1" ] && export MUST_HAVE_DLL="$1"
     if [[ ! -z "$MUST_HAVE_DLL" && "$MUST_HAVE_DLL" != "Disabled" ]]
         then
-            if [ ! -f "$WTRX_LOG" ]
-                then
-                    touch "$WTRX_LOG"
-            fi
-            unset NEED_INSTALL_DLLS READY_INSTALL_DLL
+            unset NEED_INSTALL_DLLS BAD_INSTALL_DLLS
+            [ ! -f "$WTRX_LOG" ] && touch "$WTRX_LOG"
             for need_install_dll in $MUST_HAVE_DLL
                 do
                     if [[ "$need_install_dll" == "vcrun2015" || "$need_install_dll" == "vcrun2017" ]]
@@ -1093,23 +1081,40 @@ check_musthave_dll() {
                             sed -i '/vcrun2015/d' "$WTRX_LOG"
                             sed -i '/vcrun2017/d' "$WTRX_LOG"
                     fi
-                    grep "$need_install_dll" "$WTRX_LOG" &>/dev/null
-                    if [ "$?" == "1" ]
+                    if [ -z "$(grep -wo "$need_install_dll" "$WTRX_LOG" 2>/dev/null)" ]
                         then
                             if [ -z "$NEED_INSTALL_DLLS" ]
                                 then
                                     export NEED_INSTALL_DLLS="$need_install_dll"
                                 else
-                                    export NEED_INSTALL_DLLS="$need_install_dll $NEED_INSTALL_DLLS"
+                                    export NEED_INSTALL_DLLS="$NEED_INSTALL_DLLS $need_install_dll"
                             fi
-                            export READY_INSTALL_DLL=1
                     fi
             done
-            if [ "$READY_INSTALL_DLL" == "1" ]
+            if [ ! -z "$NEED_INSTALL_DLLS" ]
                 then
                     export UPDPFX_LOG="$WINEPREFIX/update_pfx.log"
-                    print_info notify "Try to install DLL in prefix: $NEED_INSTALL_DLLS"
-                    $TERM_APP $LWSHELL -c "print_info 'Try to install DLL in prefix: $NEED_INSTALL_DLLS'|& tee -a '$UPDPFX_LOG' && winetricks -q -f -r $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
+                    print_info notify "Try to install DLL in prefix: [ $NEED_INSTALL_DLLS ]"
+                    $TERM_APP $LWSHELL -c "print_info 'Try to install DLL in prefix: [ $NEED_INSTALL_DLLS ]'|& tee -a '$UPDPFX_LOG' \
+                    && winetricks -q -f -r $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
+                    while read WTRXDLL
+                        do
+                            if [ -z "$(grep -wo "$WTRXDLL" "$WTRX_LOG" 2>/dev/null)" ]
+                                then
+                                    if [ -z "$BAD_INSTALL_DLLS" ]
+                                        then
+                                            export BAD_INSTALL_DLLS="$WTRXDLL"
+                                        else
+                                            export BAD_INSTALL_DLLS="$BAD_INSTALL_DLLS $WTRXDLL"
+                                    fi
+                            fi
+                    done <<< "$(echo -e "$NEED_INSTALL_DLLS"|tr ' ' '\n')"
+                    if [ -z "$BAD_INSTALL_DLLS" ]
+                        then
+                            print_info notify 'Winetricks DLLs are successfully installed!'
+                        else
+                            print_error yad "Winetricks DLLs are not installed successfully: [ $BAD_INSTALL_DLLS ]"
+                    fi
                     try_shutdown_wine
             fi
     fi
@@ -1128,14 +1133,14 @@ try_shutdown_wine() {
                     check_ld_library
                     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                         then
-                            if ! "$OLD_WINE" wineboot -e
+                            if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -e &>/dev/null
                                 then
                                     kill -9 $WINE_PIDS 2>/dev/null
                             fi
                             unset OLD_WINE
                     elif [ -f "$WINE" ]
                         then
-                            if ! "$WINE" wineboot -e
+                            if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -e &>/dev/null
                                 then
                                     kill -9 $WINE_PIDS 2>/dev/null
                             fi
@@ -1153,14 +1158,14 @@ try_shutdown_wine() {
             check_ld_library
             if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
-                    if ! "$OLD_WINE" wineboot -e
+                    if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -e &>/dev/null
                         then
                             kill -9 $WINE_PIDS 2>/dev/null
                     fi
                     unset OLD_WINE
             elif [ -f "$WINE" ]
                 then
-                    if ! "$WINE" wineboot -e
+                    if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -e &>/dev/null
                         then
                             kill -9 $WINE_PIDS 2>/dev/null
                     fi
@@ -1173,17 +1178,17 @@ try_shutdown_wine() {
 }
 
 try_fix_wrtx() {
-    if [ ! -z "$(grep -o 'a3f1bf98-18f3-4036-9b68-8e6de530ce0a' "$WTRX_DIR/winetricks")" ]
+    if [ ! -z "$(grep -o 'a3f1bf98-18f3-4036-9b68-8e6de530ce0a' "$LW_WTRX_DIR/winetricks")" ]
         then
-            sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$WTRX_DIR/winetricks"
+            sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$LW_WTRX_DIR/winetricks"
     fi
-    if [ -z "$(grep -o 'check_ld_library' "$WTRX_DIR/winetricks")" ]
+    if [ -z "$(grep -o 'check_ld_library' "$LW_WTRX_DIR/winetricks")" ]
         then
-            sed -i "$(( $(sed -n '/w_do_call()$/=' "$WTRX_DIR/winetricks") + 1))a\\    check_ld_library" "$WTRX_DIR/winetricks"
+            sed -i "$(( $(sed -n '/w_do_call()$/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    check_ld_library" "$LW_WTRX_DIR/winetricks"
     fi
-    if [ -z "$(grep -o 'unset LD_LIBRARY_PATH' "$WTRX_DIR/winetricks")" ]
+    if [ -z "$(grep -o 'unset LD_LIBRARY_PATH' "$LW_WTRX_DIR/winetricks")" ]
         then
-            sed -i "$(( $(sed -n '/subshell must/=' "$WTRX_DIR/winetricks") + 1))a\\    unset LD_LIBRARY_PATH" "$WTRX_DIR/winetricks"
+            sed -i "$(( $(sed -n '/subshell must/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    unset LD_LIBRARY_PATH" "$LW_WTRX_DIR/winetricks"
     fi
 }
 
@@ -1411,7 +1416,7 @@ create_shortcut() {
                 then
                     try_mkdir "$LW_APP_DIR"
                     try_cp "$DESKF" ${LW_APP_DIR}/
-                    update-desktop-database -q "$MENU_APP_DIR"
+                    update-desktop-database -q "$LW_MENU_APP_DIR"
             fi
             sleep 0.3
             if print_question "Shortcuts Creator" "Do you want to change EXE settings?"
@@ -1446,8 +1451,8 @@ lu_debug() {
             export VKBASALT_LOG_LEVEL="debug"
             export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').debug"
             export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "PRIME" "VKBASALT_EFFECTS" \
-                "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "DXVK_STATE_CACHE_PATH" "SINGLE_CPU" "VSYNC" \
-                "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" "EXE_CFG" "VIRTUAL_DESKTOP" "FPS_LIMIT" \
+                "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "DXVK_STATE_CACHE_PATH" "CPU_LIMIT" "VSYNC" \
+                "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" "VIRTUAL_DESKTOP" "FPS_LIMIT" "LW_CENV" \
                 "LW_DIR" "LW_CFG" "GSTREAMER" "HIDE_NVIDIA_GPU" "EXE_LWDB" "EXE_LWDBFL" "GST_PLUGIN_SYSTEM_PATH_1_0" "WINE_GST_REGISTRY_DIR" "RUNTIME" "WINE_SANDBOX" \
                 "WINEFSYNC" "WINEFSYNC_FUTEX2" "WINE_FULLSCREEN_FSR" "WINE_FULLSCREEN_FSR_STRENGTH" "STAGING_SHARED_MEMORY" "WINEESYNC" "VKBASALT_LOG_FILE" \
                 "LOG_FILE" "WINE_LARGE_ADDRESS_AWARE" "TERM_APP" "VKBASALT" "DXVK_NVAPIHACK" "RUN_MANGOHUD" "MANGOHUD_USER_CONF" "RUN_GAMEMODE" "VKD3D_LOG_FILE" "VKBASALT_CONFIG_FILE" \
@@ -1463,7 +1468,6 @@ lu_debug() {
                 else
                     echo "[ WINE version ] : $WINE_IN_USE" >> "$TMP_DEB"
             fi
-            [ -f "$WINEDIR/version" ] && cat "$WINEDIR/version" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
@@ -1486,7 +1490,7 @@ lu_debug() {
             echo -en "$(df -h|head -1)\n$(df -h|grep "$(echo $DiskMP|awk '{print$1}')")\n" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Graphic cards and drivers ] :" >> "$TMP_DEB"
-            echo $(lspci|grep -iF VGA) >> "$TMP_DEB"
+            echo $(lspci -k|grep -EA3 'VGA|3D|Display') >> "$TMP_DEB"
             if [ ! -x "$(which glxinfo 2>/dev/null)" ]
                 then
                     echo "[!]glxinfo not found[!]"  >> "$TMP_DEB"
@@ -1614,7 +1618,7 @@ lu_debug() {
                     echo "[ PROTON EAC ] : OFF" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
-            echo "[ Network status ] : $(curl -Is "http://www.github.com" &>/dev/null && echo ONLINE || echo OFFLINE)" >> "$TMP_DEB"
+            echo "[ Network status ] : $([ "$NETSTATUS" == 1 ] && echo ONLINE || echo OFFLINE)" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo " -------------------------------------------" >> "$TMP_DEB"
             echo "|[             Starting logging            ]|" >> "$TMP_DEB"
@@ -1688,7 +1692,7 @@ updcfgchksum() {
 }
 
 check_def_wine() {
-    if [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 0 && ! -z "$SYS_WINE" ]]
+    if [[ ! -f "$WINE" && "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|sed 's/^ *//g'|wc -l)" == 0 && ! -z "$SYS_WINE" ]]
         then
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'System\'/g" "$LW_CFG"
             export NEW_WINE_VERSION="System"
@@ -1696,16 +1700,17 @@ check_def_wine() {
             export OLD_WINE="$WINE"
             import_luwine_conf
             print_info notify "System Wine selected as default!"
-    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 0 ]]
+    elif [[ ! -f "$WINE" && "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|sed 's/^ *//g'|wc -l)" == 0 ]]
         then
             print_info yad "Lutris Wine Manager" "Wine is not installed, you must download Wine!"
             lu_winemgr
             check_def_wine
-    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" != 1 ]]
+    elif [[ ! -f "$WINE" && "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|sed 's/^ *//g'|wc -l)" != 1 ]] \
+        && [[ -z "$P_DXVK" || -z "$P_NVAPI" || -z "$P_VKD3D" ]]
         then
             print_error yad "Lutris Wine Manager" "Default Wine not selected, you must select default Wine!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$(if [ ! -z "$SYS_WINE" ]; then echo -e '\nSystem'; fi)"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            yad --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
+            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$([ ! -z "$SYS_WINE" ] && echo -e '\nSystem')$([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
                 --width=400 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
             if [ ! -z "$SETWINE" ]
                 then
@@ -1714,15 +1719,18 @@ check_def_wine() {
                     export OLD_WINE_VERSION="$WINE_VERSION"
                     export OLD_WINE="$WINE"
                     import_luwine_conf
+                    check_proton_d3dlib
                     print_info notify "Wine $SETWINE selected as default!"
                 else
                     check_def_wine
             fi
-    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" != 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ ! -f "$WINE" && "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|sed 's/^ *//g'|wc -l)" != 1 ]] \
+        && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]] \
+        && [[ -z "$P_DXVK" || -z "$P_NVAPI" || -z "$P_VKD3D" ]]
         then
             print_error yad "Lutris Wine Manager" "Default Wine not selected, you must select default Wine!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$(if [ ! -z "$SYS_WINE" ]; then echo -e '\nSystem'; fi)"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            yad --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
+            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$([ ! -z "$SYS_WINE" ] && echo -e '\nSystem')$([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+            yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
                 --width=400 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
             if [ ! -z "$SETWINE" ]
                 then
@@ -1731,28 +1739,33 @@ check_def_wine() {
                     export OLD_WINE_VERSION="$WINE_VERSION"
                     export OLD_WINE="$WINE"
                     import_luwine_conf
+                    check_proton_d3dlib
                     print_info notify "Wine $SETWINE selected as default!"
                 else
                     check_def_wine
             fi
-    elif [[ -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 && "$WINE_VERSION" != "System" ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
-        then :
-    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 ]] && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ -f "$WINE" && "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|sed 's/^ *//g'|wc -l)" == 1 && "$WINE_VERSION" != "System" ]] \
+        && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]; then :
+    elif [ ! -f "$WINE" ] && [[ "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|sed 's/^ *//g'|wc -l)" == 1 \
+        || ! -z "$P_DXVK" || ! -z "$P_NVAPI" || ! -z "$P_VKD3D" ]] \
+        && [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
-            export SETWINE="$(ls -1 "$LW_WINE_DIR" 2>/dev/null|head -1)"
+            export SETWINE="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)"
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
             export NEW_WINE_VERSION="$SETWINE"
             export OLD_WINE_VERSION="$WINE_VERSION"
             export OLD_WINE="$WINE"
             import_luwine_conf
+            check_proton_d3dlib
             print_info notify "Wine $SETWINE selected as default!"
-    elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
+    elif [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]] \
+        && [[ -z "$P_DXVK" || -z "$P_NVAPI" || -z "$P_VKD3D" ]]
         then
             if [ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" ]
                 then
                     print_info notify "Selecting default Wine..."
-                    SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$(if [ ! -z "$SYS_WINE" ]; then echo -e '\nSystem'; fi)"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-                    yad --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
+                    SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$([ ! -z "$SYS_WINE" ] && echo -e '\nSystem')$([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+                    yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
                         --width=400 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
                     if [ ! -z "$SETWINE" ]
                         then
@@ -1761,19 +1774,21 @@ check_def_wine() {
                             export OLD_WINE_VERSION="$WINE_VERSION"
                             export OLD_WINE="$WINE"
                             import_luwine_conf
+                            check_proton_d3dlib
                             print_info notify "Wine $SETWINE selected as default!"
                     fi
                 else
                     print_error yad "Lutris Wine Manager" "Lutris Wine Manager already runing!"
             fi
-    elif [[ ! -f "$WINE" && "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g'|wc -l)" == 1 ]]
+    elif [[ ! -f "$WINE" && "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|sed 's/^ *//g'|wc -l)" == 1 ]]
         then
-            export SETWINE="$(ls -1 "$LW_WINE_DIR" 2>/dev/null|head -1)"
+            export SETWINE="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)"
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
             export NEW_WINE_VERSION="$SETWINE"
             export OLD_WINE_VERSION="$WINE_VERSION"
             export OLD_WINE="$WINE"
             import_luwine_conf
+            check_proton_d3dlib
             print_info notify "Wine $SETWINE selected as default!"
     fi
     try_mkdir "$WINEPREFIX"
@@ -1804,6 +1819,7 @@ lu_prerun() {
             fi
             cd "$EXE_PATH"
             export EXE_CFG="$EXE_PATH/$EXE_NAME.wcfg"
+            export EXE_CENV="$EXE_PATH/$EXE_NAME.cenv"
             export LW_APPCFG="$LW_APPCFG_DIR/$EXE_NAME.wcfg"
             export EXE_DIR="$(grep -o '[^/]*$' <<< "$EXE_PATH")"
             if [ "$LOG" == 1 ]
@@ -1833,6 +1849,7 @@ lu_prerun() {
 }
 
 lu_run() {
+    pre_launch 2>/dev/null
     dis_displ_sw 2>/dev/null
     lu_tray
     run_db_script
@@ -1855,14 +1872,14 @@ lu_run() {
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
                     $TERM_APP $LWSHELL
             else
-                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
+                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
                 clear_log  2>/dev/null
                 xdg-open "$LOG_FILE" 2>/dev/null
             fi
     elif [ "$LOG" == 1 ]
         then
             echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
-            $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
+            $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
             clear_log  2>/dev/null
             xdg-open "$LOG_FILE" 2>/dev/null
     elif [ "$TERMINAL" == 1 ]
@@ -1887,17 +1904,17 @@ lu_run() {
                 if [ ! -z "$LU_LNK" ]
                     then
                         export TMP_OUT="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').out"
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
                     else
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
                 fi
             fi
     else
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
-        $RUN_FPSLIMIT $RUN_SINGLE_CPU $RUN_GAMEMODE $RUN_MANGOHUD "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
+        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
     unset LD_LIBRARY_PATH
-    post_launch &>/dev/null
+    post_launch 2>/dev/null
     stop_loadbar
     compositor_sw 2>/dev/null
     gamma_sw 2>/dev/null
@@ -1963,7 +1980,7 @@ check_startfile() {
     fi
 }
 
-check_exe_wcfg() {
+check_exe_wcfg_cenv() {
     check_startfile "$@"
     if [[ ! -z "$(file "$(readlink -f "$LU_START")"|grep "for MS Windows"|grep -o "executable")" && ! -z "$(readlink -f "$LU_START"|grep -o ".exe$")" ]]
         then
@@ -1983,6 +2000,15 @@ check_exe_wcfg() {
                 then
                     print_info notify "Found EXE config: '$EXE_CFG'"
                     print_error yad "EXE config not imported! First you need to set up Lutris Wine!"
+            fi
+            if [[ -f "$EXE_CENV" && ! -z "$(cat "$EXE_CENV" 2>/dev/null)" ]]
+                then
+                    print_info notify "Found EXE env file: '$EXE_CENV'"
+                    export LW_CENV="$EXE_CENV"
+            elif [[ -f "$EXE_CENV" && -z "$(cat "$EXE_CENV" 2>/dev/null)" ]]
+                then
+                    try_rm "$EXE_CENV"
+                    export LW_CENV="$LW_DEF_CENV"
             fi
     fi
 }
@@ -2031,9 +2057,9 @@ run_db_script() {
 }
 
 check_first_run() {
-    if [[ ! -f "$LW_DIR/.firstrun" && "$(cat "$LW_CFG" 2>/dev/null|wc -l)" -le 2 ]]
+    if [[ ! -f "$LW_DIR/.firstrun" && "$(cat "$LW_CFG" 2>/dev/null|wc -l)" -le 8 ]]
         then
-            if [ -z "$(echo "$FULLCMDLINE"|grep -w "$LWNAME -config")" ]
+            if [ -z "$(echo "$FULLCMDLINE"|grep -w "$LW_NAME -config")" ]
                 then
                     if print_question "Lutris Wine First Run" "It looks like you are running Lutris Wine for the first time. \nWould you like to adjust the settings before the first initialization?"
                         then
@@ -2045,7 +2071,7 @@ check_first_run() {
                 do
                     xdg-mime default LutrisWine.desktop "$winemimetype"
             done
-            update-desktop-database -q "$MENU_APP_DIR"
+            update-desktop-database -q "$LW_MENU_APP_DIR"
             touch "$LW_DIR/.firstrun"
             [ "$1" != "-init" ] && full_init
             unset FIRST_RUN
@@ -2054,7 +2080,7 @@ check_first_run() {
 }
 
 check_virt_desktop() {
-    if [ ! -z "$1" ] ; then export VIRTUAL_DESKTOP="$1" ; fi
+    [ ! -z "$1" ] && export VIRTUAL_DESKTOP="$1"
     if [ "$VIRTUAL_DESKTOP" == 1 ]
         then
             RUN_VDESKTOP="explorer /desktop=LutrisWine,$PRIMDISPL_RES"
@@ -2063,28 +2089,44 @@ check_virt_desktop() {
     fi
 }
 
+check_downloader() {
+    [ -z "$LW_DOWNLOADER" ] && export LW_DOWNLOADER="$(for whichdwnl in {aria2c,wget}
+        do
+            echo "$(basename "$(which $whichdwnl 2>/dev/null)" 2>/dev/null)"
+    done|sed '/^$/d'|head -1)"
+    [ -z "$LW_DOWNLOADER" ] && print_error yad "Downloader not found in your system! You must install aria2c or wget!" && exit 1
+    export WINETRICKS_DOWNLOADER="$LW_DOWNLOADER"
+}
+
+import_cenv() {
+    [ -f "$LW_CENV" ] && source "$LW_CENV"
+}
+
 lite_init() {
     export_all_functions
     if [[ "$1" != "-killwine" && "$1" != "-killtray" && "$1" != "-killexe" \
         && "$1" != "-killshell" && "$1" != "-exit" && "$1" != "-tray" ]]
         then
-            if [[ ! -z "$(pgrep -fa 'zenity'|grep -w 'Startup initialization'|awk '{print$1}')" \
-                || ! -z "$(pgrep -fa 'zenity'|grep -w 'Updating parameters'|awk '{print$1}')" && "$1" != "initsett" ]]
+            if [ -z "$SETT_INIT" ] && [[ ! -z "$(pgrep -fa 'zenity'|grep -w 'Runtime initialization'|awk '{print$1}')" \
+                || ! -z "$(pgrep -fa 'zenity'|grep -w 'Updating parameters'|awk '{print$1}')" ]]
                 then
                     print_info yad "Initialization is in progress! Please wait..."
-                    while pgrep -fa 'zenity'|grep -w 'Startup initialization' &>/dev/null ; do sleep 1 ; done
+                    while pgrep -fa 'zenity'|grep -w 'Runtime initialization' &>/dev/null ; do sleep 1 ; done
                     while pgrep -fa 'zenity'|grep -w 'Updating parameters' &>/dev/null ; do sleep 1 ; done
             fi
+            [[ ! -z "$SETT_INIT" || "$1" == "-init" ]] && initbar
             check_freespace "$BASH_SOURCE"
-            check_exe_wcfg "$@"
+            check_exe_wcfg_cenv "$@"
             check_luwine_conf
             init_def_config
+            check_downloader
             check_db_script
             check_loadbar_cover
             check_network_status
             check_display
             check_shell
             check_def_wine
+            check_proton_d3dlib
             check_path
             check_terminal
             check_reshade
@@ -2097,7 +2139,8 @@ lite_init() {
 full_init() {
     if [ "$SKIP_INIT" != 1 ]
         then
-            [ "$1" != "noinitbar" ] && initbar
+            [[ -z "$SETT_INIT" && "$1" != "-init" ]] && initbar
+            import_cenv
             check_crash_dialog
             check_winepfx
             check_wd3dmode
@@ -2134,7 +2177,7 @@ full_init() {
             check_musthave_dll
             check_win_version
             check_themes
-            check_single_cpu
+            check_cpu_limit
             check_fps_limit
             check_no_async
             check_us_switcher
@@ -2153,17 +2196,21 @@ lu_start() {
     check_startfile "$@"
     if [ ! -z "$LU_START" ]
         then
+            full_init "$@"
             lu_prestart
         else
             if [[ ! -z "$DEBUG" && "$DEBUG" != 0 ]]
                 then
-                    export DEBUG_EXE="$(yad --window-icon="$DEF_ICO" --title "Specify the executable file to start Lutris Wine DEBUG:" --file --file-filter="*.exe" --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
+                    export DEBUG_EXE="$(yad --window-icon="$LW_DEF_ICO" --title "Specify the executable file to start Lutris Wine DEBUG:" --file --file-filter="*.exe" --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
                     if [ -f "$DEBUG_EXE" ]
                         then
                             export DEBUG_FL="$(readlink -f "$DEBUG_EXE")"
                             if [ ! -z "$(file "$DEBUG_FL"|grep "for MS Windows"|grep -o "executable")" ]
                                 then
                                     export LU_EXE="$DEBUG_FL"
+                                    lite_init "$LU_EXE"
+                                    full_init "$LU_EXE"
+                                    export DEBUG=1
                                     lu_run "$LU_EXE"
                                 else
                                     print_error yad "Unable to start DEBUG for this file!"
@@ -2174,9 +2221,11 @@ lu_start() {
                             lu_start
                     fi
                 else
-                    export LU_START="$(yad --window-icon="$DEF_ICO" --title "Specify file to run in Lutris Wine:" --file --file-filter="*.exe *.lnk *.bat *.msi *.reg"  --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
+                    export LU_START="$(yad --window-icon="$LW_DEF_ICO" --title "Specify file to run in Lutris Wine:" --file --file-filter="*.exe *.lnk *.bat *.msi *.reg"  --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
                     if [ -f "$LU_START" ]
                         then
+                            lite_init "$LU_START"
+                            full_init "$LU_START"
                             lu_prestart
                     elif [ -d "$LU_START" ]
                         then
@@ -2195,32 +2244,33 @@ lu_config() {
             exit 1
     fi
     export LWCFGKEY=$RANDOM
-    WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*') $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi) $(if [ ! -z "$SYS_WINE" ]; then echo '\n System'; fi)"
-    WINETHEMESLST="$(ls -1 "$THEMES_DIR" 2>/dev/null|sed 's/.reg//g')"
+    WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*') $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default') $([ ! -z "$SYS_WINE" ] && echo '\n System')"
+    WINETHEMESLST="$(ls -1 "$LW_THEMES_DIR" 2>/dev/null|sed 's/.reg//g')"
     WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe= \n Disabled"
     WMONOOVERLST="Microsoft.Xna.Framework.*,Gac=n \n Disabled"
     WINVERLST="10 \n \n 8 \n 7 \n xp"
     WARCHLST="win64 \n win32"
-    MHAVEDLLST="mfc42 vcrun2019 \n dotnet46 xna40 dotnet20 mfc120 mfc42 msvcirt vcrun2010 vcrun2012 vcrun2013 vcrun2019 vcrun6 vcrun6sp6 \n physx \n Disabled"
+    MHAVEDLLST="vcrun2019 mfc42 \n vcrun6 vcrun6sp6 vcrun2010 vcrun2012 vcrun2013 vcrun2019 mfc120 mfc42 msvcirt dotnet20 xna40 dotnet46 \n physx \n Disabled"
     TERMAPPLST="$(for whichterm in {konsole,gnome-terminal,kitty,deepin-terminal,xfce4-terminal,xterm} ; do which $whichterm 2>/dev/null ; done)"
+    DOWNLOADERLST="$(for whichdwnl in {aria2c,wget} ; do echo "$(basename "$(which $whichdwnl 2>/dev/null)" 2>/dev/null)" ; done)"
     VSYNCLST="Enabled \n Disabled \n Default"
     MANGOHUDLST="OpenGL \n Vulkan \n Disabled"
     DXRLST="1.0 \n 1.1 \n Disabled"
     WD3DMODELST="DXVK+NVAPI \n VKD3D \n WineD3D \n DXVK+NVAPI+VKD3D"
-    VKICDFILESLST="AUTO $(if [ ! -z "$(find "$VLK_ICD_DIR"/nvidia* -type f 2>/dev/null)" ]; then echo '\n Nvidia'; fi) \
-                        $(if [ ! -z "$(find "$VLK_ICD_DIR"/intel* -type f 2>/dev/null)" ]; then echo '\n Intel'; fi) \
-                        $(if [ ! -z "$(find "$VLK_ICD_DIR"/radeon* -type f 2>/dev/null)" ]; then echo '\n AMD'; fi) \
-                        $(if [ ! -z "$(find "$VLK_ICD_DIR"/lvp* -type f 2>/dev/null)" ]; then echo '\n Lvp'; fi)"
-    DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null|grep -v '.*.tar.*') \n v1.9.4L-2 \n v1.9.4 \n v1.10 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
+    VKICDFILESLST="AUTO $([ ! -z "$(find "$VLK_ICD_DIR"/nvidia* -type f 2>/dev/null)" ] && echo '\n Nvidia') \
+                        $([ ! -z "$(find "$VLK_ICD_DIR"/intel* -type f 2>/dev/null)" ] && echo '\n Intel') \
+                        $([ ! -z "$(find "$VLK_ICD_DIR"/radeon* -type f 2>/dev/null)" ] && echo '\n AMD') \
+                        $([ ! -z "$(find "$VLK_ICD_DIR"/lvp* -type f 2>/dev/null)" ] && echo '\n Lvp')"
+    DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null|grep -v '.*.tar.*') \n v1.9.4L-2 \n v1.10L \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
     DXVKGITLST="https://github.com/lutris/dxvk/releases \n https://github.com/doitsujin/dxvk/releases"
-    VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null|grep -v '.*.tar.*') \n v2.5L-c0a3fa8 \n v2.5 \n v2.6 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
+    VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null|grep -v '.*.tar.*') \n v2.5L-c0a3fa8 \n v2.6 \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
     VKD3DCFGLST="force_bindless_texel_buffer,multi_queue \n Disabled"
     VKD3DGITLST="https://github.com/lutris/vkd3d/releases \n https://github.com/HansKristian-Work/vkd3d-proton/releases"
-    D3DXTRLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/d3d_extras" 2>/dev/null|grep -v '.*.tar.*') \n v2 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
+    D3DXTRLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/d3d_extras" 2>/dev/null|grep -v '.*.tar.*') \n v2 \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
     D3DXTRGITLST="https://github.com/lutris/d3d_extras/releases"
-    DXNVALST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk-nvapi" 2>/dev/null|grep -v '.*.tar.*') \n v0.5-e23d450 \n v0.5.2 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
-    DXNVAGITLST="https://github.com/lutris/dxvk-nvapi/releases \n https://github.com/VHSgunzo/nvapi/releases"
-    DGVOOLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dgvoodoo2" 2>/dev/null|grep -v '.*.tar.*') \n v2.64 \n latest $(if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]; then echo '\n Default'; fi)"
+    DXNVALST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk-nvapi" 2>/dev/null|grep -v '.*.tar.*') \n v0.5.3 \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
+    DXNVAGITLST="https://github.com/lutris/dxvk-nvapi/releases \n https://github.com/VHSgunzo/nvapi/releases \n https://github.com/jp7677/dxvk-nvapi/releases"
+    DGVOOLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dgvoodoo2" 2>/dev/null|grep -v '.*.tar.*') \n v2.64 \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
     DGVOOGITLST="https://github.com/lutris/dgvoodoo2/releases"
     SEDLWPRM="sed 's/^ *//'|sed '/^[[:space:]]*$/d'|sed 's/[[:blank:]]*$//'"
     AWKFIX="awk '{ gsub(\"-\",\"\\\\-\"); print }'"
@@ -2231,9 +2281,9 @@ lu_config() {
             DXR VKD3DCFG VKD3D_GIT_RELEASE_URL DXVK_NVAPI_VERSION NVAPI_GIT_RELEASE_URL D3D_EXTRAS D3D_EXTRAS_VERSION D3D_GIT_RELEASE_URL DGVOODOO2 \
             DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL MUST_HAVE_DLL FSR FAKE_CUR_RES DXVKASYNC WINE_DXGI ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             GL_THRD_OPTI NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD DIS_NETCORE VIRTUAL_DESKTOP \
-            BATTLEYE EAC WINE_SANDBOX CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS SINGLE_CPU DIS_OTH_DISPL \
-            RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS \
-            VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT VSYNC PRIME"
+            BATTLEYE EAC WINE_SANDBOX CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL LOADBAR LOADBARGIF LOG DEBUG SYS_WINETRICKS CPU_LIMIT \
+            DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LW_DOWNLOADER NO_TRAY US_LAYOUT \
+            VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT VSYNC PRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ ! -z "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2253,20 +2303,22 @@ lu_config() {
                 COUNT_FX=$(( $COUNT_FX + 1 ))
         done
         FX_RESULT="$(echo "cas$FX_RESULT"|sed 's/:://')"
-
         if [ ! -z "$(echo "$WCFGOUT"|head -1)" ]
             then
                 echo "$WCFGOUT" > "$LW_CFG"
                 echo "export VKBASALT_EFFECTS='$FX_RESULT'" >> "$LW_CFG"
+                [[ "$WINE_NVML_VERSION" != 'latest' && -z "$(grep -o 'WINE_NVML_VERSION' "$LW_CFG" 2>/dev/null)" ]] \
+                && echo "export WINE_NVML_VERSION='$WINE_NVML_VERSION'" >> "$LW_CFG"
                 WINEWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')"
-                CURDEFWINE="$(cat "$WINEPREFIX/.defwine")"
+                WINEPFXWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINEPREFIX.*$'|cut -d'=' -f2|tr -d \')"
+                CURDEFWINE="$(cat "$WINEPFXWCFGOUT/.defwine")"
                 if [[ "$WINEWCFGOUT" != "$CURDEFWINE" && "$WINEWCFGOUT" != "Default" ]] \
                     || [[ "$WINEWCFGOUT" == "Default" && "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \'|cut -d'=' -f2)" != "$CURDEFWINE" ]]
                     then
                         export NEW_WINE_VERSION="$WINEWCFGOUT"
                         export OLD_WINE_VERSION="$CURDEFWINE"
                         export OLD_WINE="$WINE"
-                        print_info "Wine version changed to $NEW_WINE_VERSION"
+                        print_info notify "Wine version changed to $NEW_WINE_VERSION"
                 fi
                 if [ ! -z "$LU_EXE" ]
                     then
@@ -2277,15 +2329,18 @@ lu_config() {
                                 try_ln "$LW_CFG" "$LW_APPCFG_DIR"
                         fi
                 fi
+                try_cp "/tmp/envsett$LWCFGKEY" "$LW_CENV"
+                [ -f "$WINEPFXWCFGOUT/update_pfx.log" ] \
+                && try_cp "/tmp/wlogsett$LWCFGKEY" "$WINEPFXWCFGOUT/winetricks.log"
                 if [[ "$1" == "init" && -z "$FIRST_RUN" ]]
                     then
-                        NO_NOTIFY=1 lite_init initsett
-                        NO_NOTIFY=1 full_init noinitbar
+                        SETT_INIT=1 lite_init
+                        SETT_INIT=1 full_init
                 fi
         fi
     }
     lwconfig_reset() {
-        try_rm "$LW_CFG" "$LW_DIR/.lwcfgchksum" &>/dev/null
+        try_rm "$LW_CFG" "$LW_DIR/.lwcfgchksum" "$LW_CENV" &>/dev/null
         if [ ! -z "$(echo "$FULLCMDLINE"|grep -wo '\-shortcut')" ]
             then
                 cleanrun "$(echo "$FULLCMDLINE"|sed 's/-shortcut /-config /')"
@@ -2294,7 +2349,7 @@ lu_config() {
         fi
     }
     lwconfig_menu() {
-        yad --plug=$LWCFGKEY --tabnum=1 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
+        yad --plug=$LWCFGKEY --tabnum=1 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
             --field="Wine version::CB" "$(echo -e "$WINE_VERSION\n$(echo -e "$WINE_VERSION\n$WINELST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="Windows version::CB" "$(echo -e "$WIN_VER\n$(echo -e "$WIN_VER\n$WINVERLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Wine architecture::CB" "$(echo -e "$WINEARCH\n$(echo -e "$WINEARCH\n$WARCHLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
@@ -2343,7 +2398,7 @@ lu_config() {
             --field="Wine prefix sandbox:CHK" "$WINE_SANDBOX" \
         1> /tmp/winesett$LWCFGKEY &
 
-        yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
+        yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
             --field="Check update days (0-disabled)::NUM" "$CHK_UPDATE" \
             --field="Lutris runtime:CHK" "$RUNTIME" \
             --field="Prefer system libs:CHK" "$PREF_SYS_LIBS" \
@@ -2357,7 +2412,7 @@ lu_config() {
             --field="LOG:CHK" "$LOG" \
             --field="DEBUG:CHK" "$DEBUG" \
             --field="Use system Winetricks:CHK" "$SYS_WINETRICKS" \
-            --field="Single CPU:CHK" "$SINGLE_CPU" \
+            --field="CPU limit (0-disabled)::CB" "$(echo -e "$CPU_LIMIT\n$(echo -e "$CPU_LIMIT\n$(seq 0 $(cat '/proc/cpuinfo'|grep "processor"|wc -l))"|eval $SEDLWPRM|sort -un)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Disable no primary displays:CHK" "$DIS_OTH_DISPL" \
             --field="Restore resolution:CHK" "$RESTORE_RESOL" \
             --field="Restore gamma:CHK" "$RESTORE_GAMMA" \
@@ -2367,6 +2422,7 @@ lu_config() {
             --field="Open in terminal:CHK" "$TERMINAL" \
             --field="Hold terminal:CHK" "$HOLD_TERMINAL" \
             --field="Terminal app::CB" "$(echo -e "$LW_TERM_APP\n$(echo -e "$LW_TERM_APP\n$TERMAPPLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Downloader::CB" "$(echo -e "$LW_DOWNLOADER\n$(echo -e "$LW_DOWNLOADER\n$DOWNLOADERLST"|eval $SEDLWPRM|eval $SRTLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="Don't launch tray:CHK" "$NO_TRAY" \
             --field="Switch to US keyboard layout:CHK" "$US_LAYOUT" \
             --field="VkBasalt:CHK" "$VKBASALT" \
@@ -2382,7 +2438,7 @@ lu_config() {
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
-        if [ -d "$RESHADE_DIR" ]
+        if [ -d "$LW_RESHADE_DIR" ]
             then
                 RES_LST=($(grep ".fx$" "$VKBASALT_CONFIG_FILE" 2>/dev/null|awk '{print $1}'))
                 RES_CFG=($(echo "$VKBASALT_EFFECTS"|sed 's/cas//'|sed 's/^://'|sed 's/:$//'|sed 's/::/:/'|sed 's/:/ /'))
@@ -2397,75 +2453,84 @@ lu_config() {
                 done
         fi
         (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
-            $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
+            $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
             $RESHADE_SETT \
         1> /tmp/ressett$LWCFGKEY & )
 
-        if [ -z "$FIRST_RUN" ]
-            then
-                yad --plug=$LWCFGKEY --tabnum=4 --columns=3 --form $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
-                    --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
-                    --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
-                    --field="Open CMD:FBTN" "$LWSHELL -c 'lu_cmd'" \
-                    --field="Open SHELL:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -shell'" \
-                    --field="Open application:FBTN" "$LWSHELL -c 'lu_start'" \
-                    --field="DEBUG:FBTN" "$LWSHELL -c 'export DEBUG=1 ; lu_start'" \
-                    --field="Open drive C:\:FBTN" "$LWSHELL -c 'lu_openpfx'" \
-                    --field="Apps settings:FBTN" "$LWSHELL -c 'btn_tools appcfg'" \
-                    --field="Wine manager:FBTN" "$LWSHELL -c 'btn_tools winemgr'" \
-                    --field="Runtime updater:FBTN" "$LWSHELL -c 'btn_tools update'" \
-                    --field="Winetricks:FBTN" "$LWSHELL -c 'winetricks'" \
-                    --field="Control panel:FBTN" "$LWSHELL -c 'lu_control'" \
-                    --field="Wine settings:FBTN" "$LWSHELL -c 'lu_winecfg'" \
-                    --field="Registry editor:FBTN" "$LWSHELL -c 'lu_regedit'" \
-                    --field="Wine uninstaller:FBTN" "$LWSHELL -c 'lu_uninstaller'" \
-                    --field="Create shortcut:FBTN" "$LWSHELL -c 'lu_shortcut'" \
-                    --field="Add app to Lutris:FBTN" "$LWSHELL -c 'ADDTOLU=1 lu_shortcut'" \
-                    --field="Tray:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -tray noclose'" \
-                    --field="Clear prefix:FBTN" "$LWSHELL -c 'lu_clearpfx'" \
-                    --field="Remove menu apps:FBTN" "$LWSHELL -c 'lu_rmapp'" \
-                    --field="Kill Wine processes:FBTN" "$LWSHELL -c 'lu_killwine'" \
-                    --field="Kill tray:FBTN" "$LWSHELL -c 'lu_killtray'" \
-                    --field="Kill running EXE:FBTN" "$LWSHELL -c 'lu_killexe'" \
-                    --field="Kill SHELL:FBTN" "$LWSHELL -c 'lu_killshell'" \
-                    --field="Force Exit:FBTN" "$LWSHELL -c 'lu_exit'" \
-                &>/dev/null &
-        fi
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+        --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
+
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+            --field="Log file [ $WTRX_LOG ]:TXT" "$(cat "$WTRX_LOG" 2>/dev/null)" 2>/dev/null)" > /tmp/wlogsett$LWCFGKEY &
+
+        [ -z "$FIRST_RUN" ] && yad --plug=$LWCFGKEY --tabnum=6 --columns=3 --form \
+            $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+            --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
+            --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
+            --field="Open CMD:FBTN" "$LWSHELL -c 'lu_cmd'" \
+            --field="Open SHELL:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -shell'" \
+            --field="Open application:FBTN" "$LWSHELL -c 'lu_start'" \
+            --field="DEBUG:FBTN" "$LWSHELL -c 'export DEBUG=1 ; lu_start'" \
+            --field="Open drive C:\:FBTN" "$LWSHELL -c 'lu_openpfx'" \
+            --field="Apps settings:FBTN" "$LWSHELL -c 'btn_tools appcfg'" \
+            --field="Wine manager:FBTN" "$LWSHELL -c 'btn_tools winemgr'" \
+            --field="Runtime updater:FBTN" "$LWSHELL -c 'btn_tools update'" \
+            --field="Winetricks:FBTN" "$LWSHELL -c 'btn_tools winetricks'" \
+            --field="Control panel:FBTN" "$LWSHELL -c 'lu_control'" \
+            --field="Wine settings:FBTN" "$LWSHELL -c 'lu_winecfg'" \
+            --field="Registry editor:FBTN" "$LWSHELL -c 'lu_regedit'" \
+            --field="Wine uninstaller:FBTN" "$LWSHELL -c 'lu_uninstaller'" \
+            --field="Create shortcut:FBTN" "$LWSHELL -c 'lu_shortcut'" \
+            --field="Add app to Lutris:FBTN" "$LWSHELL -c 'ADDTOLU=1 lu_shortcut'" \
+            --field="Tray:FBTN" "$LWSHELL -c '"$BASH_SOURCE" -tray noclose'" \
+            --field="Clear prefix:FBTN" "$LWSHELL -c 'btn_tools clearpfx'" \
+            --field="Remove menu apps:FBTN" "$LWSHELL -c 'lu_rmapp'" \
+            --field="Kill Wine processes:FBTN" "$LWSHELL -c 'lu_killwine'" \
+            --field="Kill tray:FBTN" "$LWSHELL -c 'lu_killtray'" \
+            --field="Kill running EXE:FBTN" "$LWSHELL -c 'lu_killexe'" \
+            --field="Kill SHELL:FBTN" "$LWSHELL -c 'lu_killshell'" \
+            --field="Force Exit:FBTN" "$LWSHELL -c 'lu_exit'" \
+        &>/dev/null &
 
         check_exes
         if [[ ! -z "$LU_EXE" && -z "$RUN_EXE" && -z "$FIRST_RUN" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
-                    --width=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5") --height=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5") --text-align=center --center --window-icon="$DEF_ICO" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
+                    --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                    --title="Lutris Wine settings for $SETT_EXE" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                    --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
         elif [[ ! -z "$LU_EXE" && ! -z "$RUN_EXE" && -z "$FIRST_RUN" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --tab="Tools" --title="Lutris Wine settings for $(basename "$LU_EXE")" $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
-                    --width=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5") --height=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5") --text-align=center --center --window-icon="$DEF_ICO" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
+                    --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                    --title="Lutris Wine settings for $SETT_EXE" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                    --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ ! -z "$FIRST_RUN" ]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --title="Lutris Wine settings" $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
-                    --width=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5") --height=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5") --text-align=center --center --window-icon="$DEF_ICO" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
+                    --tab="Custom Environment" --tab="Winetricks Log" \
+                    --title="Lutris Wine settings" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                    --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
-            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" --tab="Tools" --title="Lutris Wine settings" $(if [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] ; then echo "--scroll" ; fi) \
-                --width=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5") --height=$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5") --text-align=center --center --window-icon="$DEF_ICO" \
+            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
+                --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                --title="Lutris Wine settings" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         fi
         case $? in
-            0) lwconfig_save init|settingbar ;;
+            0) lwconfig_save init ;;
             3) lwconfig_reset ;;
-            4) lwconfig_save|settingbar
+            4) lwconfig_save
                cleanrun "'$BASH_SOURCE' '$LU_EXE'" ;;
         esac
     }
 
     btn_tools() {
-        if [ ! -z "$1" ]
-            then
-                echo "$1" > "/tmp/settbtn$LWCFGKEY"
-        fi
+        [ ! -z "$1" ] && echo "$1" > "/tmp/settbtn$LWCFGKEY"
         if [ ! -z "$(pgrep -fa yad|grep "Lutris Wine settings"|awk '{print $1}')" ]
             then
                 kill $(pgrep -fa yad|grep "Lutris Wine settings"|grep "\-\-key=$LWCFGKEY"|awk '{print $1}')
@@ -2473,34 +2538,44 @@ lu_config() {
         fi
     }
     export -f btn_tools
-
+    [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] && export SETTSCROLL=1
+    SETTWIDTH="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5")"
+    SETTHEIGHT="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5")"
     if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]
         then
-            if [[ -z "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null)" || ! -z "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
+            if [[ -z "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
+                || ! -z "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
                 then
                     export WINE_VERSION="Default"
             fi
-            if [[ -z "$(grep -wo 'DXVK_VERSION.*$' "$EXE_CFG" 2>/dev/null)" || ! -z "$(grep -wo 'DXVK_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
+            if [[ -z "$(grep -wo 'DXVK_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
+                || ! -z "$(grep -wo 'DXVK_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
                 then
                     export DXVK_VERSION="Default"
             fi
-            if [[ -z "$(grep -wo 'VKD3D_VERSION.*$' "$EXE_CFG" 2>/dev/null)" || ! -z "$(grep -wo 'VKD3D_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
+            if [[ -z "$(grep -wo 'VKD3D_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
+                || ! -z "$(grep -wo 'VKD3D_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
                 then
                     export VKD3D_VERSION="Default"
             fi
-            if [[ -z "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$EXE_CFG" 2>/dev/null)" || ! -z "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
+            if [[ -z "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
+                || ! -z "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
                 then
                     export DXVK_NVAPI_VERSION="Default"
             fi
-            if [[ -z "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$EXE_CFG" 2>/dev/null)" || ! -z "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
+            if [[ -z "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
+                || ! -z "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
                 then
                     export D3D_EXTRAS_VERSION="Default"
             fi
-            if [[ -z "$(grep -wo 'DGVOODOO2_VERSION.*$' "$EXE_CFG" 2>/dev/null)" || ! -z "$(grep -wo 'DGVOODOO2_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
+            if [[ -z "$(grep -wo 'DGVOODOO2_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
+                || ! -z "$(grep -wo 'DGVOODOO2_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
                 then
                     export DGVOODOO2_VERSION="Default"
             fi
             export LW_CFG="$EXE_CFG"
+            export LW_CENV="$EXE_CENV"
+            export SETT_EXE="$(basename "$LU_EXE")"
             lwconfig_menu
         else
             lwconfig_menu
@@ -2508,6 +2583,8 @@ lu_config() {
     try_rm "/tmp/syssett$LWCFGKEY" &>/dev/null
     try_rm "/tmp/winesett$LWCFGKEY" &>/dev/null
     try_rm "/tmp/ressett$LWCFGKEY" &>/dev/null
+    try_rm "/tmp/envsett$LWCFGKEY" &>/dev/null
+    try_rm "/tmp/wlogsett$LWCFGKEY" &>/dev/null
     if [ -f "/tmp/settbtn$LWCFGKEY" ]
         then
             SETTBTN="$(cat "/tmp/settbtn$LWCFGKEY")"
@@ -2515,8 +2592,12 @@ lu_config() {
             case $SETTBTN in
                     winemgr) lu_winemgr
                              cleanrun "$FULLCMDLINE" ;;
+                    clearpfx) lu_clearpfx
+                              cleanrun "$FULLCMDLINE" ;;
                     update) lu_update
                             cleanrun "$FULLCMDLINE" ;;
+                    winetricks) winetricks
+                                cleanrun "$FULLCMDLINE" ;;
                     appcfg) if ! lu_appcfg ; then cleanrun "$FULLCMDLINE" ; fi ;;
             esac
     fi
@@ -2631,8 +2712,11 @@ winetricks() {
             print_error yad "Winetricks" "Winetricks already runing!"
             exit 1
     fi
+    unset WTRX_ARG
+    [[ -z "$NEED_INSTALL_DLLS" && ! -z "$2" && ! -f "$2" \
+    && ! -d "$2" && ! -L "$2" ]] && export WTRX_ARG="${*:2}"
     check_winepfx
-    [ -z "$READY_INSTALL_DLL" ] && loadbar_cover 2>/dev/null
+    [[ -z "$NEED_INSTALL_DLLS" && -z "$WTRX_ARG" ]] && loadbar_cover 2>/dev/null
     check_wine_pids
     [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
@@ -2645,21 +2729,33 @@ winetricks() {
             if [ ! -z "$(which winetricks 2>/dev/null)" ]
                 then
                     print_info notify "Using System winetricks!"
-                    "$(which winetricks)" "$@"
+                    if [ -z "$WTRX_ARG" ]
+                        then
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $@ || return 1
+                        else
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $WTRX_ARG || return 1
+                    fi
                 else
                     print_error yad "Winetricks" "Winetricks not found in your system. Using Lutris Wine winetricks!"
                     check_winetricks
-                    "$WTRX_DIR/winetricks" "$@"
+                    if [ -z "$WTRX_ARG" ]
+                        then
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
+                        else
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
+                    fi
             fi
         else
             print_info notify "Using Lutris Wine winetricks!"
             check_winetricks
-            "$WTRX_DIR/winetricks" "$@"
+            if [ -z "$WTRX_ARG" ]
+                then
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
+                else
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
+            fi
     fi
-    if [[ ! -z "$NEW_WINE" && -f "$NEW_WINE" ]]
-        then
-            export WINE="$NEW_WINE"
-    fi
+    [[ ! -z "$NEW_WINE" && -f "$NEW_WINE" ]] && export WINE="$NEW_WINE"
     stop_loadbar
 }
 
@@ -2685,14 +2781,14 @@ lu_exit() {
             print_info notify "Lutris Wine successfully killed!" &
             sleep 2
             try_rm /tmp/FORCE_EXIT /tmp/envbackup* /tmp/syssett* /tmp/winesett* /tmp/ressett* /tmp/settbtn* &>/dev/null
-            pkill "$LWNAME" 2>/dev/null
+            pkill "$LW_NAME" 2>/dev/null
         else
             print_error yad "Lutris Wine Killer" "Lutris Wine not runing!" &
     fi
 }
 
 lu_killshell() {
-    check_exe_wcfg "$@"
+    check_exe_wcfg_cenv "$@"
     check_luwine_conf
     init_def_config
     check_terminal
@@ -2743,7 +2839,7 @@ lu_killtray() {
 }
 
 lu_killwine() {
-    check_exe_wcfg "$@"
+    check_exe_wcfg_cenv "$@"
     check_luwine_conf
     init_def_config
     check_wine_pids
@@ -2780,56 +2876,65 @@ lu_killexe() {
 lu_clearpfx() {
     if [ -z "$(pgrep -fa yad|grep "Prefix Cleaner"|awk '{print$1}')" ]; then :
         else
-            print_error yad "Lutris Wine Prefix Cleaner" "Lutris Wine Prefix Cleaner already runing!"
+            print_error yad "Prefix Cleaner" "Prefix Cleaner already runing!"
             exit 1
     fi
-    if print_question "Lutris Wine Prefix Cleaner" "Do you really want to clear prefix ["$WINEPREFIX"] ?"
+    if print_question "Prefix Cleaner" "Do you really want to clear prefix [ $WINEPREFIX ] ?"
         then
             touch /tmp/FORCE_EXIT
             lu_killwine "$@"
-            try_rm "$WINEPREFIX/registry_"*
-            try_rm "$WINEPREFIX/"*.reg
-            try_rm "$WINEPREFIX/"*.log
-            try_rm "$WINEPREFIX/.update-timestamp"
-            try_rm "$WINEPREFIX/drive_c/.windows-serial"
-            try_rm "$WINEPREFIX/drive_c/windows/"
-            try_rm "$WINEPREFIX/drive_c/ProgramData/Setup"
-            try_rm "$WINEPREFIX/drive_c/ProgramData/Windows"
-            try_rm "$WINEPREFIX/drive_c/ProgramData/WindowsTask"
-            try_rm "$WINEPREFIX/drive_c/ProgramData/Package Cache"
-            try_rm "$WINEPREFIX/drive_c/users/Public/Local Settings/Application Data/Microsoft"
-            try_rm "$WINEPREFIX/drive_c/users/Public/Local Settings/Application Data/Temp"
-            try_rm "$WINEPREFIX/drive_c/users/Public/Local Settings/Temporary Internet Files"
-            try_rm "$WINEPREFIX/drive_c/users/Public/Application Data/Microsoft"
-            try_rm "$WINEPREFIX/drive_c/users/Public/Application Data/wine_gecko"
-            try_rm "$WINEPREFIX/drive_c/users/Public/Temp"
-            try_rm "$WINEPREFIX/drive_c/users/user/Local Settings/Application Data/Microsoft"
-            try_rm "$WINEPREFIX/drive_c/users/user/Local Settings/Application Data/Temp"
-            try_rm "$WINEPREFIX/drive_c/users/user/Local Settings/Temporary Internet Files"
-            try_rm "$WINEPREFIX/drive_c/users/user/Application Data/Microsoft"
-            try_rm "$WINEPREFIX/drive_c/users/user/Application Data/wine_gecko"
-            try_rm "$WINEPREFIX/drive_c/users/user/Temp"
-            try_rm "$WINEPREFIX/drive_c/Program Files/Internet Explorer"
-            try_rm "$WINEPREFIX/drive_c/Program Files/Windows Media Player"
-            try_rm "$WINEPREFIX/drive_c/Program Files/Windows NT"
-            try_rm "$WINEPREFIX/drive_c/Program Files/Common Files"
-            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Internet Explorer"
-            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Common Files"
-            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Windows Media Player"
-            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Windows NT"
-            try_rm "$DEF_CACHE/gl_shader_cache/"*
-            try_rm "$DEF_CACHE/dxvk_cache/"*
-            try_rm "$DEF_CACHE/gstreamer-1.0/"*
-            try_rm "$HOME/.cache/gstreamer-1.0/"*
-            try_rm "$DEF_CACHE/mesa_shader_cache/"*
-            try_rm "$LW_DIR/.lwcfgchksum"
-            try_rm /tmp/FORCE_EXIT
-            print_info notify "Prefix "$WINEPREFIX" cleared successfully!"
-            if print_question "Lutris Wine Prefix Cleaner" "Do you want to initialize prefix right now?"
+            try_rm "$WINEPREFIX/registry_"* &>/dev/null
+            try_rm "$WINEPREFIX/"*.reg &>/dev/null
+            try_rm "$WINEPREFIX/"*.log &>/dev/null
+            try_rm "$WINEPREFIX/.update-timestamp" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/.windows-serial" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/windows/" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/ProgramData/Setup" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/ProgramData/Windows" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/ProgramData/WindowsTask" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/ProgramData/Package Cache" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/Public/Local Settings/Application Data/Microsoft" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/Public/Local Settings/Application Data/Temp" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/Public/Local Settings/Temporary Internet Files" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/Public/Application Data/Microsoft" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/Public/Application Data/wine_gecko" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/Public/Temp" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/steamuser/Local Settings/Application Data/Microsoft" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/steamuser/Local Settings/Application Data/Temp" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/steamuser/Local Settings/Temporary Internet Files" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/steamuser/Application Data/Microsoft" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/steamuser/Application Data/wine_gecko" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/users/steamuser/Temp" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files/Internet Explorer" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files/Windows Media Player" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files/Windows NT" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files/Common Files" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Internet Explorer" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Common Files" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Windows Media Player" &>/dev/null
+            try_rm "$WINEPREFIX/drive_c/Program Files (x86)/Windows NT" &>/dev/null
+            try_rm "$WINEPREFIX/.lwtheme" &>/dev/null
+            try_rm "$LW_DIR/.lwcfgchksum" &>/dev/null
+            try_rm /tmp/FORCE_EXIT &>/dev/null
+            print_info notify "Prefix "$WINEPREFIX" successfully cleared!"
+            if print_question "Prefix Cleaner" "Do you want to clear cache?"
                 then
-                    lite_init "$@"
-                    full_init
+                    try_rm "$HOME/.cache/winetricks" &>/dev/null
+                    try_rm "$LW_DEF_CACHE/gl_shader_cache/"* &>/dev/null
+                    try_rm "$LW_DEF_CACHE/dxvk_cache/"* &>/dev/null
+                    try_rm "$LW_DEF_CACHE/gstreamer-1.0/"* &>/dev/null
+                    try_rm "$HOME/.cache/gstreamer-1.0/"* &>/dev/null
+                    try_rm "$LW_DEF_CACHE/mesa_shader_cache/"* &>/dev/null
+                    try_rm "$HOME/.cache/wine" &>/dev/null
+                    print_info notify "Cache successfully cleared!"
             fi
+            if [ "$PFXARCH_MISMATCH" != 1 ] && print_question "Prefix Cleaner" "Do you want to initialize prefix right now?"
+                then
+                    SETT_INIT=1 lite_init "$@"
+                    SETT_INIT=1 full_init
+            fi
+        else
+            [ "$PFXARCH_MISMATCH" == 1 ] && exit 1
     fi
 }
 
@@ -2840,16 +2945,16 @@ lu_rmapp() {
             exit 1
     fi
     updmenuapp() {
-        update-desktop-database -q "$MENU_APP_DIR"
+        update-desktop-database -q "$LW_MENU_APP_DIR"
         sleep 0.3
         print_info notify "Lutris Wine applications deleted from menu!"
     }
-    LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$MENU_APP_DIR")"
+    LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$LW_MENU_APP_DIR")"
     if [[ ! -z "$(echo "$LWAPPSHRT"|head -1)" ]]
         then
             LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep "^Name=" {}|sed 's/^Name=//g'|sort -u|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --title "Lutris Wine Shortcuts Remover" --list --checklist --separator "\n" --column="" --column="Select shortcuts for remove:" \
-                --text-align=center --center --window-icon="$DEF_ICO" \
+                --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --width=400 --height=500 --button="REMOVE ALL:2" --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
                 then
@@ -2900,7 +3005,8 @@ lu_shortcut() {
                     print_error yad "Lutris Wine Shortcuts Creator" "Unable to create Lutris Wine shortcut for this file!"
             fi
         else
-            SHRT_EXE="$(yad --window-icon="$DEF_ICO" --title "Lutris Wine Shortcuts Creator" --file --file-filter="*.exe" --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
+            SHRT_EXE="$(yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Shortcuts Creator" --file \
+            --file-filter="*.exe" --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
             if [ -f "$SHRT_EXE" ]
                 then
                     export SHRT_FL="$(readlink -f "$SHRT_EXE")"
@@ -2945,74 +3051,76 @@ lu_help() {
         ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
-            $RED└──╼ \$$GREEN $LWNAME $BLUE{$LWNAME argument} ${RED}blabla.exe $YELLOW{exe arguments}
+            $RED└──╼ \$$GREEN $LW_NAME $BLUE{$LW_NAME argument} ${RED}blabla.exe $YELLOW{exe arguments}
 
-            ${RED}-explorer $GREEN              Wine explorer
-            ${RED}-cmd $GREEN                   Open CMD or open file in CMD
-            ${RED}-shell $GREEN                 Open SHELL or open file in SHELL
-            ${RED}-config $GREEN                Settings
-            ${RED}-appcfg $GREEN                Apps Settings
-            ${RED}-regedit $GREEN               Registry editor
-            ${RED}-control $GREEN               Control panel
-            ${RED}-winecfg $GREEN               Wine settings
-            ${RED}-winemgr $GREEN               Wine manager
-            ${RED}-taskmgr $GREEN               Task manager
-            ${RED}-uninstaller $GREEN           Wine uninstaller
-            ${RED}-winetricks $GREEN            Winetricks
-            ${RED}-openpfx $GREEN               Open drive C:
-            ${RED}-killwine $GREEN              Kill Wine processes
-            ${RED}-killtray $GREEN              Kill tray
-            ${RED}-killexe $GREEN               Kill running EXE
-            ${RED}-killshell $GREEN             Kill SHELL
-            ${RED}-exit $GREEN                  Force exit
-            ${RED}-clearpfx $GREEN              Clear prefix
-            ${RED}-rmapp $GREEN                 Remove menu apps
-            ${RED}-shortcut $GREEN              Create shortcut
-            ${RED}-addtolu $GREEN               Add to Lutris
-            ${RED}-debug $GREEN                 DEBUG
-            ${RED}-help $GREEN                  Show this usage info
-            ${RED}-version $GREEN               Show version info
-            ${RED}-tray $BLUE{noclose}${GREEN}         Tray
-            ${RED}-init $GREEN                  Forced initialization
-            ${RED}-update$BLUE {all} $GREEN          Runtime updater$BLUE
+            ${RED}-explorer $GREEN               Wine explorer
+            ${RED}-cmd $GREEN                    Open CMD or open file in CMD
+            ${RED}-shell $GREEN                  Open SHELL or open file in SHELL
+            ${RED}-config $GREEN                 Settings
+            ${RED}-appcfg $GREEN                 Apps Settings
+            ${RED}-regedit $GREEN                Registry editor
+            ${RED}-control $GREEN                Control panel
+            ${RED}-winecfg $GREEN                Wine settings
+            ${RED}-winemgr $BLUE{delonly}$GREEN       Wine manager
+            ${RED}-taskmgr $GREEN                Task manager
+            ${RED}-uninstaller $GREEN            Wine uninstaller
+            ${RED}-winetricks $GREEN {arguments} Winetricks
+            ${RED}-openpfx $GREEN                Open drive C:
+            ${RED}-killwine $GREEN               Kill Wine processes
+            ${RED}-killtray $GREEN               Kill tray
+            ${RED}-killexe $GREEN                Kill running EXE
+            ${RED}-killshell $GREEN              Kill SHELL
+            ${RED}-exit $GREEN                   Force exit
+            ${RED}-clearpfx $GREEN               Clear prefix
+            ${RED}-rmapp $GREEN                  Remove menu apps
+            ${RED}-shortcut $GREEN               Create shortcut
+            ${RED}-addtolu $GREEN                Add to Lutris
+            ${RED}-debug $GREEN                  DEBUG
+            ${RED}-help $GREEN                   Show this usage info
+            ${RED}-version $GREEN                Show version info
+            ${RED}-tray $BLUE{noclose}${GREEN}          Tray
+            ${RED}-init $GREEN                   Forced initialization
+            ${RED}-update$BLUE {all} $GREEN           Runtime updater$BLUE
             {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
             {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
-            {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime}{wtrx|winetricks}
+            {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
             {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
+            {nvml|wine_nvml}
         $RESETCOLOR" >&2
-        print_info yad "Lutris Wine usage info" "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LWNAME {$LWNAME argument} blabla.exe {exe arguments} \n\n \
-        -explorer                 Wine explorer\n \
-        -cmd                          Open CMD or open file in CMD\n \
-        -shell                         Open SHELL or open file in SHELL\n \
-        -config                      Settings\n \
-        -appcfg                     Apps Settings\n \
-        -regedit                    Registry editor\n \
-        -control                     Control panel\n \
-        -winecfg                   Wine settings\n \
-        -winemgr                 Wine manager\n \
-        -taskmgr                  Task manager\n \
-        -uninstaller              Wine uninstaller\n \
-        -winetricks               Winetricks\n \
-        -openpfx                  Open drive C:\n \
-        -killwine                     Kill Wine processes\n \
-        -killtray                      Kill tray\n \
-        -killexe                       Kill running EXE\n \
-        -killshell                     Kill SHELL\n \
-        -exit                            Force Exit\n \
-        -clearpfx                   Clear prefix\n \
-        -rmapp                      Remove menu apps\n \
-        -shortcut                  Create shortcut\n \
-        -addtolu                    Add to Lutris\n \
-        -debug                      DEBUG\n \
-        -help                          Show this usage info\n \
-        -version                    Show version info\n \
-        -tray {noclose}       Tray\n \
-        -init                             Forced initialization\n \
-        -update {all}            Runtime updater\n \
-        {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}\n \
-        {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}\n \
-        {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}\n \
-        {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
+        print_info yad "Lutris Wine usage info" "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LW_NAME {$LW_NAME argument} blabla.exe {exe arguments} \n\n \
+        -explorer \t\t\t\t\t Wine explorer\n \
+        -cmd \t\t\t\t\t\t Open CMD or open file in CMD\n \
+        -shell \t\t\t\t\t\t Open SHELL or open file in SHELL\n \
+        -config \t\t\t\t\t Settings\n \
+        -appcfg \t\t\t\t\t Apps Settings\n \
+        -regedit \t\t\t\t\t Registry editor\n \
+        -control \t\t\t\t\t Control panel\n \
+        -winecfg \t\t\t\t\t Wine settings\n \
+        -winemgr {delonly} \t\t Wine manager\n \
+        -taskmgr \t\t\t\t\t Task manager\n \
+        -uninstaller \t\t\t\t Wine uninstaller\n \
+        -winetricks {arguments} \t Winetricks\n \
+        -openpfx \t\t\t\t\t Open drive C:\n \
+        -killwine \t\t\t\t\t Kill Wine processes\n \
+        -killtray \t\t\t\t\t Kill tray\n \
+        -killexe \t\t\t\t\t Kill running EXE\n \
+        -killshell \t\t\t\t\t Kill SHELL\n \
+        -exit \t\t\t\t\t\t Force Exit\n \
+        -clearpfx \t\t\t\t\t Clear prefix\n \
+        -rmapp \t\t\t\t\t Remove menu apps\n \
+        -shortcut \t\t\t\t\t Create shortcut\n \
+        -addtolu \t\t\t\t\t Add to Lutris\n \
+        -debug \t\t\t\t\t DEBUG\n \
+        -help \t\t\t\t\t\t Show this usage info\n \
+        -version \t\t\t\t\t Show version info\n \
+        -tray {noclose} \t\t\t Tray\n \
+        -init \t\t\t\t\t\t Forced initialization\n \
+        -update {all} \t\t\t\t Runtime updater\n \
+{dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}\n \
+{inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}\n \
+{dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}\n \
+{ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
+{nvml|wine_nvml}\n \
         \nLutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
         " &>/dev/null &
 }
@@ -3058,11 +3166,8 @@ lu_version() {
 }
 
 check_shell() {
-    if [ ! -z "$1" ] ; then export LWSHELL="$1" ; fi
-    if [ -z "$LWSHELL" ]
-        then
-            export LWSHELL="$(which bash 2>/dev/null)"
-    fi
+    [ ! -z "$1" ] && export LWSHELL="$1"
+    [ -z "$LWSHELL" ] && export LWSHELL="$(which bash 2>/dev/null)"
 }
 
 lu_tray() {
@@ -3071,38 +3176,38 @@ lu_tray() {
     if [[ -z "$TRAY_PID" && "$NO_TRAY" != 1 ]]
         then
             yad --notification --no-middle --text="Lutris Wine" \
-                --window-icon="$DEF_ICO" \
-                --image="$DEF_ICO" \
+                --window-icon="$LW_DEF_ICO" \
+                --image="$LW_DEF_ICO" \
                 --command="$LWSHELL -c '$BASH_SOURCE'" \
                 --tooltip="Lutris Wine" \
                 --menu="| \
-Explorer!$LWSHELL -c '"$BASH_SOURCE" -explorer'!"$DEF_ICO"| \
-Task manager!$LWSHELL -c '"$BASH_SOURCE" -taskmgr'!"$DEF_ICO"| \
-Open CMD!$LWSHELL -c '"$BASH_SOURCE" -cmd'!"$DEF_ICO"| \
-Open SHELL!$LWSHELL -c '"$BASH_SOURCE" -shell'!"$DEF_ICO"| \
-DEBUG!$LWSHELL -c '"$BASH_SOURCE" -debug'!"$DEF_ICO"| \
-Open drive C:\!$LWSHELL -c '"$BASH_SOURCE" -openpfx'!"$DEF_ICO"| \
-Settings!$LWSHELL -c '"$BASH_SOURCE" -config'!"$DEF_ICO"| \
-Apps settings!$LWSHELL -c '"$BASH_SOURCE" -appcfg'!"$DEF_ICO"| \
-Wine manager!$LWSHELL -c '"$BASH_SOURCE" -winemgr'!"$DEF_ICO"| \
-Runtime updater!$LWSHELL -c '"$BASH_SOURCE" -update'!"$DEF_ICO"| \
-Winetricks!$LWSHELL -c '"$BASH_SOURCE" -winetricks'!"$DEF_ICO"| \
-Control panel!$LWSHELL -c '"$BASH_SOURCE" -control'!"$DEF_ICO"| \
-Wine settings!$LWSHELL -c '"$BASH_SOURCE" -winecfg'!"$DEF_ICO"| \
-Registry editor!$LWSHELL -c '"$BASH_SOURCE" -regedit'!"$DEF_ICO"| \
-Wine uninstaller!$LWSHELL -c '"$BASH_SOURCE" -uninstaller'!"$DEF_ICO"| \
-Create shortcut!$LWSHELL -c '"$BASH_SOURCE" -shortcut'!"$DEF_ICO"| \
-$( if [ ! -z "$SYS_LU" ]; then echo "Add to Lutris!$LWSHELL -c '"$BASH_SOURCE" -addtolu'!"$DEF_ICO"|"; fi) \
-Remove menu app!$LWSHELL -c '"$BASH_SOURCE" -rmapp'!"$DEF_ICO"| \
-Clear prefix!$LWSHELL -c '"$BASH_SOURCE" -clearpfx'!"$DEF_ICO"| \
-Forced init!$LWSHELL -c '"$BASH_SOURCE" -init'!"$DEF_ICO"| \
-Usage info!$LWSHELL -c '"$BASH_SOURCE" -help'!"$DEF_ICO"| \
-Version info!$LWSHELL -c '"$BASH_SOURCE" -version'!"$DEF_ICO"| \
-Kill Wine processes!$LWSHELL -c '"$BASH_SOURCE" -killwine'!"$DEF_ICO"| \
-Kill running EXE!$LWSHELL -c '"$BASH_SOURCE" -killexe'!"$DEF_ICO"| \
-Kill SHELL!$LWSHELL -c '"$BASH_SOURCE" -killshell'!"$DEF_ICO"| \
-Kill tray!$LWSHELL -c '"$BASH_SOURCE" -killtray'!"$DEF_ICO"| \
-FORCE EXIT!$LWSHELL -c '"$BASH_SOURCE" -exit'!"$DEF_ICO"|" &
+Explorer!$LWSHELL -c '"$BASH_SOURCE" -explorer'!"$LW_DEF_ICO"| \
+Task manager!$LWSHELL -c '"$BASH_SOURCE" -taskmgr'!"$LW_DEF_ICO"| \
+Open CMD!$LWSHELL -c '"$BASH_SOURCE" -cmd'!"$LW_DEF_ICO"| \
+Open SHELL!$LWSHELL -c '"$BASH_SOURCE" -shell'!"$LW_DEF_ICO"| \
+DEBUG!$LWSHELL -c '"$BASH_SOURCE" -debug'!"$LW_DEF_ICO"| \
+Open drive C:\!$LWSHELL -c '"$BASH_SOURCE" -openpfx'!"$LW_DEF_ICO"| \
+Settings!$LWSHELL -c '"$BASH_SOURCE" -config'!"$LW_DEF_ICO"| \
+Apps settings!$LWSHELL -c '"$BASH_SOURCE" -appcfg'!"$LW_DEF_ICO"| \
+Wine manager!$LWSHELL -c '"$BASH_SOURCE" -winemgr'!"$LW_DEF_ICO"| \
+Runtime updater!$LWSHELL -c '"$BASH_SOURCE" -update'!"$LW_DEF_ICO"| \
+Winetricks!$LWSHELL -c '"$BASH_SOURCE" -winetricks'!"$LW_DEF_ICO"| \
+Control panel!$LWSHELL -c '"$BASH_SOURCE" -control'!"$LW_DEF_ICO"| \
+Wine settings!$LWSHELL -c '"$BASH_SOURCE" -winecfg'!"$LW_DEF_ICO"| \
+Registry editor!$LWSHELL -c '"$BASH_SOURCE" -regedit'!"$LW_DEF_ICO"| \
+Wine uninstaller!$LWSHELL -c '"$BASH_SOURCE" -uninstaller'!"$LW_DEF_ICO"| \
+Create shortcut!$LWSHELL -c '"$BASH_SOURCE" -shortcut'!"$LW_DEF_ICO"| \
+$( if [ ! -z "$SYS_LU" ]; then echo "Add to Lutris!$LWSHELL -c '"$BASH_SOURCE" -addtolu'!"$LW_DEF_ICO"|"; fi) \
+Remove menu app!$LWSHELL -c '"$BASH_SOURCE" -rmapp'!"$LW_DEF_ICO"| \
+Clear prefix!$LWSHELL -c '"$BASH_SOURCE" -clearpfx'!"$LW_DEF_ICO"| \
+Forced init!$LWSHELL -c '"$BASH_SOURCE" -init'!"$LW_DEF_ICO"| \
+Usage info!$LWSHELL -c '"$BASH_SOURCE" -help'!"$LW_DEF_ICO"| \
+Version info!$LWSHELL -c '"$BASH_SOURCE" -version'!"$LW_DEF_ICO"| \
+Kill Wine processes!$LWSHELL -c '"$BASH_SOURCE" -killwine'!"$LW_DEF_ICO"| \
+Kill running EXE!$LWSHELL -c '"$BASH_SOURCE" -killexe'!"$LW_DEF_ICO"| \
+Kill SHELL!$LWSHELL -c '"$BASH_SOURCE" -killshell'!"$LW_DEF_ICO"| \
+Kill tray!$LWSHELL -c '"$BASH_SOURCE" -killtray'!"$LW_DEF_ICO"| \
+FORCE EXIT!$LWSHELL -c '"$BASH_SOURCE" -exit'!"$LW_DEF_ICO"|" &
             noclosetray &
     fi
 }
@@ -3114,48 +3219,51 @@ lu_winemgr() {
             exit 1
     fi
     export WGUIDW=$RANDOM
-    export ILW_LIST="$(ls -1 "$LW_WINE_DIR" 2>/dev/null)"
-    if [[ -z "$PGE_GIT_LIST" || -z  "$PLU_GIT_LIST" || -z  "$PK4_GIT_LIST" ]]
-        then
-            GREPWARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1"
-            PLU_GIT="https://github.com/lutris/wine/releases"
-            PGE_GIT="https://github.com/GloriousEggroll/proton-ge-custom/releases"
-            WGE_GIT="https://github.com/GloriousEggroll/wine-ge-custom/releases"
-            PK4_GIT="https://github.com/Kron4ek/Wine-Builds/releases"
-            print_info notify "Сhecking new WINE versions on GitHub..."
-            for git_page in {1..3}; do curl -s "$PLU_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PLU_GIT'" $0}' 1>> "/tmp/PLUGITLIST$WGUIDW" ; done &
-            for git_page in {1..3}; do curl -s "$PGE_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PGE_GIT'" $0}' 1>> "/tmp/PGEGITLIST$WGUIDW" ; done &
-            for git_page in {1..3}; do curl -s "$WGE_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WGE_GIT'" $0}' 1>> "/tmp/WGEGITLIST$WGUIDW" ; done &
-            for git_page in {1..3}; do curl -s "$PK4_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PK4_GIT'" $0}' 1>> "/tmp/PK4GITLIST$WGUIDW" ; done &
-            while true
-                do
-                    sleep 0.2
-                    GITLISTOK=0
-                    for curlgit in $PLU_GIT $PGE_GIT $WGE_GIT $PK4_GIT
-                            do
-                                echo
-                                sleep 0.2
-                                if [ -z "$(pgrep -fa curl|grep -o "$curlgit")" ]
-                                    then
-                                        GITLISTOK=$(($GITLISTOK + 1))
-                                fi
-                                if [ "$GITLISTOK" == 4 ]; then break; fi
-                        done
-                    if [ "$GITLISTOK" == 4 ]; then break; fi
-            done|settingbar_nostdout
-            PLU_GIT_LIST="$(cat /tmp/PLUGITLIST$WGUIDW 2>/dev/null)"
-            PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null)"
-            WGE_GIT_LIST="$(cat /tmp/WGEGITLIST$WGUIDW 2>/dev/null)"
-            PK4_GIT_LIST="$(cat /tmp/PK4GITLIST$WGUIDW 2>/dev/null)"
-            try_rm /tmp/PLUGITLIST$WGUIDW /tmp/PGEGITLIST$WGUIDW /tmp/WGEGITLIST$WGUIDW /tmp/PK4GITLIST$WGUIDW &>/dev/null
-    fi
-    if [[ ! -z "$PLU_GIT_LIST" || ! -z "$PGE_GIT_LIST" || ! -z "$WGE_GIT_LIST" || ! -z  "$PK4_GIT_LIST" ]]
-        then
-            export GITOK=1
-            print_info notify "Сhecking new WINE versions on GitHub completed!"
+    export ILW_LIST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*')"
+    if [[ ! -z "$NO_CHK_GIT" || "$2" == "delonly" ]]; then :
         else
-            unset GITOK
-            print_error yad "Lutris Wine Manager" "Can't get list of WINE URLs from GitHub!"
+            if [[ -z "$PGE_GIT_LIST" || -z  "$PLU_GIT_LIST" || -z  "$PK4_GIT_LIST" ]]
+                then
+                    GREPWARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1"
+                    PLU_GIT="https://github.com/lutris/wine/releases"
+                    PGE_GIT="https://github.com/GloriousEggroll/proton-ge-custom/releases"
+                    WGE_GIT="https://github.com/GloriousEggroll/wine-ge-custom/releases"
+                    PK4_GIT="https://github.com/Kron4ek/Wine-Builds/releases"
+                    print_info notify "Сhecking new WINE versions on GitHub..."
+                    for git_page in {1..3}; do curl -s "$PLU_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PLU_GIT'" $0}' 1>> "/tmp/PLUGITLIST$WGUIDW" ; done &
+                    for git_page in {1..3}; do curl -s "$PGE_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PGE_GIT'" $0}' 1>> "/tmp/PGEGITLIST$WGUIDW" ; done &
+                    for git_page in {1..3}; do curl -s "$WGE_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WGE_GIT'" $0}' 1>> "/tmp/WGEGITLIST$WGUIDW" ; done &
+                    for git_page in {1..3}; do curl -s "$PK4_GIT/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PK4_GIT'" $0}' 1>> "/tmp/PK4GITLIST$WGUIDW" ; done &
+                    while true
+                        do
+                            sleep 0.2
+                            GITLISTOK=0
+                            for curlgit in $PLU_GIT $PGE_GIT $WGE_GIT $PK4_GIT
+                                    do
+                                        echo
+                                        sleep 0.2
+                                        if [ -z "$(pgrep -fa curl|grep -o "$curlgit")" ]
+                                            then
+                                                GITLISTOK=$(($GITLISTOK + 1))
+                                        fi
+                                        if [ "$GITLISTOK" == 4 ]; then break; fi
+                                done
+                            if [ "$GITLISTOK" == 4 ]; then break; fi
+                    done|settingbar_nostdout "Сhecking GitHub" "Сhecking new WINE versions on GitHub..."
+                    PLU_GIT_LIST="$(cat /tmp/PLUGITLIST$WGUIDW 2>/dev/null)"
+                    PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null)"
+                    WGE_GIT_LIST="$(cat /tmp/WGEGITLIST$WGUIDW 2>/dev/null)"
+                    PK4_GIT_LIST="$(cat /tmp/PK4GITLIST$WGUIDW 2>/dev/null)"
+                    try_rm /tmp/PLUGITLIST$WGUIDW /tmp/PGEGITLIST$WGUIDW /tmp/WGEGITLIST$WGUIDW /tmp/PK4GITLIST$WGUIDW &>/dev/null
+            fi
+            if [[ ! -z "$PLU_GIT_LIST" || ! -z "$PGE_GIT_LIST" || ! -z "$WGE_GIT_LIST" || ! -z  "$PK4_GIT_LIST" ]]
+                then
+                    export GITOK=1
+                    print_info notify "Сhecking new WINE versions on GitHub completed!"
+                else
+                    unset GITOK
+                    print_error yad "Lutris Wine Manager" "Can't get list of WINE URLs from GitHub!"
+            fi
     fi
     if [[ ! -z "$ILW_LIST" && ! -z "$GITOK" ]]
         then
@@ -3169,7 +3277,7 @@ lu_winemgr() {
             echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
             echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=5 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
-                --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --separator="" \
+                --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" --tab="DELETE" \
                 --button="EXIT:1" --button="OK:0"
             PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null)"
@@ -3188,7 +3296,7 @@ lu_winemgr() {
                     echo -e "\n$(echo "$ILW_LIST"|grep -wv "$WINE_IN_USE" 2>/dev/null|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDEL_SET$WGUIDW" &
             fi
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
-                --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --separator="" \
+                --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="DELETE"  --button="EXIT:1" --button="OK:0"
             WDEL_SET="$(sed 's/TRUE //g' /tmp/WDEL_SET$WGUIDW 2>/dev/null)"
             try_rm /tmp/WDEL_SET$WGUIDW &>/dev/null
@@ -3203,7 +3311,7 @@ lu_winemgr() {
             echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WGESET$WGUIDW" &
             echo -e "\n$(echo "$PK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PK4SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
-                --window-icon="$DEF_ICO" --title "Lutris Wine Manager" --separator="" \
+                --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" \
                 --button="EXIT:1" --button="OK:0"
             PLU_SET="$(sed 's/TRUE //g' /tmp/PLUSET$WGUIDW 2>/dev/null)"
@@ -3235,6 +3343,7 @@ lu_winemgr() {
                                                         then
                                                             export PLU_INST=1
                                                             try_rm "$LW_WINE_DIR/${PLU_DW}.tar.${archive_type}"
+                                                            WINE_IN_USE="$PLU_DW" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" check_proton_d3dlib
                                                             print_info notify "Installation $PLU_DW completed!"
                                                         else
                                                             try_rm "$LW_WINE_DIR/${PLU_DW}.tar.${archive_type}"
@@ -3276,6 +3385,7 @@ lu_winemgr() {
                                                                             done
                                                                             try_mv "$LW_WINE_DIR/$PGE_DW/$PGEFILES/"* "$LW_WINE_DIR/$PGE_DW/"
                                                                             try_rm "$LW_WINE_DIR/$PGE_DW/$PGEFILES"
+                                                                            WINE_IN_USE="$PGE_DW" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" check_proton_d3dlib
                                                                             print_info notify "Installation $PGE_DW completed!"
                                                                     fi
                                                             done
@@ -3309,6 +3419,7 @@ lu_winemgr() {
                                                         then
                                                             export WGE_INST=1
                                                             try_rm "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}"
+                                                            WINE_IN_USE="$WGE_DW" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" check_proton_d3dlib
                                                             print_info notify "Installation $WGE_DW completed!"
                                                         else
                                                             try_rm "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}"
@@ -3340,6 +3451,7 @@ lu_winemgr() {
                                                         then
                                                             export PK4_INST=1
                                                             try_rm "$LW_WINE_DIR/${PK4_DW}.tar.${archive_type}"
+                                                            WINE_IN_USE="$PK4_DW" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" check_proton_d3dlib
                                                             print_info notify "Installation $PK4_DW completed!"
                                                         else
                                                             try_rm "$LW_WINE_DIR/${PK4_DW}.tar.${archive_type}"
@@ -3355,18 +3467,29 @@ lu_winemgr() {
     if [ ! -z "$(echo "$WDEL_SET"|head -1)" ]
         then
             unset WINEINUSEDEL
-            (while read winedel
+            for WINE_DEL in $WDEL_SET
                 do
-                    try_rm "$LW_WINE_DIR/$winedel"
-                    print_info notify "Removing $winedel completed!"
-                    if [ "$WINE_IN_USE" == "$winedel" ]
+                    try_rm "$LW_WINE_DIR/$WINE_DEL"
+                    if [[ -d "$LW_RUNTIME_DIR/dxvk/$WINE_DEL" \
+                        || -d "$LW_RUNTIME_DIR/vkd3d/$WINE_DEL" \
+                        || -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_DEL" ]]
                         then
-                            export WINEINUSEDEL=1
+                            if print_question "Remove DXVK, DXVK-NVAPI and VKD3D from $WINE_DEL"
+                                then
+                                    for pd3dll in {dxvk,dxvk-nvapi,vkd3d}
+                                        do
+                                            try_rm "$LW_RUNTIME_DIR/$pd3dll/$WINE_DEL" &>/dev/null
+                                    done
+                                    sed -i "/DXVK_NVAPI_VERSION='$WINE_DEL'/d;/DXVK_VERSION='$WINE_DEL'/d;/VKD3D_VERSION='$WINE_DEL'/d" "$LW_CFG" 2>/dev/null
+                                    print_info notify "Removing DXVK, DXVK-NVAPI and VKD3D from $WINE_DEL completed!"
+                            fi
                     fi
-            done <<< $WDEL_SET)|settingbar
+                    print_info notify "Removing $WINE_DEL completed!"
+                    [ "$WINE_IN_USE" == "$WINE_DEL" ] && export WINEINUSEDEL=1
+            done
             if [ ! -z "$WINEINUSEDEL" ]
                 then
-                    if [ ! -z "$(ls -1 "$LW_WINE_DIR" 2>/dev/null|head -1)" ]
+                    if [ ! -z "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)" ]
                         then
                             print_info notify "Removed WINE which was selected by default!"
                             check_def_wine
@@ -3379,19 +3502,19 @@ lu_winemgr() {
     fi
     if [[ "$PLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$PK4_INST" == 1 ]]
         then
+            print_info notify "Wine installation completed!"
             if [ -z "$WINEINUSEDEL" ]
                 then
                     check_def_wine
                     unset WDEL_SET
             fi
             unset PLU_INST PK4_INST PGE_INST WGE_INST
-            print_info notify "Wine installation completed!"
     fi
 }
 
 check_themes() {
-    if [ ! -z "$1" ] ; then export WINE_THEME="$1" ; fi
-    if [[ -d "$THEMES_DIR" && ! -z "$(ls -1 "$THEMES_DIR"|head -1)" ]]
+    [ ! -z "$1" ] && export WINE_THEME="$1"
+    if [[ -d "$LW_THEMES_DIR" && ! -z "$(ls -1 "$LW_THEMES_DIR"|head -1)" ]]
         then
             if [ "$(cat "$WINEPREFIX/.lwtheme" 2>/dev/null)" != "$WINE_THEME" ]
                 then
@@ -3400,20 +3523,26 @@ check_themes() {
                     check_ld_library
                     if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                         then
-                            "$OLD_WINE" regedit "$THEMES_DIR/$WINE_THEME.reg" &>/dev/null
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" regedit "$LW_THEMES_DIR/$WINE_THEME.reg" &>/dev/null
+                            [ "$?" == 0 ] && export THEMEOK=1
                             unset LD_LIBRARY_PATH
                     elif [ -f "$WINE" ]
                         then
-                            "$WINE" regedit "$THEMES_DIR/$WINE_THEME.reg" &>/dev/null
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" regedit "$LW_THEMES_DIR/$WINE_THEME.reg" &>/dev/null
+                            [ "$?" == 0 ] && export THEMEOK=1
                             unset LD_LIBRARY_PATH
-                    else
-                        unset LD_LIBRARY_PATH
-                        print_error yad "Lutris Wine theme not changed to $WINE_THEME"
-                        return 1
                     fi
-                    echo "$WINE_THEME" > "$WINEPREFIX/.lwtheme"
-                    print_info notify "Lutris Wine theme successfully changed to $WINE_THEME"
-                    try_shutdown_wine
+                    if [ ! -z "$THEMEOK" ]
+                        then
+                            unset THEMEOK
+                            echo "$WINE_THEME" > "$WINEPREFIX/.lwtheme"
+                            print_info notify "Lutris Wine theme successfully changed to $WINE_THEME"
+                            try_shutdown_wine
+                        else
+                            unset LD_LIBRARY_PATH THEMEOK
+                            print_error yad "Lutris Wine theme not changed to $WINE_THEME"
+                            return 1
+                    fi
             fi
         else
             print_error yad "Lutris Wine themes not found!" &
@@ -3434,7 +3563,7 @@ us_layout_sw() {
 }
 
 check_mangohud() {
-    if [ ! -z "$1" ] ; then export LWMANGOHUD="$1" ; fi
+    [ ! -z "$1" ] && export LWMANGOHUD="$1"
     if [[ "$LWMANGOHUD" == "OpenGL" || "$LWMANGOHUD" == "Vulkan" ]]
         then
             if [ ! -z "$(which mangohud 2>/dev/null)" ]
@@ -3469,7 +3598,7 @@ resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=
 }
 
 check_fps_limit() {
-    if [ ! -z "$1" ] ; then export FPS_LIMIT="$1" ; fi
+    [ ! -z "$1" ] && export FPS_LIMIT="$1"
     if [[ ! -z "$FPS_LIMIT" && "$FPS_LIMIT" != 0 ]]
         then
             if [[ ! -z "$(which mangohud 2>/dev/null)" && ! -z "$RUN_MANGOHUD" && "$MANGOHUD_USER_CONF" != 1 ]]
@@ -3499,7 +3628,7 @@ resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=
 }
 
 check_gamemode() {
-    if [ ! -z "$1" ] ; then export GAMEMODE="$1" ; fi
+    [ ! -z "$1" ] && export GAMEMODE="$1"
     if [ "$GAMEMODE" == 1 ]
         then
             if [ ! -z "$(which gamemoderun 2>/dev/null)" ]
@@ -3516,31 +3645,26 @@ check_gamemode() {
 }
 
 check_gstreamer() {
-    if [ ! -z "$1" ] ; then export GSTREAMER="$1" ; fi
-    if [ "$GSTREAMER" == 1 ]
+    [ ! -z "$1" ] && export GSTREAMER="$1"
+    if [[ "$GSTREAMER" == 1 && -d "$WINEDIR/lib64/gstreamer-1.0" ]]
         then
-            try_mkdir "$DEF_CACHE/gstreamer-1.0"
-            export WINE_GST_REGISTRY_DIR="$DEF_CACHE/gstreamer-1.0"
+            try_mkdir "$LW_DEF_CACHE/gstreamer-1.0"
+            export WINE_GST_REGISTRY_DIR="$LW_DEF_CACHE/gstreamer-1.0"
             export MEDIACONV_AUDIO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/audio.foz"
             export MEDIACONV_AUDIO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_audio.foz"
             export MEDIACONV_VIDEO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/video.foz"
             export MEDIACONV_VIDEO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_video.foz"
-            if [ -d "$WINEDIR/lib64/gstreamer-1.0" ]
-                then
-                    export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
-                else
-                    unset GSTREAMER
-                    sed -i "s/export GSTREAMER=.*/export GSTREAMER='0'/" "$LW_CFG" 2>/dev/null
-                    wdllover_upd "winegstreamer="
-                    print_error notify "Wine GSTREAMER not found! GSTREAMER is disabled!"
-            fi
+            export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
         else
-            print_info notify "GSTREAMER is disabled!"
+            [ ! -d "$WINEDIR/lib64/gstreamer-1.0" ] && print_error notify "Wine GSTREAMER not found!"
+            unset GSTREAMER
+            wdllover_upd "winegstreamer="
+            [ "$GSTREAMER" != 1 ] && print_info notify "GSTREAMER is disabled!"
     fi
 }
 
 check_wd3dmode() {
-    if [ ! -z "$1" ] ; then export WD3DMODE="$1" ; fi
+    [ ! -z "$1" ] && export WD3DMODE="$1"
     case "$WD3DMODE" in
         DXVK+NVAPI) export DXVK=1
                     export DXVK_NVAPI=1
@@ -3560,7 +3684,7 @@ check_wd3dmode() {
 }
 
 check_wined3d() {
-    if [ ! -z "$1" ] ; then export WINED3D="$1" ; fi
+    [ ! -z "$1" ] && export WINED3D="$1"
     if [[ "$DXVK" == 0 && "$VKD3D" == 0 ]] || [ "$WINED3D" == 1 ]
         then
             print_info notify "Running in WineD3D (OpenGL) mode!"
@@ -3570,9 +3694,12 @@ check_wined3d() {
                 then
                     try_ln "$WINEDIR"/lib/wine/i386-windows/dxgi.dll "$PFX_DLL32_PTH/dxgi.dll" &>/dev/null
             fi
-            if ! try_ln "$WINEDIR"/lib64/wine/fakedlls/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+            if [ "$WINEARCH" != "win32" ]
                 then
-                    try_ln "$WINEDIR"/lib64/wine/x86_64-windows/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                    if ! try_ln "$WINEDIR"/lib64/wine/fakedlls/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                        then
+                            try_ln "$WINEDIR"/lib64/wine/x86_64-windows/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                    fi
             fi
             for wine_build_dll in d3d11 d3d10 d3d10core d3d10_1 d3d9
                 do
@@ -3580,16 +3707,19 @@ check_wined3d() {
                         then
                             try_ln "$WINEDIR/lib/wine/i386-windows/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
                     fi
-                    if ! try_ln "$WINEDIR/lib64/wine/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                    if [ "$WINEARCH" != "win32" ]
                         then
-                            try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                            if ! try_ln "$WINEDIR/lib64/wine/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                                then
+                                    try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                            fi
                     fi
             done
     fi
 }
 
 check_dxvk_async() {
-    if [ ! -z "$1" ] ; then export DXVKASYNC="$1" ; fi
+    [ ! -z "$1" ] && export DXVKASYNC="$1"
     if [[ "$DXVKASYNC" == 1 && "$WINED3D" != 1 && "$DXVK" == 1 ]]
         then
             export DXVK_ASYNC=1
@@ -3598,19 +3728,79 @@ check_dxvk_async() {
     fi
 }
 
-check_dxvk() {
-    if [ ! -z "$1" ] ; then export DXVK="$1" ; if [ ! -z "$2" ] ; then export DXVK_VERSION="$2" ; fi ; fi
-    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi"
-    if [ "$DXVK_VERSION" == "Default" ]
+check_proton_d3dlib() {
+    unset P_DXVK P_NVAPI P_VKD3D
+    if [[ ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x32" && ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x64" ]] \
+        && [[ -d "$WINEDIR/lib/wine/dxvk" && -d "$WINEDIR/lib64/wine/dxvk" ]]
         then
-            export "$(grep -wo 'DXVK_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+            try_mkdir "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE"
+            try_cp "$WINEDIR/lib/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x32"
+            try_cp "$WINEDIR/lib64/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x64"
+            P_DXVK=1
     fi
+    if [[ ! -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x32" && ! -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x64" ]] \
+       && [[ -d "$WINEDIR/lib/wine/nvapi" && -d "$WINEDIR/lib64/wine/nvapi" ]]
+       then
+           try_mkdir "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE"
+           try_cp "$WINEDIR/lib/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x32"
+           try_cp "$WINEDIR/lib64/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x64"
+           P_NVAPI=1
+    fi
+    if [[ ! -d "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x32" && ! -d "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x64" ]] \
+        && [[ -d "$WINEDIR/lib/wine/vkd3d-proton" && -d "$WINEDIR/lib64/wine/vkd3d-proton" ]]
+        then
+            try_mkdir "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE"
+            try_cp "$WINEDIR/lib/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x32"
+            try_cp "$WINEDIR/lib64/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x64"
+            P_VKD3D=1
+    fi
+    if [[ ! -z "$P_DXVK" || ! -z "$P_NVAPI" || ! -z "$P_VKD3D" ]]
+        then
+            if print_question "Set DXVK, DXVK-NVAPI and VKD3D from $WINE_IN_USE as default?"
+                then
+                    for pd3ddll in {dxvk,dxvk-nvapi,vkd3d}
+                        do
+                            if [ -d "$LW_RUNTIME_DIR/$pd3ddll/$WINE_IN_USE" ]
+                                then
+                                    if [ "$pd3ddll" == "dxvk-nvapi" ]
+                                       then
+                                           if [ -z "$(grep -o "DXVK_NVAPI_VERSION" "$LW_CFG")" ]
+                                               then
+                                                   echo "export DXVK_NVAPI_VERSION='$WINE_IN_USE'" >> "$LW_CFG"
+                                               else
+                                                   sed -i "s/export DXVK_NVAPI_VERSION.*/export DXVK_NVAPI_VERSION='$WINE_IN_USE'/" "$LW_CFG"
+                                           fi
+                                       else
+                                            if [ -z "$(grep -io "${pd3ddll}_version" "$LW_CFG")" ]
+                                                then
+                                                    echo "export $(echo "${pd3ddll}_version"|tr [:lower:] [:upper:])='$WINE_IN_USE'" >> "$LW_CFG"
+                                                else
+                                                    sed -i "s/export $(echo "${pd3ddll}_version"|tr [:lower:] [:upper:]).*/export $(echo "${pd3ddll}_version"|tr [:lower:] [:upper:])='$WINE_IN_USE'/" "$LW_CFG"
+                                            fi
+                                    fi
+                            fi
+                    done
+                    import_luwine_conf
+                    check_def_wine
+                    check_winepfx
+                    unset WINED3D
+                    check_dxvk 1
+                    check_dxvk-nvapi 1
+                    check_vkd3d 1
+                    print_info notify "DXVK, DXVK-NVAPI and VKD3D from $WINE_IN_USE selected as default"
+            fi
+    fi
+    unset P_DXVK P_NVAPI P_VKD3D
+}
+
+check_dxvk() {
+    [ ! -z "$1" ] && export DXVK="$1"
+    [ ! -z "$2" ] && export DXVK_VERSION="$2"
+    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi"
+    [ "$DXVK_VERSION" == "Default" ] && export "$(grep -wo 'DXVK_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [[ "$DXVK" == 1 && "$WINED3D" != 1 ]]
         then
-            if [ ! -z "$DXVK_GIT_RELEASE_URL" ]
-                then
-                    GIT_RELEASE_URL="$DXVK_GIT_RELEASE_URL"
-            fi
+            GIT_RELEASE_URL="$DXVK_GIT_RELEASE_URL"
             if [[ -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d12.dll" || -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d12.dll" ]]
                 then
                     try_rm "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d12.dll" "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d12.dll"
@@ -3623,17 +3813,20 @@ check_dxvk() {
                                 then
                                     try_ln "$WINEDIR/lib/wine/i386-windows/dxgi.dll" "$PFX_DLL32_PTH" &>/dev/null
                             fi
-                            if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                            if [ "$WINEARCH" != "win32" ]
                                 then
-                                    try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                                    if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                                        then
+                                            try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                                    fi
                             fi
                             wdllover_upd "$(echo $check_dlls_slk|sed 's/ dxgi//'|sed 's/.dll//g'|tr ' ' ',')=n;dxgi=b"
                             print_info notify "Used DXGI from Wine!"
                         else
                             wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
                     fi
-                    try_mkdir "$DEF_CACHE/dxvk_cache"
-                    export DXVK_STATE_CACHE_PATH="$DEF_CACHE/dxvk_cache"
+                    try_mkdir "$LW_DEF_CACHE/dxvk_cache"
+                    export DXVK_STATE_CACHE_PATH="$LW_DEF_CACHE/dxvk_cache"
                     export DXVK_STATE_CACHE=1
                     export __GL_DXVK_OPTIMIZATIONS=1
                     unset GIT_RELEASE_URL
@@ -3650,21 +3843,17 @@ check_dxvk() {
 }
 
 check_vkd3d() {
-    if [ ! -z "$1" ] ; then export VKD3D="$1" ; if [ ! -z "$2" ] ; then export VKD3D_VERSION="$2" ; fi ; fi
+    [ ! -z "$1" ] && export VKD3D="$1"
+    [ ! -z "$2" ] && export VKD3D_VERSION="$2"
     export ALLVKD3DDLLS="d3d12"
-    if [ "$VKD3D_VERSION" == "Default" ]
-        then
-            export "$(grep -wo 'VKD3D_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
-    fi
+    [ "$VKD3D_VERSION" == "Default" ] && export "$(grep -wo 'VKD3D_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [[ "$VKD3D" == 1 && "$WINED3D" != 1 ]]
         then
-            if [ ! -z "$VKD3D_GIT_RELEASE_URL" ]
-                then
-                    GIT_RELEASE_URL="$VKD3D_GIT_RELEASE_URL"
-            fi
+            GIT_RELEASE_URL="$VKD3D_GIT_RELEASE_URL"
             if dll_manager "vkd3d" "$VKD3D_VERSION"
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
+                    export VKD3D_FEATURE_LEVEL=12_0
                     unset GIT_RELEASE_URL
                 else
                     export VKD3D=0
@@ -3678,22 +3867,37 @@ check_vkd3d() {
     fi
 }
 
-check_dxvk-nvapi() {
-    if [ ! -z "$1" ] ; then export DXVK_NVAPI="$1" ; if [ ! -z "$2" ] ; then export DXVK_NVAPI_VERSION="$2" ; fi ; fi
-    export ALLNVAPIDLLS="nvapi,nvapi64,nvml,nvcuda"
-    if [ "$DXVK_NVAPI_VERSION" == "Default" ]
+check_wine_nvml() {
+    [ ! -z "$1" ] && export WINE_NVML="$1"
+    [ ! -z "$2" ] && export WINE_NVML_VERSION="$2"
+    export ALLNVMLDLLS="nvml"
+    if [[ "$WINE_NVML" == 1 && "$DXVK_NVAPI" == 1 && "$DXVK" != 0 \
+        && ! -z "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
         then
-            export "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+            GIT_RELEASE_URL="$NVML_GIT_RELEASE_URL"
+            if dll_manager "wine_nvml" "$WINE_NVML_VERSION"
+                then
+                    wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
+                    return 0
+                else
+                    return 1
+            fi
+        else
+            return 1
     fi
+}
+
+check_dxvk-nvapi() {
+    [ ! -z "$1" ] && export DXVK_NVAPI="$1"
+    [ ! -z "$2" ] && export DXVK_NVAPI_VERSION="$2"
+    export ALLNVAPIDLLS="nvapi,nvapi64,nvml,nvcuda"
+    [ "$DXVK_NVAPI_VERSION" == "Default" ] && export "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [[ "$DXVK_NVAPI" == 1 && "$DXVK" != 0 && ! -z "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
         then
-            if [ ! -z "$NVAPI_GIT_RELEASE_URL" ]
-                then
-                    GIT_RELEASE_URL="$NVAPI_GIT_RELEASE_URL"
-            fi
+            GIT_RELEASE_URL="$NVAPI_GIT_RELEASE_URL"
             if dll_manager "dxvk-nvapi" "$DXVK_NVAPI_VERSION"
                 then
-                    if [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]]
+                    if [ "$WINEARCH" != "win32" ] && [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]]
                         then
                             CPNVNGX="$(find /usr/* -type f -name "*nvngx.dll" 2>/dev/null|awk '{print $1}'|grep 'lib')"
                             if [ ! -z "$CPNVNGX" ]
@@ -3706,8 +3910,17 @@ check_dxvk-nvapi() {
                                     print_error yad "nvngx.dll not found in your system!"
                             fi
                     fi
-                    wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n;nvcuda=b"
                     export DXVK_NVAPIHACK=0
+                    export WINE_NVML=1
+                    CHKNVML32FL="$LW_RUNTIME_DIR/dxvk-nvapi/$DXVK_NVAPI_VERSION/x32/nvml.dll"
+                    CHKNVML64FL="$LW_RUNTIME_DIR/dxvk-nvapi/$DXVK_NVAPI_VERSION/x64/nvml.dll"
+                    if [[ -f "$CHKNVML32FL" && -f "$CHKNVML64FL" ]]
+                        then
+                            wdllover_upd "nvml=n"
+                        else
+                            check_wine_nvml
+                    fi
+                    wdllover_upd "nvapi,nvapi64=n;nvcuda=b"
                 else
                     export DXVK_NVAPI=0
                     wdllover_upd "${ALLNVAPIDLLS}=b"
@@ -3721,18 +3934,13 @@ check_dxvk-nvapi() {
 }
 
 check_d3d_extras() {
-    if [ ! -z "$1" ] ; then export D3D_EXTRAS="$1" ; if [ ! -z "$2" ] ; then export D3D_EXTRAS_VERSION="$2" ; fi ; fi
+    [ ! -z "$1" ] && export D3D_EXTRAS="$1"
+    [ ! -z "$2" ] && export D3D_EXTRAS_VERSION="$2"
     export ALLD3DEXTRADLLS="d3dcompiler_33,d3dcompiler_34,d3dcompiler_35,d3dcompiler_36,d3dcompiler_37,d3dcompiler_38,d3dcompiler_39,d3dcompiler_40,d3dcompiler_41,d3dcompiler_42,d3dcompiler_43,d3dcompiler_46,d3dcompiler_47,d3dx10_33,d3dx10_34,d3dx10_35,d3dx10_36,d3dx10_37,d3dx10_38,d3dx10_39,d3dx10_40,d3dx10_41,d3dx10_42,d3dx10_43,d3dx10,d3dx11_42,d3dx11_43,d3dx9_24,d3dx9_25,d3dx9_26,d3dx9_27,d3dx9_28,d3dx9_29,d3dx9_30,d3dx9_31,d3dx9_32,d3dx9_33,d3dx9_34,d3dx9_35,d3dx9_36,d3dx9_37,d3dx9_38,d3dx9_39,d3dx9_40,d3dx9_41,d3dx9_42,d3dx9_43"
-    if [ "$D3D_EXTRAS_VERSION" == "Default" ]
+    [ "$D3D_EXTRAS_VERSION" == "Default" ] && export "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+    if [ "$D3D_EXTRAS" == 1 ]
         then
-            export "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
-    fi
-    if [[ "$D3D_EXTRAS" == 1 ]]
-        then
-            if [ ! -z "$D3D_GIT_RELEASE_URL" ]
-                then
-                    GIT_RELEASE_URL="$D3D_GIT_RELEASE_URL"
-            fi
+            GIT_RELEASE_URL="$D3D_GIT_RELEASE_URL"
             if dll_manager "d3d_extras" "$D3D_EXTRAS_VERSION"
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
@@ -3749,18 +3957,13 @@ check_d3d_extras() {
 }
 
 check_dgvoodoo2() {
-    if [ ! -z "$1" ] ; then export DGVOODOO2="$1" ; if [ ! -z "$2" ] ; then export DGVOODOO2_VERSION="$2" ; fi ; fi
+    [ ! -z "$1" ] && export DGVOODOO2="$1"
+    [ ! -z "$2" ] && export DGVOODOO2_VERSION="$2"
     export ALLDGVOODOO2DLLS="d3dimm,ddraw,glide2x,glide3x,glide"
-    if [ "$DGVOODOO2_VERSION" == "Default" ]
+    [ "$DGVOODOO2_VERSION" == "Default" ] && export "$(grep -wo 'DGVOODOO2_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+    if [ "$DGVOODOO2" == 1 ]
         then
-            export "$(grep -wo 'DGVOODOO2_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
-    fi
-    if [[ "$DGVOODOO2" == 1 ]]
-        then
-            if [ ! -z "$DGVO_GIT_RELEASE_URL" ]
-                then
-                    GIT_RELEASE_URL="$DGVO_GIT_RELEASE_URL"
-            fi
+            GIT_RELEASE_URL="$DGVO_GIT_RELEASE_URL"
             if dll_manager "dgvoodoo2" "$DGVOODOO2_VERSION"
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
@@ -3777,27 +3980,23 @@ check_dgvoodoo2() {
 }
 
 check_battleye() {
-    if [ ! -z "$1" ] ; then export BATTLEYE="$1" ; fi
+    [ ! -z "$1" ] && export BATTLEYE="$1"
     if [ "$BATTLEYE" == 1 ]
         then
             if runtime_manager "battleye"
-                then
-                    export PROTON_BATTLEYE_RUNTIME="$LW_RUNTIME_DIR/battleye_runtime"
-                else
-                    unset PROTON_BATTLEYE_RUNTIME
+                then export PROTON_BATTLEYE_RUNTIME="$LW_RUNTIME_DIR/battleye_runtime"
+                else unset PROTON_BATTLEYE_RUNTIME
             fi
     fi
 }
 
 check_eac() {
-    if [ ! -z "$1" ] ; then export EAC="$1" ; fi
+    [ ! -z "$1" ] && export EAC="$1"
     if [ "$EAC" == 1 ]
         then
             if runtime_manager "eac"
-                then
-                    export PROTON_EAC_RUNTIME="$LW_RUNTIME_DIR/eac_runtime"
-                else
-                    unset PROTON_EAC_RUNTIME
+                then export PROTON_EAC_RUNTIME="$LW_RUNTIME_DIR/eac_runtime"
+                else unset PROTON_EAC_RUNTIME
             fi
     fi
 }
@@ -3806,13 +4005,9 @@ runtime_manager() {
     try_mkdir "$LW_RUNTIME_DIR"
     if [ "$1" == "winetricks" ]; then GIT_RELEASE_URL="$WTRX_GIT_RELEASE_URL"
     elif [ "$1" == "reshade" ]; then GIT_RELEASE_URL="$RESHADE_GIT_RELEASE_URL"
-    elif [ "$1" == "eac" ]; then GIT_RELEASE_URL="$EAC_GIT_RELEASE_URL"
     else GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
     fi
-    if [ -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ]
-        then
-            FORCE_UPDATE=1
-    fi
+    [ -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ] && FORCE_UPDATE=1
     if [[ ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || [ ! -z "$FORCE_UPDATE" ]
         then
             if [[ "$NETSTATUS" == 1 ]]
@@ -3850,26 +4045,64 @@ runtime_manager() {
                             return 1
                     fi
             else
-                if [ "$NETSTATUS" == 0 ]
-                    then
-                        print_error yad "Lutris Wine Runtime Manager" "No internet connection, it is not possible to download $1"
-                fi
+                [ "$NETSTATUS" == 0 ] && print_error yad "Lutris Wine Runtime Manager" "No internet connection, it is not possible to download $1"
                 return 1
         fi
     fi
 }
 
+winepfx_init() {
+    print_info notify "Lutris Wine prefix initialization..."
+    check_wine_pids
+    [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
+    check_ld_library
+    if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
+        then
+            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -i &>/dev/null
+            [ "$?" == 0 ] && export PFXINITOK=1
+            unset LD_LIBRARY_PATH
+    elif [ -f "$WINE" ]
+        then
+            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -i &>/dev/null
+            [ "$?" == 0 ] && export PFXINITOK=1
+            unset LD_LIBRARY_PATH
+    fi
+    if [ ! -z "$PFXINITOK" ]
+        then
+            unset PFXINITOK
+            print_info notify "Lutris Wine prefix initialization successfully completed!"
+            try_shutdown_wine
+            export NEEDCHKDLL=1
+        else
+            unset LD_LIBRARY_PATH PFXINITOK
+            print_error yad "Lutris Wine prefix initialization completed with error!"
+            return 1
+    fi
+}
+
 check_winepfx() {
-    if [ ! -z "$1" ] ; then export WINEPREFIX="$1" ; fi
+    [ ! -z "$1" ] && export WINEPREFIX="$1"
+    [ ! -z "$2" ] && export WINEARCH="$2"
+    PFXARCH="$(grep -o '#arch=.*$' "$WINEPREFIX/system.reg" 2>/dev/null|cut -d'=' -f2)"
+    if [[ ! -z "$PFXARCH" && "$WINEARCH" != "$PFXARCH" ]]
+        then
+            print_info yad "Prefix ARCH Mismatch [ $PFXARCH ] -> [ $WINEARCH ]" "The prefix architecture [ $PFXARCH ] does not match with the settings [ $WINEARCH ]\nIt is necessary to clear the current prefix, or initialize a new one!"
+            PFXARCH_MISMATCH=1 lu_clearpfx
+    fi
     DESKTOP_XDG=("DESKTOP" "DOCUMENTS" "MUSIC" "VIDEOS" "PICTURES" "DOWNLOAD" "TEMPLATES")
     DEF_WDESK_MYDIR=("Desktop" "My Documents" "My Music" "My Videos" "My Pictures" "My Downloads" "My Templates")
     DEF_WDESK_DIR=("Desktop" "Documents" "Music" "Videos" "Pictures" "Downloads" "Templates")
     export WTRX_LOG="$WINEPREFIX/winetricks.log"
-    export PFX_DLL32_PTH="$WINEPREFIX/drive_c/windows/syswow64"
-    export PFX_DLL64_PTH="$WINEPREFIX/drive_c/windows/system32"
+    if [ "$WINEARCH" == "win32" ]
+        then
+            export PFX_DLL32_PTH="$WINEPREFIX/drive_c/windows/system32"
+        else
+            export PFX_DLL32_PTH="$WINEPREFIX/drive_c/windows/syswow64"
+            export PFX_DLL64_PTH="$WINEPREFIX/drive_c/windows/system32"
+            try_mkdir "$PFX_DLL64_PTH"
+    fi
     try_mkdir "$WINEPREFIX"
     try_mkdir "$PFX_DLL32_PTH"
-    try_mkdir "$PFX_DLL64_PTH"
     try_mkdir "$WINEPREFIX/drive_c"
     try_mkdir "$WINEPREFIX/dosdevices"
     try_mkdir "$WINEPREFIX/drive_c/users/steamuser"
@@ -3890,26 +4123,10 @@ check_winepfx() {
                     ln -sf "/dev/ttyS$(( $comprt - 1 ))" "$WINEPREFIX/dosdevices/com$comprt"
             fi
     done
-    if [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
+    if [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" \
+        || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
         then
-            check_wine_pids
-            [[ -z "$WINE_PIDS" && ! -z "$OLD_WINE" ]] && unset OLD_WINE
-            check_ld_library
-            if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
-                then
-                    "$OLD_WINE" wineboot -i &>/dev/null
-                    unset LD_LIBRARY_PATH
-            elif [ -f "$WINE" ]
-                then
-                    "$WINE" wineboot -i &>/dev/null
-                    unset LD_LIBRARY_PATH
-            else
-                print_error yad "Lutris Wine prefix initialization completed with error!"
-                return 1
-            fi
-            print_info notify "Lutris Wine prefix initialization successfully completed!"
-            try_shutdown_wine
-            export NEEDCHKDLL=1
+            winepfx_init
     fi
     (IFS=$'\n' ; while read XDGDESK_DIR <&3 && read WINEDESK_DIR <&4
         do
@@ -3989,7 +4206,7 @@ check_winepfx() {
 }
 
 check_vulkan_icd() {
-    if [ ! -z "$1" ] ; then export VKICDFILES="$1" ; fi
+    [ ! -z "$1" ] && export VKICDFILES="$1"
     if [ "$VKICDFILES" == "AUTO" ]
         then
             export VK_ICD_FILENAMES="$(find "$VLK_ICD_DIR" -type f 2>/dev/null|tr '\n' ':'|sed 's/.$//')"
@@ -4009,7 +4226,7 @@ check_vulkan_icd() {
 }
 
 check_prime() {
-    if [ ! -z "$1" ] ; then export PRIME="$1" ; fi
+    [ ! -z "$1" ] && export PRIME="$1"
     if [ "$PRIME" == 1 ]
         then
             export __GLX_VENDOR_LIBRARY_NAME="nvidia"
@@ -4021,7 +4238,7 @@ check_prime() {
 }
 
 check_esync() {
-    if [ ! -z "$1" ] ; then export ESYNC="$1" ; fi
+    [ ! -z "$1" ] && export ESYNC="$1"
     if [ "$ESYNC" == 1 ]
         then
             export WINEESYNC=1
@@ -4031,7 +4248,7 @@ check_esync() {
 }
 
 check_fsync() {
-    if [ ! -z "$1" ] ; then export FSYNC="$1" ; fi
+    [ ! -z "$1" ] && export FSYNC="$1"
     if [ "$FSYNC" == 1 ]
         then
             export WINEFSYNC=1
@@ -4042,7 +4259,7 @@ check_fsync() {
 }
 
 check_vsync() {
-    if [ ! -z "$1" ] ; then export VSYNC="$1" ; fi
+    [ ! -z "$1" ] && export VSYNC="$1"
     case "$VSYNC" in
         Enabled) export vblank_mode=1
                  export __GL_SYNC_TO_VBLANK=1
@@ -4053,7 +4270,7 @@ check_vsync() {
 }
 
 check_fsr() {
-    if [ ! -z "$1" ] ; then export FSR="$1" ; fi
+    [ ! -z "$1" ] && export FSR="$1"
     if [[ ! -z "$FSR" && "$FSR" != "Disabled" ]]
         then
             export WINE_FULLSCREEN_FSR=1
@@ -4064,7 +4281,8 @@ check_fsr() {
 }
 
 check_runtime() {
-    if [ ! -z "$1" ] ; then export RUNTIME="$1" ; if [ ! -z "$2" ] ; then export PREF_SYS_LIBS="$2" ; fi ; fi
+    [ ! -z "$1" ] && export RUNTIME="$1"
+    [ ! -z "$2" ] && export PREF_SYS_LIBS="$2"
     if [ "$RUNTIME" == 1 ]
         then
             #check_gamecontrollerdb
@@ -4083,7 +4301,7 @@ check_runtime() {
 }
 
 check_ld_library() {
-    if [ ! -z "$1" ] ; then ld_lib_upd "$1" ; fi
+    [ ! -z "$1" ] && ld_lib_upd "$1"
     if [ ! -z "$LD_LIBRARY_PATH" ]
         then
             if [ -z "$(echo $LD_LIBRARY_PATH|grep "$WINEDIR/lib64:$WINEDIR/lib")" ]
@@ -4096,7 +4314,9 @@ check_ld_library() {
 }
 
 check_path() {
-    if [ ! -z "$1" ] ; then path_upd "$1" ; fi
+    [ ! -z "$1" ] && path_upd "$1"
+    [[ ! -z "$(which -a 'cabextract' 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)" \
+    && -d "$WINEDIR" && -f "$WINEDIR/bin/cabextract" ]] && try_rm "$WINEDIR/bin/cabextract"
     path_upd "$WINEDIR/bin"
 }
 
@@ -4105,10 +4325,10 @@ check_hold_terminal() {
         then
             if [[ "$1" == "gnome" || ! -z "$(echo "$LW_TERM_APP"|grep -wo "gnome-terminal")" ]]
                 then
-                    unset HOLD_TERMINAL
+                    unset HOLD_TERMINAL TERM_HOLD
             elif [[ "$1" == "lxterm" || ! -z "$(echo "$LW_TERM_APP"|grep -wo "lxterminal")" ]]
                 then
-                    unset HOLD_TERMINAL
+                    unset HOLD_TERMINAL TERM_HOLD
             elif [[ "$1" == "xterm" || ! -z "$(echo "$LW_TERM_APP"|grep -wo 'xterm')" ]]
                 then
                     export TERM_HOLD="-hold"
@@ -4118,11 +4338,13 @@ check_hold_terminal() {
             else
                 export TERM_HOLD="--hold"
             fi
+        else
+            unset TERM_HOLD
     fi
 }
 
 check_terminal() {
-    if [ ! -z "$1" ] ; then export LW_TERM_APP="$1" ; fi
+    [ ! -z "$1" ] && export LW_TERM_APP="$1"
     check_hold_terminal
     if [[ ! -z "$LW_TERM_APP" && ! -z "$(which "$(basename "$LW_TERM_APP")" 2>/dev/null)" ]]
         then
@@ -4168,28 +4390,25 @@ check_terminal() {
 }
 
 check_pulse_latency() {
-    if [ ! -z "$1" ] ; then export PULSE_LTCY="$1" ; fi
-    if [ "$PULSE_LTCY" == 1 ]
-        then
-            export PULSE_LATENCY_MSEC="60"
-    fi
+    [ ! -z "$1" ] && export PULSE_LTCY="$1"
+    [ "$PULSE_LTCY" == 1 ] && export PULSE_LATENCY_MSEC="60"
 }
 
 check_vkbasalt_cfg() {
     try_mkdir "$(dirname "$VKBASALT_CONFIG_FILE")"
-    if [[ ! -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" ]] || [[ -f "$VKBASALT_CONFIG_FILE" && -d "$RESHADE_DIR" && -z "$(grep -wo "$RESHADE_DIR" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
+    if [[ ! -f "$VKBASALT_CONFIG_FILE" && -d "$LW_RESHADE_DIR" ]] || [[ -f "$VKBASALT_CONFIG_FILE" && -d "$LW_RESHADE_DIR" && -z "$(grep -wo "$LW_RESHADE_DIR" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
         then
-            echo -e "reshadeTexturePath = "$RESHADE_DIR"/textures\nreshadeIncludePath = "$RESHADE_DIR"/shaders" > "$VKBASALT_CONFIG_FILE"
+            echo -e "reshadeTexturePath = "$LW_RESHADE_DIR"/textures\nreshadeIncludePath = "$LW_RESHADE_DIR"/shaders" > "$VKBASALT_CONFIG_FILE"
             (while read RES_NAME <&3 && read RES_FLPTH <&4
                 do
                     echo "$RES_NAME = $RES_FLPTH"
-            done 3< <(ls -1 "$RESHADE_DIR"/shaders/*.fx|sed 's/.fx$//'|xargs -I {} basename {}) \
-                 4< <(ls -1 "$RESHADE_DIR"/shaders/*.fx)) >> "$VKBASALT_CONFIG_FILE"
-    elif [[ -f "$VKBASALT_CONFIG_FILE" && ! -d "$RESHADE_DIR" && ! -z "$(grep -wo 'reshadeTexturePath' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
+            done 3< <(ls -1 "$LW_RESHADE_DIR"/shaders/*.fx|sed 's/.fx$//'|xargs -I {} basename {}) \
+                 4< <(ls -1 "$LW_RESHADE_DIR"/shaders/*.fx)) >> "$VKBASALT_CONFIG_FILE"
+    elif [[ -f "$VKBASALT_CONFIG_FILE" && ! -d "$LW_RESHADE_DIR" && ! -z "$(grep -wo 'reshadeTexturePath' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
         then
             try_rm "$VKBASALT_CONFIG_FILE"
             export VKBASALT_EFFECTS="cas"
-    elif [[ ! -f "$VKBASALT_CONFIG_FILE" && ! -d "$RESHADE_DIR" ]]
+    elif [[ ! -f "$VKBASALT_CONFIG_FILE" && ! -d "$LW_RESHADE_DIR" ]]
         then
             export VKBASALT_EFFECTS="cas"
     fi
@@ -4200,7 +4419,7 @@ check_vkbasalt_cfg() {
 }
 
 check_vkbasalt_eff() {
-    if [ ! -z "$1" ] ; then export VKBASALT="$1" ; fi
+    [ ! -z "$1" ] && export VKBASALT="$1"
     if [[ "$VKBASALT" == 1 ]]
         then
             export ENABLE_VKBASALT=1
@@ -4237,12 +4456,6 @@ check_vkbasalt_eff() {
                     fi
                     sed -i "/casSharpness.*/d" "$VKBASALT_CONFIG_FILE" 2>/dev/null
             fi
-            if [ ! -z "$VK_INSTANCE_LAYERS" ]
-                then
-                    export VK_INSTANCE_LAYERS="VK_LAYER_VKBASALT_post_processing:$VK_INSTANCE_LAYERS"
-                else
-                    export VK_INSTANCE_LAYERS="VK_LAYER_VKBASALT_post_processing"
-            fi
         else
             export DISABLE_VKBASALT=1
             unset VKBASALT
@@ -4251,7 +4464,7 @@ check_vkbasalt_eff() {
 }
 
 check_reset_pulse() {
-    if [ ! -z "$1" ] ; then export RESET_PULSE="$1" ; fi
+    [ ! -z "$1" ] && export RESET_PULSE="$1"
     if [ "$RESET_PULSE" == 1 ]
         then
             if [[ ! -z "$(pgrep pulseeffects)" && ! -z "$(pgrep pulseaudio)" ]]
@@ -4279,7 +4492,7 @@ check_reset_pulse() {
 }
 
 check_win_version() {
-    if [ ! -z "$1" ] ; then export WIN_VER="$1" ; fi
+    [ ! -z "$1" ] && export WIN_VER="$1"
     if [ -z "$(cat "$WINEPREFIX/system.reg" 2>/dev/null|grep -i "Microsoft Windows $WIN_VER" 2>/dev/null)" ]
         then
             [[ ! -z "$WIN_VER" && "$WIN_VER" == "xp" ]] && export WIN_VER="xp64"
@@ -4288,26 +4501,32 @@ check_win_version() {
             check_ld_library
             if [[ ! -z "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
-                    "$OLD_WINE" winecfg -v win$WIN_VER &>/dev/null
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" winecfg -v win$WIN_VER &>/dev/null
+                    [ "$?" == 0 ] && export WINVEROK=1
                     unset LD_LIBRARY_PATH
             elif [ -f "$WINE" ]
                 then
-                    "$WINE" winecfg -v win$WIN_VER &>/dev/null
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" winecfg -v win$WIN_VER &>/dev/null
+                    [ "$?" == 0 ] && export WINVEROK=1
                     unset LD_LIBRARY_PATH
-            else
-                unset LD_LIBRARY_PATH
-                print_error yad "Windows version not changed to Windows $WIN_VER"
-                return 1
             fi
-            print_info notify "Windows version changed to Windows $WIN_VER"
-            try_shutdown_wine
+            if [ ! -z "$WINVEROK" ]
+                then
+                    unset WINVEROK
+                    print_info notify "Windows version changed to Windows $WIN_VER"
+                    try_shutdown_wine
+                else
+                    unset LD_LIBRARY_PATH WINVEROK
+                    print_error yad "Windows version not changed to Windows $WIN_VER"
+                    return 1
+            fi
         else
             return 1
     fi
 }
 
 check_crash_dialog() {
-    if [ ! -z "$1" ] ; then export SHOW_WINEDBG="$1" ; fi
+    [ ! -z "$1" ] && export SHOW_WINEDBG="$1"
     if [ "$SHOW_WINEDBG" == 1 ]
         then
             wdllover_upd "winedbg.exe=b"
@@ -4319,17 +4538,17 @@ check_crash_dialog() {
     fi
 }
 
-check_single_cpu() {
-    if [ ! -z "$1" ] ; then export SINGLE_CPU="$1" ; fi
-    if [ "$SINGLE_CPU" == 1 ]
+check_cpu_limit() {
+    [ ! -z "$1" ] && export CPU_LIMIT="$1"
+    if [[ ! -z "$CPU_LIMIT" && "$CPU_LIMIT" != 0 ]]
         then
-            export RUN_SINGLE_CPU="taskset -c 0"
-            print_info notify "Application will run on a single CPU core"
+            export RUN_CPU_LIMIT="taskset -c 0-$(( $CPU_LIMIT - 1 ))"
+            print_info notify "The application will be launched with a CPU limitation"
     fi
 }
 
 check_vkd3dconfig() {
-    if [ ! -z "$1" ] ; then export VKD3DCFG="$1" ; fi
+    [ ! -z "$1" ] && export VKD3DCFG="$1"
     if [[ ! -z "$VKD3DCFG" && "$VKD3DCFG" != "Disabled" ]]
         then
             vkd3dcfg_upd "$VKD3DCFG"
@@ -4337,7 +4556,7 @@ check_vkd3dconfig() {
 }
 
 check_dxr() {
-    if [ ! -z "$1" ] ; then export DXR="$1" ; fi
+    [ ! -z "$1" ] && export DXR="$1"
     if [ "$DXR" == "1.1" ]
         then
             vkd3dcfg_upd "dxr11"
@@ -4450,6 +4669,7 @@ upd_dxvk() {
 upd_dxvk_nvapi() {
     sed -i '/export DXVK_NVAPI_VERSION.*/d' "$LW_CFG" 2>/dev/null
     unset DXVK_NVAPI_VERSION
+    export DXVK=1
     export DXVK_NVAPI=1
     export NEEDCHKDLL=1
     export FORCE_DLL_UPDATE=1
@@ -4462,6 +4682,16 @@ upd_vkd3d() {
     export NEEDCHKDLL=1
     export FORCE_DLL_UPDATE=1
     check_vkd3d
+}
+upd_wine_nvml() {
+    sed -i '/export WINE_NVML_VERSION.*/d' "$LW_CFG" 2>/dev/null
+    unset WINE_NVML_VERSION
+    export DXVK=1
+    export WINE_NVML=1
+    export DXVK_NVAPI=1
+    export NEEDCHKDLL=1
+    export FORCE_DLL_UPDATE=1
+    check_wine_nvml
 }
 upd_all() {
     upd_battleye &
@@ -4490,6 +4720,8 @@ upd_all() {
     sleep 0.2
     upd_vkd3d &
     sleep 0.2
+    upd_wine_nvml &
+    sleep 0.2
     upd_reshade &
     sleep 0.2
     upd_winetricks $
@@ -4497,11 +4729,11 @@ upd_all() {
 }
 
 lu_update() {
-    LWRUNTIMELST="dxvk vkd3d dxvk-nvapi d3d_extras dgvoodoo2 battleye_runtime eac_runtime reshade winetricks gamecontrollerdb innoextract network-tools p7zip ubuntu1804-i686 ubuntu1804-x86_64"
+    LWRUNTIMELST="dxvk vkd3d dxvk-nvapi wine_nvml d3d_extras dgvoodoo2 battleye_runtime eac_runtime reshade winetricks gamecontrollerdb innoextract network-tools p7zip ubuntu1804-i686 ubuntu1804-x86_64"
     check_winepfx
     if [ "$2" == "all" ]
         then
-            upd_all|settingbar
+            upd_all|settingbar "Runtime Updater" "Updating Lutris Wine Runtime is in progress. Please wait..."
     elif [[ -z "$2" || "$2" == "openupdtr" ]]
         then
             if [ -z "$(pgrep -fa yad|grep "Runtime Updater"|awk '{print$1}')" ]; then :
@@ -4511,11 +4743,11 @@ lu_update() {
             fi
             LW_RUN_UPD="$(echo -e "\n$(echo "$LWRUNTIMELST"|tr ' ' '\n'|sed 's/^ *//'|sed '/^[[:space:]]*$/d'|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --title "Lutris Wine Runtime Updater" --list --checklist --separator "\n" --column="" --column="Select runtime for update:" \
-                --text-align=center --center --window-icon="$DEF_ICO" \
+                --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --width=400 --height=500 --button="UPDATE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
                 then
-                    upd_all|settingbar
+                    upd_all|settingbar "Runtime Updater" "Updating Lutris Wine Runtime is in progress. Please wait..."
             elif [ ! -z "$(echo "$LW_RUN_UPD"|head -1)" ]
                 then
                     LW_RUN_UPD="$(echo "$LW_RUN_UPD"|sed '/^TRUE$/d'|sed '/^$/d')"
@@ -4548,13 +4780,15 @@ lu_update() {
                                             sleep 0.2 ;;
                                 vkd3d) upd_vkd3d &
                                        sleep 0.2 ;;
+                                wine_nvml) upd_wine_nvml &
+                                           sleep 0.2 ;;
                                 reshade) upd_reshade &
                                          sleep 0.2 ;;
                                 winetricks) upd_winetricks &
                                             sleep 0.2 ;;
                             esac
                     done
-                    wait)|settingbar
+                    wait)|settingbar "Runtime Updater" "Updating Lutris Wine Runtime is in progress. Please wait..."
                     print_info notify "Runtime update completed!"
             fi
         else
@@ -4587,6 +4821,8 @@ lu_update() {
                                                     sleep 0.2 ;;
                         vkd|vkd3d) upd_vkd3d &
                                    sleep 0.2 ;;
+                        nvml|wine_nvml) upd_wine_nvml &
+                                        sleep 0.2 ;;
                         resh|reshade) upd_reshade &
                                       sleep 0.2 ;;
                         wtrx|winetricks) upd_winetricks &
@@ -4595,13 +4831,13 @@ lu_update() {
                     esac
                     shift
             done
-            wait)|settingbar
+            wait)|settingbar "Runtime Updater" "Updating Lutris Wine Runtime is in progress. Please wait..."
             print_info notify "Runtime update completed!"
     fi
 }
 
 check_no_async() {
-    if [ ! -z "$1" ] ; then export VULKAN_NO_ASYNC="$1" ; fi
+    [ ! -z "$1" ] && export VULKAN_NO_ASYNC="$1"
     if [ "$VULKAN_NO_ASYNC" == 1 ]
         then
             export RADV_DEBUG="llvm"
@@ -4615,7 +4851,7 @@ check_no_async() {
 }
 
 check_us_switcher() {
-    if [ ! -z "$1" ] ; then export US_LAYOUT="$1" ; fi
+    [ ! -z "$1" ] && export US_LAYOUT="$1"
     if [[ "$US_LAYOUT" == 1 && -z "$(which xkb-switch 2>/dev/null)" ]]
         then
             export US_LAYOUT=0
@@ -4652,10 +4888,10 @@ check_other_fixes() {
     [ "$SHARED_MEMORY" == 1 ] && export STAGING_SHARED_MEMORY=1
     [ "$DIS_LAYER_AMD" == 1 ] && export DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1=1
     [ "$GL_THRD_OPTI" == 1 ] && export __GL_THREADED_OPTIMIZATIONS=1
-    try_mkdir "$DEF_CACHE/gl_shader_cache"
-    try_mkdir "$DEF_CACHE/mesa_shader_cache"
-    export MESA_GLSL_CACHE_DIR="$DEF_CACHE"
-    export __GL_SHADER_DISK_CACHE_PATH="$DEF_CACHE/gl_shader_cache"
+    try_mkdir "$LW_DEF_CACHE/gl_shader_cache"
+    try_mkdir "$LW_DEF_CACHE/mesa_shader_cache"
+    export MESA_GLSL_CACHE_DIR="$LW_DEF_CACHE"
+    export __GL_SHADER_DISK_CACHE_PATH="$LW_DEF_CACHE/gl_shader_cache"
     export __GL_SHADER_DISK_CACHE=1
     export __GL_SHADER_DISK_CACHE_SIZE="1000000000"
 }
@@ -4694,7 +4930,7 @@ exeargs_upd() {
 }
 
 check_exe_args() {
-    if [ ! -z "$1" ] ; then export EXEARGS="$1" ; fi
+    [ ! -z "$1" ] && export EXEARGS="$1"
     if [ ! -z "$EXEARGS" ]
         then
             exeargs_upd "$EXEARGS"
@@ -4702,7 +4938,7 @@ check_exe_args() {
 }
 
 check_wmonover() {
-    if [ ! -z "$1" ] ; then export WMONOVER="$1" ; fi
+    [ ! -z "$1" ] && export WMONOVER="$1"
     if [[ ! -z "$WMONOVER" && "$WMONOVER" != "Disabled" && "$DIS_NETCORE" != "1" ]]
         then
             wmonover_upd "$WMONOVER"
@@ -4710,7 +4946,7 @@ check_wmonover() {
 }
 
 check_wdllover() {
-    if [ ! -z "$1" ] ; then export WDLLOVER="$1" ; fi
+    [ ! -z "$1" ] && export WDLLOVER="$1"
     if [[ ! -z "$WDLLOVER" && "$WDLLOVER" != "Disabled" ]]
         then
             wdllover_upd "$WDLLOVER"
@@ -4718,12 +4954,12 @@ check_wdllover() {
 }
 
 export_all_functions() {
-    export -f print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid check_vkd3dconfig try_rm check_themes \
-        check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_mono_gecko try_download check_single_cpu ld_lib_upd \
-        unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher \
-        compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris gamma_sw vkd3dcfg_upd \
+    export -f print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid check_vkd3dconfig try_rm check_themes import_cenv \
+        check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_mono_gecko try_download check_cpu_limit ld_lib_upd \
+        unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher check_proton_d3dlib \
+        compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris gamma_sw vkd3dcfg_upd check_downloader \
         create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_conf check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd \
-        lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr \
+        lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr winepfx_init \
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr updcfgchksum lite_init \
         us_layout_sw check_mangohud check_wd3dmode check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
         check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell \
@@ -4733,25 +4969,26 @@ export_all_functions() {
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
         upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt_eff check_luwine_conf check_videodrv check_startfile init_def_config \
         settingbar_nostdout check_freespace initbar check_network_status check_no_async print_question print_input loadbar_cover check_first_run check_eac \
-        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg lu_appcfg try_fix_wrtx try_shutdown_wine check_fake_cur_res \
-        check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args
+        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_fake_cur_res \
+        check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
+        check_wine_nvml
 }
 
 initbar() {
     INIPRGRS="/tmp/iniprgrs$ENVKEY"
     touch "$INIPRGRS"
     while [ -f "$INIPRGRS" ]; do echo; sleep 0.1; done| \
-    #yad --progress --text="Initialization in progress. Please wait..." --pulsate --no-buttons --undecorated --center --no-escape --auto-close --skip-taskbar --on-top --width=500 --height=50 Lutris Wine &
-    zenity --window-icon="$DEF_ICO" --progress --title="Startup initialization" --text="Initialization is in progress. Please wait..." --pulsate --auto-close --width=500 --height=40 --no-cancel Lutris Wine &>/dev/null &
+    zenity --window-icon="$LW_DEF_ICO" --progress --title="Runtime initialization" --width=500 --height=40 --no-cancel \
+        --text="Initialization is in progress. Please wait..." --pulsate --auto-close Lutris Wine &>/dev/null &
 }
 
 check_loadbar_cover() {
-    if [[ ! -z "$LOADBARGIF" && "$LOADBARGIF" != "$DEF_LOAD_GIF" && -z "$(file "$LOADBARGIF"|grep -wo 'GIF image data')" ]]
+    if [[ ! -z "$LOADBARGIF" && "$LOADBARGIF" != "$LW_DEF_LOAD_GIF" && -z "$(file "$LOADBARGIF"|grep -wo 'GIF image data')" ]]
         then
-            if [ -f "$DEF_LOAD_GIF" ]
+            if [ -f "$LW_DEF_LOAD_GIF" ]
                 then
-                    export LOADBARGIF="$DEF_LOAD_GIF"
-                    sed -i "s@export LOADBARGIF.*@export LOADBARGIF='$DEF_LOAD_GIF'@g" "$LW_CFG" 2>/dev/null
+                    export LOADBARGIF="$LW_DEF_LOAD_GIF"
+                    sed -i "s@export LOADBARGIF.*@export LOADBARGIF='$LW_DEF_LOAD_GIF'@g" "$LW_CFG" 2>/dev/null
                     print_error yad "Lutris Wine Cover Loader" "Unsupported loading bar cover file! Reset to default cover." &
                 else
                     export LOADBAR=0
@@ -4800,7 +5037,7 @@ lu_appcfg() {
         then
             LW_APP_SETT="$(echo -e "\n$(echo "$LWAPPSCFG"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
             yad --title "Lutris Wine Applications Settings" --list --radiolist --separator "\n" --column="" --column="Select app config for open:" \
-                --text-align=center --center --window-icon="$DEF_ICO" \
+                --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --width=400 --height=500 --button="RESET ALL:2" --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
                 then
@@ -4843,9 +5080,9 @@ if [ $(id -u) -eq 0 ]
             -winecfg) full_init "$@" ; lu_winecfg "$@" ;;
             -taskmgr) full_init "$@" ; lu_taskmgr "$@" ;;
             -uninstaller) full_init "$@" ; lu_uninstaller "$@" ;;
-            -debug) full_init "$@" ; DEBUG=1 lu_start "$@" ;;
-            -winetricks) winetricks ;;
-            -winemgr) lu_winemgr ;;
+            -debug) DEBUG=1 lu_start "$@" ;;
+            -winetricks) winetricks "$@" ;;
+            -winemgr) lu_winemgr "$@" ;;
             -openpfx) lu_openpfx ;;
             -killwine) lu_killwine "$@" ;;
             -killtray) lu_killtray ;;
@@ -4863,7 +5100,7 @@ if [ $(id -u) -eq 0 ]
             -config) lu_config "$@" ;;
             -appcfg) lu_appcfg ;;
             -*) lu_help ;;
-            *) full_init "$@" ; lu_start "$@" ;;
+            *) lu_start "$@" ;;
         esac
 fi
 try_rm /tmp/envbackup$ENVKEY &>/dev/null
