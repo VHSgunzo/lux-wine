@@ -170,7 +170,7 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 -winemgr {delonly}      Wine manager
 -taskmgr                Task manager
 -uninstaller            Wine uninstaller
--winetricks             Winetricks
+-winetricks {arguments} Winetricks
 -openpfx                Open drive C:\
 -killwine               Kill Wine processes
 -killtray               Kill tray
