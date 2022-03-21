@@ -1490,7 +1490,7 @@ lu_debug() {
             echo -en "$(df -h|head -1)\n$(df -h|grep "$(echo $DiskMP|awk '{print$1}')")\n" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Graphic cards and drivers ] :" >> "$TMP_DEB"
-            echo $(lspci -k|grep -EA3 'VGA|3D|Display') >> "$TMP_DEB"
+            echo "$(lspci -k|grep -EA3 'VGA|3D|Display')" >> "$TMP_DEB"
             if [ ! -x "$(which glxinfo 2>/dev/null)" ]
                 then
                     echo "[!]glxinfo not found[!]"  >> "$TMP_DEB"
