@@ -94,11 +94,11 @@ if check_deps
             then
                 if ! launch_helper
                     then
-                        lu_exit
+                        exit 1
                 fi
             else
-                lu_exit
+                exit 1
         fi
     else
-        lu_exit
+        exit 1
 fi

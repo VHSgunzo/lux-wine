@@ -105,6 +105,7 @@ All Arch-based distributions
 - [x] Selecting different D3D DLLs from different versions of Proton
 - [x] Custom Environment (globally and separately for EXE)
 - [x] pre_launch and post_launch functions
+- [x] Checking and usage anticheat libraries and protons in native Steam
 - [x] [WINE-NVML](https://github.com/Saancreed/wine-nvml) (automatic download if it does not exist in dxvk-nvapi)
 - [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [x] Redefining Wine options in settings GUI:
@@ -178,7 +179,7 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 -killshell              Kill SHELL
 -exit                   Force exit
 -clearpfx               Clear prefix
--rmapp                  Remove menu apps
+-rmapp                  Remove menu app
 -shortcut               Create shortcut
 -addtolu                Add to Lutris
 -debug                  DEBUG
