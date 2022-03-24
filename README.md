@@ -17,8 +17,8 @@ All Arch-based distributions
 - [x] Checking for updates for libraries in a given period of time
 - [x] Ability to create separate configuration files for different EXEs
 - [x] Automatic enable WineD3D (OpenGL) mode if Vulkan API is not available
-- [x] Manual enabling WineD3D (OpenGL) mode (Disables DXVK, DXVK-NVAPI, VKD3D, DXR)
-- [x] DXVK with Wine DXGI mode
+- [x] Manual enabling WineD3D (OpenGL) mode (Disables [DXVK](https://github.com/doitsujin/dxvk/releases), [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi/releases), [VKD3D](https://github.com/HansKristian-Work/vkd3d-proton), DXR)
+- [x] [DXVK](https://github.com/doitsujin/dxvk/releases) with Wine DXGI mode
 - [x] Supports running on virtual machines with GL acceleration (tested on KVM, see installation video)
 - [x] Debug mode
 - [x] Terminal mode (various terminals supported) (see Terminal usage)
@@ -29,22 +29,22 @@ All Arch-based distributions
 - [x] Wine Manager ([Lutris](https://github.com/lutris/wine/releases), [Proton GE](https://github.com/GloriousEggroll/proton-ge-custom/releases), [Wine GE](https://github.com/GloriousEggroll/wine-ge-custom/releases), [Kron4ek](https://github.com/Kron4ek/Wine-Builds/releases))
 - [x] System Wine supports (selected automatically if no other versions of Wine are installed)
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
-- [x] Switching DXR/RTX Version (if the video adapter support and depends on VKD3D)
+- [x] Switching DXR/RTX Version (if the video adapter support and depends on [VKD3D](https://github.com/HansKristian-Work/vkd3d-proton))
 - [x] DLSS (if the video adapter and game support and depends on [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi) + [WINE-NVML](https://github.com/Saancreed/wine-nvml))
 - [x] Custom URL for runtime repo
-- [x] Custom VKD3D config
-- [x] MangoHud settings (with custom config support)
-- [x] VkBasalt settings
-- [x] Reshade Shaders settings (VkBasalt Effects, depends on VkBasalt)
+- [x] Custom [VKD3D](https://github.com/HansKristian-Work/vkd3d-proton) config
+- [x] [MangoHud](https://github.com/flightlessmango/MangoHud/releases) settings (with custom config support)
+- [x] [VkBasalt](https://github.com/DadSchoorse/vkBasalt/releases) settings
+- [x] [Reshade Shaders](https://github.com/crosire/reshade-shaders) settings (VkBasalt Effects, depends on VkBasalt)
 - [x] Vulkan ICD loader automatic and manual settings
-- [x] AMD FidelityFX Contrast Adaptive Sharpening settings (depends on VkBasalt)
-- [x] Gstreamer (if Wine support)
-- [x] GameMode
+- [x] AMD FidelityFX Contrast Adaptive Sharpening settings (depends on [VkBasalt](https://github.com/DadSchoorse/vkBasalt/releases))
+- [x] [Gstreamer](https://github.com/GStreamer/gstreamer) (if Wine support)
+- [x] [GameMode](https://github.com/FeralInteractive/gamemode/releases)
 - [x] Esync
 - [x] Fsync (if linux kernel support)
 - [x] Vsync settings
 - [x] AMD FidelityFX Super Resolution settings (if Wine support)
-- [x] BattleEye Runtime (if Wine support)
+- [x] BattleEye runtime (if Wine support)
 - [x] EasyAntiCheat runtime (if Wine support)
 - [x] NVIDIA Prime Render Offload
 - [x] US keyboard layout switcher
@@ -53,7 +53,7 @@ All Arch-based distributions
 - [x] Restore gamma
 - [x] CPU limitation mode
 - [x] Show Crash Dialog (WINEDBG)
-- [x] FPS limit settings (with MangoHud or libstrangle)
+- [x] FPS limit settings (with [MangoHud](https://github.com/flightlessmango/MangoHud/releases) or [libstrangle](https://github.com/milaq/libstrangle))
 - [x] Custom Wine themes
 - [x] Runtime updater
 - [x] Quick add applications to Lutris (if Lutris installed)
@@ -100,12 +100,12 @@ All Arch-based distributions
 - [x] Wine prefix sandbox
 - [x] Wayland supports (experimental)
 - [x] Downloader selection (aria2c or wget, aria2c in priority)
-- [x] Ability to use the built-in Proton D3D DLLs (DXVK, DXVK-NVAPI and VKD3D)
+- [x] Ability to use the built-in Proton D3D DLLs ([DXVK](https://github.com/doitsujin/dxvk/releases), [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi/releases) and [VKD3D](https://github.com/HansKristian-Work/vkd3d-proton))
 - [x] Selecting different D3D DLLs from different versions of Proton
 - [x] Custom Environment (globally and separately for EXE)
 - [x] pre_launch and post_launch functions
 - [x] Checking and usage anticheat libraries and Protons in native Steam (selected automatically if no other versions of Wine and anticheats are installed)
-- [x] [WINE-NVML](https://github.com/Saancreed/wine-nvml) (automatic download if it does not exist in dxvk-nvapi)
+- [x] [WINE-NVML](https://github.com/Saancreed/wine-nvml) (automatic download if it does not exist in [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi/releases)
 - [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [x] Redefining Wine options in settings GUI:
 ```

@@ -2149,6 +2149,8 @@ check_steamapps() {
                     try_ln "$STM7PRTN" "$LW_WINE_DIR/Proton70"
                     print_info notify "Found Proton 7.0 in Steam and linked to Lutris Wine"
             fi
+        else
+            unset STMEAC STMBATTLEYE
     fi
 }
 
