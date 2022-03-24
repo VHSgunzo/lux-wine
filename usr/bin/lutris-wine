@@ -1175,15 +1175,14 @@ try_shutdown_wine() {
 try_fix_wrtx() {
     if [ ! -z "$(grep -o 'a3f1bf98-18f3-4036-9b68-8e6de530ce0a' "$LW_WTRX_DIR/winetricks")" ]
         then
-            sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$LW_WTRX_DIR/winetricks"
+            print_info "Fix winetricks dotnet20"
+            sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$LW_WTRX_DIR/winetricks" 2>/dev/null
     fi
     if [ -z "$(grep -o 'check_ld_library' "$LW_WTRX_DIR/winetricks")" ]
         then
-            sed -i "$(( $(sed -n '/w_do_call()$/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    check_ld_library" "$LW_WTRX_DIR/winetricks"
-    fi
-    if [ -z "$(grep -o 'unset LD_LIBRARY_PATH' "$LW_WTRX_DIR/winetricks")" ]
-        then
-            sed -i "$(( $(sed -n '/subshell must/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    unset LD_LIBRARY_PATH" "$LW_WTRX_DIR/winetricks"
+            print_info "Fix winetricks LD_LIBRARY_PATH"
+            sed -i "$(( $(sed -n '/w_do_call()$/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    check_ld_library" "$LW_WTRX_DIR/winetricks" 2>/dev/null
+            sed -i "$(( $(sed -n '/subshell must/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    unset LD_LIBRARY_PATH" "$LW_WTRX_DIR/winetricks" 2>/dev/null
     fi
 }
 
@@ -4140,7 +4139,9 @@ runtime_manager() {
     else GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
     fi
     [ -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ] && FORCE_UPDATE=1
-    if [[ ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || [ ! -z "$FORCE_UPDATE" ]
+    if [[ ! -z "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 \
+        && -z "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
+        || [ ! -z "$FORCE_UPDATE" ]
         then
             if [[ "$NETSTATUS" == 1 ]]
                 then
@@ -4160,7 +4161,6 @@ runtime_manager() {
                                                         then
                                                             try_rm "$dll_archive"*
                                                             touch "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)"
-                                                            if [ "$1" == "winetricks" ]; then try_fix_wrtx; fi
                                                             unset FORCE_UPDATE
                                                             check_$1 2>/dev/null
                                                         else
@@ -4177,7 +4177,8 @@ runtime_manager() {
                             return 1
                     fi
             else
-                [ "$NETSTATUS" == 0 ] && print_error yad "Lutris Wine Runtime Manager" "No internet connection, it is not possible to download $1"
+                [ "$NETSTATUS" == 0 ] && print_error yad "Lutris Wine Runtime Manager" \
+                "No internet connection, it is not possible to download $1"
                 return 1
         fi
     fi
@@ -4707,7 +4708,10 @@ check_reshade() {
 }
 
 check_winetricks() {
-    runtime_manager "winetricks"
+    if runtime_manager "winetricks"
+        then
+            try_fix_wrtx
+    fi
 }
 
 check_gamecontrollerdb() {
