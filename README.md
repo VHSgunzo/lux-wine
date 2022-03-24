@@ -26,7 +26,7 @@ All Arch-based distributions
 - [x] Logging mode
 - [x] SHELL mode or open file in SHELL (with access to all lutris-wine functions)
 - [x] CMD mode or open file in CMD
-- [x] Wine Manager (Lutris, Proton GE, Wine GE, Kron4ek)
+- [x] Wine Manager ([Lutris](https://github.com/lutris/wine/releases), [Proton GE](https://github.com/GloriousEggroll/proton-ge-custom/releases), [Wine GE](https://github.com/GloriousEggroll/wine-ge-custom/releases), [Kron4ek](https://github.com/Kron4ek/Wine-Builds/releases))
 - [x] System Wine supports (selected automatically if no other versions of Wine are installed)
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
 - [x] Switching DXR/RTX Version (if the video adapter support and depends on VKD3D)
@@ -89,9 +89,8 @@ All Arch-based distributions
 - [x] Wine MONO overrides
 - [x] Disabling MONO (.NET Core)
 - [x] Various optimizations for better gaming performance
-- [x] Lutris Runtime (with system library priority if needed)
+- [x] Ability to use Lutris runtime (with system library priority if needed)
 - [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/usr/share/lutris-wine/db/LeagueClient.lwdb)
-- [x] EXE DB launch helper script automatically starts if located in the application folder and has the same name, but with the extension *.lwdb
 - [x] Custom loading bar animation
 - [x] Old OpenGL String
 - [x] Disable Vulkan Async
@@ -105,7 +104,7 @@ All Arch-based distributions
 - [x] Selecting different D3D DLLs from different versions of Proton
 - [x] Custom Environment (globally and separately for EXE)
 - [x] pre_launch and post_launch functions
-- [x] Checking and usage anticheat libraries and protons in native Steam
+- [x] Checking and usage anticheat libraries and Protons in native Steam (selected automatically if no other versions of Wine and anticheats are installed)
 - [x] [WINE-NVML](https://github.com/Saancreed/wine-nvml) (automatic download if it does not exist in dxvk-nvapi)
 - [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [x] Redefining Wine options in settings GUI:

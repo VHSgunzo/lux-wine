@@ -101,6 +101,7 @@ check_def_config() {
     [ ! -f "$LW_DEF_CENV" ] && echo -e "#pre_launch() { commands ; }\n#post_launch() { commands ; }" > "$LW_DEF_CENV"
     [ -z "$CPU_LIMIT" ] && export CPU_LIMIT=0
     [ -z "$LW_STEAMAPPS_DIR" ] && export LW_STEAMAPPS_DIR="$HOME/.local/share/Steam/steamapps/common"
+    [ -z "$CHKSTEAMAPPS" ] && export CHKSTEAMAPPS=1
 }
 
 print_var() {
@@ -791,6 +792,7 @@ check_display() {
             export OTHDISPL_OUT="$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')"
             export PRIMDISPLCFG="$(eval $CHK_PRIMDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--primary","--mode "$4,"--pos "$5"x"$6,"--rotate "$7}' 2>/dev/null)"
             export OTHDISPLCFG="$(eval $CHK_OTHDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--mode "$3,"--pos "$4"x"$5,"--rotate "$6}' 2>/dev/null)"
+            [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] && export YADSCROLL=1
         else
             print_error yad "xrandr not found in your system!"
     fi
@@ -1306,7 +1308,7 @@ exe2png() {
 add_to_lutris() {
     if [ -z "$SYS_LU" ]
         then
-            print_error yad "Lutris Wine Shortcuts Creator" "Lutris not found in your system!"
+            print_error yad "Shortcuts Creator" "Lutris not found in your system!"
             exit 1
     fi
     if [ ! -z "$1" ]
@@ -1324,9 +1326,9 @@ add_to_lutris() {
             if [ ! -z "$ADD_APP_NAME" ]
                 then
                     export SHRT_NAME="$ADD_APP_NAME"
-                    try_cp "$LUJPG" "$LU_DIR"/banners/"$ADD_APP_NAME".jpg
+                    try_cp "$LUJPG" "$LU_DIR/banners/$ADD_APP_NAME.jpg"
                 else
-                    try_cp "$LUJPG" "$LU_DIR"/banners/
+                    try_cp "$LUJPG" "$LU_DIR/banners/"
             fi
             echo "name: \"${SHRT_NAME}\"" > "$YMLTOLU"
             echo "game_slug: \"${SHRT_NAME}\"" >> "$YMLTOLU"
@@ -1367,7 +1369,8 @@ add_to_lutris() {
                                     LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                                     if [ ! -z "$LUADDPID" ]
                                         then
-                                            if print_question "Shortcuts Creator" "Application successfully added to Lutris! \nDo you want to close Lutris?"
+                                            if print_question "Shortcuts Creator" \
+                                                "Application successfully added to Lutris! \nDo you want to close Lutris?"
                                                 then
                                                     kill -9 "$LUADDPID" 2>/dev/null
                                             fi
@@ -1378,7 +1381,8 @@ add_to_lutris() {
                             LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
                             if [ ! -z "$LUADDPID" ]
                                 then
-                                    if print_question "Shortcuts Creator" "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else. \nDo you want to close Lutris?"
+                                    if print_question "Shortcuts Creator" \
+                                        "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else. \nDo you want to close Lutris?"
                                         then
                                             kill "$LUADDPID" 2>/dev/null
                                     fi
@@ -1398,10 +1402,7 @@ create_shortcut() {
             if print_question "Shortcuts Creator" "Change application name [ $SHRT_NAME ] ?"
                 then
                     ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lutris Wine application" "$SHRT_NAME")"
-                    if [ ! -z "$ADD_APP_NAME" ]
-                        then
-                            export SHRT_NAME="$ADD_APP_NAME"
-                    fi
+                    [ ! -z "$ADD_APP_NAME" ] && export SHRT_NAME="$ADD_APP_NAME"
             fi
             echo "Name=${SHRT_NAME}" >> "$DESKF"
             echo "Exec=\"$LW_SOURCE\" \"$1\"" >> "$DESKF"
@@ -1412,13 +1413,16 @@ create_shortcut() {
             echo "Icon="$LUPNG"" >> "$DESKF"
             chmod u+x "$DESKF"
             echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}completed!\n$RESETCOLOR"
-            if print_question "Shortcuts Creator" "Shortcut [$(basename "$DESKF")] successfully created in the directory with the executable file. \nDo you want to add it to application menu?"
+            if print_question "Shortcuts Creator" \
+                "Shortcut [ $(basename "$DESKF") ] successfully created in the directory with the executable file. \nDo you want to add it to application menu?"
                 then
                     try_mkdir "$LW_APP_DIR"
-                    try_cp "$DESKF" ${LW_APP_DIR}/
+                    try_cp "$DESKF" "${LW_APP_DIR}/"
                     update-desktop-database -q "$LW_MENU_APP_DIR"
+                    print_info notify "Lutris Wine applications added to menu!"
             fi
-            if print_question "Shortcuts Creator" "Do you want to change EXE settings?"
+            if [ -z "$(pgrep -fa yad|grep -wo "Lutris Wine settings for $EXE_FULL_NAME")" ] \
+                && print_question "Shortcuts Creator" "Do you want to change EXE settings?"
                 then
                     lu_config
             fi
@@ -2054,7 +2058,7 @@ check_db_script() {
         then
             if [ ! -z "$(file "$EXE_LWDBFL"|grep -wo "shell script")" ]
                 then
-                    print_info notify "Found EXE DB script: '$EXE_LWDBFL'"
+                    print_info notify "EXE DB script: '$EXE_LWDBFL'"
                     if [ -z "$EXE_LWDB" ]
                         then
                             export EXE_LWDB=1
@@ -2128,7 +2132,7 @@ check_downloader() {
 }
 
 check_steamapps() {
-    if [[ "$NO_STEAMAPPS" != 1 && -d "$LW_STEAMAPPS_DIR" ]]
+    if [[ "$NO_STEAMAPPS" != 1 && -d "$LW_STEAMAPPS_DIR" && "$CHKSTEAMAPPS" == 1 ]]
         then
             try_mkdir "$LW_WINE_DIR"
             STMXPRTN="$LW_STEAMAPPS_DIR/Proton - Experimental/files"
@@ -2326,7 +2330,7 @@ lu_config() {
             DGVOODOO2 DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL MUST_HAVE_DLL FSR FAKE_CUR_RES DXVKASYNC WINE_DXGI ESYNC FSYNC GSTREAMER SHOW_WINEDBG \
             LARGE_ADDRESS OLD_GL_STRING GL_THRD_OPTI NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM \
             DIS_LAYER_AMD DIS_NETCORE VIRTUAL_DESKTOP BATTLEYE EAC WINE_SANDBOX CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL \
-            LOADBAR LOADBARGIF LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR \
+            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR \
             RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE \
             LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT VSYNC PRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
@@ -2394,7 +2398,7 @@ lu_config() {
         BTNTLS=1 cleanrun "$FULLCMDLINE"
     }
     lwconfig_menu() {
-        yad --plug=$LWCFGKEY --tabnum=1 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+        yad --plug=$LWCFGKEY --tabnum=1 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Wine version::CB" "$(echo -e "$WINE_VERSION\n$(echo -e "$WINE_VERSION\n$WINELST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="Windows version::CB" "$(echo -e "$WIN_VER\n$(echo -e "$WIN_VER\n$WINVERLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Wine architecture::CB" "$(echo -e "$WINEARCH\n$(echo -e "$WINEARCH\n$WARCHLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
@@ -2443,7 +2447,7 @@ lu_config() {
             --field="Wine prefix sandbox:CHK" "$WINE_SANDBOX" \
         1> /tmp/winesett$LWCFGKEY &
 
-        yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+        yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Check update days (0-disabled)::NUM" "$CHK_UPDATE" \
             --field="Lutris runtime:CHK" "$RUNTIME" \
             --field="Prefer system libs:CHK" "$PREF_SYS_LIBS" \
@@ -2454,6 +2458,7 @@ lu_config() {
             --field="Loading bar cover:CHK" "$LOADBAR" \
             --field="Loading bar cover GIF::FL" "$LOADBARGIF" \
             --file-filter="Loading bar cover (*.gif)| *.gif *.GIF" \
+            --field="Check Steam apps:CHK" "$CHKSTEAMAPPS" \
             --field="Steam apps common folder::DIR" "$LW_STEAMAPPS_DIR" \
             --field="LOG:CHK" "$LOG" \
             --field="DEBUG:CHK" "$DEBUG" \
@@ -2499,18 +2504,18 @@ lu_config() {
                 done
         fi
         (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
-            $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+            $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             $RESHADE_SETT \
         1> /tmp/ressett$LWCFGKEY & )
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Log file [ $WTRX_LOG ]:TXT" "$(cat "$WTRX_LOG" 2>/dev/null)" 2>/dev/null)" > /tmp/wlogsett$LWCFGKEY &
 
         [ -z "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=6 --columns=2 --form \
-            $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+            $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
             --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
             --field="Open CMD:FBTN" "$LWSHELL -c 'lu_cmd'" \
@@ -2544,27 +2549,27 @@ lu_config() {
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
                     --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
-                    --title="Lutris Wine settings for $EXE_FULL_NAME" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                    --title="Lutris Wine settings for $EXE_FULL_NAME" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
         elif [[ ! -z "$LU_EXE" && ! -z "$RUN_EXE" && -z "$FIRST_RUN" ]]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
                     --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
-                    --title="Lutris Wine settings for $EXE_FULL_NAME" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                    --title="Lutris Wine settings for $EXE_FULL_NAME" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ ! -z "$FIRST_RUN" ]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
                     --tab="Custom Environment" --tab="Winetricks Log" \
-                    --title="Lutris Wine settings" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                    --title="Lutris Wine settings" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
             yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
                 --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
-                --title="Lutris Wine settings" $([ ! -z "$SETTSCROLL" ] && echo "--scroll") \
+                --title="Lutris Wine settings" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                 --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         fi
@@ -2585,7 +2590,6 @@ lu_config() {
         fi
     }
     export -f btn_tools
-    [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] && export SETTSCROLL=1
     SETTWIDTH="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5")"
     SETTHEIGHT="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5")"
     if [[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]]
@@ -3113,7 +3117,7 @@ lu_rmapp() {
 lu_shortcut() {
     if [ -z "$(pgrep -fa yad|grep "Shortcuts Creator"|awk '{print$1}')" ]; then :
         else
-            print_error yad "Lutris Wine Shortcuts Creator" "Lutris Wine Shortcuts Creator already runing!"
+            print_error yad "Shortcuts Creator" "Lutris Wine Shortcuts Creator already runing!"
             exit 1
     fi
     if [ -f "$LU_EXE" ]
@@ -3141,12 +3145,12 @@ lu_shortcut() {
                                     create_shortcut "$LU_EXE"
                             fi
                         else
-                            print_error yad "Lutris Wine Shortcuts Creator" "Unable to create Lutris Wine shortcut for this file!"
+                            print_error yad "Shortcuts Creator" "Unable to create Lutris Wine shortcut for this file!"
                             lu_shortcut
                     fi
             elif [ -d "$SHRT_EXE" ]
                 then
-                    print_error yad "Lutris Wine Shortcuts Creator" "Specify the executable file to create Lutris Wine shortcut!"
+                    print_error yad "Shortcuts Creator" "Specify the executable file to create Lutris Wine shortcut!"
                     lu_shortcut
             fi
     fi
@@ -3198,7 +3202,8 @@ lu_help() {
             {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
             {nvml|wine_nvml}
         $RESETCOLOR" >&2
-        print_info yad "Lutris Wine usage info" "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LW_NAME {$LW_NAME argument} blabla.exe {exe arguments} \n\n \
+        print_info yad "Lutris Wine usage info" \
+        "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LW_NAME {$LW_NAME argument} blabla.exe {exe arguments} \n\n \
         -explorer \t\t\t\t\t Wine explorer\n \
         -cmd \t\t\t\t\t\t Open CMD or open file in CMD\n \
         -shell \t\t\t\t\t\t Open SHELL or open file in SHELL\n \
@@ -4099,10 +4104,12 @@ check_battleye() {
                             export PROTON_BATTLEYE_RUNTIME="$LW_RUNTIME_DIR/battleye_runtime"
                         else
                             unset PROTON_BATTLEYE_RUNTIME
+                            print_error yad "Proton BattlEye Runtime is disabled!"
                     fi
             fi
         else
             unset PROTON_BATTLEYE_RUNTIME
+            print_info "Proton BattlEye Runtime is disabled!"
     fi
 }
 
@@ -4119,10 +4126,12 @@ check_eac() {
                             export PROTON_EAC_RUNTIME="$LW_RUNTIME_DIR/eac_runtime"
                         else
                             unset PROTON_EAC_RUNTIME
+                            print_error yad "Proton EasyAntiCheat Runtime is disabled!"
                     fi
             fi
         else
             unset PROTON_EAC_RUNTIME
+            print_error "Proton EasyAntiCheat Runtime is disabled!"
     fi
 }
 
