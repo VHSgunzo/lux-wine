@@ -240,7 +240,7 @@ check_exes() {
     if [ ! -z "$CHK_EXES" ]
         then
             export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$1}')"
-            export RUN_EXES="$(while read exepid ; do ps -p $exepid -o args|cut -d":" -f2|sed '/COMMAND/d'|sed 'y#\\#/#' ; done <<< "$EXE_PIDS")"
+            export RUN_EXES="$(while read exepid ; do ps -p $exepid -o args|sed '/COMMAND/d'|sed 's/[a-zA-Z]://'|sed 'y#\\#/#' ; done <<< "$EXE_PIDS")"
             [[ ! -z "$EXE_DIR" && ! -z "$EXE_NAME" ]] && export RUN_EXE=$(echo "$RUN_EXES"|grep -iE "($EXE_DIR|$EXE_NAME)" 2>/dev/null)
     fi
 }
