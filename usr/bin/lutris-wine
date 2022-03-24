@@ -75,6 +75,7 @@ check_def_config() {
     [ -z "$DGVOODOO2" ] && export DGVOODOO2=1
     [ -z "$BATTLEYE" ] && export BATTLEYE=1
     [ -z "$EAC" ] && export EAC=1
+    [ -z "$EXE_LWDB" ] && export EXE_LWDB=1
     [ -z "$GL_THRD_OPTI" ] && export GL_THRD_OPTI=1
     [ -z "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='vcrun2019 mfc42'
     [ -z "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
@@ -2045,44 +2046,39 @@ check_exe_wcfg_cenv() {
 }
 
 check_db_script() {
-    if [ -f "$EXE_PATH/$EXE_NAME.lwdb" ]
+    if [ ! -f "$EXE_LWDBFL" ]
         then
-            export EXE_LWDBFL="$EXE_PATH/$EXE_NAME.lwdb"
-            export EXE_LWDB=1
-    elif [[ ! -f "$EXE_LWDBFL" && -f "$LW_DB_DIR/$EXE_NAME.lwdb" ]]
-        then
-            export EXE_LWDBFL="$LW_DB_DIR/$EXE_NAME.lwdb"
-            export EXE_LWDB=1
+            if [ -f "$EXE_PATH/$EXE_NAME.lwdb" ]
+                then
+                    export EXE_LWDBFL="$EXE_PATH/$EXE_NAME.lwdb"
+            elif [ -f "$LW_DB_DIR/$EXE_NAME.lwdb" ]
+                then
+                    export EXE_LWDBFL="$LW_DB_DIR/$EXE_NAME.lwdb"
+            fi
     fi
     if [ -f "$EXE_LWDBFL" ]
         then
             if [ ! -z "$(file "$EXE_LWDBFL"|grep -wo "shell script")" ]
                 then
                     print_info notify "EXE DB script: '$EXE_LWDBFL'"
-                    if [ -z "$EXE_LWDB" ]
-                        then
-                            export EXE_LWDB=1
-                    fi
                 else
-                    unset EXE_LWDBFL EXE_LWDB
-                    sed -i '/export EXE_LWDBFL.*/d' "$LW_CFG" 2>/dev/null
-                    sed -i "s/export EXE_LWDB=.*/export EXE_LWDB='0'/" "$LW_CFG" 2>/dev/null
+                    unset EXE_LWDBFL
+                    sed -i '/EXE_LWDBFL.*/d' "$LW_CFG" 2>/dev/null
                     print_error yad "EXE DB file not a shell script!"
             fi
         else
-            unset EXE_LWDB
+            unset EXE_LWDBFL
     fi
 }
 
 run_db_script() {
-    if [ "$EXE_LWDB" == 1 ]
+    if [[ -f "$EXE_LWDBFL" && "$EXE_LWDB" == 1 ]]
         then
-            source "$EXE_LWDBFL"
-            if [ "$?" == 0 ]
+            if source "$EXE_LWDBFL"
                 then
-                    print_info notify "EXE DB script launched!"
+                    print_info notify "EXE DB script successfully launched!"
                 else
-                    print_error "EXE DB script not launched!"
+                    print_error yad "EXE DB script was launched unsuccessfully!"
             fi
     fi
 }
