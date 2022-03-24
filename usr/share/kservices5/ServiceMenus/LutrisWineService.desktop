@@ -113,7 +113,7 @@ Name=Add to Lutris
 Name[ru_RU]=Добавить в Lutris
 
 [Desktop Action rmapp]
-Exec=lutris-wine -rmapp
+Exec=lutris-wine -rmapp %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Remove menu apps
 Name[ru_RU]=Удалить приложения из меню
