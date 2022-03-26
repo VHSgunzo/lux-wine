@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.69"
+export LW_VERSION="0.70"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -103,6 +103,8 @@ check_def_config() {
     [ -z "$CPU_LIMIT" ] && export CPU_LIMIT=0
     [ -z "$LW_STEAMAPPS_DIR" ] && export LW_STEAMAPPS_DIR="$HOME/.local/share/Steam/steamapps/common"
     [ -z "$CHKSTEAMAPPS" ] && export CHKSTEAMAPPS=1
+    [ -z "$RESIZABLE_BAR" ] && export RESIZABLE_BAR=1
+    [ -z "$LATENCYFLEX" ] && export LATENCYFLEX=1
 }
 
 print_var() {
@@ -1700,14 +1702,14 @@ updcfgchksum() {
 }
 
 check_def_wine() {
-    LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|sed 's/^ *//g')"
+    LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
     (IFS=$'\n' ; for BINWINE in $LOCWINELST
         do
             [ ! -f "$LW_WINE_DIR/$BINWINE/bin/wine" ] \
             && print_error notify "No Wine binary file found [ $BINWINE ], it will be deleted!" \
             && try_rm "$LW_WINE_DIR/$BINWINE" &>/dev/null
     done)
-    if [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|wc -l)" == 0 && ! -z "$SYS_WINE" ]]
+    if [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 0 && ! -z "$SYS_WINE" ]]
         then
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'System\'/g" "$LW_CFG"
             export NEW_WINE_VERSION="System"
@@ -1715,12 +1717,12 @@ check_def_wine() {
             export OLD_WINE="$WINE"
             import_luwine_wcfg
             print_info notify "System Wine selected as default!"
-    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|wc -l)" == 0 ]]
+    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 0 ]]
         then
             print_info yad "Lutris Wine Manager" "Wine is not installed, you must download Wine!"
             lu_winemgr
             check_def_wine
-    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|wc -l)" != 1 ]] \
+    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" != 1 ]] \
         && [[ -z "$P_DXVK" || -z "$P_NVAPI" || -z "$P_VKD3D" ]]
         then
             print_error yad "Lutris Wine Manager" "Default Wine not selected, you must select default Wine!"
@@ -1739,7 +1741,7 @@ check_def_wine() {
                 else
                     check_def_wine
             fi
-    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|wc -l)" != 1 ]] \
+    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" != 1 ]] \
         && [[ "$WLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$WK4_INST" == 1 ]] \
         && [[ -z "$P_DXVK" || -z "$P_NVAPI" || -z "$P_VKD3D" ]]
         then
@@ -1759,9 +1761,9 @@ check_def_wine() {
                 else
                     check_def_wine
             fi
-    elif [[ -f "$WINE" && "$(echo "$LOCWINELST"|wc -l)" == 1 && "$WINE_VERSION" != "System" ]] \
+    elif [[ -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 1 && "$WINE_VERSION" != "System" ]] \
         && [[ "$WLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$WK4_INST" == 1 ]]; then :
-    elif [ ! -f "$WINE" ] && [[ "$(echo "$LOCWINELST"|wc -l)" == 1 \
+    elif [ ! -f "$WINE" ] && [[ "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 1 \
         || ! -z "$P_DXVK" || ! -z "$P_NVAPI" || ! -z "$P_VKD3D" ]] \
         && [[ "$WLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$WK4_INST" == 1 ]]
         then
@@ -1795,7 +1797,7 @@ check_def_wine() {
                 else
                     print_error yad "Lutris Wine Manager" "Lutris Wine Manager already runing!"
             fi
-    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|wc -l)" == 1 ]]
+    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 1 ]]
         then
             export SETWINE="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)"
             sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
@@ -2111,7 +2113,7 @@ check_virt_desktop() {
     [ ! -z "$1" ] && export VIRTUAL_DESKTOP="$1"
     if [ "$VIRTUAL_DESKTOP" == 1 ]
         then
-            RUN_VDESKTOP="explorer /desktop=LutrisWine,$PRIMDISPL_RES"
+            export RUN_VDESKTOP="explorer /desktop=LutrisWine,$PRIMDISPL_RES"
         else
             unset RUN_VDESKTOP
     fi
@@ -2146,6 +2148,40 @@ check_steamapps() {
             fi
         else
             unset STMEAC STMBATTLEYE
+    fi
+}
+
+check_latencyflex() {
+    if [[ "$LATENCYFLEX" == 1 && "$WINEARCH" == 'win64' \
+        && "$DXVK_NVAPI" == 1 && "$WINED3D" != 1 ]]
+        then
+            export LFX=1
+            for latencydll in {latencyflex_layer,latencyflex_wine}
+                do
+                    sys_latencydll="/usr/lib/wine/x86_64-windows/${latencydll}.dll"
+                    wine_latencydll="$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-windows/${latencydll}.dll"
+                    pfx_latencydll="$WINEPREFIX/drive_c/windows/system32/${latencydll}.dll"
+                    if [ -f "$sys_latencydll" ]
+                        then
+                            if [[ ! -f "$wine_latencydll" \
+                                && -d "$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-windows" ]]
+                                then
+                                    try_ln "$sys_latencydll" "$wine_latencydll" &>/dev/null
+                                    try_ln "$sys_latencydll.a" "$wine_latencydll.a" &>/dev/null
+                            fi
+                            [ ! -f "$pfx_latencydll" ] && try_ln "$sys_latencydll" "$pfx_latencydll" &>/dev/null
+                    fi
+            done
+            latencyso="/usr/lib/wine/x86_64-unix/latencyflex_layer.so"
+            wine_latencyso="$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-unix/latencyflex_layer.so"
+            [[ -f "$latencyso" && ! -f "$wine_latencyso" \
+            && -d "$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-unix" ]] \
+                && try_ln "$latencyso" "$wine_latencyso" &>/dev/null
+            wdllover_upd "latencyflex_layer,latencyflex_wine=b"
+        else
+            unset LATENCYFLEX LFX
+            export DISABLE_LFX=1
+            wdllover_upd "latencyflex_layer,latencyflex_wine="
     fi
 }
 
@@ -2213,6 +2249,7 @@ full_init() {
             check_wined3d
             check_vkd3dconfig
             check_dxr
+            check_resizable_bar
             check_battleye
             check_eac
             check_winetricks
@@ -2232,6 +2269,7 @@ full_init() {
             check_restore_resol
             check_virt_desktop
             check_fake_cur_res
+            check_latencyflex
             try_rm "$INIPRGRS" &>/dev/null
             [[ "$1" == "-init" || "$FIRST_RUN" == 1 ]] && print_info notify "Lutris Wine full initialization completed!"
         else
@@ -2320,16 +2358,28 @@ lu_config() {
     DXNVALST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk-nvapi" 2>/dev/null|grep -v '.*.tar.*') \n v0.5.3 \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
     DXNVAGITLST="https://github.com/lutris/dxvk-nvapi/releases \n https://github.com/VHSgunzo/nvapi/releases \n https://github.com/jp7677/dxvk-nvapi/releases"
     DGVOOLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dgvoodoo2" 2>/dev/null|grep -v '.*.tar.*') \n v2.64 \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
+    NVMLLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/wine_nvml" 2>/dev/null|grep -v '.*.tar.*') \n v0.1 \n latest $([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo '\n Default')"
     DGVOOGITLST="https://github.com/lutris/dgvoodoo2/releases"
+    WTRXGITLST="https://github.com/lutris/winetricks/releases"
+    BLDBTGITLST="https://github.com/lutris/buildbot/releases"
+    RESHGITLST="https://github.com/VHSgunzo/reshade/releases"
+    NVMLGITLST="https://github.com/VHSgunzo/nvml/releases"
+    WLUGITLST="https://github.com/lutris/wine/releases"
+    PGEGITLST="https://github.com/GloriousEggroll/proton-ge-custom/releases"
+    WGEGITLST="https://github.com/GloriousEggroll/wine-ge-custom/releases"
+    WK4GITLST="https://github.com/Kron4ek/Wine-Builds/releases"
     lwconfig_save() {
-        LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE DXVK_VERSION DXVK_GIT_RELEASE_URL VKD3D_VERSION \
-            DXR VKD3DCFG VKD3D_GIT_RELEASE_URL DXVK_NVAPI_VERSION NVAPI_GIT_RELEASE_URL D3D_EXTRAS D3D_EXTRAS_VERSION D3D_GIT_RELEASE_URL \
-            DGVOODOO2 DGVOODOO2_VERSION DGVO_GIT_RELEASE_URL MUST_HAVE_DLL FSR FAKE_CUR_RES DXVKASYNC WINE_DXGI ESYNC FSYNC GSTREAMER SHOW_WINEDBG \
-            LARGE_ADDRESS OLD_GL_STRING GL_THRD_OPTI NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM \
-            DIS_LAYER_AMD DIS_NETCORE VIRTUAL_DESKTOP BATTLEYE EAC WINE_SANDBOX CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL \
-            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR \
-            RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE \
-            LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT VSYNC PRIME"
+        LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE WINE_DXGI D3D_EXTRAS DGVOODOO2 \
+            DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION DXR VKD3DCFG MUST_HAVE_DLL FSR \
+            FAKE_CUR_RES WINE_SANDBOX ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING GL_THRD_OPTI \
+            NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD DIS_NETCORE \
+            VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL \
+            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT DIS_OTH_DISPL RESTORE_RESOL \
+            RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LW_DOWNLOADER NO_TRAY \
+            US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
+            VSYNC PRIME DXVK_GIT_RELEASE_URL VKD3D_GIT_RELEASE_URL NVAPI_GIT_RELEASE_URL D3D_GIT_RELEASE_URL DGVO_GIT_RELEASE_URL \
+            WTRX_GIT_RELEASE_URL BUILD_GIT_RELEASE_URL RESHADE_GIT_RELEASE_URL NVML_GIT_RELEASE_URL WLU_GIT_RELEASE_URL \
+            PGE_GIT_RELEASE_URL WGE_GIT_RELEASE_URL WK4_GIT_RELEASE_URL"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ ! -z "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2337,7 +2387,9 @@ lu_config() {
                                     echo "$CFGVAR=$CFGPARAM"
                             fi
                     done 3< <(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM|sed 's/^/export /') \
-                         4< <(echo -e "$(cat /tmp/winesett$LWCFGKEY 2>/dev/null|eval $SEDLWPRM)\n$(cat /tmp/syssett$LWCFGKEY|eval $SEDLWPRM)"))"
+                         4< <(echo -e "$(cat "/tmp/winesett$LWCFGKEY" 2>/dev/null)\n\
+                                       $(cat "/tmp/syssett$LWCFGKEY" 2>/dev/null)\n\
+                                       $(cat "/tmp/reposett$LWCFGKEY" 2>/dev/null)"|eval $SEDLWPRM))"
 
         COUNT_FX=0
         for read_list_fx in $(cat /tmp/ressett$LWCFGKEY 2>/dev/null)
@@ -2353,15 +2405,13 @@ lu_config() {
             then
                 echo "$WCFGOUT" > "$LW_CFG"
                 echo "export VKBASALT_EFFECTS='$FX_RESULT'" >> "$LW_CFG"
-                [[ "$WINE_NVML_VERSION" != 'latest' && -z "$(grep -o 'WINE_NVML_VERSION' "$LW_CFG" 2>/dev/null)" ]] \
-                    && echo "export WINE_NVML_VERSION='$WINE_NVML_VERSION'" >> "$LW_CFG"
                 WINEWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')"
                 WINEPFXWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINEPREFIX.*$'|cut -d'=' -f2|tr -d \')"
                 [[ "$WINEPFXWCFGOUT" == "$WINEPREFIX" && -f "$WINEPREFIX/update_pfx.log" ]] \
                     && try_cp "/tmp/wlogsett$LWCFGKEY" "$WINEPFXWCFGOUT/winetricks.log"
                 if [[ ! -z "$WINEPFXWCFGOUT" && "$WINEPFXWCFGOUT" != "$WINEPREFIX" ]]
                     then
-                        print_info notify "Wine prefix changed! \n[ $WINEPREFIX ] -> [ $WINEPFXWCFGOUT ]"
+                        print_info notify "Wine prefix changed to [ $WINEPFXWCFGOUT ]"
                         export WINEPREFIX="$WINEPFXWCFGOUT"
                 fi
                 CURDEFWINE="$(cat "$WINEPREFIX/.defwine" 2>/dev/null)"
@@ -2404,25 +2454,21 @@ lu_config() {
             --field="WINE DLL OVERRIDES::CBE" "$(echo -e "$WDLLOVER\n$(echo -e "$WDLLOVER\n$WDLLOVERLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="WINE MONO OVERRIDES::CBE" "$(echo -e "$WMONOVER\n$(echo -e "$WMONOVER\n$WMONOOVERLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="D3D mode::CB" "$(echo -e "$WD3DMODE\n$(echo -e "$WD3DMODE\n$WD3DMODELST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="DXVK with Wine DXGI:CHK" "$WINE_DXGI" \
+            --field="D3D EXTRAS:CHK" "$D3D_EXTRAS" \
+            --field="DGVOODOO2:CHK" "$DGVOODOO2" \
             --field="DXVK version::CBE" "$(echo -e "$DXVK_VERSION\n$(echo -e "$DXVK_VERSION\n$DXVKLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DXVK GIT::CBE" "$(echo -e "$DXVK_GIT_RELEASE_URL\n$(echo -e "$DXVK_GIT_RELEASE_URL\n$DXVKGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="VKD3D version::CBE" "$(echo -e "$VKD3D_VERSION\n$(echo -e "$VKD3D_VERSION\n$VKD3DLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="DXVK-NVAPI version::CBE" "$(echo -e "$DXVK_NVAPI_VERSION\n$(echo -e "$DXVK_NVAPI_VERSION\n$DXNVALST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="D3D EXTRAS version::CBE" "$(echo -e "$D3D_EXTRAS_VERSION\n$(echo -e "$D3D_EXTRAS_VERSION\n$D3DXTRLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="DGVOODOO2 version::CBE" "$(echo -e "$DGVOODOO2_VERSION\n$(echo -e "$DGVOODOO2_VERSION\n$DGVOOLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="WINE-NVML version::CBE" "$(echo -e "$WINE_NVML_VERSION\n$(echo -e "$WINE_NVML_VERSION\n$NVMLLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="DXR/RTX version::CB" "$(echo -e "$DXR\n$(echo -e "$DXR\n$DXRLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="VKD3D config::CBE" "$(echo -e "$VKD3DCFG\n$(echo -e "$VKD3DCFG\n$VKD3DCFGLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="VKD3D GIT::CBE" "$(echo -e "$VKD3D_GIT_RELEASE_URL\n$(echo -e "$VKD3D_GIT_RELEASE_URL\n$VKD3DGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DXVK-NVAPI version::CBE" "$(echo -e "$DXVK_NVAPI_VERSION\n$(echo -e "$DXVK_NVAPI_VERSION\n$DXNVALST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DXVK-NVAPI GIT::CBE" "$(echo -e "$NVAPI_GIT_RELEASE_URL\n$(echo -e "$NVAPI_GIT_RELEASE_URL\n$DXNVAGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="D3D EXTRAS:CHK" "$D3D_EXTRAS" \
-            --field="D3D EXTRAS version::CBE" "$(echo -e "$D3D_EXTRAS_VERSION\n$(echo -e "$D3D_EXTRAS_VERSION\n$D3DXTRLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="D3D EXTRAS GIT::CBE" "$(echo -e "$D3D_GIT_RELEASE_URL\n$(echo -e "$D3D_GIT_RELEASE_URL\n$D3DXTRGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DGVOODOO2:CHK" "$DGVOODOO2" \
-            --field="DGVOODOO2 version::CBE" "$(echo -e "$DGVOODOO2_VERSION\n$(echo -e "$DGVOODOO2_VERSION\n$DGVOOLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DGVOODOO2 GIT::CBE" "$(echo -e "$DGVO_GIT_RELEASE_URL\n$(echo -e "$DGVO_GIT_RELEASE_URL\n$DGVOOGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="MUST HAVE DLL::CBE" "$(echo -e "$MUST_HAVE_DLL\n$(echo -e "$MUST_HAVE_DLL\n$MHAVEDLLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="AMD FidelityFX Super Resolution::CB" "$(echo -e "$FSR\n$(echo -e "$FSR\n$(seq 5)\n Disabled"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="WINE__FULLSCREEN__FAKE__CURRENT__RES::CBE" "$(echo -e "$FAKE_CUR_RES\n$(echo -e "$FAKE_CUR_RES \n $PRIMDISPL_RESES \n Disabled"|eval $SEDLWPRM)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="DXVK_ASYNC:CHK" "$DXVKASYNC" \
-            --field="DXVK with Wine DXGI:CHK" "$WINE_DXGI" \
+            --field="Wine prefix sandbox:CHK" "$WINE_SANDBOX" \
             --field="Esync:CHK" "$ESYNC" \
             --field="Fsync:CHK" "$FSYNC" \
             --field="Gstreamer:CHK" "$GSTREAMER" \
@@ -2441,7 +2487,9 @@ lu_config() {
             --field="Virtual desktop:CHK" "$VIRTUAL_DESKTOP" \
             --field="BattleEye runtime:CHK" "$BATTLEYE" \
             --field="EasyAntiCheat runtime:CHK" "$EAC" \
-            --field="Wine prefix sandbox:CHK" "$WINE_SANDBOX" \
+            --field="DXVK_ASYNC:CHK" "$DXVKASYNC" \
+            --field="Nvidia Resizable BAR:CHK" "$RESIZABLE_BAR" \
+            --field="LatencyFleX (NVIDIA Reflex):CHK" "$LATENCYFLEX" \
         1> /tmp/winesett$LWCFGKEY &
 
         yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
@@ -2486,6 +2534,22 @@ lu_config() {
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
+        yad --plug=$LWCFGKEY --tabnum=3 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ ! -z "$YADSCROLL" ] && echo "--scroll")  \
+            --field="DXVK GIT::CBE" "$(echo -e "$DXVK_GIT_RELEASE_URL\n$(echo -e "$DXVK_GIT_RELEASE_URL\n$DXVKGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="VKD3D GIT::CBE" "$(echo -e "$VKD3D_GIT_RELEASE_URL\n$(echo -e "$VKD3D_GIT_RELEASE_URL\n$VKD3DGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="DXVK-NVAPI GIT::CBE" "$(echo -e "$NVAPI_GIT_RELEASE_URL\n$(echo -e "$NVAPI_GIT_RELEASE_URL\n$DXNVAGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="D3D EXTRAS GIT::CBE" "$(echo -e "$D3D_GIT_RELEASE_URL\n$(echo -e "$D3D_GIT_RELEASE_URL\n$D3DXTRGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="DGVOODOO2 GIT::CBE" "$(echo -e "$DGVO_GIT_RELEASE_URL\n$(echo -e "$DGVO_GIT_RELEASE_URL\n$DGVOOGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Winetricks GIT::CBE" "$(echo -e "$WTRX_GIT_RELEASE_URL\n$(echo -e "$WTRX_GIT_RELEASE_URL\n$WTRXGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Lutris build bot GIT::CBE" "$(echo -e "$BUILD_GIT_RELEASE_URL\n$(echo -e "$BUILD_GIT_RELEASE_URL\n$BLDBTGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Reshade Shaders GIT::CBE" "$(echo -e "$RESHADE_GIT_RELEASE_URL\n$(echo -e "$RESHADE_GIT_RELEASE_URL\n$RESHGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="WINE-NVML GIT::CBE" "$(echo -e "$NVML_GIT_RELEASE_URL\n$(echo -e "$NVML_GIT_RELEASE_URL\n$NVMLGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Wine Lutris GIT::CBE" "$(echo -e "$WLU_GIT_RELEASE_URL\n$(echo -e "$WLU_GIT_RELEASE_URL\n$WLUGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Proton GE GIT::CBE" "$(echo -e "$PGE_GIT_RELEASE_URL\n$(echo -e "$PGE_GIT_RELEASE_URL\n$PGEGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Wine GE GIT::CBE" "$(echo -e "$WGE_GIT_RELEASE_URL\n$(echo -e "$WGE_GIT_RELEASE_URL\n$WGEGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Wine Kron4ek GIT::CBE" "$(echo -e "$WK4_GIT_RELEASE_URL\n$(echo -e "$WK4_GIT_RELEASE_URL\n$WK4GITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+        1> /tmp/reposett$LWCFGKEY &
+
         if [ -d "$LW_RESHADE_DIR" ]
             then
                 RES_LST=($(grep ".fx$" "$VKBASALT_CONFIG_FILE" 2>/dev/null|awk '{print $1}'))
@@ -2500,18 +2564,18 @@ lu_config() {
                         fi
                 done
         fi
-        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
+        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=4 --form --separator=" " --bool-fmt=1 --columns=4 \
             $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             $RESHADE_SETT \
         1> /tmp/ressett$LWCFGKEY & )
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=6 --separator="" --form $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Log file [ $WTRX_LOG ]:TXT" "$(cat "$WTRX_LOG" 2>/dev/null)" 2>/dev/null)" > /tmp/wlogsett$LWCFGKEY &
 
-        [ -z "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=6 --columns=2 --form \
+        [ -z "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=7 --columns=2 --form \
             $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
             --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
             --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
@@ -2544,28 +2608,28 @@ lu_config() {
         check_exes
         if [[ ! -z "$LU_EXE" && -z "$RUN_EXE" && -z "$FIRST_RUN" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
-                    --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+                    --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lutris Wine settings for $EXE_FULL_NAME" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
         elif [[ ! -z "$LU_EXE" && ! -z "$RUN_EXE" && -z "$FIRST_RUN" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
-                    --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+                    --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lutris Wine settings for $EXE_FULL_NAME" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ ! -z "$FIRST_RUN" ]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
-                    --tab="Custom Environment" --tab="Winetricks Log" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+                    --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" \
                     --title="Lutris Wine settings" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
-            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="VkBasalt Effects" \
-                --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+                --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                 --title="Lutris Wine settings" $([ ! -z "$YADSCROLL" ] && echo "--scroll") \
                 --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
@@ -2593,33 +2657,31 @@ lu_config() {
         then
             if [[ -z "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
                 || ! -z "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
-                then
-                    export WINE_VERSION="Default"
+                then export WINE_VERSION="Default"
             fi
             if [[ -z "$(grep -wo 'DXVK_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
                 || ! -z "$(grep -wo 'DXVK_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
-                then
-                    export DXVK_VERSION="Default"
+                then export DXVK_VERSION="Default"
             fi
             if [[ -z "$(grep -wo 'VKD3D_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
                 || ! -z "$(grep -wo 'VKD3D_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
-                then
-                    export VKD3D_VERSION="Default"
+                then export VKD3D_VERSION="Default"
             fi
             if [[ -z "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
                 || ! -z "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
-                then
-                    export DXVK_NVAPI_VERSION="Default"
+                then export DXVK_NVAPI_VERSION="Default"
             fi
             if [[ -z "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
                 || ! -z "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
-                then
-                    export D3D_EXTRAS_VERSION="Default"
+                then export D3D_EXTRAS_VERSION="Default"
             fi
             if [[ -z "$(grep -wo 'DGVOODOO2_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
                 || ! -z "$(grep -wo 'DGVOODOO2_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
-                then
-                    export DGVOODOO2_VERSION="Default"
+                then export DGVOODOO2_VERSION="Default"
+            fi
+            if [[ -z "$(grep -wo 'WINE_NVML_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
+                || ! -z "$(grep -wo 'WINE_NVML_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
+                then export WINE_NVML_VERSION="Default"
             fi
             export LW_CFG="$EXE_CFG"
             export LW_CENV="$EXE_CENV"
@@ -2632,6 +2694,7 @@ lu_config() {
     try_rm "/tmp/ressett$LWCFGKEY" &>/dev/null
     try_rm "/tmp/envsett$LWCFGKEY" &>/dev/null
     try_rm "/tmp/wlogsett$LWCFGKEY" &>/dev/null
+    try_rm "/tmp/reposett$LWCFGKEY" &>/dev/null
     if [ -f "/tmp/settbtn$LWCFGKEY" ]
         then
             SETTBTN="$(cat "/tmp/settbtn$LWCFGKEY")"
@@ -3980,6 +4043,7 @@ check_wine_nvml() {
     [ ! -z "$1" ] && export WINE_NVML="$1"
     [ ! -z "$2" ] && export WINE_NVML_VERSION="$2"
     export ALLNVMLDLLS="nvml"
+    [ "$WINE_NVML_VERSION" == "Default" ] && export "$(grep -wo 'WINE_NVML_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [[ "$WINE_NVML" == 1 && "$DXVK_NVAPI" == 1 && "$DXVK" != 0 \
         && ! -z "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
         then
@@ -4019,6 +4083,7 @@ check_dxvk-nvapi() {
                                     print_error yad "nvngx.dll not found in your system!"
                             fi
                     fi
+                    export DXVK_ENABLE_NVAPI=1
                     export DXVK_NVAPIHACK=0
                     export WINE_NVML=1
                     CHKNVML32FL="$LW_RUNTIME_DIR/dxvk-nvapi/$DXVK_NVAPI_VERSION/x32/nvml.dll"
@@ -4703,6 +4768,17 @@ check_dxr() {
     fi
 }
 
+check_resizable_bar() {
+    [ ! -z "$1" ] && export RESIZABLE_BAR="$1"
+    if [ "$RESIZABLE_BAR" == "1" ]
+        then
+            vkd3dcfg_upd "upload_hvv"
+    elif [[ "$RESIZABLE_BAR" != "1" && ! -z "$(echo "$VKD3D_CONFIG"|grep -o "upload_hvv")" ]]
+        then
+            export VKD3D_CONFIG="$(echo "$VKD3D_CONFIG"|sed 's/upload_hvv//'|sed 's/,,/,/'|sed 's/^,//'|sed 's/,$//')"
+    fi
+}
+
 check_reshade() {
     runtime_manager "reshade"
 }
@@ -5112,7 +5188,7 @@ export_all_functions() {
         settingbar_nostdout check_freespace initbar check_network_status check_no_async print_question print_input loadbar_cover check_first_run check_eac \
         run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_fake_cur_res \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
-        check_wine_nvml
+        check_wine_nvml check_resizable_bar check_latencyflex
 }
 
 initbar() {
