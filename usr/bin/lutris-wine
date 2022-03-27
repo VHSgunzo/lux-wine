@@ -1702,59 +1702,59 @@ updcfgchksum() {
 }
 
 check_def_wine() {
-    LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
-    (IFS=$'\n' ; for BINWINE in $LOCWINELST
+    def_wine_selector() {
+        unset SETWINE
+        export SETWINE="$(echo -e "\n$(echo "${LOCWINELST}$([ ! -z "$SYS_WINE" ] && echo -e '\nSystem')$([[ ! -z "$LU_EXE" \
+            && -z "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
+        yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
+            --width=400 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" \
+            --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
+    }
+    export_wine_changes() {
+        sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
+        export NEW_WINE_VERSION="$SETWINE"
+        export OLD_WINE_VERSION="$WINE_VERSION"
+        export OLD_WINE="$WINE"
+    }
+    (IFS=$'\n' ; for BINWINE in $(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)
         do
-            [ ! -f "$LW_WINE_DIR/$BINWINE/bin/wine" ] \
-            && print_error notify "No Wine binary file found [ $BINWINE ], it will be deleted!" \
-            && try_rm "$LW_WINE_DIR/$BINWINE" &>/dev/null
+            if [ ! -f "$LW_WINE_DIR/$BINWINE/bin/wine" ]
+                then
+                    print_error notify "No Wine binary file found [ $BINWINE ], it will be deleted!"
+                    try_rm "$LW_WINE_DIR/$BINWINE" &>/dev/null
+            fi
     done)
+    LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
     if [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 0 && ! -z "$SYS_WINE" ]]
         then
-            sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'System\'/g" "$LW_CFG"
-            export NEW_WINE_VERSION="System"
-            export OLD_WINE_VERSION="$WINE_VERSION"
-            export OLD_WINE="$WINE"
-            import_luwine_wcfg
-            print_info notify "System Wine selected as default!"
+            if print_question "Lutris Wine Manager" "Found system Wine, do you want to select it as default?"
+                then
+                    sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'System\'/g" "$LW_CFG"
+                    export NEW_WINE_VERSION="System"
+                    export OLD_WINE_VERSION="$WINE_VERSION"
+                    export OLD_WINE="$WINE"
+                    import_luwine_wcfg
+                    print_info notify "System Wine selected as default!"
+                else
+                    unset SYS_WINE
+                    lu_winemgr
+                    check_def_wine
+            fi
     elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 0 ]]
         then
             print_info yad "Lutris Wine Manager" "Wine is not installed, you must download Wine!"
             lu_winemgr
             check_def_wine
-    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" != 1 ]] \
-        && [[ -z "$P_DXVK" || -z "$P_NVAPI" || -z "$P_VKD3D" ]]
-        then
-            print_error yad "Lutris Wine Manager" "Default Wine not selected, you must select default Wine!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$([ ! -z "$SYS_WINE" ] && echo -e '\nSystem')$([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
-                --width=400 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
-            if [ ! -z "$SETWINE" ]
-                then
-                    sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-                    export NEW_WINE_VERSION="$SETWINE"
-                    export OLD_WINE_VERSION="$WINE_VERSION"
-                    export OLD_WINE="$WINE"
-                    import_luwine_wcfg
-                    check_proton_d3dlib
-                    print_info notify "Wine $SETWINE selected as default!"
-                else
-                    check_def_wine
-            fi
-    elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" != 1 ]] \
+    elif [ ! -f "$WINE" ] && [ "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" -gt 1 ] \
         && [[ "$WLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$WK4_INST" == 1 ]] \
+        || [ ! -f "$WINE" ] && [ "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" -gt 1 ] \
         && [[ -z "$P_DXVK" || -z "$P_NVAPI" || -z "$P_VKD3D" ]]
         then
             print_error yad "Lutris Wine Manager" "Default Wine not selected, you must select default Wine!"
-            SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$([ ! -z "$SYS_WINE" ] && echo -e '\nSystem')$([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-            yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
-                --width=400 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
+            def_wine_selector
             if [ ! -z "$SETWINE" ]
                 then
-                    sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-                    export NEW_WINE_VERSION="$SETWINE"
-                    export OLD_WINE_VERSION="$WINE_VERSION"
-                    export OLD_WINE="$WINE"
+                    export_wine_changes
                     import_luwine_wcfg
                     check_proton_d3dlib
                     print_info notify "Wine $SETWINE selected as default!"
@@ -1768,10 +1768,7 @@ check_def_wine() {
         && [[ "$WLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$WK4_INST" == 1 ]]
         then
             export SETWINE="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)"
-            sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-            export NEW_WINE_VERSION="$SETWINE"
-            export OLD_WINE_VERSION="$WINE_VERSION"
-            export OLD_WINE="$WINE"
+            export_wine_changes
             import_luwine_wcfg
             check_proton_d3dlib
             print_info notify "Wine $SETWINE selected as default!"
@@ -1781,15 +1778,10 @@ check_def_wine() {
             if [ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" ]
                 then
                     print_info notify "Selecting default Wine..."
-                    SETWINE="$(echo -e "\n$(echo "$(ls "$LW_WINE_DIR")$([ ! -z "$SYS_WINE" ] && echo -e '\nSystem')$([[ ! -z "$LU_EXE" && -z "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
-                    yad --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --column="" --column="Select default Wine:" \
-                        --width=400 --height=500 --list --radiolist --separator "\n" --button="EXIT:1" --button="OK:0" --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
+                    def_wine_selector
                     if [ ! -z "$SETWINE" ]
                         then
-                            sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-                            export NEW_WINE_VERSION="$SETWINE"
-                            export OLD_WINE_VERSION="$WINE_VERSION"
-                            export OLD_WINE="$WINE"
+                            export_wine_changes
                             import_luwine_wcfg
                             check_proton_d3dlib
                             print_info notify "Wine $SETWINE selected as default!"
@@ -1800,10 +1792,7 @@ check_def_wine() {
     elif [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 1 ]]
         then
             export SETWINE="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)"
-            sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
-            export NEW_WINE_VERSION="$SETWINE"
-            export OLD_WINE_VERSION="$WINE_VERSION"
-            export OLD_WINE="$WINE"
+            export_wine_changes
             import_luwine_wcfg
             check_proton_d3dlib
             print_info notify "Wine $SETWINE selected as default!"
@@ -2174,9 +2163,11 @@ check_latencyflex() {
             done
             latencyso="/usr/lib/wine/x86_64-unix/latencyflex_layer.so"
             wine_latencyso="$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-unix/latencyflex_layer.so"
-            [[ -f "$latencyso" && ! -f "$wine_latencyso" \
-            && -d "$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-unix" ]] \
-                && try_ln "$latencyso" "$wine_latencyso" &>/dev/null
+            if [[ -f "$latencyso" && ! -f "$wine_latencyso" \
+                && -d "$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-unix" ]]
+                then
+                    try_ln "$latencyso" "$wine_latencyso" &>/dev/null
+            fi
             wdllover_upd "latencyflex_layer,latencyflex_wine=b"
         else
             unset LATENCYFLEX LFX
@@ -3638,7 +3629,6 @@ lu_winemgr() {
     fi
     if [ ! -z "$(echo "$WDEL_SET"|head -1)" ]
         then
-            unset WINEINUSEDEL
             (IFS=$'\n' ; for WINE_DEL in $(echo "$WDEL_SET"|eval $SEDLWPRM)
                 do
                     try_rm "$LW_WINE_DIR/$WINE_DEL"
@@ -3657,17 +3647,18 @@ lu_winemgr() {
                             fi
                     fi
                     print_info notify "Removing $WINE_DEL completed!"
-                    [ "$WINE_IN_USE" == "$WINE_DEL" ] && export WINEINUSEDEL=1
-            done)
-            if [ ! -z "$WINEINUSEDEL" ]
+                    [ "$WINE_IN_USE" == "$WINE_DEL" ] && echo 1 > "/tmp/WINEINUSEDEL$WGUIDW"
+            done)|settingbar "Lutris Wine Manager" "Deletion is in progress. Please wait..."
+            if [ -f "/tmp/WINEINUSEDEL$WGUIDW" ]
                 then
-                    if [ ! -z "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)" ]
+                    if [[ ! -z "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)" || ! -z "$SYS_WINE" ]]
                         then
                             print_info notify "Removed WINE which was selected by default!"
                             check_def_wine
                         else
                             print_info notify "Removed WINE which was selected by default! WINE is not installed, you must download WINE!"
-                            unset WINEINUSEDEL WDEL_SET
+                            try_rm "/tmp/WINEINUSEDEL$WGUIDW" &>/dev/null
+                            unset WDEL_SET
                             lu_winemgr
                     fi
             fi
@@ -3675,13 +3666,14 @@ lu_winemgr() {
     if [[ "$WLU_INST" == 1 || "$PGE_INST" == 1 || "$WGE_INST" == 1 || "$WK4_INST" == 1 ]]
         then
             print_info notify "Wine installation completed!"
-            if [ -z "$WINEINUSEDEL" ]
+            if [ ! -f "/tmp/WINEINUSEDEL$WGUIDW" ]
                 then
                     check_def_wine
                     unset WDEL_SET
             fi
             unset WLU_INST WK4_INST PGE_INST WGE_INST
     fi
+    try_rm "/tmp/WINEINUSEDEL$WGUIDW" &>/dev/null
 }
 
 check_themes() {
