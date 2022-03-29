@@ -508,6 +508,35 @@ download_dll_release() {
 }
 
 check_dll_symlink() {
+    unset NEW32SLK NEW64SLK
+    for dll_check in $check_dlls_slk
+        do
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
+            for x32_x86 in "x32" "x86"
+                do
+                   if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" \
+                        && -f "$PFX_DLL32_PTH/$dll_check" ]] \
+                        || [[ -f "$LW_RUNTIME_DIR/$1/v$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "v$2" \
+                        && -f "$PFX_DLL32_PTH/$dll_check" ]]
+                        then
+                            ls -la "$PFX_DLL32_PTH"|grep '^l'|grep "\/$1\/"|grep -o ':[0-9][0-9] .* \->'|\
+                            sed 's/ ->//;s/^:[0-9][0-9] //'|xargs -I {} rm -rf "$PFX_DLL32_PTH/{}"
+                            break
+                    fi
+            done
+            if [ "$WINEARCH" != "win32" ]
+                then
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
+                    if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" \
+                        && -f "$PFX_DLL64_PTH/$dll_check" ]] \
+                        || [[ -f "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" && "$PFX_DLL64_VER" != "v$2" \
+                        && -f "$PFX_DLL64_PTH/$dll_check" ]]
+                        then
+                            ls -la "$PFX_DLL64_PTH"|grep '^l'|grep "\/$1\/"|grep -o ':[0-9][0-9] .* \->'|\
+                            sed 's/ ->//;s/^:[0-9][0-9] //'|xargs -I {} rm -rf "$PFX_DLL64_PTH/{}"
+                    fi
+            fi
+    done
     for dll_check in $check_dlls_slk
         do
             PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
@@ -516,13 +545,17 @@ check_dll_symlink() {
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" "$PFX_DLL32_PTH/"
-                                then print_info "New link to $(basename "$PFX_DLL32_PTH") for $dll_check from $1 $2 created!"
+                                then
+                                    NEW32SLK=1
+                                    print_info "New symlink to $(basename "$PFX_DLL32_PTH") for $dll_check from $1 $2 created!"
                             fi
                     fi
                     if [[ -f "$LW_RUNTIME_DIR/$1/v$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "v$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/v$2/$x32_x86/$dll_check" "$PFX_DLL32_PTH/"
-                                then print_info "New link to $(basename "$PFX_DLL32_PTH") for $dll_check from $1 v$2 created!"
+                                then
+                                    NEW32SLK=1
+                                    print_info "New symlink to $(basename "$PFX_DLL32_PTH") for $dll_check from $1 v$2 created!"
                             fi
                     fi
             done
@@ -532,17 +565,22 @@ check_dll_symlink() {
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" "$PFX_DLL64_PTH/"
-                                then print_info "New link to system32 for $dll_check from $1 $2 created!"
+                                then
+                                    NEW64SLK=1
+                                    print_info "New symlink to system32 for $dll_check from $1 $2 created!"
                             fi
                     fi
                     if [[ -f "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" && "$PFX_DLL64_VER" != "v$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" "$PFX_DLL64_PTH/"
-                                then print_info "New link to system32 for $dll_check from $1 v$2 created!"
+                                then
+                                    NEW64SLK=1
+                                    print_info "New symlink to system32 for $dll_check from $1 v$2 created!"
                             fi
                     fi
             fi
     done
+    [[ ! -z "$NEW32SLK" || ! -z "$NEW64SLK" ]] && print_info notify "Creating new symlink for $1 $2 completed!"
 }
 
 check_symlink() {
@@ -552,7 +590,7 @@ check_symlink() {
             return 0
     elif [ ! -z "$(echo "$CHK_SLK_FILE"|grep "broken symbolic link to"|awk '{print $1}')" ]
         then
-            print_error "Remove broken symlink: $1"
+            print_error "Remove broken symlink [ $1 ]"
             unlink "$1"
             return 1
     else
@@ -1727,7 +1765,8 @@ check_def_wine() {
     LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
     if [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 0 && ! -z "$SYS_WINE" ]]
         then
-            if print_question "Lutris Wine Manager" "Found system Wine, do you want to select it as default?"
+            print_info "System Wine found"
+            if print_question "Lutris Wine Manager" "System Wine found, do you want to select it as default?"
                 then
                     sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'System\'/g" "$LW_CFG"
                     export NEW_WINE_VERSION="System"
@@ -1777,7 +1816,6 @@ check_def_wine() {
         then
             if [ -z "$(pgrep -fa yad|grep "Wine Manager"|awk '{print$1}')" ]
                 then
-                    print_info notify "Selecting default Wine..."
                     def_wine_selector
                     if [ ! -z "$SETWINE" ]
                         then
@@ -2694,6 +2732,7 @@ lu_config() {
                     winemgr) lu_winemgr
                              BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
                     clearpfx) lu_clearpfx
+                              sleep 0.5
                               BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
                     update) lu_update
                             BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
@@ -2710,6 +2749,7 @@ lu_config() {
                                 else
                                     cleanrun "'$LW_SOURCE' -init"
                           fi
+                          sleep 0.5
                           BTNTLS=1 cleanrun "$FULLCMDLINE";;
                     appcfg) lu_appcfg || BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
             esac
@@ -3087,7 +3127,7 @@ lu_clearpfx() {
             try_rm "$WINEPREFIX/.lwtheme" &>/dev/null
             try_rm "$LW_DIR/.lwcfgchksum" &>/dev/null
             try_rm /tmp/FORCE_EXIT &>/dev/null
-            print_info notify "Prefix "$WINEPREFIX" successfully cleared!"
+            print_info notify "Prefix [ $WINEPREFIX ] successfully cleared!"
             if print_question "Prefix Cleaner" "Do you want to clear cache?"
                 then
                     try_rm "$HOME/.cache/winetricks" &>/dev/null
@@ -3647,7 +3687,7 @@ lu_winemgr() {
                             fi
                     fi
                     print_info notify "Removing $WINE_DEL completed!"
-                    [ "$WINE_IN_USE" == "$WINE_DEL" ] && echo 1 > "/tmp/WINEINUSEDEL$WGUIDW"
+                    [ "$WINE_IN_USE" == "$WINE_DEL" ] && touch "/tmp/WINEINUSEDEL$WGUIDW"
             done)|settingbar "Lutris Wine Manager" "Deletion is in progress. Please wait..."
             if [ -f "/tmp/WINEINUSEDEL$WGUIDW" ]
                 then
