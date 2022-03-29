@@ -30,6 +30,7 @@ export GDK_BACKEND="x11"
 [ -z "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
 [ -z "$LW_DEF_WINEPFX" ] && export LW_DEF_WINEPFX="$LW_DIR/winepfx"
 [ -z "$LW_DEF_CACHE" ] && export LW_DEF_CACHE="$LW_DIR/cache"
+[ -z "$LW_DEF_TMP" ] && export LW_DEF_TMP="$LW_DIR/tmp"
 [ -z "$LW_DEF_CENV" ] && export LW_DEF_CENV="$LW_DIR/luwine.cenv"
 [ -z "$LW_CENV" ] && export LW_CENV="$LW_DEF_CENV"
 [ -z "$LW_APPCFG_DIR" ] && export LW_APPCFG_DIR="$LW_DIR/appcfg"
@@ -3536,20 +3537,20 @@ lu_winemgr() {
                     if [ ! -z "$WLU_DW_URL" ]
                         then
                             print_info notify "Download and install $WLU_DW"
-                            if try_download "$WLU_DW_URL" "$LW_WINE_DIR"
+                            if try_download "$WLU_DW_URL" "$LW_DEF_TMP"
                                 then
                                     for archive_type in "gz" "xz"
                                         do
-                                            if [ -f "$LW_WINE_DIR/${WLU_DW}.tar.${archive_type}" ]
+                                            if [ -f "$LW_DEF_TMP/${WLU_DW}.tar.${archive_type}" ]
                                                 then
-                                                    if unpack_tar_${archive_type} "$LW_WINE_DIR/${WLU_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
+                                                    if unpack_tar_${archive_type} "$LW_DEF_TMP/${WLU_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
                                                         then
                                                             export WLU_INST=1
-                                                            try_rm "$LW_WINE_DIR/${WLU_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${WLU_DW}.tar.${archive_type}"
                                                             WINE_IN_USE="$WLU_DW" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" check_proton_d3dlib
                                                             print_info notify "Installation $WLU_DW completed!"
                                                         else
-                                                            try_rm "$LW_WINE_DIR/${WLU_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${WLU_DW}.tar.${archive_type}"
                                                             try_rm "$LW_WINE_DIR/${WLU_DW}"
                                                             lu_winemgr
                                                     fi
@@ -3568,16 +3569,16 @@ lu_winemgr() {
                     if [ ! -z "$PGE_DW_URL" ]
                         then
                             print_info notify "Download and install $PGE_DW..."
-                            if try_download "$PGE_DW_URL" "$LW_WINE_DIR"
+                            if try_download "$PGE_DW_URL" "$LW_DEF_TMP"
                                 then
                                     for archive_type in "gz" "xz"
                                         do
-                                            if [ -f "$LW_WINE_DIR/${PGE_DW}.tar.${archive_type}" ]
+                                            if [ -f "$LW_DEF_TMP/${PGE_DW}.tar.${archive_type}" ]
                                                 then
-                                                    if unpack_tar_${archive_type} "$LW_WINE_DIR/${PGE_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
+                                                    if unpack_tar_${archive_type} "$LW_DEF_TMP/${PGE_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
                                                         then
                                                             export PGE_INST=1
-                                                            try_rm "$LW_WINE_DIR/${PGE_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${PGE_DW}.tar.${archive_type}"
                                                             for PGEFILES in files dist
                                                                 do
                                                                     if [ -d "$LW_WINE_DIR/$PGE_DW/$PGEFILES" ]
@@ -3593,7 +3594,7 @@ lu_winemgr() {
                                                                     fi
                                                             done
                                                         else
-                                                            try_rm "$LW_WINE_DIR/${PGE_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${PGE_DW}.tar.${archive_type}"
                                                             try_rm "$LW_WINE_DIR/${PGE_DW}"
                                                             lu_winemgr
                                                     fi
@@ -3612,20 +3613,20 @@ lu_winemgr() {
                     if [ ! -z "$WGE_DW_URL" ]
                         then
                             print_info notify "Download and install $WGE_DW"
-                            if try_download "$WGE_DW_URL" "$LW_WINE_DIR"
+                            if try_download "$WGE_DW_URL" "$LW_DEF_TMP"
                                 then
                                     for archive_type in "gz" "xz"
                                         do
-                                            if [ -f "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}" ]
+                                            if [ -f "$LW_DEF_TMP/${WGE_DW}.tar.${archive_type}" ]
                                                 then
-                                                    if unpack_tar_${archive_type} "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
+                                                    if unpack_tar_${archive_type} "$LW_DEF_TMP/${WGE_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
                                                         then
                                                             export WGE_INST=1
-                                                            try_rm "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${WGE_DW}.tar.${archive_type}"
                                                             WINE_IN_USE="$WGE_DW" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" check_proton_d3dlib
                                                             print_info notify "Installation $WGE_DW completed!"
                                                         else
-                                                            try_rm "$LW_WINE_DIR/${WGE_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${WGE_DW}.tar.${archive_type}"
                                                             try_rm "$LW_WINE_DIR/${WGE_DW}"
                                                             lu_winemgr
                                                     fi
@@ -3644,20 +3645,20 @@ lu_winemgr() {
                     if [ ! -z "$WK4_DW_URL" ]
                         then
                             print_info notify "Download and install $WK4_DW..."
-                            if try_download "$WK4_DW_URL" "$LW_WINE_DIR"
+                            if try_download "$WK4_DW_URL" "$LW_DEF_TMP"
                                 then
                                     for archive_type in "gz" "xz"
                                         do
-                                            if [ -f "$LW_WINE_DIR/${WK4_DW}.tar.${archive_type}" ]
+                                            if [ -f "$LW_DEF_TMP/${WK4_DW}.tar.${archive_type}" ]
                                                 then
-                                                    if unpack_tar_${archive_type} "$LW_WINE_DIR/${WK4_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
+                                                    if unpack_tar_${archive_type} "$LW_DEF_TMP/${WK4_DW}.tar.${archive_type}" "$LW_WINE_DIR/"
                                                         then
                                                             export WK4_INST=1
-                                                            try_rm "$LW_WINE_DIR/${WK4_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${WK4_DW}.tar.${archive_type}"
                                                             WINE_IN_USE="$WK4_DW" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" check_proton_d3dlib
                                                             print_info notify "Installation $WK4_DW completed!"
                                                         else
-                                                            try_rm "$LW_WINE_DIR/${WK4_DW}.tar.${archive_type}"
+                                                            try_rm "$LW_DEF_TMP/${WK4_DW}.tar.${archive_type}"
                                                             try_rm "$LW_WINE_DIR/${WK4_DW}"
                                                             lu_winemgr
                                                     fi
