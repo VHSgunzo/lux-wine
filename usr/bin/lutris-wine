@@ -55,7 +55,7 @@ check_def_config() {
     [ -z "$PULSE_LTCY" ] && export PULSE_LTCY=1
     [ -z "$VKBASALT" ] && export VKBASALT=1
     [ -z "$WIN_VER" ] && export WIN_VER="10"
-    [ -z "$VKD3DCFG" ] && export VKD3DCFG="force_bindless_texel_buffer,multi_queue"
+    [ -z "$VKD3DCFG" ] && export VKD3DCFG="Disabled"
     [ -z "$DXR" ] && export DXR="1.1"
     [ -z "$DXVKASYNC" ] && export DXVKASYNC=1
     [ -z "$LARGE_ADDRESS" ] && export LARGE_ADDRESS=1
@@ -1854,16 +1854,22 @@ check_def_wine() {
             fi
     elif [[ ! -z "$PFXDEFWINE" && "$WINE_VERSION" != "$PFXDEFWINE" ]]
         then
-            print_error yad "Wine version mismatch [ $WINE_VERSION ] -> [ $PFXDEFWINE ]" \
-            "Wine version in config file [ $WINE_VERSION ] mismatch with prefix version [ $PFXDEFWINE ]"
             export OLD_WINE_VERSION="$PFXDEFWINE"
             export OLD_WINE="$LW_WINE_DIR/$PFXDEFWINE/bin/wine"
-            if try_shutdown_wine
+            check_wine_pids
+            if [ ! -z "$WINE_PIDS" ]
                 then
-                    echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
+                    print_error yad "Wine version mismatch [ $WINE_VERSION ] -> [ $PFXDEFWINE ]" \
+                    "Wine version in config file [ $WINE_VERSION ] mismatch with prefix version [ $PFXDEFWINE ]"
+                    if try_shutdown_wine
+                        then
+                            echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
+                        else
+                            try_rm "$INIPRGRS" &>/dev/null
+                            exit 1
+                    fi
                 else
-                    try_rm "$INIPRGRS" &>/dev/null
-                    exit 1
+                    echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
             fi
             unset OLD_WINE_VERSION OLD_WINE
     fi
@@ -2518,7 +2524,7 @@ lu_config() {
             --field="BattleEye runtime:CHK" "$BATTLEYE" \
             --field="EasyAntiCheat runtime:CHK" "$EAC" \
             --field="DXVK_ASYNC:CHK" "$DXVKASYNC" \
-            --field="Nvidia Resizable BAR:CHK" "$RESIZABLE_BAR" \
+            --field="NVIDIA Resizable BAR:CHK" "$RESIZABLE_BAR" \
             --field="LatencyFleX (NVIDIA Reflex):CHK" "$LATENCYFLEX" \
         1> /tmp/winesett$LWCFGKEY &
 
