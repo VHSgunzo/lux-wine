@@ -10,10 +10,10 @@ check_deps() {
 }
 
 check_gi_patch() {
-    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch"
+    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch260"
     if [ ! -d "$DIR" ]
         then
-            if try_download "https://github.com/VHSgunzo/gi_patch/releases/download/v1/gi_patch.tar.gz" "$WINEPREFIX/drive_c/Program Files"
+            if try_download "https://github.com/VHSgunzo/gi_patch/releases/download/v2.6/gi_patch260.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                 then
                     if unpack_tar_gz "$DIR.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                         then
@@ -35,11 +35,11 @@ launch_helper() {
     CEXE1="$DATADIR/upload_crash.exe"
     CEXE2="$DATADIR/Plugins/crashreport.exe"
     sum=($(md5sum $FILE))
-    if [ "$sum" == "e1291ef7269feb9dcb1873e7096050c2" ]
+    if [ "$sum" == "60c53487fdc21c4fe8891a5ab14df9cc" ]
         then
             print_info notify "Patch is already applied!"
         else
-            if [ "${sum}" == "c61817c8246b018ba028b579a12a5a19" ]; then
+            if [ "${sum}" == "af82a646e947d2ba69bf0c7f2432454a" ]; then
                 reltype="os"
                 print_info notify "Applying patch for: International (OS) version"
             else

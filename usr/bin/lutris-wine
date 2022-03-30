@@ -2563,7 +2563,7 @@ lu_config() {
             --field="GameMode:CHK" "$GAMEMODE" \
             --field="MangoHud::CB" "$(echo -e "$LWMANGOHUD\n$(echo -e "$LWMANGOHUD\n$MANGOHUDLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="MangoHud User config:CHK" "$MANGOHUD_USER_CONF" \
-            --field="MangoHud config::CBE" "$(echo -e "$MANGOHUDCFG\n$(echo -e "$MANGOHUDCFG\n no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,frame_timing=1,frametime_color=00ff00,show_fps_limit,resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="MangoHud config::CBE" "$(echo -e "$MANGOHUDCFG\n$(echo -e "$MANGOHUDCFG\n no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,show_fps_limit,resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
             --field="Vsync::CB" "$(echo -e "$VSYNC\n$(echo -e "$VSYNC\n$VSYNCLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="NVIDIA Prime Render Offload:CHK" "$PRIME" \
@@ -3790,7 +3790,7 @@ check_mangohud() {
                         then
 export MANGOHUD_CONFIG="no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
 cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
-engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,frame_timing=1,frametime_color=00ff00,\
+engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
 resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"
                     elif [[ ! -z "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
                         then
@@ -3818,13 +3818,13 @@ check_fps_limit() {
                         then
                             if [ -z "$(echo $MANGOHUDCFG|grep -wo "fps_limit")" ]
                                 then
-                                    export MANGOHUD_CONFIG="$(echo "${MANGOHUDCFG},fps_limit=$FPS_LIMIT")"
+                                    export MANGOHUD_CONFIG="$(echo "${MANGOHUDCFG},toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0")"
                             fi
                         else
 export MANGOHUD_CONFIG="no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
 cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
-engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,frame_timing=1,frametime_color=00ff00,\
-resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12,fps_limit=$FPS_LIMIT"
+engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
+resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12,toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0"
                     fi
              elif [ ! -z "$(which strangle 2>/dev/null)" ]
                 then
