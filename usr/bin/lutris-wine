@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.70"
+export LW_VERSION="0.71.r0"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -14,6 +14,8 @@ export GDK_BACKEND="x11"
 [ -z "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ -z "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LutrisWine"
 [ -z "$LU_DIR" ] && export LU_DIR="$HOME/.local/share/lutris"
+[ -z "$LU_CACHE_DIR" ] && export LU_CACHE_DIR="$HOME/.cache/lutris"
+[ -z "$LU_CONFIG_DIR" ] && export LU_CONFIG_DIR="$HOME/.config/lutris"
 [ -z "$LW_THEMES_DIR" ] && export LW_THEMES_DIR="/usr/share/lutris-wine/themes"
 [ -z "$LW_WINE_DIR" ] && export LW_WINE_DIR="$LW_DIR/runners/wine"
 [ -z "$LW_RUNTIME_DIR" ] && export LW_RUNTIME_DIR="$LW_DIR/runtime"
@@ -21,7 +23,6 @@ export GDK_BACKEND="x11"
 [ -z "$LW_APP_DIR" ] && export LW_APP_DIR="$LW_MENU_APP_DIR/LutrisWineApp"
 [ -z "$LW_WTRX_DIR" ] && export LW_WTRX_DIR="$LW_RUNTIME_DIR/winetricks"
 [ -z "$LW_DB_DIR" ] && export LW_DB_DIR="/usr/share/lutris-wine/db"
-[ -z "$LU_DB" ] && export LU_DB="$LU_DIR/pga.db"
 [ -z "$LW_DEF_CFG" ] && export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
 [ -z "$LW_CFG" ] && export LW_CFG="$LW_DEF_CFG"
 [ -z "$VKBASALT_CONFIG_FILE" ] && export VKBASALT_CONFIG_FILE="$LW_DIR/vkBasalt.conf"
@@ -512,7 +513,7 @@ check_dll_symlink() {
     unset NEW32SLK NEW64SLK
     for dll_check in $check_dlls_slk
         do
-            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
             for x32_x86 in "x32" "x86"
                 do
                    if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" \
@@ -527,7 +528,7 @@ check_dll_symlink() {
             done
             if [ "$WINEARCH" != "win32" ]
                 then
-                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" \
                         && -f "$PFX_DLL64_PTH/$dll_check" ]] \
                         || [[ -f "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" && "$PFX_DLL64_VER" != "v$2" \
@@ -540,7 +541,7 @@ check_dll_symlink() {
     done
     for dll_check in $check_dlls_slk
         do
-            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
             for x32_x86 in "x32" "x86"
                 do
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" ]]
@@ -562,7 +563,7 @@ check_dll_symlink() {
             done
             if [ "$WINEARCH" != "win32" ]
                 then
-                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|awk -F "$1" '{print $2}'|cut -d"/" -f2)"
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" "$PFX_DLL64_PTH/"
@@ -1363,13 +1364,13 @@ add_to_lutris() {
                             ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lutris Wine application" "$SHRT_NAME")"
                     fi
             fi
-            try_mkdir "$LU_DIR/banners"
+            try_mkdir "$LU_CACHE_DIR/banners"
             if [ ! -z "$ADD_APP_NAME" ]
                 then
                     export SHRT_NAME="$ADD_APP_NAME"
-                    try_cp "$LUJPG" "$LU_DIR/banners/$ADD_APP_NAME.jpg"
+                    try_cp "$LUJPG" "$LU_CACHE_DIR/banners/$ADD_APP_NAME.jpg"
                 else
-                    try_cp "$LUJPG" "$LU_DIR/banners/"
+                    try_cp "$LUJPG" "$LU_CACHE_DIR/banners/"
             fi
             echo "name: \"${SHRT_NAME}\"" > "$YMLTOLU"
             echo "game_slug: \"${SHRT_NAME}\"" >> "$YMLTOLU"
@@ -1392,19 +1393,17 @@ add_to_lutris() {
             fi
             echo "  system: {}" >> "$YMLTOLU"
             echo "  wine: {}" >> "$YMLTOLU"
-            LUTRIS_SKIP_INIT=1 lutris -i "$YMLTOLU" 2>/dev/null &
-            ludb_md5sum1=$(md5sum "$LU_DB")
-            timewait=15
-            (IFS=$'\n' ; while true
+            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 LUTRIS_SKIP_INIT=1 lutris -i "$YMLTOLU" 2>/dev/null &
+            timewait=30
+            (IFS=$'\n' ; while ! ls "$LU_CONFIG_DIR/games/$SHRT_NAME"-$(date '+%s'|cut -b1-9)*.yml &>/dev/null
                 do
                     timesleep=$(($timesleep + 1))
                     if [ "$timesleep" != "$(($timewait + 1))" ]
                         then
                             sleep 1
-                            ludb_md5sum2=$(md5sum "$LU_DB")
-                            if [ "$ludb_md5sum1" != "$ludb_md5sum2" ]
+                            LUNEWAPP="$(ls "$LU_CONFIG_DIR/games/$SHRT_NAME"-$(date '+%s'|cut -b1-9)*.yml 2>/dev/null)"
+                            if [ ! -z "$LUNEWAPP" ]
                                 then
-                                    LUNEWAPP="$(ls $HOME/.config/lutris/games/"$SHRT_NAME"-*.yml 2>/dev/null)"
                                     sed -i 's/wine:\{1,\}$/wine: {}/' "$LUNEWAPP" 2>/dev/null
                                     sed -i '/  version: /d' "$LUNEWAPP" 2>/dev/null
                                     LUADDPID="$(ps -ef|grep "lutris -i"|grep -iF "$(basename "$YMLTOLU")"|grep -v grep|awk '{print$2}')"
@@ -1426,9 +1425,13 @@ add_to_lutris() {
                                         "The Lutris database hasn't changed, you may have canceled the app add to Lutris or are waiting for something else. \nDo you want to close Lutris?"
                                         then
                                             kill "$LUADDPID" 2>/dev/null
+                                        else
+                                            timesleep=0
+                                            continue
                                     fi
+                                else
+                                    break
                             fi
-                            break
                     fi
             done)
     fi
@@ -1494,17 +1497,22 @@ lu_debug() {
             export WINE_MONO_TRACE="E:System.NotImplementedException"
             export VKBASALT_LOG_LEVEL="debug"
             export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').debug"
+            check_runtime
+            check_ld_library
             export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "PRIME" "VKBASALT_EFFECTS" \
                 "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "DXVK_STATE_CACHE_PATH" "CPU_LIMIT" "VSYNC" \
                 "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" "VIRTUAL_DESKTOP" "FPS_LIMIT" "LW_CENV" \
-                "LW_DIR" "LW_CFG" "GSTREAMER" "HIDE_NVIDIA_GPU" "EXE_LWDB" "EXE_LWDBFL" "GST_PLUGIN_SYSTEM_PATH_1_0" "WINE_GST_REGISTRY_DIR" "RUNTIME" "WINE_SANDBOX" \
-                "WINEFSYNC" "WINEFSYNC_FUTEX2" "WINE_FULLSCREEN_FSR" "WINE_FULLSCREEN_FSR_STRENGTH" "STAGING_SHARED_MEMORY" "WINEESYNC" "VKBASALT_LOG_FILE" \
-                "LOG_FILE" "WINE_LARGE_ADDRESS_AWARE" "TERM_APP" "VKBASALT" "DXVK_NVAPIHACK" "RUN_MANGOHUD" "MANGOHUD_USER_CONF" "RUN_GAMEMODE" "VKD3D_LOG_FILE" \
+                "LW_DIR" "LW_CFG" "GSTREAMER" "HIDE_NVIDIA_GPU" "EXE_LWDB" "EXE_LWDBFL" "GST_PLUGIN_SYSTEM_PATH_1_0" "WINE_GST_REGISTRY_DIR" "RUNTIME" "PREF_SYS_LIBS" \
+                "WINE_SANDBOX" "WINEFSYNC" "WINEFSYNC_FUTEX2" "WINE_FULLSCREEN_FSR" "WINE_FULLSCREEN_FSR_STRENGTH" "STAGING_SHARED_MEMORY" "WINEESYNC" "VKBASALT_LOG_FILE" \
+                "LOG_FILE" "WINE_LARGE_ADDRESS_AWARE" "TERM_APP" "VKBASALT" "DXVK_NVAPIHACK" "MANGOHUD" "MANGOHUD_USER_CONF" "RUN_GAMEMODE" "VKD3D_LOG_FILE" \
                 "VKBASALT_CONFIG_FILE" "VK_ICD_FILENAMES" "__GL_THREADED_OPTIMIZATIONS" "DXVK_STATE_CACHE_PATH" "__GLX_VENDOR_LIBRARY_NAME" "__NV_PRIME_RENDER_OFFLOAD" \
                 "WINE_FULLSCREEN_FAKE_CURRENT_RES" "DXVK_STATE_CACHE" "__GL_DXVK_OPTIMIZATIONS" "__GL_SHADER_DISK_CACHE_PATH" "__GL_SHADER_DISK_CACHE" "__GL_SHADER_DISK_CACHE_SIZE" \
                 "WD3DMODE" "MEDIACONV_AUDIO_DUMP_FILE" "MEDIACONV_AUDIO_TRANSCODED_FILE" "MEDIACONV_VIDEO_DUMP_FILE" "MEDIACONV_VIDEO_TRANSCODED_FILE" "LW_STEAMAPPS_DIR")"
+            unset LD_LIBRARY_PATH
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            echo "[ Lutris Wine version ] : $LW_VERSION" >> "$TMP_DEB"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             if [ "$WINE_VERSION" == "System" ]
                 then
@@ -1939,14 +1947,14 @@ lu_run() {
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
                     $TERM_APP $LWSHELL
             else
-                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
+                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
                 clear_log  2>/dev/null
                 xdg-open "$LOG_FILE" 2>/dev/null
             fi
     elif [ "$LOG" == 1 ]
         then
             echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
-            $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
+            $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
             clear_log  2>/dev/null
             xdg-open "$LOG_FILE" 2>/dev/null
     elif [ "$TERMINAL" == 1 ]
@@ -1971,14 +1979,14 @@ lu_run() {
                 if [ ! -z "$LU_LNK" ]
                     then
                         export TMP_OUT="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').out"
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
                     else
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
                 fi
             fi
     else
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
-        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
+        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
     unset LD_LIBRARY_PATH
     post_launch 2>/dev/null
@@ -2170,14 +2178,14 @@ check_steamapps() {
             STM7PRTN="$LW_STEAMAPPS_DIR/Proton 7.0/dist"
             STMBATTLEYE="$LW_STEAMAPPS_DIR/Proton BattlEye Runtime"
             STMEAC="$LW_STEAMAPPS_DIR/Proton EasyAntiCheat Runtime"
-            if [[ -f "$STMXPRTN/bin/wine" && ! -d "$LW_WINE_DIR/ProtonExperimental" ]]
+            if [[ -f "$STMXPRTN/bin/wine" && ! -d "$LW_WINE_DIR/Proton - Experimental" ]]
                 then
-                    try_ln "$STMXPRTN" "$LW_WINE_DIR/ProtonExperimental"
+                    try_ln "$STMXPRTN" "$LW_WINE_DIR/Proton - Experimental"
                     print_info notify "Found Proton - Experimental in Steam and linked to Lutris Wine"
             fi
-            if [[ -f "$STM7PRTN/bin/wine" && ! -d "$LW_WINE_DIR/Proton70" ]]
+            if [[ -f "$STM7PRTN/bin/wine" && ! -d "$LW_WINE_DIR/Proton 7.0" ]]
                 then
-                    try_ln "$STM7PRTN" "$LW_WINE_DIR/Proton70"
+                    try_ln "$STM7PRTN" "$LW_WINE_DIR/Proton 7.0"
                     print_info notify "Found Proton 7.0 in Steam and linked to Lutris Wine"
             fi
         else
@@ -3674,25 +3682,32 @@ lu_winemgr() {
                     fi
             done
     fi
+    rm_pd3dll() {
+       for pd3dll in {dxvk,dxvk-nvapi,vkd3d}
+            do
+                try_rm "$LW_RUNTIME_DIR/$pd3dll/$WINE_DEL" &>/dev/null
+        done
+    }
     if [ ! -z "$(echo "$WDEL_SET"|head -1)" ]
         then
             (IFS=$'\n' ; for WINE_DEL in $(echo "$WDEL_SET"|eval $SEDLWPRM)
                 do
-                    try_rm "$LW_WINE_DIR/$WINE_DEL"
                     if [[ -d "$LW_RUNTIME_DIR/dxvk/$WINE_DEL" \
                         || -d "$LW_RUNTIME_DIR/vkd3d/$WINE_DEL" \
                         || -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_DEL" ]]
                         then
-                            if print_question "Remove DXVK, DXVK-NVAPI and VKD3D from $WINE_DEL"
+                            if print_question "Remove DXVK, DXVK-NVAPI and VKD3D from ${WINE_DEL}?"
                                 then
-                                    for pd3dll in {dxvk,dxvk-nvapi,vkd3d}
-                                        do
-                                            try_rm "$LW_RUNTIME_DIR/$pd3dll/$WINE_DEL" &>/dev/null
-                                    done
+                                    rm_pd3dll
                                     sed -i "/DXVK_NVAPI_VERSION='$WINE_DEL'/d;/DXVK_VERSION='$WINE_DEL'/d;/VKD3D_VERSION='$WINE_DEL'/d" "$LW_CFG" 2>/dev/null
                                     print_info notify "Removing DXVK, DXVK-NVAPI and VKD3D from $WINE_DEL completed!"
+                                else
+                                    rm_pd3dll
+                                    WINE_IN_USE="$WINE_DEL" WINEDIR="$LW_WINE_DIR/$WINE_IN_USE" get_proton_d3dlib 'cp'
+                                    unset P_DXVK P_NVAPI P_VKD3D
                             fi
                     fi
+                    try_rm "$LW_WINE_DIR/$WINE_DEL"
                     print_info notify "Removing $WINE_DEL completed!"
                     [ "$WINE_IN_USE" == "$WINE_DEL" ] && touch "/tmp/WINEINUSEDEL$WGUIDW"
             done)|settingbar "Lutris Wine Manager" "Deletion is in progress. Please wait..."
@@ -3779,13 +3794,16 @@ check_mangohud() {
         then
             if [ ! -z "$(which mangohud 2>/dev/null)" ]
                 then
+                    export MANGOHUD_LIB_NAME="libMangoHud.so"
                     if [ "$LWMANGOHUD" == "Vulkan" ]
                         then
-                            export RUN_MANGOHUD="mangohud"
+                            export MANGOHUD=1
                     elif [ "$LWMANGOHUD" == "OpenGL" ]
                         then
-                            export RUN_MANGOHUD="mangohud --dlsym"
+                            export MANGOHUD=1
+                            export MANGOHUD_LIB_NAME="libMangoHud_dlsym.so:${MANGOHUD_LIB_NAME}"
                     fi
+                    export LD_PRELOAD="${LD_PRELOAD}:${MANGOHUD_LIB_NAME}"
                     if [[ -z "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
                         then
 export MANGOHUD_CONFIG="no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
@@ -3799,12 +3817,12 @@ resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=
                 else
                     print_error yad "MANGOHUD not found in your system!"
                     export DISABLE_MANGOHUD=1
-                    unset RUN_MANGOHUD
+                    unset MANGOHUD
             fi
         else
             print_info notify "MANGOHUD is disabled!"
             export DISABLE_MANGOHUD=1
-            unset RUN_MANGOHUD
+            unset MANGOHUD
     fi
 }
 
@@ -3812,7 +3830,7 @@ check_fps_limit() {
     [ ! -z "$1" ] && export FPS_LIMIT="$1"
     if [[ ! -z "$FPS_LIMIT" && "$FPS_LIMIT" != 0 ]]
         then
-            if [[ ! -z "$(which mangohud 2>/dev/null)" && ! -z "$RUN_MANGOHUD" && "$MANGOHUD_USER_CONF" != 1 ]]
+            if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 ]]
                 then
                     if [ ! -z "$MANGOHUDCFG" ]
                         then
@@ -3939,32 +3957,36 @@ check_dxvk_async() {
     fi
 }
 
-check_proton_d3dlib() {
-    unset P_DXVK P_NVAPI P_VKD3D
+get_proton_d3dlib() {
+    unset P_DXVK P_NVAPI P_VKD3D PROTON_D3D_VERSION
     if [[ ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x32" && ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x64" ]] \
         && [[ -d "$WINEDIR/lib/wine/dxvk" && -d "$WINEDIR/lib64/wine/dxvk" ]]
         then
             try_mkdir "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE"
-            try_cp "$WINEDIR/lib/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x32"
-            try_cp "$WINEDIR/lib64/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x64"
-            P_DXVK=1
+            try_$1 "$WINEDIR/lib/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x32"
+            try_$1 "$WINEDIR/lib64/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x64"
+            export P_DXVK=1
     fi
     if [[ ! -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x32" && ! -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x64" ]] \
        && [[ -d "$WINEDIR/lib/wine/nvapi" && -d "$WINEDIR/lib64/wine/nvapi" ]]
        then
            try_mkdir "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE"
-           try_cp "$WINEDIR/lib/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x32"
-           try_cp "$WINEDIR/lib64/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x64"
-           P_NVAPI=1
+           try_$1 "$WINEDIR/lib/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x32"
+           try_$1 "$WINEDIR/lib64/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_IN_USE/x64"
+           export P_NVAPI=1
     fi
     if [[ ! -d "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x32" && ! -d "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x64" ]] \
         && [[ -d "$WINEDIR/lib/wine/vkd3d-proton" && -d "$WINEDIR/lib64/wine/vkd3d-proton" ]]
         then
             try_mkdir "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE"
-            try_cp "$WINEDIR/lib/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x32"
-            try_cp "$WINEDIR/lib64/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x64"
-            P_VKD3D=1
+            try_$1 "$WINEDIR/lib/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x32"
+            try_$1 "$WINEDIR/lib64/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_IN_USE/x64"
+            export P_VKD3D=1
     fi
+}
+
+check_proton_d3dlib() {
+    get_proton_d3dlib 'ln'
     if [[ ! -z "$P_DXVK" || ! -z "$P_NVAPI" || ! -z "$P_VKD3D" ]]
         then
             if print_question "Set DXVK, DXVK-NVAPI and VKD3D from $WINE_IN_USE as default?"
@@ -3991,6 +4013,7 @@ check_proton_d3dlib() {
                                     fi
                             fi
                     done
+                    PROTON_D3D_VERSION="$WINE_IN_USE"
                     import_luwine_wcfg
                     check_def_wine
                     check_winepfx
@@ -3998,10 +4021,10 @@ check_proton_d3dlib() {
                     check_dxvk 1
                     check_dxvk-nvapi 1
                     check_vkd3d 1
-                    print_info notify "DXVK, DXVK-NVAPI and VKD3D from $WINE_IN_USE selected as default"
+                    print_info notify "DXVK, DXVK-NVAPI and VKD3D from $PROTON_D3D_VERSION selected as default"
             fi
     fi
-    unset P_DXVK P_NVAPI P_VKD3D
+    unset P_DXVK P_NVAPI P_VKD3D PROTON_D3D_VERSION
 }
 
 check_dxvk() {
@@ -5227,7 +5250,7 @@ export_all_functions() {
         settingbar_nostdout check_freespace initbar check_network_status check_no_async print_question print_input loadbar_cover check_first_run check_eac \
         run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_fake_cur_res \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
-        check_wine_nvml check_resizable_bar check_latencyflex
+        check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib
 }
 
 initbar() {
