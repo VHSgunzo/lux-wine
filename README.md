@@ -109,6 +109,12 @@ All Arch-based distributions
 - [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [x] [LatencyFleX](https://github.com/ishitatsuyuki/LatencyFleX) (depends on [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi) >=0.5.3)
 - [x] Nvidia Resizable BAR (if your system support)
+- [x] Сreating/restoring backups of Wine prefixes
+- [x] Supports the creation of multiple backups with their own timestamps for the same prefix
+- [x] Сhoosing the compression method (xz and zstd) and compression level for backups (zstd and 1 lvl as default for backups)
+- [x] Supports the creation of multiple backups with their own timestamps for the same prefix
+- [x] Mounting/unmounting backups of Wine prefixes
+- [x] Supports mounting multiple backups at the same time with a separate control gui
 - [x] Redefining Wine options in settings GUI:
 ```
       * WINE_HIDE_NVIDIA_GPU
@@ -188,6 +194,10 @@ yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 -version                Show version info
 -tray {noclose}         Tray
 -init                   Forced initialization
+-pfxbackup {xz}         Make prefix backup
+-pfxrestore             Restore prefix from backup
+-backupmnt              Mount prefix backup
+-backupunmnt            Unmount prefix backup
 -update {all}           Runtime updater
 {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
 {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}

@@ -166,9 +166,33 @@ Icon=/usr/share/lutris-wine/icon/default_icon.png
 Name=Forced initialization
 Name[ru_RU]=Принудительная инициализация
 
+[Desktop Action pfxbackup]
+Exec=lutris-wine -pfxbackup %f
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Create prefix backup
+Name[ru_RU]=Создать бекап префикса
+
+[Desktop Action pfxrestore]
+Exec=lutris-wine -pfxrestore %f
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Restore prefix from backup
+Name[ru_RU]=Восстановить префикс
+
+[Desktop Action backupmnt]
+Exec=lutris-wine -backupmnt %f
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Mount prefix backup
+Name[ru_RU]=Монтировать бекап префикса
+
+[Desktop Action backupunmnt]
+Exec=lutris-wine -backupunmnt %f
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Unmount prefix backup
+Name[ru_RU]=Отмонтировать бекап префикса
+
 [Desktop Entry]
 Type=Service
-Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;update;version;help;config;appcfg;init
+Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;winetricks;openpfx;killwine;killtray;killexe;killshell;clearpfx;debug;shortcut;addtolu;rmapp;tray;exit;update;version;help;config;appcfg;init;pfxbackup;pfxrestore;backupmnt;backupunmnt
 Encoding=UTF-8
 Name=Lutris Wine
 Name[ru_RU]=Lutris Wine

@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.71.r0"
+export LW_VERSION="0.72.r0"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -29,7 +29,9 @@ export GDK_BACKEND="x11"
 [ -z "$LW_RESHADE_DIR" ] && export LW_RESHADE_DIR="$LW_RUNTIME_DIR/reshade"
 [ -z "$LW_DEF_ICO" ] && export LW_DEF_ICO="/usr/share/lutris-wine/icon/default_icon.png"
 [ -z "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
-[ -z "$LW_DEF_WINEPFX" ] && export LW_DEF_WINEPFX="$LW_DIR/winepfx"
+[ -z "$LW_DEF_WPFXS_DIR" ] && export LW_DEF_WPFXS_DIR="$LW_DIR/wprefixes"
+[ -z "$LW_DEF_WINEPFX" ] && export LW_DEF_WINEPFX="$LW_DEF_WPFXS_DIR/defprefix"
+[ -z "$LW_DEF_WINEPFXBKP_DIR" ] && export LW_DEF_WINEPFXBKP_DIR="$LW_DIR/prefix_backups"
 [ -z "$LW_DEF_CACHE" ] && export LW_DEF_CACHE="$LW_DIR/cache"
 [ -z "$LW_DEF_TMP" ] && export LW_DEF_TMP="$LW_DIR/tmp"
 [ -z "$LW_DEF_CENV" ] && export LW_DEF_CENV="$LW_DIR/luwine.cenv"
@@ -38,6 +40,8 @@ export GDK_BACKEND="x11"
 [ -z "$VLK_ICD_DIR" ] && export VLK_ICD_DIR="/usr/share/vulkan/icd.d"
 [ -z "$SYS_WINE" ] && export SYS_WINE="$(which -a wine 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)"
 [ -z "$SYS_LU" ] && export SYS_LU="$(which lutris 2>/dev/null)"
+[ -z "$CMPRSS_METHOD" ] && export CMPRSS_METHOD='zstd'
+[ -z "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
 export > /tmp/envbackup$ENVKEY
 
 check_def_config() {
@@ -592,7 +596,7 @@ check_symlink() {
             return 0
     elif [ ! -z "$(echo "$CHK_SLK_FILE"|grep "broken symbolic link to"|awk '{print $1}')" ]
         then
-            print_error "Remove broken symlink [ $1 ]"
+            print_info "Removing broken symlink [ $1 ]"
             unlink "$1"
             return 1
     else
@@ -740,14 +744,14 @@ settingbar() {
     if [[ ! -z "$1" && ! -z "$2" ]]
         then
             tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
-                --width=500 --height=40 --no-cancel --title="$1" --text="$2" "$SETTBARKEY" Lutris Wine &
+                --width=650 --height=40 --no-cancel --title="$1" --text="$2" "$SETTBARKEY" Lutris Wine &
     elif [[ ! -z "$1" && -z "$2" ]]
         then
             tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
-                --width=500 --height=40 --no-cancel --title="Settings" --text="$1" "$SETTBARKEY" Lutris Wine &
+                --width=650 --height=40 --no-cancel --title="Settings" --text="$1" "$SETTBARKEY" Lutris Wine &
     else
         tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
-            --width=500 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." "$SETTBARKEY" Lutris Wine &
+            --width=650 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." "$SETTBARKEY" Lutris Wine &
     fi
     tail --pid="$(pgrep -fa zenity|grep -w "$SETTBARKEY"|awk '{print$1}')" -q -f "$SETTOUTFILE"
     try_rm "$SETTOUTFILE"
@@ -757,14 +761,14 @@ settingbar_nostdout() {
     if [[ ! -z "$1" && ! -z "$2" ]]
         then
             zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
-                --width=500 --height=40 --no-cancel --title="$1" --text="$2" Lutris Wine
+                --width=650 --height=40 --no-cancel --title="$1" --text="$2" Lutris Wine
     elif [[ ! -z "$1" && -z "$2" ]]
         then
             zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
-                --width=500 --height=40 --no-cancel --title="Settings" --text="$1" Lutris Wine
+                --width=650 --height=40 --no-cancel --title="Settings" --text="$1" Lutris Wine
     else
         zenity --window-icon="$LW_DEF_ICO" --progress --pulsate --auto-close \
-            --width=500 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." Lutris Wine
+            --width=650 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." Lutris Wine
     fi
 }
 
@@ -1716,6 +1720,10 @@ check_luwine_wcfg_cenv() {
     try_mkdir "$LW_WINE_DIR"
     [ -z "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ] \
     && echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
+    [ ! -z "$(grep -wo "WINEPREFIX='$LW_DIR/winepfx'" "$LW_DEF_CFG" 2>/dev/null)" ] \
+    && sed -i "s@WINEPREFIX=.*@WINEPREFIX='$LW_DEF_WINEPFX'@" "$LW_DEF_CFG" 2>/dev/null
+    [ ! -z "$(grep -wo "WINEPREFIX='$LW_DIR/winepfx'" "$LW_CFG" 2>/dev/null)" ] \
+    && sed -i "s@WINEPREFIX=.*@WINEPREFIX='$LW_DEF_WINEPFX'@" "$LW_CFG" 2>/dev/null
     import_luwine_wcfg
     import_cenv
 }
@@ -1947,14 +1955,14 @@ lu_run() {
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
                     $TERM_APP $LWSHELL
             else
-                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
+                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
                 clear_log  2>/dev/null
                 xdg-open "$LOG_FILE" 2>/dev/null
             fi
     elif [ "$LOG" == 1 ]
         then
             echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
-            $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
+            $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
             clear_log  2>/dev/null
             xdg-open "$LOG_FILE" 2>/dev/null
     elif [ "$TERMINAL" == 1 ]
@@ -1979,14 +1987,14 @@ lu_run() {
                 if [ ! -z "$LU_LNK" ]
                     then
                         export TMP_OUT="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').out"
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
                     else
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
                 fi
             fi
     else
         echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
-        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
+        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
     unset LD_LIBRARY_PATH
     post_launch 2>/dev/null
@@ -2009,10 +2017,10 @@ lu_run() {
 
 lu_prestart() {
     export LU_EXE="$(readlink -f "$LU_START")"
-    export LU_MSI="$(basename "$LU_EXE"|grep -iF ".msi")"
-    export LU_BAT="$(basename "$LU_EXE"|grep -iF ".bat")"
-    export LU_REG="$(basename "$LU_EXE"|grep -iF ".reg")"
-    export LU_LNK="$(basename "$LU_EXE"|grep -iF ".lnk")"
+    export LU_MSI="$(basename "$LU_EXE"|grep -io "\.msi$")"
+    export LU_BAT="$(basename "$LU_EXE"|grep -io "\.bat$")"
+    export LU_REG="$(basename "$LU_EXE"|grep -io "\.reg$")"
+    export LU_LNK="$(basename "$LU_EXE"|grep -io "\.lnk$")"
     if [[ ! -z "$LU_MSI" && ! -z "$(file "$LU_EXE"|grep "Os: Windows"|grep -o "MSI Installer")" ]]
         then
             dis_debug_msg
@@ -2043,11 +2051,15 @@ check_startfile() {
     if [ -f "$1" ]
         then
             [ -z "$LU_START" ] && export LU_START="$1"
+            [[ ! -z "$(basename "$1"|grep -io "\.lwpfx$")" \
+            && -z "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$1")"
             [ -z "$EXE_ARG" ] && export EXE_ARG="${*:2}"
             [ -z "$FULLCMDLINE" ] && export FULLCMDLINE="$0 '${*:1}'"
     elif [ -f "$2" ]
         then
             [ -z "$LU_START" ] && export LU_START="$2"
+            [[ ! -z "$(basename "$2"|grep -io "\.lwpfx$")" \
+            && -z "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$2")"
             [ -z "$EXE_ARG" ] && export EXE_ARG="${*:3}"
             [ -z "$FULLCMDLINE" ] && export FULLCMDLINE="$0 $1 '${*:2}'"
     else
@@ -2412,15 +2424,16 @@ lu_config() {
     PGEGITLST="https://github.com/GloriousEggroll/proton-ge-custom/releases"
     WGEGITLST="https://github.com/GloriousEggroll/wine-ge-custom/releases"
     WK4GITLST="https://github.com/Kron4ek/Wine-Builds/releases"
+    CMPRSSLST="xz \n zstd"
     lwconfig_save() {
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE WINE_DXGI D3D_EXTRAS DGVOODOO2 \
             DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION DXR VKD3DCFG MUST_HAVE_DLL FSR \
             FAKE_CUR_RES WINE_SANDBOX ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING GL_THRD_OPTI \
             NO_WRITE_WATCH VULKAN_NO_ASYNC HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD DIS_NETCORE \
             VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX CHK_UPDATE RUNTIME PREF_SYS_LIBS EXEARGS EXE_LWDB EXE_LWDBFL \
-            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT DIS_OTH_DISPL RESTORE_RESOL \
-            RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP LW_DOWNLOADER NO_TRAY \
-            US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
+            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
+            DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
+            LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
             VSYNC PRIME DXVK_GIT_RELEASE_URL VKD3D_GIT_RELEASE_URL NVAPI_GIT_RELEASE_URL D3D_GIT_RELEASE_URL DGVO_GIT_RELEASE_URL \
             WTRX_GIT_RELEASE_URL BUILD_GIT_RELEASE_URL RESHADE_GIT_RELEASE_URL NVML_GIT_RELEASE_URL WLU_GIT_RELEASE_URL \
             PGE_GIT_RELEASE_URL WGE_GIT_RELEASE_URL WK4_GIT_RELEASE_URL"
@@ -2553,6 +2566,8 @@ lu_config() {
             --field="DEBUG:CHK" "$DEBUG" \
             --field="Use system Winetricks:CHK" "$SYS_WINETRICKS" \
             --field="CPU limit (0-disabled)::CB" "$(echo -e "$CPU_LIMIT\n$(echo -e "$CPU_LIMIT\n$(seq 0 $(cat '/proc/cpuinfo'|grep "processor"|wc -l))"|eval $SEDLWPRM|sort -un)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="Backup compression method::CB" "$(echo -e "$CMPRSS_METHOD\n$(echo -e "$CMPRSS_METHOD\n$CMPRSSLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="ZSTD compression level::CB" "$(echo -e "$ZSTD_CMPRSS_LVL\n$(echo -e "$ZSTD_CMPRSS_LVL\n$(seq 1 22)"|eval $SEDLWPRM|sort -un)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Disable no primary displays:CHK" "$DIS_OTH_DISPL" \
             --field="Restore resolution:CHK" "$RESTORE_RESOL" \
             --field="Restore gamma:CHK" "$RESTORE_GAMMA" \
@@ -2642,6 +2657,10 @@ lu_config() {
             --field="Clear prefix:FBTN" "$LWSHELL -c 'btn_tools clearpfx'" \
             --field="Forced init:FBTN" "$LWSHELL -c 'btn_tools init'" \
             --field="Usage info:FBTN" "$LWSHELL -c 'lu_help'" \
+            --field="Create prefix backup:FBTN" "$LWSHELL -c 'btn_tools pfxbackup'" \
+            --field="Restore prefix from backup:FBTN" "$LWSHELL -c 'btn_tools pfxrestore'" \
+            --field="Mount prefix backup:FBTN" "$LWSHELL -c 'lu_backupmnt'" \
+            --field="Unmount prefix backup:FBTN" "$LWSHELL -c 'lu_backupunmnt'" \
             --field="Kill Wine processes:FBTN" "$LWSHELL -c 'lu_killwine'" \
             --field="Kill running EXE:FBTN" "$LWSHELL -c 'lu_killexe'" \
             --field="Kill SHELL:FBTN" "$LWSHELL -c 'lu_killshell'" \
@@ -2746,26 +2765,39 @@ lu_config() {
             case $SETTBTN in
                     winemgr) lu_winemgr
                              BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
+
                     clearpfx) lu_clearpfx
                               sleep 0.5
                               BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
+
                     update) lu_update
                             BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
+
                     winetricks) if [ ! -z "$LU_EXE" ]
-                                    then
-                                        cleanrun "'$LW_SOURCE' -winetricks '$LU_EXE'"
-                                    else
-                                        cleanrun "'$LW_SOURCE' -winetricks"
+                                    then cleanrun "'$LW_SOURCE' -winetricks '$LU_EXE'"
+                                    else cleanrun "'$LW_SOURCE' -winetricks"
                                 fi
                                 BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
+
                     init) if [ ! -z "$LU_EXE" ]
-                                then
-                                    cleanrun "'$LW_SOURCE' -init '$LU_EXE'"
-                                else
-                                    cleanrun "'$LW_SOURCE' -init"
+                                then cleanrun "'$LW_SOURCE' -init '$LU_EXE'"
+                                else cleanrun "'$LW_SOURCE' -init"
                           fi
                           sleep 0.5
-                          BTNTLS=1 cleanrun "$FULLCMDLINE";;
+                          BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
+
+                    pfxbackup) if [ ! -z "$LU_EXE" ]
+                                then cleanrun "'$LW_SOURCE' -pfxbackup '$LU_EXE'"
+                                else cleanrun "'$LW_SOURCE' -pfxbackup"
+                                fi
+                                BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
+
+                    pfxrestore) if [ ! -z "$LU_EXE" ]
+                                then cleanrun "'$LW_SOURCE' -pfxrestore '$LU_EXE'"
+                                else cleanrun "'$LW_SOURCE' -pfxrestore"
+                                fi
+                                BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
+
                     appcfg) lu_appcfg || BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
             esac
     fi
@@ -3299,8 +3331,12 @@ lu_help() {
             ${RED}-debug $GREEN                  DEBUG
             ${RED}-help $GREEN                   Show this usage info
             ${RED}-version $GREEN                Show version info
-            ${RED}-tray $BLUE{noclose}${GREEN}          Tray
+            ${RED}-tray $BLUE{noclose}$GREEN          Tray
             ${RED}-init $GREEN                   Forced initialization
+            ${RED}-pfxbackup $BLUE{xz}$GREEN          Create prefix backup
+            ${RED}-pfxrestore $GREEN             Restore prefix from backup
+            ${RED}-backupmnt $GREEN              Mount prefix backup
+            ${RED}-backupunmnt $GREEN            Unmount prefix backup
             ${RED}-update$BLUE {all} $GREEN           Runtime updater$BLUE
             {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
             {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
@@ -3337,6 +3373,10 @@ lu_help() {
         -version \t\t\t\t\t Show version info\n \
         -tray {noclose} \t\t\t Tray\n \
         -init \t\t\t\t\t\t Forced initialization\n \
+        -pfxbackup {xz}\t\t\t Create prefix backup\n \
+        -pfxrestore \t\t\t\t Restore prefix from backup\n \
+        -backupmnt \t\t\t\t Mount prefix backup\n \
+        -backupunmnt \t\t\t Unmount prefix backup\n \
         -update {all} \t\t\t\t Runtime updater\n \
 {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}\n \
 {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}\n \
@@ -3400,14 +3440,14 @@ lu_tray() {
             yad --notification --no-middle --text="Lutris Wine" \
                 --window-icon="$LW_DEF_ICO" \
                 --image="$LW_DEF_ICO" \
-                --command="$LWSHELL -c '$LW_SOURCE'" \
+                --command="$([ -z "$LU_EXE" ] && echo "$LWSHELL -c '"$LW_SOURCE"'"||echo :)" \
                 --tooltip="Lutris Wine" \
                 --menu="| \
 Explorer!$LWSHELL -c '"$LW_SOURCE" -explorer'!"$LW_DEF_ICO"| \
 Task manager!$LWSHELL -c '"$LW_SOURCE" -taskmgr'!"$LW_DEF_ICO"| \
 Open CMD!$LWSHELL -c '"$LW_SOURCE" -cmd'!"$LW_DEF_ICO"| \
 Open SHELL!$LWSHELL -c '"$LW_SOURCE" -shell'!"$LW_DEF_ICO"| \
-DEBUG!$LWSHELL -c '"$LW_SOURCE" -debug'!"$LW_DEF_ICO"| \
+$([ -z "$LU_EXE" ] && echo "DEBUG!$LWSHELL -c '"$LW_SOURCE" -debug'!"$LW_DEF_ICO"|") \
 Open drive C:\!$LWSHELL -c '"$LW_SOURCE" -openpfx'!"$LW_DEF_ICO"| \
 Settings!$LWSHELL -c '"$LW_SOURCE" -config'!"$LW_DEF_ICO"| \
 Apps settings!$LWSHELL -c '"$LW_SOURCE" -appcfg'!"$LW_DEF_ICO"| \
@@ -3419,9 +3459,13 @@ Wine settings!$LWSHELL -c '"$LW_SOURCE" -winecfg'!"$LW_DEF_ICO"| \
 Registry editor!$LWSHELL -c '"$LW_SOURCE" -regedit'!"$LW_DEF_ICO"| \
 Wine uninstaller!$LWSHELL -c '"$LW_SOURCE" -uninstaller'!"$LW_DEF_ICO"| \
 Create shortcut!$LWSHELL -c '"$LW_SOURCE" -shortcut'!"$LW_DEF_ICO"| \
-$( if [ ! -z "$SYS_LU" ]; then echo "Add to Lutris!$LWSHELL -c '"$LW_SOURCE" -addtolu'!"$LW_DEF_ICO"|"; fi) \
+$([ ! -z "$SYS_LU" ] && echo "Add to Lutris!$LWSHELL -c '"$LW_SOURCE" -addtolu'!"$LW_DEF_ICO"|") \
 Remove menu app!$LWSHELL -c '"$LW_SOURCE" -rmapp'!"$LW_DEF_ICO"| \
 Clear prefix!$LWSHELL -c '"$LW_SOURCE" -clearpfx'!"$LW_DEF_ICO"| \
+Prefix backup!$LWSHELL -c '"$LW_SOURCE" -pfxbackup'!"$LW_DEF_ICO"| \
+Restore prefix!$LWSHELL -c '"$LW_SOURCE" -pfxrestore'!"$LW_DEF_ICO"| \
+Mount prefix backup!$LWSHELL -c '"$LW_SOURCE" -backupmnt'!"$LW_DEF_ICO"| \
+Unmount prefix backup!$LWSHELL -c '"$LW_SOURCE" -backupunmnt'!"$LW_DEF_ICO"| \
 Forced init!$LWSHELL -c '"$LW_SOURCE" -init'!"$LW_DEF_ICO"| \
 Usage info!$LWSHELL -c '"$LW_SOURCE" -help'!"$LW_DEF_ICO"| \
 Version info!$LWSHELL -c '"$LW_SOURCE" -version'!"$LW_DEF_ICO"| \
@@ -3447,7 +3491,7 @@ lu_winemgr() {
             if [[ -z "$PGE_GIT_LIST" || -z  "$WLU_GIT_LIST" || -z  "$WK4_GIT_LIST" || -z  "$WGE_GIT_LIST" ]]
                 then
                     GREPWARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1"
-                    print_info notify "Сhecking new WINE versions on GitHub..."
+                    print_info notify "Сhecking new Wine versions on GitHub..."
                     for git_page in {1..3}; do curl -s "$WLU_GIT_RELEASE_URL/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WLU_GIT_RELEASE_URL'" $0}' 1>> "/tmp/WLUGITLIST$WGUIDW" ; done &
                     for git_page in {1..3}; do curl -s "$PGE_GIT_RELEASE_URL/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PGE_GIT_RELEASE_URL'" $0}' 1>> "/tmp/PGEGITLIST$WGUIDW" ; done &
                     for git_page in {1..3}; do curl -s "$WGE_GIT_RELEASE_URL/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WGE_GIT_RELEASE_URL'" $0}' 1>> "/tmp/WGEGITLIST$WGUIDW" ; done &
@@ -3467,7 +3511,7 @@ lu_winemgr() {
                                         [ "$GITLISTOK" == 4 ] && break
                                 done
                             [ "$GITLISTOK" == 4 ] && break
-                    done|settingbar_nostdout "Сhecking GitHub" "Сhecking new WINE versions on GitHub..."
+                    done|settingbar_nostdout "Сhecking GitHub" "Сhecking new Wine versions on GitHub..."
                     WLU_GIT_LIST="$(cat /tmp/WLUGITLIST$WGUIDW 2>/dev/null)"
                     PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null)"
                     WGE_GIT_LIST="$(cat /tmp/WGEGITLIST$WGUIDW 2>/dev/null)"
@@ -3477,10 +3521,10 @@ lu_winemgr() {
             if [[ ! -z "$WLU_GIT_LIST" || ! -z "$PGE_GIT_LIST" || ! -z "$WGE_GIT_LIST" || ! -z  "$WK4_GIT_LIST" ]]
                 then
                     export GITOK=1
-                    print_info notify "Сhecking new WINE versions on GitHub completed!"
+                    print_info notify "Сhecking new Wine versions on GitHub completed!"
                 else
                     unset GITOK
-                    print_error yad "Lutris Wine Manager" "Can't get list of WINE URLs from GitHub!"
+                    print_error yad "Lutris Wine Manager" "Can't get list of Wine URLs from GitHub!"
             fi
     fi
     if [[ ! -z "$ILW_LIST" && ! -z "$GITOK" ]]
@@ -3489,11 +3533,11 @@ lu_winemgr() {
             PGE_LIST="$(echo -e "$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//;s/.tar.gz//' ; done)\n$ILW_LIST"|awk '!seen[$0]++'|grep -v "$ILW_LIST")"
             WGE_LIST="$(echo -e "$(for WGEGIT in $WGE_GIT_LIST ; do echo $WGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//;s/.tar.gz//' ; done)\n$ILW_LIST"|awk '!seen[$0]++'|grep -v "$ILW_LIST")"
             WK4_LIST="$(echo -e "$(for WK4GIT in $WK4_GIT_LIST ; do echo $WK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//;s/.tar.gz//' ; done|sed '/-x86/d')\n$ILW_LIST"|awk '!seen[$0]++'|grep -v "$ILW_LIST")"
-            echo -e "\n$(echo "$WLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WLUSET$WGUIDW" &
-            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
-            echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WGESET$WGUIDW" &
-            echo -e "\n$(echo "$WK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WK4SET$WGUIDW" &
-            echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=5 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDELSET$WGUIDW" &
+            echo -e "\n$(echo "$WLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/WLUSET$WGUIDW" &
+            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/PGESET$WGUIDW" &
+            echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/WGESET$WGUIDW" &
+            echo -e "\n$(echo "$WK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/WK4SET$WGUIDW" &
+            echo -e "\n$(echo "$ILW_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=5 --list --column="" --checklist --separator=" " --column "Select installed Wine for delete:" 1> "/tmp/WDELSET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" --tab="DELETE" \
@@ -3508,10 +3552,10 @@ lu_winemgr() {
         then
             if [[ "$(echo "$ILW_LIST"|sed 's/^ *//g'|wc -l)" == 1 && "$ILW_LIST" == "$WINE_IN_USE" ]]
                 then
-                    print_error yad "Lutris Wine Manager" "Lutris Wine has one WINE installed and it selected by default! Can't run Wine Manager!"
+                    print_error yad "Lutris Wine Manager" "Lutris Wine has one Wine installed and it selected by default! Can't run Wine Manager!"
                     exit 1
                 else
-                    echo -e "\n$(echo "$ILW_LIST"|grep -wv "$WINE_IN_USE" 2>/dev/null|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed WINE for delete:" 1> "/tmp/WDELSET$WGUIDW" &
+                    echo -e "\n$(echo "$ILW_LIST"|grep -wv "$WINE_IN_USE" 2>/dev/null|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select installed Wine for delete:" 1> "/tmp/WDELSET$WGUIDW" &
             fi
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --separator="" \
@@ -3524,10 +3568,10 @@ lu_winemgr() {
             PGE_LIST="$(for PGEGIT in $PGE_GIT_LIST ; do echo $PGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//;s/.tar.gz//' ; done)"
             WGE_LIST="$(for WGEGIT in $WGE_GIT_LIST ; do echo $WGEGIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//;s/.tar.gz//' ; done)"
             WK4_LIST="$(for WK4GIT in $WK4_GIT_LIST ; do echo $WK4GIT|awk -F/ '{print $NF}'|sed 's/.tar.xz//;s/.tar.gz//' ; done|sed '/-x86/d')"
-            echo -e "\n$(echo "$WLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WLUSET$WGUIDW" &
-            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/PGESET$WGUIDW" &
-            echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WGESET$WGUIDW" &
-            echo -e "\n$(echo "$WK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select WINE for download:" 1> "/tmp/WK4SET$WGUIDW" &
+            echo -e "\n$(echo "$WLU_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=1 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/WLUSET$WGUIDW" &
+            echo -e "\n$(echo "$PGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=2 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/PGESET$WGUIDW" &
+            echo -e "\n$(echo "$WGE_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=3 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/WGESET$WGUIDW" &
+            echo -e "\n$(echo "$WK4_LIST"|sed ':a;N;$!ba;s/\n/\n\n/g')"|yad --plug=$WGUIDW --tabnum=4 --list --column="" --checklist --separator=" " --column "Select Wine for download:" 1> "/tmp/WK4SET$WGUIDW" &
             yad --key=$WGUIDW --notebook --width=500 --height=600 --text-align=center --center \
                 --window-icon="$LW_DEF_ICO" --title "Lutris Wine Manager" --separator="" \
                 --tab-pos=top --tab="Lutris" --tab="Proton GE" --tab="Wine GE" --tab="Kron4ek" \
@@ -3715,10 +3759,10 @@ lu_winemgr() {
                 then
                     if [[ ! -z "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)" || ! -z "$SYS_WINE" ]]
                         then
-                            print_info notify "Removed WINE which was selected by default!"
+                            print_info notify "Removed Wine which was selected by default!"
                             check_def_wine
                         else
-                            print_info notify "Removed WINE which was selected by default! WINE is not installed, you must download WINE!"
+                            print_info notify "Removed Wine which was selected by default! Wine is not installed, you must download Wine!"
                             try_rm "/tmp/WINEINUSEDEL$WGUIDW" &>/dev/null
                             unset WDEL_SET
                             lu_winemgr
@@ -3794,16 +3838,13 @@ check_mangohud() {
         then
             if [ ! -z "$(which mangohud 2>/dev/null)" ]
                 then
-                    export MANGOHUD_LIB_NAME="libMangoHud.so"
                     if [ "$LWMANGOHUD" == "Vulkan" ]
                         then
-                            export MANGOHUD=1
+                            export RUN_MANGOHUD="mangohud"
                     elif [ "$LWMANGOHUD" == "OpenGL" ]
                         then
-                            export MANGOHUD=1
-                            export MANGOHUD_LIB_NAME="libMangoHud_dlsym.so:${MANGOHUD_LIB_NAME}"
+                            export RUN_MANGOHUD="mangohud --dlsym"
                     fi
-                    export LD_PRELOAD="${LD_PRELOAD}:${MANGOHUD_LIB_NAME}"
                     if [[ -z "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
                         then
 export MANGOHUD_CONFIG="no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
@@ -3817,12 +3858,12 @@ resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=
                 else
                     print_error yad "MANGOHUD not found in your system!"
                     export DISABLE_MANGOHUD=1
-                    unset MANGOHUD
+                    unset MANGOHUD RUN_MANGOHUD
             fi
         else
             print_info notify "MANGOHUD is disabled!"
             export DISABLE_MANGOHUD=1
-            unset MANGOHUD
+            unset MANGOHUD RUN_MANGOHUD
     fi
 }
 
@@ -3830,7 +3871,7 @@ check_fps_limit() {
     [ ! -z "$1" ] && export FPS_LIMIT="$1"
     if [[ ! -z "$FPS_LIMIT" && "$FPS_LIMIT" != 0 ]]
         then
-            if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 ]]
+            if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 && ! -z "$RUN_MANGOHUD" ]]
                 then
                     if [ ! -z "$MANGOHUDCFG" ]
                         then
@@ -4343,6 +4384,19 @@ winepfx_init() {
 check_winepfx() {
     [ ! -z "$1" ] && export WINEPREFIX="$1"
     [ ! -z "$2" ] && export WINEARCH="$2"
+    if [ -d "$LW_DIR/winepfx" ]
+        then
+            print_info notify "The default prefix found is on the old path and will be moved!"
+            try_mkdir "$LW_DEF_WINEPFX"
+            if try_mv "$LW_DIR/winepfx/"* "$LW_DEF_WINEPFX/"
+                then
+                    try_rm "$LW_DIR/winepfx"
+                    print_info notify "The default prefix successfully moved!"
+                else
+                    print_error yad "An error occurred when moving the default prefix from the old path!"
+                    exit 1
+            fi
+    fi
     PFXARCH="$(grep -o '#arch=.*$' "$WINEPREFIX/system.reg" 2>/dev/null|cut -d'=' -f2)"
     if [[ ! -z "$PFXARCH" && "$WINEARCH" != "$PFXARCH" ]]
         then
@@ -5237,11 +5291,11 @@ export_all_functions() {
         check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_mono_gecko try_download check_cpu_limit ld_lib_upd \
         unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher check_proton_d3dlib \
         compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris gamma_sw vkd3dcfg_upd check_downloader \
-        create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_wcfg check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd \
+        create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_wcfg check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd select_lwpfx \
         lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr winepfx_init \
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr updcfgchksum lite_init \
         us_layout_sw check_mangohud check_wd3dmode check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
-        check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell \
+        check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell unpack_squash \
         check_prime check_esync check_fsync check_fsr check_runtime check_path check_terminal check_pulse_latency check_ld_library check_wdllover \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
         runtime_manager check_gamecontrollerdb check_innoextract check_network-tools check_p7zip check_ubuntu1804-i686 upd_battleye upd_gamecontrollerdb \
@@ -5250,14 +5304,14 @@ export_all_functions() {
         settingbar_nostdout check_freespace initbar check_network_status check_no_async print_question print_input loadbar_cover check_first_run check_eac \
         run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_fake_cur_res \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
-        check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib
+        check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt
 }
 
 initbar() {
     INIPRGRS="/tmp/iniprgrs$ENVKEY"
     touch "$INIPRGRS"
     while [ -f "$INIPRGRS" ]; do echo; sleep 0.1; done| \
-    zenity --window-icon="$LW_DEF_ICO" --progress --title="Runtime initialization" --width=500 --height=40 --no-cancel \
+    zenity --window-icon="$LW_DEF_ICO" --progress --title="Runtime initialization" --width=650 --height=40 --no-cancel \
         --text="Initialization is in progress. Please wait..." --pulsate --auto-close Lutris Wine &>/dev/null &
 }
 
@@ -5281,10 +5335,8 @@ loadbar_cover() {
     if [ "$LOADBAR" != 0 ]
         then
             if [ ! -z "$1" ]
-                then
-                    GIF_FILE="$1"
-                else
-                    GIF_FILE="$LOADBARGIF"
+                then GIF_FILE="$1"
+                else GIF_FILE="$LOADBARGIF"
             fi
             GIF_SIZE_X="$(file "$GIF_FILE"|awk '{print $7 + 20}')"
             GIF_SIZE_Y="$(file "$GIF_FILE"|awk '{print $9 + 20}')"
@@ -5296,8 +5348,7 @@ loadbar_cover() {
 
 stop_loadbar() {
     if [[ ! -z "$LOADBARPID" && ! -z "$(ps -ef|grep -wo "$LOADBARPID" 2>/dev/null)" ]]
-        then
-            kill "$LOADBARPID" 2>/dev/null
+        then kill "$LOADBARPID" 2>/dev/null
     fi
 }
 
@@ -5344,6 +5395,325 @@ lu_appcfg() {
     fi
 }
 
+makesquash_zstd() {
+    unset squashsource squashpath squashmane extension compres_lvl
+    set -o pipefail
+    if [ -z "$3" ]; then extension='sfs' ; else extension=$3 ; fi
+    if [ -z "$4" ]; then compres_lvl=1 ; else compres_lvl=$4 ; fi
+    if [[ -f "$1" || -d "$1" || -L "$1" ]]
+        then
+            squashsource="$(readlink -f "$1")"
+            if [ ! -z "$2" ]
+                then
+                    if [ ! -d "$2" ]
+                        then
+                            print_error "Destination path '$2' not found!"
+                            return 1
+                        else squashpath="$2/"
+                    fi
+            fi
+            if [ ! -z "$(which 'mksquashfs' 2>/dev/null)" ]
+                then
+                    squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").zst.$extension"
+                    print_info "Making SquashFS ZSTD image : [ $squashmane ]\n[ FROM ]: [ $squashsource ] [ COMPRESS LVL ]: $compres_lvl \n[  TO  ]: [ ${squashpath}$squashmane ]"
+                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp zstd -Xcompression-level $compres_lvl|\
+                    settingbar_nostdout "Making SquashFS ZSTD image : $squashmane" "From : $squashsource \nTo : ${squashpath}$squashmane \nCompression level : $compres_lvl"
+                    [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
+                    && return 1 || print_info "Making SquashFS ZSTD image completed!" && return 0
+                else
+                    print_error yad "ZSTD Squashing..." "mksquashfs not found in your system!"
+                    return 1
+            fi
+        else
+            print_error "'$1' not found for squashing!"
+            return 1
+    fi
+}
+
+makesquash_xz() {
+    unset squashsource squashpath squashmane extension
+    set -o pipefail
+    if [ -z "$3" ]; then extension='sfs' ; else extension=$3 ; fi
+    if [[ -f "$1" || -d "$1" || -L "$1" ]]
+        then
+            squashsource="$(readlink -f "$1")"
+            if [ ! -z "$2" ]
+                then
+                    if [ ! -d "$2" ]
+                        then
+                            print_error "Destination path '$2' not found!"
+                            return 1
+                        else squashpath="$2/"
+                    fi
+            fi
+            if [ ! -z "$(which 'mksquashfs' 2>/dev/null)" ]
+                then
+                    squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").xz.$extension"
+                    print_info "Making SquashFS XZ image : [ $squashmane ]\n[ FROM ]: [ $squashsource ]\n[  TO  ]: [ ${squashpath}$squashmane ]"
+                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp xz|\
+                    settingbar_nostdout "Making SquashFS XZ image : $squashmane" "From : $squashsource \nTo : ${squashpath}$squashmane"
+                    [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
+                    && return 1 || print_info "Making SquashFS XZ image completed!" && return 0
+                else
+                    print_error yad "XZ Squashing..." "mksquashfs not found in your system!"
+                    return 1
+            fi
+        else
+            print_error "'$1' not found for squashing!"
+            return 1
+    fi
+}
+
+unpack_squash() {
+    unset unsquashsource unsquashpath unsquashmane
+    set -o pipefail
+    if [[ -f "$1" || -L "$1" ]]
+        then
+            unsquashsource="$(readlink -f "$1")"
+            if [ ! -z "$2" ]
+                then
+                    if [ ! -d "$2" ]
+                        then
+                            print_error "Destination path '$2' not found!"
+                            return 1
+                        else unsquashpath="$2/"
+                    fi
+            fi
+            if [ ! -z "$(which 'unsquashfs' 2>/dev/null)" ]
+                then
+                    unsquashimage="$(basename "$unsquashsource")"
+                    unsquashmane="$(echo "$unsquashimage"|awk -F'.' '{print $1}')"
+                    print_info "Unsquashing image : [ $unsquashimage ]\n[ FROM ]: [ $unsquashsource ]\n[  TO  ]: [ ${unsquashpath}$unsquashmane ]"
+                    unsquashfs -f -d "${unsquashpath}$unsquashmane" "$unsquashsource"|\
+                    settingbar_nostdout "Unsquashing image : $unsquashimage" "From : $unsquashsource \nTo : ${unsquashpath}$unsquashmane"
+                    [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to unsquashing" "From :'$unsquashsource' \nTo : ${unsquashpath}$unsquashmane" \
+                    && return 1 || print_info "Unsquashing image completed!" && return 0
+                else
+                    print_error yad "Unsquashing..." "unsquashfs not found in your system!"
+                    return 1
+            fi
+        else
+            print_error "'$1' not found for unsquashing!"
+            return 1
+    fi
+}
+
+lu_pfxbackup() {
+    if [[ ! -z "$3" && "$3" == "xz" ]] \
+    || [[ ! -z "$2" && "$2" == "xz" ]]
+        then CMPRSS_METHOD="xz"
+    fi
+    if [ "$CMPRSS_METHOD" != "xz" ]
+        then
+            CMPRSS_METHOD='zstd'
+            if [[ "$2" == +([0-9])  ]]
+                then ZSTD_CMPRSS_LVL="$2"
+            elif [[ "$3" == +([0-9])  ]]
+                then ZSTD_CMPRSS_LVL="$3"
+            elif [[ "$4" == +([0-9]) ]]
+                then ZSTD_CMPRSS_LVL="$4"
+            fi
+        else unset ZSTD_CMPRSS_LVL
+    fi
+    if [[ ! -z "$2" && -d "$2" ]]
+        then
+            if [[ -f "$2/userdef.reg" && -f "$2/system.reg" && -f "$2/user.reg" \
+                && -f "$2/.update-timestamp" ]]; then export WINEPREFIX="$2"
+                else
+                    print_error yad "Prefix backup" "This directory is not a Wine prefix!"
+                    return 1
+            fi
+    fi
+    if [[  -d "$WINEPREFIX" && -f "$WINEPREFIX/userdef.reg" && -f "$WINEPREFIX/system.reg" \
+        && -f "$WINEPREFIX/user.reg" && -f "$WINEPREFIX/.update-timestamp" ]]
+        then
+            if print_question "Prefix backup" "Are you sure you want to backup this prefix?\n[ $WINEPREFIX ]"
+                then
+                    try_mkdir "$LW_DEF_WINEPFXBKP_DIR"
+                    if makesquash_$CMPRSS_METHOD "$WINEPREFIX" "$LW_DEF_WINEPFXBKP_DIR" 'lwpfx' $ZSTD_CMPRSS_LVL
+                        then
+                            print_info notify "Prefix backup completed!"
+                            xdg-open "$LW_DEF_WINEPFXBKP_DIR" &>/dev/null
+                        else
+                            print_error yad "Prefix backup" "Cannot create prefix backup!"
+                            return 1
+                    fi
+            fi
+        else print_error yad "Prefix backup" "Something is wrong with this prefix. It's not possible to start backup!"
+             return 1
+    fi
+}
+
+select_lwpfx() {
+    unset LWPFX_FL
+    not_lwpfx() {
+        print_error yad "You must specify Lutris Wine prefix backup image!"
+        select_lwpfx "$1"
+    }
+    LWPFX_FL="$(cd "$LW_DEF_WINEPFXBKP_DIR" 2>/dev/null ; yad --window-icon="$LW_DEF_ICO" \
+                    --title "Specify Lutris Wine prefix backup image:" \
+                    --center --on-top --file --file-filter="$1*.lwpfx" \
+                    --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
+    if [ -f "$LWPFX_FL" ]
+        then
+            if [ ! -z "$(file "$LWPFX_FL"|grep -o 'Squashfs')" ]
+                then
+                    export LU_LWPFX="$LWPFX_FL"
+                    return 0
+                else
+                    not_lwpfx "$1"
+            fi
+    elif [ -d "$LWPFX_FL" ]
+        then
+            not_lwpfx "$1"
+    else
+        return 1
+    fi
+}
+
+lu_pfxrestore() {
+    [ -f "$1" ] && export LU_LWPFX="$1"
+    select_lwpfx_for_restore() {
+        print_info notify "You must specify Lutris Wine prefix backup image!"
+        select_lwpfx "$1" && lu_pfxrestore
+    }
+    pfxrestore() {
+        RESTORE_READY=1
+        if [ "$1" != 'force' ]
+            then
+                if ! print_question "Prefix restore" "Are you sure you want to restore this prefix backup image?\n[ $LU_LWPFX ]"
+                    then
+                        unset RESTORE_READY
+                fi
+        fi
+        if [ "$RESTORE_READY" == 1 ]
+            then
+                try_mkdir "$LW_DEF_WPFXS_DIR"
+                if unpack_squash "$LU_LWPFX" "$LW_DEF_WPFXS_DIR"
+                    then
+                        print_info notify "The prefix backup is successfully restored!"
+                        xdg-open "$PFXRESTORE_DIR" &>/dev/null
+                    else
+                        print_error yad "Prefix restore error" "Cannot restore prefix backup!"
+                        return 1
+                fi
+        fi
+    }
+    if [ -f "$LU_LWPFX" ]
+        then
+            LWPFX_NAME="$(basename "$LU_LWPFX"|awk -F'.' '{print $1}')"
+            PFXRESTORE_DIR="$LW_DEF_WPFXS_DIR/$LWPFX_NAME"
+            if [[ -d "$PFXRESTORE_DIR" && $(ls -1 "$PFXRESTORE_DIR" 2>/dev/null|eval $SEDLWPRM|wc -l) -ge 5 ]]
+                then
+                    print_error notify "The recovery directory is not empty!"
+                    print_info "[ $PFXRESTORE_DIR ]"
+                    if print_question "Prefix restore" \
+                    "The recovery directory is not empty.\n[ $PFXRESTORE_DIR ] \nAre you sure you want to continue? \nIt will be deleted before restoring data from the backup!"
+                        then
+                            try_rm "$PFXRESTORE_DIR"
+                            pfxrestore 'force'||return 1
+                    fi
+                else pfxrestore||return 1
+            fi
+        else
+            LWPFX_NAME="$(basename "$WINEPREFIX")"
+            LWPFX_BKPS="$(ls -1 "$LW_DEF_WINEPFXBKP_DIR" 2>/dev/null|grep -w "^${LWPFX_NAME}.*\.lwpfx$")"
+            if [ "$(echo "$LWPFX_BKPS"|eval $SEDLWPRM|wc -l)" -gt 1 ]
+                then
+                    print_info "Several backups of the current prefix were found!"
+                    select_lwpfx_for_restore "$LWPFX_NAME."
+            elif [ "$(echo "$LWPFX_BKPS"|eval $SEDLWPRM|wc -l)" -eq 1 ]
+                then
+                    lu_pfxrestore "$LW_DEF_WINEPFXBKP_DIR/$LWPFX_BKPS"
+            else
+                print_error "No backups for the current prefix were found in the backup directory!"
+                if print_question "Prefix restore" "No backups for the current prefix were found in the backup directory! \nDo you want to choose a prefix backup from another location?"
+                    then
+                        select_lwpfx_for_restore
+                    else
+                        return 1
+                fi
+            fi
+    fi
+}
+
+lu_backupmnt() {
+    [ -f "$1" ] && export LU_LWPFX="$1"
+    if [ ! -z "$(which 'squashfuse' 2>/dev/null)" ]
+        then
+            if [ -f "$LU_LWPFX" ]
+                then
+                    LWPFX_NAME="$(basename "$LU_LWPFX")"
+                    LWPFX_MNT_DIR="$LW_DEF_TMP/${LWPFX_NAME}-$(echo -n "$LU_LWPFX"|sha256sum|head -c 8)"
+                    if [[ ! -d "$LWPFX_MNT_DIR" && -z "$(mount|grep -wo "$LWPFX_NAME")" ]]
+                        then
+                            try_mkdir "$LWPFX_MNT_DIR"
+                            if squashfuse "$LU_LWPFX" "$LWPFX_MNT_DIR"
+                                then
+                                    print_info notify "The prefix backup is successfully mounted!"
+                                    print_info "[ $LWPFX_MNT_DIR ]"
+                                    xdg-open "$LWPFX_MNT_DIR" &>/dev/null
+                                    while true
+                                        do
+                                           if [ ! -z "$(mount|grep -wo "$LWPFX_NAME")" ]
+                                                then sleep 1
+                                                else kill $(pgrep -fa 'yad'|grep -w "$LWPFX_NAME"|awk '{print$1}') &>/dev/null
+                                                break
+                                            fi
+                                    done &
+                                    if yad --form --title="Mounted image: $LWPFX_NAME" --text-align=center --center --fixed \
+                                           --window-icon="$LW_DEF_ICO" --button="UNMOUNT:0" --selectable-labels --on-top \
+                                           --text="Mount point: [ $LWPFX_MNT_DIR ]" \
+                                           --field="Open:FBTN" "$LWSHELL -c 'xdg-open "$LWPFX_MNT_DIR" &>/dev/null'" \
+                                           Lutris Wine &>/dev/null
+                                        then lu_backupunmnt "$LU_LWPFX"
+                                    fi
+                                else print_error yad "Mount error" "Cannot mount prefix backup!"
+                                     return 1
+                            fi
+                        else print_error yad "Mount error" "The mount point has been found! Backup is already mounted!"
+                             return 1
+                    fi
+                else print_info notify "You must specify Lutris Wine prefix backup image!"
+                     select_lwpfx && lu_backupmnt
+            fi
+        else print_error yad "Mount error" "squashfuse not found in your system!"
+             return 1
+    fi
+}
+
+lu_backupunmnt() {
+    [ -f "$1" ] && export LU_LWPFX="$1"
+    if [ ! -z "$(which 'fusermount' 2>/dev/null)" ]
+        then
+            if [ -f "$LU_LWPFX" ]
+                then
+                    LWPFX_NAME="$(basename "$LU_LWPFX")"
+                    LWPFX_MNT_DIR="$LW_DEF_TMP/${LWPFX_NAME}-$(echo -n "$LU_LWPFX"|sha256sum|head -c 8)"
+                    if [[ -d "$LWPFX_MNT_DIR" && ! -z "$(mount|grep -wo "$LWPFX_NAME")" ]]
+                        then
+                            if fusermount -u "$LWPFX_MNT_DIR"
+                                then
+                                    print_info notify "The prefix backup is successfully unmounted!"
+                                    try_rm "$LWPFX_MNT_DIR"
+                                else
+                                    print_error yad "Unmount error : $LWPFX_NAME" "Cannot unmount prefix backup! \nClose all programs accessing the backup and try to unmount again!"
+                                    if print_question "Try unmount" "Try to unmount prefix backup image again?"
+                                        then lu_backupunmnt "$LU_LWPFX"
+                                    fi
+                            fi
+                        else print_error yad "Unmount error" "Mount point not found! Backup is already unmounted!"
+                             return 1
+                    fi
+                else print_info notify "You must specify Lutris Wine prefix backup image!"
+                     select_lwpfx && lu_backupunmnt
+            fi
+        else print_error yad "Unmount error" "fusermount not found in your system!"
+             return 1
+    fi
+}
+
+
 if [ $(id -u) -eq 0 ]
     then
         print_error yad "Don't run Lutris Wine as root!"
@@ -5362,7 +5732,7 @@ if [ $(id -u) -eq 0 ]
             -uninstaller) lu_uninstaller ;;
             -debug) DEBUG=1 lu_start "$@" ;;
             -winetricks) winetricks "$@" ;;
-            -winemgr) lu_winemgr ;;
+            -winemgr) lu_winemgr "$@" ;;
             -openpfx) lu_openpfx ;;
             -killwine) lu_killwine "$@" ;;
             -killtray) lu_killtray ;;
@@ -5379,8 +5749,13 @@ if [ $(id -u) -eq 0 ]
             -update) lu_update "$@" ;;
             -config) lu_config ;;
             -appcfg) lu_appcfg ;;
+            -pfxbackup) lu_pfxbackup "$@" ;;
+            -pfxrestore) lu_pfxrestore ;;
+            -backupmnt) lu_backupmnt ;;
+            -backupunmnt) lu_backupunmnt ;;
             -*) lu_help ;;
             *) lu_start "$@" ;;
         esac
 fi
 try_rm /tmp/envbackup$ENVKEY &>/dev/null
+

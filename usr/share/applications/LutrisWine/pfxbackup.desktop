@@ -1,10 +1,10 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -shell %f
+Exec=lutris-wine -pfxbackup %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-MimeType=application/x-shellscript;text/x-shellscript;application/x-executable;inode/directory
-Name=SHELL
-Name[ru_RU]=SHELL
+MimeType=application/x-ms-dos-executable;application/x-msdos-program;inode/directory
+Name=Create prefix backup
+Name[ru_RU]=Создать бекап префикса
 NoDisplay=false
 StartupNotify=true
 Terminal=0
