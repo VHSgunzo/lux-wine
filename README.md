@@ -112,7 +112,6 @@ All Arch-based distributions
 - [x] Сreating/restoring backups of Wine prefixes
 - [x] Supports the creation of multiple backups with their own timestamps for the same prefix
 - [x] Сhoosing the compression method (xz and zstd) and compression level for backups (zstd and 1 lvl as default for backups)
-- [x] Supports the creation of multiple backups with their own timestamps for the same prefix
 - [x] Mounting/unmounting backups of Wine prefixes
 - [x] Supports mounting multiple backups at the same time with a separate control gui
 - [x] Redefining Wine options in settings GUI:

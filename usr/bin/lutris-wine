@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.72.r0"
+export LW_VERSION="0.72.r1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -2498,7 +2498,7 @@ lu_config() {
         fi
     }
     lwconfig_reset() {
-        try_rm "$LW_CFG" "$LW_DIR/.lwcfgchksum" "$LW_CENV" &>/dev/null
+        try_rm "$LW_CFG" "$LW_CENV" &>/dev/null
         BTNTLS=1 cleanrun "$FULLCMDLINE"
     }
     lwconfig_menu() {
@@ -2801,6 +2801,7 @@ lu_config() {
                     appcfg) lu_appcfg || BTNTLS=1 cleanrun "$FULLCMDLINE" ;;
             esac
     fi
+    try_rm "$LW_DIR/.lwcfgchksum" &>/dev/null
 }
 
 cleanrun() {
