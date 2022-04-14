@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.72.r1"
+export LW_VERSION="0.72.r2"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -5540,7 +5540,7 @@ lu_pfxbackup() {
                             return 1
                     fi
             fi
-        else print_error yad "Prefix backup" "Something is wrong with this prefix. It's not possible to start backup!"
+        else print_error yad "Prefix backup" "Something is wrong with this prefix.\n[ $WINEPREFIX ]\nIt's not possible to start backup!"
              return 1
     fi
 }
@@ -5662,7 +5662,7 @@ lu_backupmnt() {
                                                 break
                                             fi
                                     done &
-                                    if yad --form --title="Mounted image: $LWPFX_NAME" --text-align=center --center --fixed \
+                                    if yad --form --title="Mounted image : $LWPFX_NAME" --text-align=center --center --fixed \
                                            --window-icon="$LW_DEF_ICO" --button="UNMOUNT:0" --selectable-labels --on-top \
                                            --text="Mount point: [ $LWPFX_MNT_DIR ]" \
                                            --field="Open:FBTN" "$LWSHELL -c 'xdg-open "$LWPFX_MNT_DIR" &>/dev/null'" \
