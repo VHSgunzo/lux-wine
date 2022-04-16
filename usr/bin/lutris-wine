@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.72.r2"
+export LW_VERSION="0.72.r3"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'

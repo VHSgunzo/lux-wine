@@ -2,7 +2,7 @@
 Categories=Lutris Wine
 Exec=lutris-wine -backupunmnt %f
 Icon=/usr/share/lutris-wine/icon/default_icon.png
-MimeType=application/vnd.squashfs;application/octet-stream
+MimeType=application/vnd.squashfs
 Name=Unmount prefix backup
 Name[ru_RU]=Отмонтировать бекап префикса
 NoDisplay=false
