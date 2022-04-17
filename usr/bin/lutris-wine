@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.72.r3"
+export LW_VERSION="0.72.r4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -4000,7 +4000,7 @@ check_dxvk_async() {
 }
 
 get_proton_d3dlib() {
-    unset P_DXVK P_NVAPI P_VKD3D PROTON_D3D_VERSION
+    unset P_DXVK P_NVAPI P_VKD3D
     if [[ ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x32" && ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_IN_USE/x64" ]] \
         && [[ -d "$WINEDIR/lib/wine/dxvk" && -d "$WINEDIR/lib64/wine/dxvk" ]]
         then
@@ -4055,7 +4055,6 @@ check_proton_d3dlib() {
                                     fi
                             fi
                     done
-                    PROTON_D3D_VERSION="$WINE_IN_USE"
                     import_luwine_wcfg
                     check_def_wine
                     check_winepfx
@@ -4063,10 +4062,9 @@ check_proton_d3dlib() {
                     check_dxvk 1
                     check_dxvk-nvapi 1
                     check_vkd3d 1
-                    print_info notify "DXVK, DXVK-NVAPI and VKD3D from $PROTON_D3D_VERSION selected as default"
             fi
     fi
-    unset P_DXVK P_NVAPI P_VKD3D PROTON_D3D_VERSION
+    unset P_DXVK P_NVAPI P_VKD3D
 }
 
 check_dxvk() {
