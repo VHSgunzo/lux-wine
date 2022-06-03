@@ -10,10 +10,10 @@ check_deps() {
 }
 
 check_gi_patch() {
-    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch260"
+    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch270"
     if [ ! -d "$DIR" ]
         then
-            if try_download "https://github.com/VHSgunzo/gi_patch/releases/download/v2.6/gi_patch260.tar.gz" "$WINEPREFIX/drive_c/Program Files"
+            if try_download "https://github.com/VHSgunzo/gi_patch/releases/download/v2.7/gi_patch270.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                 then
                     if unpack_tar_gz "$DIR.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                         then
@@ -35,40 +35,52 @@ launch_helper() {
     CEXE1="$DATADIR/upload_crash.exe"
     CEXE2="$DATADIR/Plugins/crashreport.exe"
     sum=($(md5sum $FILE))
-    if [ "$sum" == "60c53487fdc21c4fe8891a5ab14df9cc" ]
+    if [ "$sum" == "87ff89ecca9fbd699e728e70e292ded7" ]
         then
             print_info notify "Patch is already applied!"
         else
-            if [ "${sum}" == "af82a646e947d2ba69bf0c7f2432454a" ]; then
-                reltype="os"
-                print_info notify "Applying patch for: International (OS) version"
-            else
-                print_error yad "Wrong file version\nmd5sum: ${sum}"
-                return 1
+            if [ "${sum}" == "8c8c3d845b957e4cb84c662bed44d072" ]
+                then
+                    reltype="os"
+                    print_info notify "Applying patch for: International (OS) version"
+                else
+                    print_error yad "Wrong file version\nmd5sum: ${sum}"
+                    return 1
             fi
             if print_question "Hereby you are violating the game's Terms of Service! \nDo you accept the risk and possible consequences?"
                 then
                     print_info notify "Setting up blocked servers"
-                    if [ -z "$(grep "Genshin logging servers" /etc/hosts)" ]; then
-                        print_info yad "Blocking logging servers in /etc/hosts\n\n0.0.0.0 log-upload-os.mihoyo.com\n0.0.0.0 overseauspider.yuanshen.com"
-                        pkexec sh -c 'echo -e "\n# Genshin logging servers (do not remove!)\n0.0.0.0 log-upload-os.mihoyo.com\n0.0.0.0 overseauspider.yuanshen.com\n" >> /etc/hosts'
-                    else
-                        print_info notify "Logging servers are already blocked. Skip."
+                    if [ -z "$(grep "Genshin logging servers" /etc/hosts)" ]
+                        then
+                            print_info yad "Blocking logging servers in /etc/hosts\n\n0.0.0.0 log-upload-os.hoyoverse.com\n0.0.0.0 overseauspider.yuanshen.com"
+                            pkexec sh -c 'echo -e "\n# Genshin logging servers (do not remove!)\n0.0.0.0 log-upload-os.hoyoverse.com\n0.0.0.0 overseauspider.yuanshen.com\n" >> /etc/hosts'
+                        else
+                            if [ ! -z "$(grep -A1 'Genshin logging servers' /etc/hosts|grep -o 'log-upload-os.mihoyo.com' /etc/hosts)" ]
+                                then
+                                    print_info yad "Need to change logging server in /etc/hosts! \nlog-upload-os.mihoyo.com\nto\nlog-upload-os.hoyoverse.com"
+                                    pkexec sh -c "sed -i 's/log-upload-os.mihoyo.com/log-upload-os.hoyoverse.com/g' /etc/hosts"
+                                    print_info notify "Logging server changed in /etc/hosts!"
+                                else
+                                    print_info notify "Logging servers are already blocked. Skip."
+                            fi
                     fi
-                    if [ -z "$(grep "Optional Unity proxy" /etc/hosts)" ]; then
-                        if print_question "Blocking common Unity proxy/cdn servers in /etc/hosts\nIf issues arise in other games consider commenting a few lines to check what makes the difference.\n\n0.0.0.0 prd-lender.cdp.internal.unity3d.com\n0.0.0.0 thind-prd-knob.data.ie.unity3d.com\n0.0.0.0 thind-gke-usc.prd.data.corp.unity3d.com\n0.0.0.0 cdp.cloud.unity3d.com\n0.0.0.0 remote-config-proxy-prd.uca.cloud.unity3d.com\n\nBlock Unity proxy/cdn servers?"
-                            then
-                                pkexec sh -c 'echo -e "# Optional Unity proxy/cdn servers\n0.0.0.0 prd-lender.cdp.internal.unity3d.com\n0.0.0.0 thind-prd-knob.data.ie.unity3d.com\n0.0.0.0 thind-gke-usc.prd.data.corp.unity3d.com\n0.0.0.0 cdp.cloud.unity3d.com\n0.0.0.0 remote-config-proxy-prd.uca.cloud.unity3d.com\n" >> /etc/hosts'
-                        fi
-                    else
-                        print_info notify "Unity proxy/cdn servers are already blocked. Skip."
+                    if [ -z "$(grep "Optional Unity proxy" /etc/hosts)" ]
+                        then
+                            if print_question "Blocking common Unity proxy/cdn servers in /etc/hosts\nIf issues arise in other games consider commenting a few lines to check what makes the difference.\n\n0.0.0.0 prd-lender.cdp.internal.unity3d.com\n0.0.0.0 thind-prd-knob.data.ie.unity3d.com\n0.0.0.0 thind-gke-usc.prd.data.corp.unity3d.com\n0.0.0.0 cdp.cloud.unity3d.com\n0.0.0.0 remote-config-proxy-prd.uca.cloud.unity3d.com\n\nBlock Unity proxy/cdn servers?"
+                                then
+                                    pkexec sh -c 'echo -e "# Optional Unity proxy/cdn servers\n0.0.0.0 prd-lender.cdp.internal.unity3d.com\n0.0.0.0 thind-prd-knob.data.ie.unity3d.com\n0.0.0.0 thind-gke-usc.prd.data.corp.unity3d.com\n0.0.0.0 cdp.cloud.unity3d.com\n0.0.0.0 remote-config-proxy-prd.uca.cloud.unity3d.com\n" >> /etc/hosts'
+                            fi
+                        else
+                            print_info notify "Unity proxy/cdn servers are already blocked. Skip."
                     fi
                     print_info notify "Renaming the crash reporter(s)"
-                    if [[ -e "$CEXE1" ]]; then
-                        try_mv "$CEXE1" "$CEXE1.bak"
+                    if [[ -e "$CEXE1" ]]
+                        then
+                            try_mv "$CEXE1" "$CEXE1.bak"
                     fi
-                    if [[ -e "$CEXE2" ]]; then
-                        try_mv "$CEXE2" "$CEXE2.bak"
+                    if [[ -e "$CEXE2" ]]
+                        then
+                            try_mv "$CEXE2" "$CEXE2.bak"
                     fi
                     try_cp "$DIR/mhyprot2_running.reg" ./
                     print_info notify "Patching UnityPlayer"
@@ -78,6 +90,7 @@ launch_helper() {
                             print_info notify "Patch applied! Enjoy the game."
                         else
                             try_mv "$FILE.bak" "$FILE"
+                            print_error yad "Patch not applied!"
                             return 1
                     fi
                 else
