@@ -43,7 +43,7 @@ All Arch-based distributions
 - [x] Esync
 - [x] Fsync (if linux kernel support)
 - [x] Vsync settings
-- [x] AMD FidelityFX Super Resolution settings (if Wine support)
+- [x] [AMD FidelityFX Super Resolution settings (if Wine support)](https://github.com/GloriousEggroll/proton-ge-custom/releases/tag/GE-Proton7-24)
 - [x] BattleEye runtime (if Wine support)
 - [x] EasyAntiCheat runtime (if Wine support)
 - [x] NVIDIA Prime Render Offload
@@ -93,7 +93,6 @@ All Arch-based distributions
 - [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/usr/share/lutris-wine/db/LeagueClient.lwdb)
 - [x] Custom loading bar animation
 - [x] Old OpenGL String
-- [x] Disable Vulkan Async
 - [x] Wine virtual desktop
 - [x] Disable no primary displays
 - [x] Restore resolution
@@ -106,7 +105,6 @@ All Arch-based distributions
 - [x] pre_launch and post_launch functions
 - [x] Checking and usage anticheat libraries and Protons in native Steam (selected automatically if no other versions of Wine and anticheats are installed)
 - [x] [WINE-NVML](https://github.com/Saancreed/wine-nvml) (automatic download if it does not exist in [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi/releases)
-- [x] [Faking current resolution](https://github.com/GloriousEggroll/proton-ge-custom/pull/52) (if Wine support WINE_FULLSCREEN_FAKE_CURRENT_RES and depends on FSR)
 - [x] [LatencyFleX](https://github.com/ishitatsuyuki/LatencyFleX) (depends on [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi) >=0.5.3)
 - [x] Nvidia Resizable BAR (if your system support)
 - [x] Сreating/restoring backups of Wine prefixes
