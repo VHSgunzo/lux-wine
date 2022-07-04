@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.73.r0"
+export LW_VERSION="0.73.r1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -2510,7 +2510,7 @@ lu_config() {
             --field="DXR/RTX version::CB" "$(echo -e "$DXR\n$(echo -e "$DXR\n$DXRLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="VKD3D config::CBE" "$(echo -e "$VKD3DCFG\n$(echo -e "$VKD3DCFG\n$VKD3DCFGLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="MUST HAVE DLL::CBE" "$(echo -e "$MUST_HAVE_DLL\n$(echo -e "$MUST_HAVE_DLL\n$MHAVEDLLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="AMD FidelityFX Super Resolution 1.0::CBE" "$(echo -e "$FSR_MODE\n$(echo -e "$FSR_MODE\n$FSRMODELST\n Disabled"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="AMD FidelityFX Super Resolution 1.0::CB" "$(echo -e "$FSR_MODE\n$(echo -e "$FSR_MODE\n$FSRMODELST\n Disabled"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Wine prefix sandbox:CHK" "$WINE_SANDBOX" \
             --field="Esync:CHK" "$ESYNC" \
             --field="Fsync:CHK" "$FSYNC" \
