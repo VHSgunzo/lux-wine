@@ -1,6 +1,6 @@
 # lutris-wine - Easy launch of your Windows applications and games with Wine/Proton
 
-VERSION := 0.74.r1
+VERSION := 0.74.r3
 
 INSTALL	:= install
 RM	:= rm
