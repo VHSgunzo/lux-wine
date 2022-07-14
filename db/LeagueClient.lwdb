@@ -1,0 +1,114 @@
+#!/bin/bash
+check_win_version '10'
+unset -f loadbar_cover
+
+check_deps() {
+    if [ -z "$(which openssl 2>/dev/null)" ]
+        then
+            dialog --warning --text="Install openssl in your system!"
+            return 1
+    fi
+}
+
+dialog() {
+    zenity "$@" --window-icon="$LW_DEF_ICO" --width="400" --title="Lutris Wine LOL compatibility check"
+}
+
+final_check() {
+    if [ "$(cat /proc/sys/abi/vsyscall32)" -ne 0 ]; then
+        dialog --warning --text="As far as this script can detect, your system is not configured to work with League's anticheat. Please verify that you can get into the practice too before playing a multiplayer game."
+        return 1
+    fi
+}
+
+syscall_check() {
+    # If abi.vsyscall32=0 is already set, no need to do anything
+    if [ "$(cat /proc/sys/abi/vsyscall32)" -eq 0 ]
+        then
+            return 0
+    fi
+    if grep -E -x -q "abi.vsyscall32( )?=( )?0" /etc/sysctl.conf
+        then
+            if dialog --question --text="It looks like you already configured your system to work with League anticheat, and saved the setting to persist across reboots. However, for some reason the persistence part did not work.\n\nFor now, would you like to enable the setting again until the next reboot?"
+                then
+                    pkexec sh -c 'sysctl -w abi.vsyscall32=0'
+                    return 0
+                else
+                    return 1
+            fi
+    fi
+
+    once="Change setting until next reboot"
+    persist="Change setting and persist after reboot"
+    manual="Show me the commands; I'll handle it myself"
+
+    if dialog --question --text="League of Legends' anticheat requires using a modified version of wine (wine-lol) and changing a system setting. Otherwise, the game will crash after champion select.\nNote: The setting (abi.vsyscall32=0) may reduce the performance of some 32 bit applications.\n\nWould you like to change the setting now?"
+        then
+            # I tried to embed the command in the dialog and run the output, but
+            # parsing variables with embedded quotes is an excercise in frustration.
+            RESULT=$(dialog --list --radiolist --height="200" \
+                --column="" --column="Command" \
+                "TRUE" "$once" \
+                "FALSE" "$persist" \
+                "FALSE" "$manual")
+
+            case "$RESULT" in
+                "$once")
+                    pkexec sh -c 'sysctl -w abi.vsyscall32=0'
+                    return 0 ;;
+                "$persist")
+                    pkexec sh -c 'echo "abi.vsyscall32 = 0" >> /etc/sysctl.conf && sysctl -p'
+                    return 0 ;;
+                "$manual")
+                    dialog --info --no-wrap --text="To change the setting (a kernel parameter) until next boot, run:\n\nsudo sh -c 'sysctl -w abi.vsyscall32=0'\n\nTo persist the setting between reboots, run:\n\nsudo sh -c 'echo \"abi.vsyscall32 = 0\" >> /etc/sysctl.conf &amp;&amp; sysctl -p'"
+                    # Anyone who wants to do it manually doesn't need another warning
+                    final_check
+                    return 1 ;;
+                *)
+                    print_error "League of Legends" "Dialog canceled or unknown option selected $RESULT"
+                    return 1 ;;
+            esac
+    fi
+    final_check
+}
+
+launch_helper() {
+    GIF_FILE="/usr/share/lutris-wine/gif/league-of-legends.gif"
+    yad --picture --filename="$GIF_FILE" --no-buttons --undecorated --center --skip-taskbar --on-top \
+        --width="$(file "$GIF_FILE"|awk '{print $7 + 20}')" --height="$(file "$GIF_FILE"|awk '{print $9 + 20}')" $ENVKEY  Lutris Wine &>/dev/null &
+    LOADBARPID="$(pgrep -fa yad|grep "$(basename "$GIF_FILE")"|grep "$ENVKEY"|awk '{print$1}')"
+    process=LeagueClientUx.exe
+    uxpid=$(timeout 4m sh -c "until pidof ${process}; do sleep 1; done")
+    if [[ ! -n $uxpid ]]; then
+    print_error yad "League of Legends" "Could not find process ${process}"
+    exit 1
+    fi
+    print_info notify "League of Legends" "LeagueClientUx pid: ${uxpid}"
+    port=$(xargs -0 < /proc/${uxpid}/cmdline \
+    | sed -n 's/.*--app-port=\([[:digit:]]*\).*/\1/p')
+    if [[ ! -n $port ]]; then
+    print_error yad "League of Legends" "Could not find port"
+    exit 1
+    fi
+    print_info notify "League of Legends" "Waiting for port ${port}"
+
+    kill -STOP ${uxpid} 2>/dev/null
+    timeout 5m /bin/bash -c "
+    until openssl s_client -ssl3 -connect :${port} <<< Q > /dev/null 2>&1; do
+    sleep 1
+    done"
+    kill -CONT ${uxpid} 2>/dev/null
+    kill "$LOADBARPID" 2>/dev/null
+}
+
+if check_deps
+    then
+        if syscall_check
+            then
+                launch_helper &
+            else
+                exit 1
+        fi
+    else
+        exit 1
+fi

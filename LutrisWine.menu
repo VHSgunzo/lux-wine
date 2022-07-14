@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+"http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
+<Menu>
+    <Name>Applications</Name>
+    <Menu>
+        <Name>LutrisWine</Name>
+        <Directory>LutrisWine.directory</Directory>
+        <Include>
+            <Category>Lutris Wine</Category>
+        </Include>
+    </Menu>
+    <Menu>
+        <Name>LutrisWineApp</Name>
+        <Directory>LutrisWineApp.directory</Directory>
+        <Include>
+                <Category>Lutris Wine App</Category>
+        </Include>
+    </Menu>
+</Menu>

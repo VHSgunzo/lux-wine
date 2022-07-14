@@ -1,0 +1,12 @@
+[Desktop Entry]
+Categories=Lutris Wine
+Exec=lutris-wine -winemgr
+Icon=/usr/share/lutris-wine/icon/default_icon.png
+Name=Wine manager
+Name[ru_RU]=Wine менеджер
+NoDisplay=false
+StartupNotify=true
+Terminal=0
+TerminalOptions=--hold
+Type=Application
+X-KDE-SubstituteUID=false

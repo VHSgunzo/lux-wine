@@ -1,0 +1,4 @@
+#!/bin/bash
+check_win_version '10'
+[ ! -z "$(lspci|grep -o 'NVIDIA')" ] \
+&& export WINE_HIDE_NVIDIA_GPU=1

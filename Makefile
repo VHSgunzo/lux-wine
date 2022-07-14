@@ -1,19 +1,41 @@
+# lutris-wine - Easy launch of your Windows applications and games with Wine/Proton
+
+VERSION := 0.74.r0
+
+INSTALL	:= install
+RM	:= rm
+LS	:= ls
+
 install:
-	rm -rfv /usr/bin/lutris-wine /etc/xdg/menus/applications-merged/LutrisWine.menu /usr/share/applications/LutrisWine /usr/share/desktop-directories/LutrisWine* /usr/share/kservices5/ServiceMenus/LutrisWine* /usr/share/lutris-wine /usr/share/licenses/lutris-wine
-	mkdir -p /usr/share/kservices5/ServiceMenus
-	mkdir -p /usr/share/licenses/lutris-wine
-	mkdir -p /usr/share/desktop-directories
-	mkdir -p /etc/xdg/menus/applications-merged
-	cp -rfv usr/bin/lutris-wine /usr/bin/lutris-wine
-	cp -rfv etc/xdg/menus/applications-merged/LutrisWine.menu /etc/xdg/menus/applications-merged/LutrisWine.menu
-	cp -rfv usr/share/applications/LutrisWine /usr/share/applications/
-	cp -rfv usr/share/desktop-directories/LutrisWineApp.directory /usr/share/desktop-directories/LutrisWineApp.directory
-	cp -rfv usr/share/desktop-directories/LutrisWine.directory /usr/share/desktop-directories/LutrisWine.directory
-	cp -rfv usr/share/kservices5/ServiceMenus/LutrisWineService.desktop /usr/share/kservices5/ServiceMenus/LutrisWineService.desktop
-	cp -rfv usr/share/lutris-wine /usr/share/
-	cp -rfv LICENSE /usr/share/licenses/lutris-wine/LICENSE
+	$(INSTALL) -Dm755 lutris-wine "$(DESTDIR)/usr/bin/lutris-wine"
+	$(INSTALL) -Dm644 LutrisWine.menu "$(DESTDIR)/etc/xdg/menus/applications-merged/LutrisWine.menu"
+	$(INSTALL) -Dm644 LutrisWineService.desktop "$(DESTDIR)/usr/share/kservices5/ServiceMenus/LutrisWineService.desktop"
+	$(INSTALL) -Dm644 LICENSE "$(DESTDIR)/usr/share/licenses/lutris-wine/LICENSE"
+	(IFS=$$'\n' ; for APP in $$($(LS) -1 applications) ; do \
+	$(INSTALL) -Dm644 "applications/$$APP" "$(DESTDIR)/usr/share/applications/LutrisWine/$$APP" ; \
+	done)
+	(IFS=$$'\n' ; for DIR in $$($(LS) -1 directories) ; do \
+	$(INSTALL) -Dm644 "directories/$$DIR" "$(DESTDIR)/usr/share/desktop-directories/$$DIR" ; \
+	done)
+	(IFS=$$'\n' ; for ICON in $$($(LS) -1 icons) ; do \
+	$(INSTALL) -Dm644 "icons/$$ICON" "$(DESTDIR)/usr/share/lutris-wine/icons/$$ICON" ; \
+	done)
+	(IFS=$$'\n' ; for GIF in $$($(LS) -1 gif) ; do \
+	$(INSTALL) -Dm644 "gif/$$GIF" "$(DESTDIR)/usr/share/lutris-wine/gif/$$GIF" ; \
+	done)
+	(IFS=$$'\n' ; for THEME in $$($(LS) -1 themes) ; do \
+	$(INSTALL) -Dm644 "themes/$$THEME" "$(DESTDIR)/usr/share/lutris-wine/themes/$$THEME" ; \
+	done)
+	(IFS=$$'\n' ; for DB in $$($(LS) -1 db) ; do \
+	$(INSTALL) -Dm644 "db/$$DB" "$(DESTDIR)/usr/share/lutris-wine/db/$$DB" ; \
+	done)
 
 uninstall:
-	rm -rfv /usr/bin/lutris-wine /etc/xdg/menus/applications-merged/LutrisWine.menu /usr/share/applications/LutrisWine /usr/share/desktop-directories/LutrisWine* /usr/share/kservices5/ServiceMenus/LutrisWine* /usr/share/lutris-wine /usr/share/licenses/lutris-wine
+	$(RM) -rfv "$(DESTDIR)/usr/bin/lutris-wine"
+	$(RM) -rfv "$(DESTDIR)/etc/xdg/menus/applications-merged/LutrisWine.menu"
+	$(RM) -rfv "$(DESTDIR)/usr/share/applications/LutrisWine"
+	$(RM) -rfv "$(DESTDIR)/usr/share/desktop-directories/LutrisWine"*
+	$(RM) -rfv "$(DESTDIR)/usr/share/kservices5/ServiceMenus/LutrisWine"*
+	$(RM) -rfv "$(DESTDIR)/usr/share/lutris-wine /usr/share/licenses/lutris-wine"
 
 .PHONY: install uninstall
