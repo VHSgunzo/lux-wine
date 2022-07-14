@@ -1,7 +1,7 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
-pkgname=lutris-wine-git
-pkgver=0.74.r0
-pkgrel=1
+pkgname='lutris-wine-git'
+pkgver='0.74.r1'
+pkgrel='1'
 pkgdesc='Easy launch of your Windows applications and games with Wine/Proton'
 arch=('any')
 url='https://github.com/VHSgunzo/lutris-wine'
