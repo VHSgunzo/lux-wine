@@ -1,3 +1,0 @@
-#!/bin/bash
-check_win_version '10'
-check_exe_args '+com_skipIntroVideo 1 +com_skipKeyPressOnLoadScreens 1 +m_smoothing 0'
