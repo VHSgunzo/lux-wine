@@ -1,5 +1,5 @@
 #!/bin/bash
-export LW_VERSION="0.74.r3"
+export LW_VERSION="0.74.r4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -1447,6 +1447,12 @@ create_shortcut() {
             echo "StartupNotify=true" >> "$DESKF"
             echo "Path="$SHRT_PATH"" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Actions=Remove" >> "$DESKF"
+            echo -e "\n[Desktop Action Remove]" >> "$DESKF"
+            echo "Name=Remove ${SHRT_NAME} from menu" >> "$DESKF"
+            echo "Name[ru_RU]=Удалить ${SHRT_NAME} из меню" >> "$DESKF"
+            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Exec=\"$LW_SOURCE\" \"-rmapp '$1'\"" >> "$DESKF"
             chmod u+x "$DESKF"
             echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}completed!\n$RESETCOLOR"
             if print_question "Shortcuts Creator" \
@@ -1644,6 +1650,19 @@ lu_debug() {
             if [ -n "$DGVOODOO2_VERSION" ]
                 then
                     echo "[ DGVOODOO2 version ] : $DGVOODOO2_VERSION" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            if [ "$WINE_NVML" == 1 ]
+                then
+                    echo "[ WINE-NVML ] : ON" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                else
+                    echo "[ WINE-NVML ] : OFF" >> "$TMP_DEB"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            fi
+            if [ -n "$WINE_NVML_VERSION" ]
+                then
+                    echo "[ WINE-NVML version ] : $WINE_NVML_VERSION" >> "$TMP_DEB"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
             fi
             if [ "$BATTLEYE" == 1 ]
@@ -3199,16 +3218,25 @@ lu_rmapp() {
     LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$LW_MENU_APP_DIR" 2>/dev/null)"
     if [[ -n "$(echo "$LWAPPSHRT"|head -1)" ]]
         then
-            if [ -f "$LU_EXE" ]
+            [ -n "$(echo "$2"|grep -o '\.exe$')" ] && LU_EXE="$2"
+            if [[ -n "$LU_EXE" && ! -d "$LU_EXE" && ! -L "$LU_EXE" ]]
                 then
-                    LWAPPRM="$(grep "$LU_EXE" -lr "$LW_MENU_APP_DIR" 2>/dev/null)"
-                    if [[ -n "$LWAPPRM" && -n "$(grep -wo "Lutris Wine App" "$LWAPPRM")"  ]]
+                    (IFS=$'\n' ; LWAPPSRM=($(grep "$LU_EXE" -lr "$LW_MENU_APP_DIR" 2>/dev/null))
+                    if [ -n "${LWAPPSRM[*]}" ]
                         then
-                            try_rm "$LWAPPRM"
+                            for LWAPPRM in ${LWAPPSRM[*]}
+                                do
+                                    if [ -n "$(grep -wo "Lutris Wine App" "$LWAPPRM")"  ]
+                                        then
+                                            try_rm "$LWAPPRM"
+                                        else
+                                            print_error yad "Shortcuts Remover" "$LWAPPRM is not a Lutris Wine app!"
+                                    fi
+                            done
                             updmenuapp
                         else
-                            print_error yad "Shortcuts Remover" "Lutris Wine app [ $EXE_FULL_NAME ] not found in menu!"
-                    fi
+                            print_error yad "Shortcuts Remover" "$LU_EXE not found in the menu!"
+                    fi)
                 else
                     LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep "^Name=" {}|sed 's/^Name=//g'|sort -u|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
                     yad --title "Lutris Wine Shortcuts Remover" --list --checklist --separator "\n" --column="" --column="Select shortcuts for remove:" \
@@ -3333,36 +3361,36 @@ lu_help() {
         print_info yad "Lutris Wine usage info" \
         "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LW_NAME {$LW_NAME argument} blabla.exe {exe arguments} \n\n \
         -explorer \t\t\t\t\t Wine explorer\n \
-        -cmd \t\t\t\t\t\t Open CMD or open file in CMD\n \
-        -shell \t\t\t\t\t\t Open SHELL or open file in SHELL\n \
+        -cmd \t\t\t\t\t Open CMD or open file in CMD\n \
+        -shell \t\t\t\t\t Open SHELL or open file in SHELL\n \
         -config \t\t\t\t\t Settings\n \
         -appcfg \t\t\t\t\t Apps Settings\n \
         -regedit \t\t\t\t\t Registry editor\n \
         -control \t\t\t\t\t Control panel\n \
         -winecfg \t\t\t\t\t Wine settings\n \
-        -winemgr {delonly} \t\t Wine manager\n \
+        -winemgr {delonly} \t\t\t Wine manager\n \
         -taskmgr \t\t\t\t\t Task manager\n \
         -uninstaller \t\t\t\t Wine uninstaller\n \
-        -winetricks {arguments} \t Winetricks\n \
+        -winetricks {arguments} \t\t Winetricks\n \
         -openpfx \t\t\t\t\t Open drive C:\n \
         -killwine \t\t\t\t\t Kill Wine processes\n \
         -killtray \t\t\t\t\t Kill tray\n \
         -killexe \t\t\t\t\t Kill running EXE\n \
         -killshell \t\t\t\t\t Kill SHELL\n \
-        -exit \t\t\t\t\t\t Force Exit\n \
+        -exit \t\t\t\t\t Force Exit\n \
         -clearpfx \t\t\t\t\t Clear prefix\n \
         -rmapp \t\t\t\t\t Remove menu app\n \
         -shortcut \t\t\t\t\t Create shortcut\n \
         -addtolu \t\t\t\t\t Add to Lutris\n \
         -debug \t\t\t\t\t DEBUG\n \
-        -help \t\t\t\t\t\t Show this usage info\n \
+        -help \t\t\t\t\t Show this usage info\n \
         -version \t\t\t\t\t Show version info\n \
-        -tray {noclose} \t\t\t Tray\n \
-        -init \t\t\t\t\t\t Forced initialization\n \
+        -tray {noclose} \t\t\t\t Tray\n \
+        -init \t\t\t\t\t Forced initialization\n \
         -pfxbackup {xz}\t\t\t Create prefix backup\n \
         -pfxrestore \t\t\t\t Restore prefix from backup\n \
         -backupmnt \t\t\t\t Mount prefix backup\n \
-        -backupunmnt \t\t\t Unmount prefix backup\n \
+        -backupunmnt \t\t\t\t Unmount prefix backup\n \
         -update {all} \t\t\t\t Runtime updater\n \
 {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}\n \
 {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}\n \
@@ -5394,7 +5422,7 @@ makesquash_zstd() {
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").zst.$extension"
                     print_info "Making SquashFS ZSTD image : [ $squashmane ]\n[ FROM ]: [ $squashsource ] [ COMPRESS LVL ]: $compres_lvl \n[  TO  ]: [ ${squashpath}$squashmane ]"
-                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp zstd -Xcompression-level $compres_lvl|\
+                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp zstd -Xcompression-level $compres_lvl -no-xattrs|\
                     settingbar_nostdout "Making SquashFS ZSTD image : $squashmane" "From : $squashsource \nTo : ${squashpath}$squashmane \nCompression level : $compres_lvl"
                     [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
                     && return 1 || print_info "Making SquashFS ZSTD image completed!" && return 0
@@ -5428,7 +5456,7 @@ makesquash_xz() {
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").xz.$extension"
                     print_info "Making SquashFS XZ image : [ $squashmane ]\n[ FROM ]: [ $squashsource ]\n[  TO  ]: [ ${squashpath}$squashmane ]"
-                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp xz|\
+                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp xz -no-xattrs|\
                     settingbar_nostdout "Making SquashFS XZ image : $squashmane" "From : $squashsource \nTo : ${squashpath}$squashmane"
                     [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
                     && return 1 || print_info "Making SquashFS XZ image completed!" && return 0
@@ -5556,25 +5584,20 @@ lu_pfxrestore() {
         select_lwpfx "$1" && lu_pfxrestore
     }
     pfxrestore() {
-        RESTORE_READY=1
-        if [ "$1" != 'force' ]
+        try_mkdir "$LW_DEF_TMP"
+        try_mkdir "$LW_DEF_WPFXS_DIR"
+        try_rm "${LW_DEF_TMP}/$LWPFX_NAME" &>/dev/null
+        if unpack_squash "$LU_LWPFX" "$LW_DEF_TMP"
             then
-                if ! print_question "Prefix restore" "Are you sure you want to restore this prefix backup image?\n[ $LU_LWPFX ]"
-                    then
-                        unset RESTORE_READY
-                fi
-        fi
-        if [ "$RESTORE_READY" == 1 ]
-            then
-                try_mkdir "$LW_DEF_WPFXS_DIR"
-                if unpack_squash "$LU_LWPFX" "$LW_DEF_WPFXS_DIR"
-                    then
-                        print_info notify "The prefix backup is successfully restored!"
-                        xdg-open "$PFXRESTORE_DIR" &>/dev/null
-                    else
-                        print_error yad "Prefix restore error" "Cannot restore prefix backup!"
-                        return 1
-                fi
+                try_rm "$PFXRESTORE_DIR" &>/dev/null
+                try_mv "${LW_DEF_TMP}/$LWPFX_NAME" "${LW_DEF_WPFXS_DIR}/"
+                print_info notify "The prefix backup is successfully restored!"
+                xdg-open "$PFXRESTORE_DIR" &>/dev/null
+                return 0
+            else
+                try_rm "${LW_DEF_TMP}/$LWPFX_NAME" &>/dev/null
+                print_error yad "Prefix restore error" "Cannot restore prefix backup!"
+                return 1
         fi
     }
     if [ -f "$LU_LWPFX" ]
@@ -5586,12 +5609,15 @@ lu_pfxrestore() {
                     print_error notify "The recovery directory is not empty!"
                     print_info "[ $PFXRESTORE_DIR ]"
                     if print_question "Prefix restore" \
-                    "The recovery directory is not empty.\n[ $PFXRESTORE_DIR ] \nAre you sure you want to continue? \nIt will be deleted before restoring data from the backup!"
+                    "The recovery directory is not empty.\n[ $PFXRESTORE_DIR ] \nAre you sure you want to continue? \nIt will be overwritten during data recovery from backup!"
                         then
-                            try_rm "$PFXRESTORE_DIR"
-                            pfxrestore 'force'||return 1
+                            pfxrestore||return 1
                     fi
-                else pfxrestore||return 1
+                else
+                    if print_question "Prefix restore" "Are you sure you want to restore this prefix backup image?\n[ $LU_LWPFX ]"
+                        then
+                            pfxrestore||return 1
+                    fi
             fi
         else
             LWPFX_NAME="$(basename "$WINEPREFIX")"
@@ -5718,7 +5744,7 @@ if [ $(id -u) -eq 0 ]
             -killshell) lu_killshell "$@" ;;
             -exit) lu_exit "$@" ;;
             -clearpfx) lu_clearpfx "$@" ;;
-            -rmapp) lu_rmapp ;;
+            -rmapp) lu_rmapp "$@" ;;
             -shortcut) lu_shortcut ;;
             -addtolu) ADDTOLU=1 lu_shortcut ;;
             -help) lu_help ;;
