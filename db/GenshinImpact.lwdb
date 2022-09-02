@@ -10,7 +10,7 @@ check_deps() {
 }
 
 check_gi_patch() {
-    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch280"
+    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch300"
     if [ ! -d "$DIR" ]
         then
             if try_download "https://github.com/niizam/gi_patch/releases/download/v3.0/gi_patch300.tar.gz" "$WINEPREFIX/drive_c/Program Files"
