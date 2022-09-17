@@ -1,5 +1,5 @@
-#!/bin/bash
-export LW_VERSION="0.74.r5"
+#!/usr/bin/env bash
+export LW_VERSION="0.74.r6"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -10,6 +10,14 @@ export RESETCOLOR='\033[1;00m'
 
 export ENVKEY=$RANDOM
 export GDK_BACKEND="x11"
+if [ -n "$RUNDIR" ]
+    then
+        export LW_EDITOR="pluma"
+        export LW_FLMGR="thunar"
+    else
+        export LW_EDITOR="xdg-open"
+        export LW_FLMGR="xdg-open"
+fi
 [ ! -n "$LW_SOURCE" ] && export LW_SOURCE="$0"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LutrisWine"
@@ -93,10 +101,6 @@ check_def_config() {
     [ ! -n "$BUILD_GIT_RELEASE_URL" ] && export BUILD_GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
     [ ! -n "$RESHADE_GIT_RELEASE_URL" ] && export RESHADE_GIT_RELEASE_URL="https://github.com/VHSgunzo/reshade/releases"
     [ ! -n "$NVML_GIT_RELEASE_URL" ] && export NVML_GIT_RELEASE_URL="https://github.com/VHSgunzo/nvml/releases"
-    [ ! -n "$WLU_GIT_RELEASE_URL" ] && export WLU_GIT_RELEASE_URL="https://github.com/lutris/wine/releases"
-    [ ! -n "$PGE_GIT_RELEASE_URL" ] && export PGE_GIT_RELEASE_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases"
-    [ ! -n "$WGE_GIT_RELEASE_URL" ] && export WGE_GIT_RELEASE_URL="https://github.com/GloriousEggroll/wine-ge-custom/releases"
-    [ ! -n "$WK4_GIT_RELEASE_URL" ] && export WK4_GIT_RELEASE_URL="https://github.com/Kron4ek/Wine-Builds/releases"
     [ ! -n "$DXVK_VERSION" ] && export DXVK_VERSION="latest"
     [ ! -n "$VKD3D_VERSION" ] && export VKD3D_VERSION="latest"
     [ ! -n "$DXVK_NVAPI_VERSION" ] && export DXVK_NVAPI_VERSION="latest"
@@ -203,7 +207,7 @@ check_lupid() {
 
 check_tray() {
     unset TRAY_PID FORCE_TRAY CHK_TRAY_PID CHK_FORCE_TRAY
-    CHK_TRAY_PID="$(pgrep -fa yad|grep "\-\-notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
+    CHK_TRAY_PID="$(pgrep -fa yad|grep "\--notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
     CHK_FORCE_TRAY="$(pgrep -fa "$LW_NAME"|grep -o "noclose")"
     [ -n "$CHK_TRAY_PID" ] && export TRAY_PID="$CHK_TRAY_PID"
     [ -n "$CHK_FORCE_TRAY" ] && export FORCE_TRAY="$CHK_FORCE_TRAY"
@@ -242,7 +246,12 @@ check_luwine_sh_pid() {
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
-    CHK_EXES="$(pgrep -fa ".ex"|grep -iF ".ex"|sed "/windows/d;/$LW_NAME/d;/grep/d;/yad/d;/winedevice/d;/^$/d;/^[[:space:]]*$/d;s/[[:blank:]]*$//")"
+    if [ -n "$RUNIMAGE" ]
+        then
+            CHK_EXES="$(pgrep -fa ".ex"|grep -iF ".ex"|grep -v "$RUNDIR"|grep -v "$(basename "$RUNIMAGE")"|grep -v " bash"|sed "/windows/d;/$LW_NAME/d;/grep/d;/yad/d;/winedevice/d;/^$/d;/^[[:space:]]*$/d;s/[[:blank:]]*$//")"
+        else
+            CHK_EXES="$(pgrep -fa ".ex"|grep -iF ".ex"|sed "/windows/d;/$LW_NAME/d;/grep/d;/yad/d;/winedevice/d;/^$/d;/^[[:space:]]*$/d;s/[[:blank:]]*$//")"
+    fi
     if [ -n "$CHK_EXES" ]
         then
             export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$1}')"
@@ -285,26 +294,7 @@ check_compositor() {
     fi
 }
 
-check_mono_gecko() {
-    if [ "$WINE_VERSION" != "System" ]
-        then
-            try_mkdir "$LW_RUNTIME_DIR/gecko"
-            try_mkdir "$LW_RUNTIME_DIR/mono"
-            for mono_gecko in "mono" "gecko"
-                do
-                    if [ ! -d "$WINEDIR/share/wine/$mono_gecko" ]
-                        then
-                            try_ln "$LW_RUNTIME_DIR/$mono_gecko" "$WINEDIR/share/wine/"
-                    elif ! check_symlink "$WINEDIR/share/wine/$mono_gecko" && [[ -d "$WINEDIR/share/wine/$mono_gecko" ]]
-                        then
-                            if try_cp "$WINEDIR/share/wine/$mono_gecko" "$LW_RUNTIME_DIR/"
-                                then
-                                    try_rm "$WINEDIR/share/wine/$mono_gecko"
-                                    try_ln "$LW_RUNTIME_DIR/$mono_gecko" "$WINEDIR/share/wine/"
-                            fi
-                    fi
-            done
-    fi
+check_netcore() {
     if [ "$DIS_NETCORE" == 1 ]
         then
             export WMONOVER="Disabled"
@@ -369,8 +359,8 @@ check_git_release() {
 }
 
 check_network_status() {
-    if ping -4 -q -c1 -W0.5 8.8.8.8 &>/dev/null
-        then curl -Is "http://www.github.com" &>/dev/null && export NETSTATUS=1 || export NETSTATUS=0
+    if nc -zw1 github.com 443 &>/dev/null
+        then export NETSTATUS=1
         else export NETSTATUS=0
     fi
 }
@@ -515,7 +505,7 @@ check_dll_symlink() {
     unset NEW32SLK NEW64SLK
     for dll_check in $check_dlls_slk
         do
-            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
             for x32_x86 in "x32" "x86"
                 do
                    if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" \
@@ -523,27 +513,27 @@ check_dll_symlink() {
                         || [[ -f "$LW_RUNTIME_DIR/$1/v$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "v$2" \
                         && -f "$PFX_DLL32_PTH/$dll_check" ]]
                         then
-                            ls -la "$PFX_DLL32_PTH"|grep '^l'|grep "\/$1\/"|grep -o ':[0-9][0-9] .* \->'|\
+                            ls -la "$PFX_DLL32_PTH"|grep '^l'|grep "/$1/"|grep -o ':[0-9][0-9] .* ->'|\
                             sed 's/ ->//;s/^:[0-9][0-9] //'|xargs -I {} rm -rf "$PFX_DLL32_PTH/{}"
                             break
                     fi
             done
             if [ "$WINEARCH" != "win32" ]
                 then
-                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" \
                         && -f "$PFX_DLL64_PTH/$dll_check" ]] \
                         || [[ -f "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" && "$PFX_DLL64_VER" != "v$2" \
                         && -f "$PFX_DLL64_PTH/$dll_check" ]]
                         then
-                            ls -la "$PFX_DLL64_PTH"|grep '^l'|grep "\/$1\/"|grep -o ':[0-9][0-9] .* \->'|\
+                            ls -la "$PFX_DLL64_PTH"|grep '^l'|grep "/$1/"|grep -o ':[0-9][0-9] .* ->'|\
                             sed 's/ ->//;s/^:[0-9][0-9] //'|xargs -I {} rm -rf "$PFX_DLL64_PTH/{}"
                     fi
             fi
     done
     for dll_check in $check_dlls_slk
         do
-            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
             for x32_x86 in "x32" "x86"
                 do
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" ]]
@@ -565,7 +555,7 @@ check_dll_symlink() {
             done
             if [ "$WINEARCH" != "win32" ]
                 then
-                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "\/.*-windows\/"|grep -v "\/fakedlls\/"|grep -wo "$2")"
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" "$PFX_DLL64_PTH/"
@@ -664,20 +654,20 @@ try_rm() {
 }
 
 check_freespace() {
-    USEDDS="$(echo "$(df -h|grep "$(echo $(mount|grep -w "on $(stat -c %m -- "$(dirname "$1")")")|awk '{print$1}')")"|awk '{print$5}'|head -1|sed 's/.$//')"
+    USEDDS="$(echo "$(df -h 2>/dev/null|grep "$(echo $(mount|grep -w "on $(stat -c %m -- "$(dirname "$1")")")|awk '{print$1}')")"|awk '{print$5}'|head -1|sed 's/.$//')"
     [ "$USEDDS" -ge "95" ] \
     && print_error yad "Disk space error" "There [ $(stat -c %m -- "$(dirname "$1")") ] is little free disk space left, you need to free up disk space!"
 }
 
 try_download() {
     set -o pipefail
-    if [ ! -n "$1" ]; then print_error "Specify download URL!" && return 1 ; else DLFLNAME="$(basename "$1")" ; fi
-    if [ ! -n "$2" ]; then DLPTH="./" ; else DLPTH="$2" ; fi
+    [ ! -n "$1" ] && print_error "Specify download URL!" && return 1 || DLFLNAME="$(basename "$1")"
+    [ ! -n "$2" ] && DLPTH="./" || DLPTH="$2"
     check_freespace "$DLPTH"
     try_mkdir "$DLPTH"
     if [ "$LW_DOWNLOADER" == "aria2c" ]
         then
-            aria2c -x 13 -s 13 --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|grep --line-buffered 'ETA'| \
+            aria2c -x 13 -s 13 --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|stdbuf -o0 grep 'ETA'| \
             sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'| \
             yad --progress --percentage=0 --text="Download:\t$DLFLNAME\n$1" --auto-close --no-escape --selectable-labels \
                 --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar Lutris Wine
@@ -1141,7 +1131,7 @@ check_musthave_dll() {
                             print_info notify 'Winetricks DLLs are successfully installed!'
                         else
                             print_error yad "Winetricks DLLs are not installed successfully! \n[ $BAD_INSTALL_DLLS ]\nSee [ $UPDPFX_LOG ]"
-                            xdg-open "$UPDPFX_LOG" 2>/dev/null
+                            $LW_EDITOR "$UPDPFX_LOG" 2>/dev/null &
                     fi
                     try_shutdown_wine
             fi
@@ -1586,8 +1576,8 @@ lu_debug() {
             export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').debug"
             check_runtime
             check_ld_library
-            export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "PRIME" "VKBASALT_EFFECTS" \
-                "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "DXVK_STATE_CACHE_PATH" "CPU_LIMIT" "VSYNC" \
+            export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "PRIME" \
+                "VKBASALT_EFFECTS" "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "CPU_LIMIT" "VSYNC" \
                 "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" "VIRTUAL_DESKTOP" "FPS_LIMIT" "LW_CENV" \
                 "LW_DIR" "LW_CFG" "GSTREAMER" "HIDE_NVIDIA_GPU" "EXE_LWDB" "EXE_LWDBFL" "GST_PLUGIN_SYSTEM_PATH_1_0" "WINE_GST_REGISTRY_DIR" "RUNTIME" "PREF_SYS_LIBS" \
                 "WINE_SANDBOX" "WINEFSYNC" "WINEFSYNC_FUTEX2" "WINE_FULLSCREEN_FSR" "WINE_FULLSCREEN_FSR_STRENGTH" "STAGING_SHARED_MEMORY" "WINEESYNC" "VKBASALT_LOG_FILE" \
@@ -2045,7 +2035,7 @@ lu_run() {
                     unset LU_SHELL_PTH TERMINAL LU_SHELL_EXE LD_LIBRARY_PATH
                     $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
                     clear_log  2>/dev/null
-                    xdg-open "$LOG_FILE" 2>/dev/null
+                    $LW_EDITOR "$LOG_FILE" 2>/dev/null &
             elif [ -n "$LU_SHELL_PTH" ]
                 then
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
@@ -2053,14 +2043,14 @@ lu_run() {
             else
                 $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
                 clear_log  2>/dev/null
-                xdg-open "$LOG_FILE" 2>/dev/null
+                $LW_EDITOR "$LOG_FILE" 2>/dev/null &
             fi
     elif [ "$LOG" == 1 ]
         then
             echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
             $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
             clear_log  2>/dev/null
-            xdg-open "$LOG_FILE" 2>/dev/null
+            $LW_EDITOR "$LOG_FILE" 2>/dev/null &
     elif [ "$TERMINAL" == 1 ]
         then
             if [ -n "$LU_SHELL_EXE" ]
@@ -2070,7 +2060,7 @@ lu_run() {
                             unset LU_SHELL_EXE TERMINAL
                             $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
                             clear_log  2>/dev/null
-                            xdg-open "$LOG_FILE" 2>/dev/null
+                            $LW_EDITOR "$LOG_FILE" 2>/dev/null &
                         else
                             unset LU_SHELL_EXE TERMINAL
                             $TERM_APP $LWSHELL -c "$@"
@@ -2107,6 +2097,8 @@ lu_run() {
                 then
                     check_tray; check_wine_pids; check_luwine_sh_pid
                     [[ ! -n "$WINE_PIDS" && ! -n "$LW_SH_PID" && -n "$TRAY_PID" ]] && lu_killtray
+                    #[ -n "$SQFUSE_PIDS" ] && \
+                    #    kill $SQFUSE_PIDS 2>/dev/null
             fi
     fi
 }
@@ -2350,7 +2342,7 @@ lite_init() {
                     while pgrep -fa 'zenity'|grep -w 'Updating parameters' &>/dev/null ; do sleep 1 ; done
             fi
             [[ -n "$SETT_INIT" || "$1" == "-init" ]] && initbar
-            check_freespace "$LW_SOURCE"
+            check_freespace "$HOME/.local"
             check_exe_wcfg_cenv "$@"
             check_luwine_wcfg_cenv
             check_def_config
@@ -2383,7 +2375,7 @@ full_init() {
             check_wd3dmode
             check_videodrv
             check_compositor
-            check_mono_gecko
+            check_netcore
             check_wdllover
             check_wmonover
             check_other_fixes
@@ -2475,7 +2467,7 @@ lu_start() {
 }
 
 lu_config() {
-    if [ ! -n "$(pgrep -fa yad|grep -v "\-\-notification"|grep -v grep|grep -wo "Lutris Wine settings"|awk '{print$1}')" ]; then :
+    if [ ! -n "$(pgrep -fa yad|grep -v "\--notification"|grep -v grep|grep -wo "Lutris Wine settings"|awk '{print$1}')" ]; then :
         else
             print_error yad "Lutris Wine settings" "Lutris Wine settings already runing!"
             exit 1
@@ -2530,8 +2522,7 @@ lu_config() {
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
             VSYNC PRIME DXVK_GIT_RELEASE_URL VKD3D_GIT_RELEASE_URL NVAPI_GIT_RELEASE_URL D3D_GIT_RELEASE_URL DGVO_GIT_RELEASE_URL \
-            WTRX_GIT_RELEASE_URL BUILD_GIT_RELEASE_URL RESHADE_GIT_RELEASE_URL NVML_GIT_RELEASE_URL WLU_GIT_RELEASE_URL \
-            PGE_GIT_RELEASE_URL WGE_GIT_RELEASE_URL WK4_GIT_RELEASE_URL"
+            WTRX_GIT_RELEASE_URL BUILD_GIT_RELEASE_URL RESHADE_GIT_RELEASE_URL NVML_GIT_RELEASE_URL"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ -n "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2674,7 +2665,7 @@ lu_config() {
             --field="Don't launch tray:CHK" "$NO_TRAY" \
             --field="Switch to US keyboard layout:CHK" "$US_LAYOUT" \
             --field="VkBasalt:CHK" "$VKBASALT" \
-            --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(echo -e "$VKBASALT_FFX_CAS\n$(echo -e "$VKBASALT_FFX_CAS\n$(seq -f "%0.1f" 0.1 0.1 1|tr ',' '.')\n Disabled"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(echo -e "$VKBASALT_FFX_CAS\n$(echo -e "$VKBASALT_FFX_CAS\n$(seq 0.1 0.1 1|tr ',' '.')\n Disabled"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="Vulkan ICD loader::CB" "$(echo -e "$VKICDFILES\n$(echo -e "$VKICDFILES\n$VKICDFILESLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
             --field="GameMode:CHK" "$GAMEMODE" \
             --field="MangoHud::CB" "$(echo -e "$LWMANGOHUD\n$(echo -e "$LWMANGOHUD\n$MANGOHUDLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
@@ -2696,10 +2687,6 @@ lu_config() {
             --field="Lutris build bot GIT::CBE" "$(echo -e "$BUILD_GIT_RELEASE_URL\n$(echo -e "$BUILD_GIT_RELEASE_URL\n$BLDBTGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="Reshade Shaders GIT::CBE" "$(echo -e "$RESHADE_GIT_RELEASE_URL\n$(echo -e "$RESHADE_GIT_RELEASE_URL\n$RESHGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="WINE-NVML GIT::CBE" "$(echo -e "$NVML_GIT_RELEASE_URL\n$(echo -e "$NVML_GIT_RELEASE_URL\n$NVMLGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Wine Lutris GIT::CBE" "$(echo -e "$WLU_GIT_RELEASE_URL\n$(echo -e "$WLU_GIT_RELEASE_URL\n$WLUGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Proton GE GIT::CBE" "$(echo -e "$PGE_GIT_RELEASE_URL\n$(echo -e "$PGE_GIT_RELEASE_URL\n$PGEGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Wine GE GIT::CBE" "$(echo -e "$WGE_GIT_RELEASE_URL\n$(echo -e "$WGE_GIT_RELEASE_URL\n$WGEGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Wine Kron4ek GIT::CBE" "$(echo -e "$WK4_GIT_RELEASE_URL\n$(echo -e "$WK4_GIT_RELEASE_URL\n$WK4GITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
         1> /tmp/reposett$LWCFGKEY &
 
         if [ -d "$LW_RESHADE_DIR" ]
@@ -2802,8 +2789,8 @@ lu_config() {
         [ -n "$1" ] && echo "$1" > "/tmp/settbtn$LWCFGKEY"
         if [ -n "$(pgrep -fa yad|grep "Lutris Wine settings"|awk '{print $1}')" ]
             then
-                kill $(pgrep -fa yad|grep "Lutris Wine settings"|grep "\-\-key=$LWCFGKEY"|awk '{print $1}')
-                kill $(pgrep -fa yad|grep "\-\-plug=$LWCFGKEY"|awk '{print $1}')
+                kill $(pgrep -fa yad|grep "Lutris Wine settings"|grep "\--key=$LWCFGKEY"|awk '{print $1}')
+                kill $(pgrep -fa yad|grep "\--plug=$LWCFGKEY"|awk '{print $1}')
         fi
     }
     export -f btn_tools
@@ -3111,7 +3098,7 @@ winetricks() {
 }
 
 lu_openpfx() {
-    xdg-open "$WINEPREFIX/drive_c/" 2>/dev/null
+    $LW_FLMGR "$WINEPREFIX/drive_c/" 2>/dev/null &
 }
 
 lu_exit() {
@@ -3133,7 +3120,9 @@ lu_exit() {
             print_info notify "Lutris Wine successfully killed!" &
             sleep 2
             try_rm /tmp/FORCE_EXIT /tmp/envbackup* /tmp/syssett* /tmp/winesett* /tmp/ressett* /tmp/settbtn* &>/dev/null
-            pkill "$LW_NAME" 2>/dev/null
+            kill $(pgrep -fa "$LW_NAME"|awk '{print$1}')
+            [ -n "$SQFUSE_PIDS" ] && \
+                kill $SQFUSE_PIDS 2>/dev/null
         else
             print_error yad "Lutris Wine Killer" "Lutris Wine not runing!" &
     fi
@@ -3555,7 +3544,7 @@ Explorer!$LWSHELL -c '"$LW_SOURCE" -explorer'!"$LW_DEF_ICO"| \
 Task manager!$LWSHELL -c '"$LW_SOURCE" -taskmgr'!"$LW_DEF_ICO"| \
 Open CMD!$LWSHELL -c '"$LW_SOURCE" -cmd'!"$LW_DEF_ICO"| \
 Open SHELL!$LWSHELL -c '"$LW_SOURCE" -shell'!"$LW_DEF_ICO"| \
-$([ ! -n "$LU_EXE" ] && echo "DEBUG!$LWSHELL -c '"$LW_SOURCE" -debug'!"$LW_DEF_ICO"|") \
+$([ ! -n "$LU_EXE" ] && echo "DEBUG!$LWSHELL -c '"$LW_SOURCE" -debug'!"$LW_DEF_ICO"| ")\
 Open drive C:\!$LWSHELL -c '"$LW_SOURCE" -openpfx'!"$LW_DEF_ICO"| \
 Settings!$LWSHELL -c '"$LW_SOURCE" -config'!"$LW_DEF_ICO"| \
 Apps settings!$LWSHELL -c '"$LW_SOURCE" -appcfg'!"$LW_DEF_ICO"| \
@@ -3567,7 +3556,7 @@ Wine settings!$LWSHELL -c '"$LW_SOURCE" -winecfg'!"$LW_DEF_ICO"| \
 Registry editor!$LWSHELL -c '"$LW_SOURCE" -regedit'!"$LW_DEF_ICO"| \
 Wine uninstaller!$LWSHELL -c '"$LW_SOURCE" -uninstaller'!"$LW_DEF_ICO"| \
 Create shortcut!$LWSHELL -c '"$LW_SOURCE" -shortcut'!"$LW_DEF_ICO"| \
-$([ -n "$SYS_LU" ] && echo "Add to Lutris!$LWSHELL -c '"$LW_SOURCE" -addtolu'!"$LW_DEF_ICO"|") \
+$([ -n "$SYS_LU" ] && echo "Add to Lutris!$LWSHELL -c '"$LW_SOURCE" -addtolu'!"$LW_DEF_ICO"| ")\
 Remove menu app!$LWSHELL -c '"$LW_SOURCE" -rmapp'!"$LW_DEF_ICO"| \
 Clear prefix!$LWSHELL -c '"$LW_SOURCE" -clearpfx'!"$LW_DEF_ICO"| \
 Prefix backup!$LWSHELL -c '"$LW_SOURCE" -pfxbackup'!"$LW_DEF_ICO"| \
@@ -3594,32 +3583,21 @@ lu_winemgr() {
     fi
     export WGUIDW=$RANDOM
     export ILW_LIST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*')"
+    export WLU_GIT_RELEASE_URL="https://api.github.com/repos/lutris/wine/releases"
+    export PGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
+    export WGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/wine-ge-custom/releases"
+    export WK4_GIT_RELEASE_URL="https://api.github.com/repos/Kron4ek/Wine-Builds/releases"
     if [[ -n "$NO_CHK_GIT" || "$2" == "delonly" ]]; then :
         else
             if [[ ! -n "$PGE_GIT_LIST" || ! -n  "$WLU_GIT_LIST" || ! -n  "$WK4_GIT_LIST" || ! -n  "$WGE_GIT_LIST" ]]
                 then
-                    GREPWARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1"
+                    GREPWARCHURL="grep 'browser_download_url'|grep -iEo 'https.*download.*\.tar\.gz|https.*download.*\.tar\.xz|https.*download.*\.tar\.zst'"
                     print_info notify "Сhecking new Wine versions on GitHub..."
-                    for git_page in {1..3}; do curl -s "$WLU_GIT_RELEASE_URL/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WLU_GIT_RELEASE_URL'" $0}' 1>> "/tmp/WLUGITLIST$WGUIDW" ; done &
-                    for git_page in {1..3}; do curl -s "$PGE_GIT_RELEASE_URL/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$PGE_GIT_RELEASE_URL'" $0}' 1>> "/tmp/PGEGITLIST$WGUIDW" ; done &
-                    for git_page in {1..3}; do curl -s "$WGE_GIT_RELEASE_URL/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WGE_GIT_RELEASE_URL'" $0}' 1>> "/tmp/WGEGITLIST$WGUIDW" ; done &
-                    for git_page in {1..3}; do curl -s "$WK4_GIT_RELEASE_URL/?page=$git_page"|eval "$GREPWARCHURL"|awk '{print "'$WK4_GIT_RELEASE_URL'" $0}' 1>> "/tmp/WK4GITLIST$WGUIDW" ; done &
-                    while true
-                        do
-                            sleep 0.2
-                            GITLISTOK=0
-                            for curlgit in $WLU_GIT_RELEASE_URL $PGE_GIT_RELEASE_URL $WGE_GIT_RELEASE_URL $WK4_GIT_RELEASE_URL
-                                    do
-                                        echo
-                                        sleep 0.2
-                                        if [ ! -n "$(pgrep -fa curl|grep -o "$curlgit")" ]
-                                            then
-                                                GITLISTOK=$(($GITLISTOK + 1))
-                                        fi
-                                        [ "$GITLISTOK" == 4 ] && break
-                                done
-                            [ "$GITLISTOK" == 4 ] && break
-                    done|settingbar_nostdout "Сhecking GitHub" "Сhecking new Wine versions on GitHub..."
+                    (curl -s "$WLU_GIT_RELEASE_URL"|eval "$GREPWARCHURL" 1>> "/tmp/WLUGITLIST$WGUIDW" &
+                    curl -s "$PGE_GIT_RELEASE_URL"|eval "$GREPWARCHURL" 1>> "/tmp/PGEGITLIST$WGUIDW" &
+                    curl -s "$WGE_GIT_RELEASE_URL"|eval "$GREPWARCHURL" 1>> "/tmp/WGEGITLIST$WGUIDW" &
+                    curl -s "$WK4_GIT_RELEASE_URL"|eval "$GREPWARCHURL" 1>> "/tmp/WK4GITLIST$WGUIDW" &
+                    wait)|settingbar_nostdout "Сhecking GitHub" "Сhecking new Wine versions on GitHub..."
                     WLU_GIT_LIST="$(cat /tmp/WLUGITLIST$WGUIDW 2>/dev/null)"
                     PGE_GIT_LIST="$(cat /tmp/PGEGITLIST$WGUIDW 2>/dev/null)"
                     WGE_GIT_LIST="$(cat /tmp/WGEGITLIST$WGUIDW 2>/dev/null)"
@@ -4418,7 +4396,7 @@ runtime_manager() {
         && ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
         || [ -n "$FORCE_UPDATE" ]
         then
-            if [[ "$NETSTATUS" == 1 ]]
+            if [ "$NETSTATUS" == 1 ]
                 then
                     try_rm "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" &>/dev/null
                     print_info notify "Checking updates for $1 runtime..."
@@ -4686,8 +4664,8 @@ check_vsync() {
         Enabled) export vblank_mode=1
                  export __GL_SYNC_TO_VBLANK=1
                  print_info notify "Vsync in force enabled mode!" ;;
-        Disabled) unset vblank_mode
-                  unset __GL_SYNC_TO_VBLANK ;;
+        Disabled) export vblank_mode=0
+                  export __GL_SYNC_TO_VBLANK=0 ;;
     esac
 }
 
@@ -4776,10 +4754,13 @@ check_terminal() {
                     export TERM_APP="$LW_TERM_APP --wait --"
             elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "lxterminal")" ]
                 then
-                    export TERM_APP="lxterminal -e"
+                    export TERM_APP="$LW_TERM_APP -e"
             elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "xfce4-terminal")" ]
                 then
                     export TERM_APP="$LW_TERM_APP $TERM_HOLD -x"
+            elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "xterm")" ]
+                then
+                    export TERM_APP="$LW_TERM_APP -bg black -fg white $TERM_HOLD -e"
             else
                 export TERM_APP="$LW_TERM_APP $TERM_HOLD -e"
             fi
@@ -4807,7 +4788,7 @@ check_terminal() {
                     export TERM_APP="xfce4-terminal $TERM_HOLD -x"
             else
                 check_hold_terminal xterm
-                export TERM_APP="xterm $TERM_HOLD -e"
+                export TERM_APP="xterm -bg black -fg white $TERM_HOLD -e"
             fi
     fi
 }
@@ -5004,13 +4985,15 @@ check_resizable_bar() {
 }
 
 check_reshade() {
-    runtime_manager "reshade"
+    [[ ! -d "$LW_RESHADE_DIR/shaders" ]] && \
+        runtime_manager "reshade"
 }
 
 check_winetricks() {
-    if runtime_manager "winetricks"
+    if [[ "$SYS_WINETRICKS" != 1 || "$FORCE_UPDATE" == 1 ]]
         then
-            try_fix_wrtx
+            runtime_manager "winetricks" && \
+                try_fix_wrtx
     fi
 }
 
@@ -5039,45 +5022,35 @@ check_ubuntu1804-x86_64() {
 }
 
 upd_reshade() {
-    export FORCE_UPDATE=1
-    check_reshade
+    FORCE_UPDATE=1 check_reshade
 }
 
 upd_winetricks() {
-    export FORCE_UPDATE=1
-    check_winetricks
+    FORCE_UPDATE=1 check_winetricks
 }
 upd_battleye() {
-    export FORCE_UPDATE=1
-    check_battleye
+    FORCE_UPDATE=1 check_battleye
 }
 upd_eac() {
-    export FORCE_UPDATE=1
-    check_eac
+    FORCE_UPDATE=1 check_eac
 }
 upd_gamecontrollerdb() {
-    export FORCE_UPDATE=1
-    check_gamecontrollerdb
+    FORCE_UPDATE=1 check_gamecontrollerdb
 }
 upd_innoextract() {
-    export FORCE_UPDATE=1
-    check_innoextract
+    FORCE_UPDATE=1 check_innoextract
 }
 upd_network-tools() {
-    export FORCE_UPDATE=1
-    check_network-tools
+    FORCE_UPDATE=1 check_network-tools
 }
 upd_p7zip() {
-    export FORCE_UPDATE=1
-    check_p7zip
+    FORCE_UPDATE=1 check_p7zip
 }
 upd_ubuntu1804-i686() {
-    export FORCE_UPDATE=1
-    check_ubuntu1804-i686
+    FORCE_UPDATE=1 check_ubuntu1804-i686
 }
 upd_ubuntu1804-x86_64() {
-    export FORCE_UPDATE=1
-    check_ubuntu1804-x86_64
+    FORCE_UPDATE=1 check_ubuntu1804-x86_64
 }
 upd_d3d_extras() {
     sed -i '/export D3D_EXTRAS_VERSION.*/d' "$LW_CFG" 2>/dev/null
@@ -5383,7 +5356,7 @@ export_all_functions() {
     export TRLWPRM="awk '!x[\$0]++'|tr '\n' '!'|sed 's/.$//'"
     export SORTU="sort -u"
     export -f print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid check_vkd3dconfig try_rm check_themes import_cenv \
-        check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_mono_gecko try_download check_cpu_limit ld_lib_upd \
+        check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_netcore try_download check_cpu_limit ld_lib_upd \
         unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher check_proton_d3dlib \
         compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris gamma_sw vkd3dcfg_upd check_downloader \
         create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_wcfg check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd select_lwpfx \
@@ -5396,10 +5369,11 @@ export_all_functions() {
         runtime_manager check_gamecontrollerdb check_innoextract check_network-tools check_p7zip check_ubuntu1804-i686 upd_battleye upd_gamecontrollerdb \
         upd_innoextract upd_network-tools upd_p7zip upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all check_ubuntu1804-x86_64 \
         upd_ubuntu1804-x86_64 upd_ubuntu1804-i686 check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config \
-        settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac \
-        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine \
+        settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
+        run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
-        check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt
+        check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
+        check_dxvk_async check_vsync
 }
 
 initbar() {
@@ -5628,7 +5602,7 @@ lu_pfxbackup() {
                     if makesquash_$CMPRSS_METHOD "$WINEPREFIX" "$LW_DEF_WINEPFXBKP_DIR" 'lwpfx' $ZSTD_CMPRSS_LVL
                         then
                             print_info notify "Prefix backup completed!"
-                            xdg-open "$LW_DEF_WINEPFXBKP_DIR" &>/dev/null
+                            $LW_FLMGR "$LW_DEF_WINEPFXBKP_DIR" &>/dev/null &
                         else
                             print_error yad "Prefix backup" "Cannot create prefix backup!"
                             return 1
@@ -5681,7 +5655,7 @@ lu_pfxrestore() {
                 try_rm "$PFXRESTORE_DIR" &>/dev/null
                 try_mv "${LW_DEF_TMP}/$LWPFX_NAME" "${LW_DEF_WPFXS_DIR}/"
                 print_info notify "The prefix backup is successfully restored!"
-                xdg-open "$PFXRESTORE_DIR" &>/dev/null
+                $LW_FLMGR "$PFXRESTORE_DIR" &>/dev/null &
                 return 0
             else
                 try_rm "${LW_DEF_TMP}/$LWPFX_NAME" &>/dev/null
@@ -5738,6 +5712,8 @@ lu_backupmnt() {
                 then
                     LWPFX_NAME="$(basename "$LU_LWPFX")"
                     LWPFX_MNT_DIR="$LW_DEF_TMP/${LWPFX_NAME}-$(echo -n "$LU_LWPFX"|sha256sum|head -c 8)"
+                    [[ -d "$LWPFX_MNT_DIR" && ! -n "$(mount|grep -wo "$LWPFX_NAME")" ]] && \
+                        rm -rf "$LWPFX_MNT_DIR"
                     if [[ ! -d "$LWPFX_MNT_DIR" && ! -n "$(mount|grep -wo "$LWPFX_NAME")" ]]
                         then
                             try_mkdir "$LWPFX_MNT_DIR"
@@ -5745,7 +5721,7 @@ lu_backupmnt() {
                                 then
                                     print_info notify "The prefix backup is successfully mounted!"
                                     print_info "[ $LWPFX_MNT_DIR ]"
-                                    xdg-open "$LWPFX_MNT_DIR" &>/dev/null
+                                    $LW_FLMGR "$LWPFX_MNT_DIR" &>/dev/null &
                                     while true
                                         do
                                            if [ -n "$(mount|grep -wo "$LWPFX_NAME")" ]
@@ -5757,7 +5733,7 @@ lu_backupmnt() {
                                     if yad --form --title="Mounted image : $LWPFX_NAME" --text-align=center --center --fixed \
                                            --window-icon="$LW_DEF_ICO" --button="UNMOUNT:0" --selectable-labels --on-top \
                                            --text="Mount point: [ $LWPFX_MNT_DIR ]" \
-                                           --field="Open:FBTN" "$LWSHELL -c 'xdg-open "$LWPFX_MNT_DIR" &>/dev/null'" \
+                                           --field="Open:FBTN" "$LWSHELL -c '$LW_FLMGR "$LWPFX_MNT_DIR" &>/dev/null'" \
                                            Lutris Wine &>/dev/null
                                         then lu_backupunmnt "$LU_LWPFX"
                                     fi

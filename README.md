@@ -90,7 +90,7 @@ All Arch-based distributions
 - [x] Disabling MONO (.NET Core)
 - [x] Various optimizations for better gaming performance
 - [x] Ability to use Lutris runtime (with system library priority if needed)
-- [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/usr/share/lutris-wine/db/LeagueClient.lwdb)
+- [x] Custom EXE DB launch helper scripts, like this [LOL anticheat helper](https://github.com/VHSgunzo/lutris-wine/blob/main/db/LeagueClient.lwdb)
 - [x] Custom loading bar animation
 - [x] Old OpenGL String
 - [x] Wine virtual desktop
