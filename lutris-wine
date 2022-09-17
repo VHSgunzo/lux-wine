@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LW_VERSION="0.74.r6"
+export LW_VERSION="0.74.r7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -10,6 +10,7 @@ export RESETCOLOR='\033[1;00m'
 
 export ENVKEY=$RANDOM
 export GDK_BACKEND="x11"
+export SYS_WINETRICKS=1
 if [ -n "$RUNDIR" ]
     then
         export LW_EDITOR="pluma"
@@ -34,7 +35,7 @@ fi
 [ ! -n "$LW_DEF_CFG" ] && export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
 [ ! -n "$LW_CFG" ] && export LW_CFG="$LW_DEF_CFG"
 [ ! -n "$VKBASALT_CONFIG_FILE" ] && export VKBASALT_CONFIG_FILE="$LW_DIR/vkBasalt.conf"
-[ ! -n "$LW_RESHADE_DIR" ] && export LW_RESHADE_DIR="$LW_RUNTIME_DIR/reshade"
+[ ! -n "$LW_RESHADE_DIR" ] && export LW_RESHADE_DIR="/opt/reshade"
 [ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="/usr/share/lutris-wine/icons/default_icon.png"
 [ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
 [ ! -n "$LW_DEF_WPFXS_DIR" ] && export LW_DEF_WPFXS_DIR="$LW_DIR/wprefixes"
@@ -99,7 +100,6 @@ check_def_config() {
     [ ! -n "$DGVO_GIT_RELEASE_URL" ] && export DGVO_GIT_RELEASE_URL="https://github.com/lutris/dgvoodoo2/releases"
     [ ! -n "$WTRX_GIT_RELEASE_URL" ] && export WTRX_GIT_RELEASE_URL="https://github.com/lutris/winetricks/releases"
     [ ! -n "$BUILD_GIT_RELEASE_URL" ] && export BUILD_GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
-    [ ! -n "$RESHADE_GIT_RELEASE_URL" ] && export RESHADE_GIT_RELEASE_URL="https://github.com/VHSgunzo/reshade/releases"
     [ ! -n "$NVML_GIT_RELEASE_URL" ] && export NVML_GIT_RELEASE_URL="https://github.com/VHSgunzo/nvml/releases"
     [ ! -n "$DXVK_VERSION" ] && export DXVK_VERSION="latest"
     [ ! -n "$VKD3D_VERSION" ] && export VKD3D_VERSION="latest"
@@ -317,7 +317,7 @@ check_git_release() {
     if [ -n "$GIT_RELEASE_CHK" ]
         then
             GIT_RELEASE="$GIT_RELEASE_CHK"
-            if [[ ! -n "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" && "$1" != "reshade" ]]
+            if [[ ! -n "$(echo "$GIT_RELEASE_URL"|grep -o "buildbot")" && "$1" != "winetricks" ]]
                 then
                     dll_version="$(basename "$GIT_RELEASE_CHK"|sed "s/$1//"|sed -r 's/^[^0-9]+//'|sed 's/.tar.gz//'|sed 's/.tar.xz//'|sed 's/.tar.zst//')"
                     unset GIT_RELEASE_CHK
@@ -2357,7 +2357,6 @@ lite_init() {
             check_proton_d3dlib
             check_path
             check_terminal
-            check_reshade
             check_vkbasalt_cfg
             check_exe_args
             check_first_run "$@"
@@ -2504,7 +2503,6 @@ lu_config() {
     DGVOOGITLST="https://github.com/lutris/dgvoodoo2/releases"
     WTRXGITLST="https://github.com/lutris/winetricks/releases"
     BLDBTGITLST="https://github.com/lutris/buildbot/releases"
-    RESHGITLST="https://github.com/VHSgunzo/reshade/releases"
     NVMLGITLST="https://github.com/VHSgunzo/nvml/releases"
     WLUGITLST="https://github.com/lutris/wine/releases"
     PGEGITLST="https://github.com/GloriousEggroll/proton-ge-custom/releases"
@@ -2522,7 +2520,7 @@ lu_config() {
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
             VSYNC PRIME DXVK_GIT_RELEASE_URL VKD3D_GIT_RELEASE_URL NVAPI_GIT_RELEASE_URL D3D_GIT_RELEASE_URL DGVO_GIT_RELEASE_URL \
-            WTRX_GIT_RELEASE_URL BUILD_GIT_RELEASE_URL RESHADE_GIT_RELEASE_URL NVML_GIT_RELEASE_URL"
+            WTRX_GIT_RELEASE_URL BUILD_GIT_RELEASE_URL NVML_GIT_RELEASE_URL"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ -n "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2685,7 +2683,6 @@ lu_config() {
             --field="DGVOODOO2 GIT::CBE" "$(echo -e "$DGVO_GIT_RELEASE_URL\n$(echo -e "$DGVO_GIT_RELEASE_URL\n$DGVOOGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="Winetricks GIT::CBE" "$(echo -e "$WTRX_GIT_RELEASE_URL\n$(echo -e "$WTRX_GIT_RELEASE_URL\n$WTRXGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="Lutris build bot GIT::CBE" "$(echo -e "$BUILD_GIT_RELEASE_URL\n$(echo -e "$BUILD_GIT_RELEASE_URL\n$BLDBTGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Reshade Shaders GIT::CBE" "$(echo -e "$RESHADE_GIT_RELEASE_URL\n$(echo -e "$RESHADE_GIT_RELEASE_URL\n$RESHGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
             --field="WINE-NVML GIT::CBE" "$(echo -e "$NVML_GIT_RELEASE_URL\n$(echo -e "$NVML_GIT_RELEASE_URL\n$NVMLGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
         1> /tmp/reposett$LWCFGKEY &
 
@@ -3430,11 +3427,10 @@ lu_help() {
             ${RED}-backupmnt $GREEN              Mount prefix backup
             ${RED}-backupunmnt $GREEN            Unmount prefix backup
             ${RED}-update$BLUE {all} $GREEN           Runtime updater$BLUE
-            {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
-            {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
+            {dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {inn|innoextract}
+            {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime} {nvml|wine_nvml}
             {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
             {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
-            {nvml|wine_nvml}
         $RESETCOLOR" >&2
         print_info yad "Lutris Wine usage info" \
         "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LW_NAME {$LW_NAME argument} blabla.exe {exe arguments} \n\n \
@@ -3470,11 +3466,10 @@ lu_help() {
         -backupmnt \t\t\t\t Mount prefix backup\n \
         -backupunmnt \t\t\t\t Unmount prefix backup\n \
         -update {all} \t\t\t\t Runtime updater\n \
-{dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}\n \
+{dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {nvml|wine_nvml}\n \
 {inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}\n \
 {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}\n \
 {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
-{nvml|wine_nvml}\n \
         \nLutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
         " &>/dev/null &
 }
@@ -4388,7 +4383,6 @@ check_eac() {
 runtime_manager() {
     try_mkdir "$LW_RUNTIME_DIR"
     if [ "$1" == "winetricks" ]; then GIT_RELEASE_URL="$WTRX_GIT_RELEASE_URL"
-    elif [ "$1" == "reshade" ]; then GIT_RELEASE_URL="$RESHADE_GIT_RELEASE_URL"
     else GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
     fi
     [ ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ] && FORCE_UPDATE=1
@@ -4984,11 +4978,6 @@ check_resizable_bar() {
     fi
 }
 
-check_reshade() {
-    [[ ! -d "$LW_RESHADE_DIR/shaders" ]] && \
-        runtime_manager "reshade"
-}
-
 check_winetricks() {
     if [[ "$SYS_WINETRICKS" != 1 || "$FORCE_UPDATE" == 1 ]]
         then
@@ -5019,10 +5008,6 @@ check_ubuntu1804-i686() {
 
 check_ubuntu1804-x86_64() {
     runtime_manager "Ubuntu-18.04-x86_64"
-}
-
-upd_reshade() {
-    FORCE_UPDATE=1 check_reshade
 }
 
 upd_winetricks() {
@@ -5132,14 +5117,12 @@ upd_all() {
     sleep 0.2
     upd_wine_nvml &
     sleep 0.2
-    upd_reshade &
-    sleep 0.2
     upd_winetricks $
     wait
 }
 
 lu_update() {
-    LWRUNTIMELST="dxvk vkd3d dxvk-nvapi wine_nvml d3d_extras dgvoodoo2 battleye_runtime eac_runtime reshade winetricks gamecontrollerdb innoextract network-tools p7zip ubuntu1804-i686 ubuntu1804-x86_64"
+    LWRUNTIMELST="dxvk vkd3d dxvk-nvapi wine_nvml d3d_extras dgvoodoo2 battleye_runtime eac_runtime winetricks gamecontrollerdb innoextract network-tools p7zip ubuntu1804-i686 ubuntu1804-x86_64"
     check_winepfx
     if [ "$2" == "all" ]
         then
@@ -5192,8 +5175,6 @@ lu_update() {
                                        sleep 0.2 ;;
                                 wine_nvml) upd_wine_nvml &
                                            sleep 0.2 ;;
-                                reshade) upd_reshade &
-                                         sleep 0.2 ;;
                                 winetricks) upd_winetricks &
                                             sleep 0.2 ;;
                             esac
@@ -5233,8 +5214,6 @@ lu_update() {
                                    sleep 0.2 ;;
                         nvml|wine_nvml) upd_wine_nvml &
                                         sleep 0.2 ;;
-                        resh|reshade) upd_reshade &
-                                      sleep 0.2 ;;
                         wtrx|winetricks) upd_winetricks &
                                          sleep 0.2 ;;
                         *) print_error "Invalid argument: '$2'" ;;
