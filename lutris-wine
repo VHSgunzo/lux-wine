@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LW_VERSION="0.74.r7"
+export LW_VERSION="0.75.r0"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -10,11 +10,11 @@ export RESETCOLOR='\033[1;00m'
 
 export ENVKEY=$RANDOM
 export GDK_BACKEND="x11"
-export SYS_WINETRICKS=1
 if [ -n "$RUNDIR" ]
     then
         export LW_EDITOR="pluma"
         export LW_FLMGR="thunar"
+        export SYS_WINETRICKS=1
     else
         export LW_EDITOR="xdg-open"
         export LW_FLMGR="xdg-open"
@@ -93,14 +93,18 @@ check_def_config() {
     [ ! -n "$GL_THRD_OPTI" ] && export GL_THRD_OPTI=1
     [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='vcrun2019 mfc42'
     [ ! -n "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
-    [ ! -n "$DXVK_GIT_RELEASE_URL" ] && export DXVK_GIT_RELEASE_URL="https://github.com/lutris/dxvk/releases"
-    [ ! -n "$VKD3D_GIT_RELEASE_URL" ] && export VKD3D_GIT_RELEASE_URL="https://github.com/lutris/vkd3d/releases"
-    [ ! -n "$NVAPI_GIT_RELEASE_URL" ] && export NVAPI_GIT_RELEASE_URL="https://github.com/lutris/dxvk-nvapi/releases"
-    [ ! -n "$D3D_GIT_RELEASE_URL" ] && export D3D_GIT_RELEASE_URL="https://github.com/lutris/d3d_extras/releases"
-    [ ! -n "$DGVO_GIT_RELEASE_URL" ] && export DGVO_GIT_RELEASE_URL="https://github.com/lutris/dgvoodoo2/releases"
-    [ ! -n "$WTRX_GIT_RELEASE_URL" ] && export WTRX_GIT_RELEASE_URL="https://github.com/lutris/winetricks/releases"
-    [ ! -n "$BUILD_GIT_RELEASE_URL" ] && export BUILD_GIT_RELEASE_URL="https://github.com/lutris/buildbot/releases"
-    [ ! -n "$NVML_GIT_RELEASE_URL" ] && export NVML_GIT_RELEASE_URL="https://github.com/VHSgunzo/nvml/releases"
+    export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
+    export VKD3D_GIT_RELEASE_URL="https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases"
+    export NVAPI_GIT_RELEASE_URL="https://api.github.com/repos/jp7677/dxvk-nvapi/releases"
+    export D3D_GIT_RELEASE_URL="https://api.github.com/repos/lutris/d3d_extras/releases"
+    export DGVO_GIT_RELEASE_URL="https://api.github.com/repos/lutris/dgvoodoo2/releases"
+    export WTRX_GIT_RELEASE_URL="https://api.github.com/repos/lutris/winetricks/releases"
+    export BUILD_GIT_RELEASE_URL="https://api.github.com/repos/lutris/buildbot/releases"
+    export NVML_GIT_RELEASE_URL="https://api.github.com/repos/VHSgunzo/nvml/releases"
+    export WLU_GIT_RELEASE_URL="https://api.github.com/repos/lutris/wine/releases"
+    export PGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
+    export WGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/wine-ge-custom/releases"
+    export WK4_GIT_RELEASE_URL="https://api.github.com/repos/Kron4ek/Wine-Builds/releases"
     [ ! -n "$DXVK_VERSION" ] && export DXVK_VERSION="latest"
     [ ! -n "$VKD3D_VERSION" ] && export VKD3D_VERSION="latest"
     [ ! -n "$DXVK_NVAPI_VERSION" ] && export DXVK_NVAPI_VERSION="latest"
@@ -312,7 +316,7 @@ check_git_release() {
             dll_version="$(echo $2|sed 's/^v//g')"
             CHECKDLLVERS="grep -iE '($dll_version\.tar\.xz$|$dll_version\.tar\.gz$|$dll_version\.tar\.zst$)'"
     fi
-    GREPARCHURL="grep -iE '(.tar.gz|.tar.xz|.tar.zst)'|grep -v 'tags'|grep 'href'|sed 's/.*releases//g'|cut -d'\"' -f1|awk '{print \"$GIT_RELEASE_URL\" \$0}'|grep '$1'"
+    GREPARCHURL="grep 'browser_download_url'|grep -iEo 'https.*download.*\.tar\.gz|https.*download.*\.tar\.xz|https.*download.*\.tar\.zst'|grep '$1'"
     GIT_RELEASE_CHK="$(curl -s "$GIT_RELEASE_URL"|eval "$GREPARCHURL"|eval "$CHECKDLLVERS")"
     if [ -n "$GIT_RELEASE_CHK" ]
         then
@@ -2489,25 +2493,13 @@ lu_config() {
                         $([ -n "$(find "$VLK_ICD_DIR"/intel* -type f 2>/dev/null)" ] && echo '\n Intel') \
                         $([ -n "$(find "$VLK_ICD_DIR"/radeon* -type f 2>/dev/null)" ] && echo '\n AMD') \
                         $([ -n "$(find "$VLK_ICD_DIR"/lvp* -type f 2>/dev/null)" ] && echo '\n Lvp')"
-    DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null|grep -v '.*.tar.*') \n v1.9.4L-2 \n v1.10L \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    DXVKGITLST="https://github.com/lutris/dxvk/releases \n https://github.com/doitsujin/dxvk/releases"
-    VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null|grep -v '.*.tar.*') \n v2.5L-c0a3fa8 \n v2.6 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
+    DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null|grep -v '.*.tar.*') \n v1.9.4 \n v1.10 \n v1.10.3 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
+    VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null|grep -v '.*.tar.*') \n v2.5 \n v2.6 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
     VKD3DCFGLST="force_bindless_texel_buffer,multi_queue \n Disabled"
-    VKD3DGITLST="https://github.com/lutris/vkd3d/releases \n https://github.com/HansKristian-Work/vkd3d-proton/releases"
     D3DXTRLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/d3d_extras" 2>/dev/null|grep -v '.*.tar.*') \n v2 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    D3DXTRGITLST="https://github.com/lutris/d3d_extras/releases"
-    DXNVALST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk-nvapi" 2>/dev/null|grep -v '.*.tar.*') \n v0.5.3 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    DXNVAGITLST="https://github.com/lutris/dxvk-nvapi/releases \n https://github.com/VHSgunzo/nvapi/releases \n https://github.com/jp7677/dxvk-nvapi/releases"
-    DGVOOLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dgvoodoo2" 2>/dev/null|grep -v '.*.tar.*') \n v2.64 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
+    DXNVALST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk-nvapi" 2>/dev/null|grep -v '.*.tar.*') \n v0.5.3 \n v0.5.4 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
+    DGVOOLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dgvoodoo2" 2>/dev/null|grep -v '.*.tar.*') \n v2.64 \n v2.79.1 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
     NVMLLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/wine_nvml" 2>/dev/null|grep -v '.*.tar.*') \n v0.1 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    DGVOOGITLST="https://github.com/lutris/dgvoodoo2/releases"
-    WTRXGITLST="https://github.com/lutris/winetricks/releases"
-    BLDBTGITLST="https://github.com/lutris/buildbot/releases"
-    NVMLGITLST="https://github.com/VHSgunzo/nvml/releases"
-    WLUGITLST="https://github.com/lutris/wine/releases"
-    PGEGITLST="https://github.com/GloriousEggroll/proton-ge-custom/releases"
-    WGEGITLST="https://github.com/GloriousEggroll/wine-ge-custom/releases"
-    WK4GITLST="https://github.com/Kron4ek/Wine-Builds/releases"
     CMPRSSLST="xz \n zstd"
     FSRMODELST="ultra \n quality \n balanced \n performance"
     lwconfig_save() {
@@ -2519,8 +2511,7 @@ lu_config() {
             LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
-            VSYNC PRIME DXVK_GIT_RELEASE_URL VKD3D_GIT_RELEASE_URL NVAPI_GIT_RELEASE_URL D3D_GIT_RELEASE_URL DGVO_GIT_RELEASE_URL \
-            WTRX_GIT_RELEASE_URL BUILD_GIT_RELEASE_URL NVML_GIT_RELEASE_URL"
+            VSYNC PRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ -n "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2529,8 +2520,7 @@ lu_config() {
                             fi
                     done 3< <(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM|sed 's/^/export /') \
                          4< <(echo -e "$(cat "/tmp/winesett$LWCFGKEY" 2>/dev/null)\n\
-                                       $(cat "/tmp/syssett$LWCFGKEY" 2>/dev/null)\n\
-                                       $(cat "/tmp/reposett$LWCFGKEY" 2>/dev/null)"|eval $SEDLWPRM))"
+                                       $(cat "/tmp/syssett$LWCFGKEY" 2>/dev/null)"|eval $SEDLWPRM))"
 
         COUNT_FX=0
         for read_list_fx in $(cat /tmp/ressett$LWCFGKEY 2>/dev/null)
@@ -2675,17 +2665,6 @@ lu_config() {
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
-        yad --plug=$LWCFGKEY --tabnum=3 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ -n "$YADSCROLL" ] && echo "--scroll")  \
-            --field="DXVK GIT::CBE" "$(echo -e "$DXVK_GIT_RELEASE_URL\n$(echo -e "$DXVK_GIT_RELEASE_URL\n$DXVKGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="VKD3D GIT::CBE" "$(echo -e "$VKD3D_GIT_RELEASE_URL\n$(echo -e "$VKD3D_GIT_RELEASE_URL\n$VKD3DGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DXVK-NVAPI GIT::CBE" "$(echo -e "$NVAPI_GIT_RELEASE_URL\n$(echo -e "$NVAPI_GIT_RELEASE_URL\n$DXNVAGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="D3D EXTRAS GIT::CBE" "$(echo -e "$D3D_GIT_RELEASE_URL\n$(echo -e "$D3D_GIT_RELEASE_URL\n$D3DXTRGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DGVOODOO2 GIT::CBE" "$(echo -e "$DGVO_GIT_RELEASE_URL\n$(echo -e "$DGVO_GIT_RELEASE_URL\n$DGVOOGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Winetricks GIT::CBE" "$(echo -e "$WTRX_GIT_RELEASE_URL\n$(echo -e "$WTRX_GIT_RELEASE_URL\n$WTRXGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Lutris build bot GIT::CBE" "$(echo -e "$BUILD_GIT_RELEASE_URL\n$(echo -e "$BUILD_GIT_RELEASE_URL\n$BLDBTGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="WINE-NVML GIT::CBE" "$(echo -e "$NVML_GIT_RELEASE_URL\n$(echo -e "$NVML_GIT_RELEASE_URL\n$NVMLGITLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-        1> /tmp/reposett$LWCFGKEY &
-
         if [ -d "$LW_RESHADE_DIR" ]
             then
                 RES_LST=($(grep ".fx$" "$VKBASALT_CONFIG_FILE" 2>/dev/null|awk '{print $1}'))
@@ -2700,18 +2679,18 @@ lu_config() {
                         fi
                 done
         fi
-        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=4 --form --separator=" " --bool-fmt=1 --columns=4 \
+        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
             $([ -n "$YADSCROLL" ] && echo "--scroll") \
             $RESHADE_SETT \
         1> /tmp/ressett$LWCFGKEY & )
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ -n "$YADSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form $([ -n "$YADSCROLL" ] && echo "--scroll") \
             --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=6 --separator="" --form $([ -n "$YADSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ -n "$YADSCROLL" ] && echo "--scroll") \
             --field="Log file [ $WTRX_LOG ]:TXT" "$(cat "$WTRX_LOG" 2>/dev/null)" 2>/dev/null)" > /tmp/wlogsett$LWCFGKEY &
 
-        [ ! -n "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=7 --columns=2 --form \
+        [ ! -n "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=6 --columns=2 --form \
             $([ -n "$YADSCROLL" ] && echo "--scroll") \
             --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
             --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
@@ -2748,27 +2727,27 @@ lu_config() {
         check_exes
         if [[ -n "$LU_EXE" && ! -n "$RUN_EXE" && ! -n "$FIRST_RUN" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lutris Wine settings for $EXE_FULL_NAME" $([ -n "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
         elif [[ -n "$LU_EXE" && -n "$RUN_EXE" && ! -n "$FIRST_RUN" ]]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lutris Wine settings for $EXE_FULL_NAME" $([ -n "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ -n "$FIRST_RUN" ]
             then
-                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+                yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" \
                     --title="Lutris Wine settings" $([ -n "$YADSCROLL" ] && echo "--scroll") \
                     --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
-            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" --tab="Repositories" \
+            yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                 --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                 --title="Lutris Wine settings" $([ -n "$YADSCROLL" ] && echo "--scroll") \
                 --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
@@ -2834,7 +2813,6 @@ lu_config() {
     try_rm "/tmp/ressett$LWCFGKEY" &>/dev/null
     try_rm "/tmp/envsett$LWCFGKEY" &>/dev/null
     try_rm "/tmp/wlogsett$LWCFGKEY" &>/dev/null
-    try_rm "/tmp/reposett$LWCFGKEY" &>/dev/null
     if [ -f "/tmp/settbtn$LWCFGKEY" ]
         then
             SETTBTN="$(cat "/tmp/settbtn$LWCFGKEY")"
@@ -3049,15 +3027,18 @@ winetricks() {
             if [ -n "$(which winetricks 2>/dev/null)" ]
                 then
                     print_info notify "Using System winetricks!"
-                    if [[ ! -n "$WTRX_ARG" && -n "$WTRX_RUN" ]]
+                    if [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$WTRX_RUN" ]] \
+                        || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && -n "$WTRX_RUN" ]] \
+                        || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && ! -n "$WTRX_RUN" ]]
                         then
                             $TERM_APP $LWSHELL -c "print_info 'Using System winetricks!!' \
                             && DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$(which winetricks)'"
-                    elif [[ ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
+                    elif [[ -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $@ || return 1
-                    else
-                        DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $WTRX_ARG || return 1
+                    elif [[ ! -n "$NEED_INSTALL_DLLS" && -n "$WTRX_ARG" ]]
+                        then
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $WTRX_ARG || return 1
                     fi
                 else
                     print_error yad "Winetricks" "Winetricks not found in your system. Using Lutris Wine winetricks!"
@@ -3578,10 +3559,6 @@ lu_winemgr() {
     fi
     export WGUIDW=$RANDOM
     export ILW_LIST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*')"
-    export WLU_GIT_RELEASE_URL="https://api.github.com/repos/lutris/wine/releases"
-    export PGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
-    export WGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/wine-ge-custom/releases"
-    export WK4_GIT_RELEASE_URL="https://api.github.com/repos/Kron4ek/Wine-Builds/releases"
     if [[ -n "$NO_CHK_GIT" || "$2" == "delonly" ]]; then :
         else
             if [[ ! -n "$PGE_GIT_LIST" || ! -n  "$WLU_GIT_LIST" || ! -n  "$WK4_GIT_LIST" || ! -n  "$WGE_GIT_LIST" ]]
@@ -4382,7 +4359,8 @@ check_eac() {
 
 runtime_manager() {
     try_mkdir "$LW_RUNTIME_DIR"
-    if [ "$1" == "winetricks" ]; then GIT_RELEASE_URL="$WTRX_GIT_RELEASE_URL"
+    if [ "$1" == "winetricks" ]
+    then GIT_RELEASE_URL="$WTRX_GIT_RELEASE_URL"
     else GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
     fi
     [ ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ] && FORCE_UPDATE=1
