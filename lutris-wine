@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LW_VERSION="0.75.r3"
+export LW_VERSION="0.75.4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -607,7 +607,7 @@ try_mkdir() {
 try_ln() {
     if [[ -f "$1" || -d "$1" || -L "$1" ]]
         then
-            ln -sf "$@" 2>/dev/null
+            ln -sfr "$@" 2>/dev/null
             [ "$?" != 0 ] && print_error "Failed to link '$1' to '$2'" || return 0
     elif [ ! -n "$(dirname "$2" 2>/dev/null)" ]
         then
@@ -2345,7 +2345,8 @@ lite_init() {
                     while pgrep -fa 'zenity'|grep -w 'Runtime initialization' &>/dev/null ; do sleep 1 ; done
                     while pgrep -fa 'zenity'|grep -w 'Updating parameters' &>/dev/null ; do sleep 1 ; done
             fi
-            [[ -n "$SETT_INIT" || "$1" == "-init" ]] && initbar
+            [[ -n "$SETT_INIT" || "$1" == "-init" ]] && \
+                initbar && rm -rf "$LW_DIR/.lwcfgchksum"
             check_freespace "$HOME/.local"
             check_exe_wcfg_cenv "$@"
             check_luwine_wcfg_cenv
@@ -2372,7 +2373,8 @@ lite_init() {
 full_init() {
     if [ "$SKIP_INIT" != 1 ]
         then
-            [[ ! -n "$SETT_INIT" && "$1" != "-init" ]] && initbar
+            [[ ! -n "$SETT_INIT" && "$1" != "-init" ]] && \
+                initbar
             check_crash_dialog
             check_winepfx
             check_wd3dmode
@@ -2416,7 +2418,8 @@ full_init() {
             check_virt_desktop
             check_latencyflex
             try_rm "$INIPRGRS" &>/dev/null
-            [[ "$1" == "-init" || "$FIRST_RUN" == 1 ]] && print_info notify "Lutris Wine full initialization completed!"
+            [[ "$1" == "-init" || "$FIRST_RUN" == 1 ]] && \
+                print_info notify "Lutris Wine full initialization completed!"
         else
             print_info notify "Lutris Wine full startup initialization is disabled! Unexpected errors may occur..."
     fi
@@ -4018,15 +4021,15 @@ check_wined3d() {
             print_info notify "Running in WineD3D (OpenGL) mode!"
             export GL_YIELD="NOTHING"
             export WINED3D=1
-            if ! try_ln "$WINEDIR"/lib/wine/fakedlls/dxgi.dll "$PFX_DLL32_PTH/dxgi.dll" &>/dev/null
+            if ! try_ln "$WINEDIR/lib/wine/fakedlls/dxgi.dll" "$PFX_DLL32_PTH/dxgi.dll" &>/dev/null
                 then
-                    try_ln "$WINEDIR"/lib/wine/i386-windows/dxgi.dll "$PFX_DLL32_PTH/dxgi.dll" &>/dev/null
+                    try_ln "$WINEDIR/lib/wine/i386-windows/dxgi.dll" "$PFX_DLL32_PTH/dxgi.dll" &>/dev/null
             fi
             if [ "$WINEARCH" != "win32" ]
                 then
-                    if ! try_ln "$WINEDIR"/lib64/wine/fakedlls/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                    if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
                         then
-                            try_ln "$WINEDIR"/lib64/wine/x86_64-windows/dxgi.dll "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                            try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
                     fi
             fi
             for wine_build_dll in d3d11 d3d10 d3d10core d3d10_1 d3d9
