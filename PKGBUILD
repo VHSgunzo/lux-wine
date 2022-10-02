@@ -38,15 +38,15 @@ optdepends=('lib32-vulkan-radeon' 'vulkan-radeon' 'xf86-video-amdgpu'
 )
 provides=("${pkgname%-git}")
 conflicts=("${pkgname%-git}")
-source=('git+https://github.com/VHSgunzo/lutris-wine.git')
+source=("${pkgname}::git+https://github.com/VHSgunzo/lutris-wine.git")
 sha256sums=('SKIP')
 
 pkgver() {
-  cd "$srcdir/${pkgname%-git}"
+  cd "$srcdir/${pkgname}"
   git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 package() {
-    cd $srcdir/${pkgname%-git}
+    cd $srcdir/${pkgname}
     make DESTDIR="${pkgdir}" install
 }
