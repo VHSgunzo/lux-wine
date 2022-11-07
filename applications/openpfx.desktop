@@ -1,10 +1,11 @@
+#!/usr/bin/env xdg-open
 [Desktop Entry]
 Categories=Lutris Wine
 Exec=lutris-wine -openpfx %f
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 MimeType=application/x-ms-dos-executable;application/x-msdos-program
-Name=Open drive C:\\
-Name[ru_RU]=Открыть диск C:\\
+Name=Open drive C:
+Name[ru_RU]=Открыть диск C:
 NoDisplay=false
 StartupNotify=true
 Terminal=0

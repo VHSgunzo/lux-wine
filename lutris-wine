@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LW_VERSION="0.75.4"
+export LW_VERSION="0.75.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -13,7 +13,7 @@ export GDK_BACKEND="x11"
 if [ -n "$RUNDIR" ]
     then
         export LW_EDITOR="pluma"
-        export LW_FLMGR="thunar"
+        export LW_FLMGR="spacefm"
         export SYS_WINETRICKS=1
     else
         export LW_EDITOR="xdg-open"
@@ -823,15 +823,27 @@ wine_is_death() {
 check_display() {
     if [ -n "$(which xrandr 2>/dev/null)" ]
         then
-            export CHK_PRIMDISPL_OUT="xrandr --current|grep -w 'connected'|grep -w 'primary'|grep '[0-9]x[0-9]'"
-            export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep '[0-9]x[0-9]'"
+            if [ -n "$(xrandr --current|grep -ow 'primary')" ]
+                then
+                    export CHK_PRIMDISPL_OUT="xrandr --current|grep -w 'connected'|grep -w 'primary'|grep '[0-9]x[0-9]'"
+                    export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep '[0-9]x[0-9]'"
+                    export PRIMDISPL_RES="$(eval $CHK_PRIMDISPL_OUT|sed -n -e 's/.* connected primary \([^ +]*\).*/\1/p')"
+            # Old xfce4 bug (xrandr not print 'primary') (Linux Lite, MX Linux, PCLinuxOS, PeppermintOS, Sparky Linux)
+            elif [ -n "$(xrandr --current|grep -owm1 'connected')" ]
+                then
+                    export CHK_PRIMDISPL_OUT="xrandr --current|grep -wm1 'connected'|grep '[0-9]x[0-9]'"
+                    export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep -v '+0+0'|grep '[0-9]x[0-9]'"
+                    export PRIMDISPL_RES="$(eval $CHK_PRIMDISPL_OUT|sed -n -e 's/.* connected \([^ +]*\).*/\1/p')"
+            else
+                print_error yad "Could not determine display settings!"
+            fi
             export PRIMDISPL_OUT="$(eval $CHK_PRIMDISPL_OUT|awk '{print$1}')"
-            export PRIMDISPL_RES="$(xrandr --current|sed -n -e 's/.* connected primary \([^ +]*\).*/\1/p')"
-            #export PRIMDISPL_RESES="$(xrandr --current|grep -a15 'primary'|grep -v '^[a-zA-Z]'|grep -o '\b.*[0-9]x[0-9]*\b'|sort -rn|awk '!seen[$0]++')"
             export OTHDISPL_OUT="$(eval $CHK_OTHDISPL_OUT|awk '{print$1}')"
             export PRIMDISPLCFG="$(eval $CHK_PRIMDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--primary","--mode "$4,"--pos "$5"x"$6,"--rotate "$7}' 2>/dev/null)"
             export OTHDISPLCFG="$(eval $CHK_OTHDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--mode "$3,"--pos "$4"x"$5,"--rotate "$6}' 2>/dev/null)"
-            [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] && export YADSCROLL=1
+            #export PRIMDISPL_RESES="$(xrandr --current|grep -a15 'primary'|grep -v '^[a-zA-Z]'|grep -o '\b.*[0-9]x[0-9]*\b'|sort -rn|awk '!seen[$0]++')"
+            [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] && \
+                export YADSCROLL=1
         else
             print_error yad "xrandr not found in your system!"
     fi
@@ -1116,8 +1128,8 @@ check_musthave_dll() {
                 then
                     export UPDPFX_LOG="$WINEPREFIX/update_pfx.log"
                     print_info notify "Try to install DLL in prefix: [ $NEED_INSTALL_DLLS ]"
-                    $TERM_APP $LWSHELL -c "print_info 'Try to install DLL in prefix: [ $NEED_INSTALL_DLLS ]'|& tee -a '$UPDPFX_LOG' \
-                    && winetricks -q -f -r $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
+                    $TERM_APP $LWSHELL -c "print_info 'Try to install DLL in prefix: [ $NEED_INSTALL_DLLS ]'|& tee -a '$UPDPFX_LOG' ; \
+                    winetricks -q -f -r $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
                     while read WTRXDLL
                         do
                             if [ ! -n "$(grep -wo "$WTRXDLL" "$WTRX_LOG" 2>/dev/null)" ]
@@ -3027,29 +3039,29 @@ winetricks() {
     fi
     if [ "$SYS_WINETRICKS" == 1 ]
         then
-            if [ -n "$(which winetricks 2>/dev/null)" ]
+            if [ -x "/usr/bin/winetricks" ]
                 then
                     print_info notify "Using System winetricks!"
                     if [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$WTRX_RUN" ]] \
                         || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && -n "$WTRX_RUN" ]] \
                         || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && ! -n "$WTRX_RUN" ]]
                         then
-                            $TERM_APP $LWSHELL -c "print_info 'Using System winetricks!!' \
-                            && DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$(which winetricks)'"
+                            $TERM_APP $LWSHELL -c "print_info 'Using System winetricks!!' ; \
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks"
                     elif [[ -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                         then
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $@ || return 1
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks $@ || return 1
                     elif [[ ! -n "$NEED_INSTALL_DLLS" && -n "$WTRX_ARG" ]]
                         then
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$(which winetricks)" $WTRX_ARG || return 1
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks $WTRX_ARG || return 1
                     fi
                 else
                     print_error yad "Winetricks" "Winetricks not found in your system. Using Lutris Wine winetricks!"
                     check_winetricks
                     if [[ ! -n "$WTRX_ARG" && -n "$WTRX_RUN" ]]
                         then
-                            $TERM_APP $LWSHELL -c "print_info 'Using Lutris Wine winetricks!' \
-                            && DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
+                            $TERM_APP $LWSHELL -c "print_info 'Using Lutris Wine winetricks!' ; \
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
                     elif [[ ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
@@ -3064,8 +3076,8 @@ winetricks() {
                 || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && -n "$WTRX_RUN" ]] \
                 || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && ! -n "$WTRX_RUN" ]]
                 then
-                    $TERM_APP $LWSHELL -c "print_info 'Using Lutris Wine winetricks!' \
-                    && DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
+                    $TERM_APP $LWSHELL -c "print_info 'Using Lutris Wine winetricks!' ; \
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
             elif [[ -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                 then
                     DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
@@ -4188,6 +4200,8 @@ check_vkd3d() {
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
                     export VKD3D_FEATURE_LEVEL=12_0
+                    try_mkdir "$LW_DEF_CACHE/vkd3d_cache"
+                    export VKD3D_SHADER_CACHE_PATH="$LW_DEF_CACHE/vkd3d_cache"
                     unset GIT_RELEASE_URL
                 else
                     export VKD3D=0
@@ -4732,7 +4746,7 @@ check_terminal() {
                     export TERM_APP="$LW_TERM_APP -e"
             elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "xfce4-terminal")" ]
                 then
-                    export TERM_APP="$LW_TERM_APP $TERM_HOLD -x"
+                    export TERM_APP="$LW_TERM_APP --disable-server $TERM_HOLD -x"
             elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "xterm")" ]
                 then
                     export TERM_APP="$LW_TERM_APP -bg black -fg white $TERM_HOLD -e"
@@ -4760,7 +4774,7 @@ check_terminal() {
                     export TERM_APP="lxterminal -e"
             elif [ -n "$(which xfce4-terminal 2>/dev/null)" ]
                 then
-                    export TERM_APP="xfce4-terminal $TERM_HOLD -x"
+                    export TERM_APP="xfce4-terminal --disable-server $TERM_HOLD -x"
             else
                 check_hold_terminal xterm
                 export TERM_APP="xterm -bg black -fg white $TERM_HOLD -e"
@@ -5743,7 +5757,7 @@ lu_backupunmnt() {
 }
 
 
-if [ $(id -u) -eq 0 ]
+if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
     then
         print_error yad "Don't run Lutris Wine as root!"
         exit 1
