@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-export LW_VERSION="0.75.5"
+
+export LW_VERSION="0.75.6"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -51,7 +52,10 @@ fi
 [ ! -n "$SYS_LU" ] && export SYS_LU="$(which lutris 2>/dev/null)"
 [ ! -n "$CMPRSS_METHOD" ] && export CMPRSS_METHOD='zstd'
 [ ! -n "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
+[ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
+    NOT_TERM=1
 export > /tmp/envbackup$ENVKEY
+export LWPID=$BASHPID
 
 check_def_config() {
     [ ! -n "$LOADBAR" ] && export LOADBAR=1
@@ -144,10 +148,10 @@ print_error() {
         then
             yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0" --title="Lutris Wine Error" \
                 --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
-    elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 ]]
+    elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
             notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" "$3"
-    elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 ]]
+    elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
             notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2"
     fi
@@ -171,10 +175,10 @@ print_info() {
         then
             yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lutris Wine Info" \
                 --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
-    elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 ]]
+    elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
             notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" "$3"
-    elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 ]]
+    elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
             notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2"
     fi
@@ -207,14 +211,6 @@ print_input() {
 check_lupid() {
     unset LU_PID
     export LU_PID="$(pgrep -fa python|grep lutris|awk '{print$1}')"
-}
-
-check_tray() {
-    unset TRAY_PID FORCE_TRAY CHK_TRAY_PID CHK_FORCE_TRAY
-    CHK_TRAY_PID="$(pgrep -fa yad|grep "\--notification"|grep -iF "Lutris Wine"|awk '{print $1}')"
-    CHK_FORCE_TRAY="$(pgrep -fa "$LW_NAME"|grep -o "noclose")"
-    [ -n "$CHK_TRAY_PID" ] && export TRAY_PID="$CHK_TRAY_PID"
-    [ -n "$CHK_FORCE_TRAY" ] && export FORCE_TRAY="$CHK_FORCE_TRAY"
 }
 
 check_wine_pids() {
@@ -250,22 +246,17 @@ check_luwine_sh_pid() {
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
-    if [ -n "$RUNIMAGE" ]
+    RUN_EXES="$(ps -o pid=,cmd= -p $(ls -l /proc/*/exe 2>/dev/null|\
+                grep -E 'wine(64)?-preloader|wineserver'|\
+                awk -F/ '{print $3}') 2>/dev/null|grep -v 'winedevice'|\
+                grep -v 'windows.sys.*'|grep -v 'wineserver')"
+    if [ -n "$RUN_EXES" ]
         then
-            CHK_EXES="$(pgrep -fa ".ex"|grep -iF ".ex"|grep -v "$RUNDIR"|grep -v "$(basename "$RUNIMAGE")"|grep -v " bash"|sed "/windows/d;/$LW_NAME/d;/grep/d;/yad/d;/winedevice/d;/^$/d;/^[[:space:]]*$/d;s/[[:blank:]]*$//")"
-        else
-            CHK_EXES="$(pgrep -fa ".ex"|grep -iF ".ex"|sed "/windows/d;/$LW_NAME/d;/grep/d;/yad/d;/winedevice/d;/^$/d;/^[[:space:]]*$/d;s/[[:blank:]]*$//")"
+            export EXE_PIDS="$(echo "$RUN_EXES"|awk '{print$1}')"
+            [[ -n "$EXE_DIR" && -n "$EXE_NAME" ]] && \
+                export RUN_EXE="$(echo "$EXE_PIDS"|xargs -I {} lsof -p {}|\
+                                  grep -iE "($EXE_DIR|$EXE_NAME)" 2>/dev/null)"
     fi
-    if [ -n "$CHK_EXES" ]
-        then
-            export EXE_PIDS="$(echo "$CHK_EXES"|awk '{print$1}')"
-            export RUN_EXES="$(while read exepid ; do ps -p $exepid -o args|sed '/COMMAND/d'|sed 's/[a-zA-Z]://'|sed 'y#\\#/#' ; done <<< "$EXE_PIDS")"
-            [[ -n "$EXE_DIR" && -n "$EXE_NAME" ]] && export RUN_EXE=$(echo "$RUN_EXES"|grep -iE "($EXE_DIR|$EXE_NAME)" 2>/dev/null)
-    fi
-}
-
-noclosetray() {
-    [ -n "$FORCE_TRAY" ] && while : ; do sleep 1 ; done
 }
 
 check_compositor() {
@@ -1147,7 +1138,7 @@ check_musthave_dll() {
                             print_info notify 'Winetricks DLLs are successfully installed!'
                         else
                             print_error yad "Winetricks DLLs are not installed successfully! \n[ $BAD_INSTALL_DLLS ]\nSee [ $UPDPFX_LOG ]"
-                            $LW_EDITOR "$UPDPFX_LOG" 2>/dev/null &
+                            $LW_EDITOR "$UPDPFX_LOG" 2>/dev/null
                     fi
                     try_shutdown_wine
             fi
@@ -1433,6 +1424,7 @@ add_to_lutris() {
                     fi
             done)
     fi
+    wait
 }
 
 create_shortcut() {
@@ -1589,7 +1581,7 @@ lu_debug() {
             export VKD3D_DEBUG="warn"
             export WINE_MONO_TRACE="E:System.NotImplementedException"
             export VKBASALT_LOG_LEVEL="debug"
-            export TMP_DEB="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').debug"
+            export TMP_DBG="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').debug"
             check_runtime
             check_ld_library
             export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "PRIME" \
@@ -1601,186 +1593,186 @@ lu_debug() {
                 "VKBASALT_CONFIG_FILE" "VK_ICD_FILENAMES" "__GL_THREADED_OPTIMIZATIONS" "DXVK_STATE_CACHE_PATH" "__GLX_VENDOR_LIBRARY_NAME" "__NV_PRIME_RENDER_OFFLOAD" \
                 "WINE_FULLSCREEN_FSR_MODE" "DXVK_STATE_CACHE" "__GL_DXVK_OPTIMIZATIONS" "__GL_SHADER_DISK_CACHE_PATH" "__GL_SHADER_DISK_CACHE" "__GL_SHADER_DISK_CACHE_SIZE" \
                 "WD3DMODE" "MEDIACONV_AUDIO_DUMP_FILE" "MEDIACONV_AUDIO_TRANSCODED_FILE" "MEDIACONV_VIDEO_DUMP_FILE" "MEDIACONV_VIDEO_TRANSCODED_FILE" "LW_STEAMAPPS_DIR")"
-            unset LD_LIBRARY_PATH
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Lutris Wine version ] : $LW_VERSION" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            #unset LD_LIBRARY_PATH
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Lutris Wine version ] : $LW_VERSION" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             if [ "$WINE_VERSION" == "System" ]
                 then
-                    echo "[ WINE version ] : System $("$SYS_WINE" --version)" >> "$TMP_DEB"
+                    echo "[ WINE version ] : System $("$SYS_WINE" --version)" >> "$TMP_DBG"
                 else
-                    echo "[ WINE version ] : $WINE_IN_USE" >> "$TMP_DEB"
+                    echo "[ WINE version ] : $WINE_IN_USE" >> "$TMP_DBG"
             fi
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Operating system ] : $(lsb_release -d|sed 's/Description://g')" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ GLIBC version ] : $(ldd --version|grep -m1 ldd|awk '{print $NF}')" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Desktop Environment ] : $XDG_CURRENT_DESKTOP - $DESKTOP_SESSION $XDG_SESSION_TYPE" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Kernel ] : $(uname -r)" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Debug for program ] : $LU_EXE" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Operating system ] : $(lsb_release -d|sed 's/Description://g')" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ GLIBC version ] : $(ldd --version|grep -m1 ldd|awk '{print $NF}')" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Desktop Environment ] : $XDG_CURRENT_DESKTOP - $DESKTOP_SESSION $XDG_SESSION_TYPE" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Kernel ] : $(uname -r)" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             echo "[ CPU ] :$(cat /proc/cpuinfo|grep "cpu cores"|sort -u|cut -d":" -f2)-physical $(cat /proc/cpuinfo| \
-            grep "processor"|wc -l)-logical cores$(cat /proc/cpuinfo|grep "model name"|sort -u|cut -d":" -f2)" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Memory ] :" >> "$TMP_DEB"
-            free -m >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            grep "processor"|wc -l)-logical cores$(cat /proc/cpuinfo|grep "model name"|sort -u|cut -d":" -f2)" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Memory ] :" >> "$TMP_DBG"
+            free -m >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             export DiskMP="$(mount|grep -w "on $(stat -c %m -- "$LU_EXE")")"
-            echo "[ Disk info ] : $(echo $DiskMP|awk -F'type ' '{print $2}') " >> "$TMP_DEB"
-            echo -en "$(df -h|head -1)\n$(df -h|grep "$(echo $DiskMP|awk '{print$1}')")\n" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo "[ Graphic cards and drivers ] :" >> "$TMP_DEB"
-            echo "$(lspci -k|grep -EA3 'VGA|3D|Display')" >> "$TMP_DEB"
+            echo "[ Disk info ] : $(echo $DiskMP|awk -F'type ' '{print $2}') " >> "$TMP_DBG"
+            echo -en "$(df -h|head -1)\n$(df -h|grep "$(echo $DiskMP|awk '{print$1}')")\n" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo "[ Graphic cards and drivers ] :" >> "$TMP_DBG"
+            echo "$(lspci -k|grep -EA3 'VGA|3D|Display')" >> "$TMP_DBG"
             if [ ! -x "$(which glxinfo 2>/dev/null)" ]
                 then
-                    echo "[!]glxinfo not found[!]"  >> "$TMP_DEB"
+                    echo "[!]glxinfo not found[!]"  >> "$TMP_DBG"
                 else
-                    glxinfo -B >> "$TMP_DEB"
+                    glxinfo -B >> "$TMP_DBG"
             fi
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             if [ ! -x "$(which vulkaninfo 2>/dev/null)" ]
                 then
-                    echo "[!]vulkaninfo not found[!]"  >> "$TMP_DEB"
+                    echo "[!]vulkaninfo not found[!]"  >> "$TMP_DBG"
                 else
-                    echo "[ Vulkan info device name ] : $(vulkaninfo|grep deviceName|cut -d"=" -f2)" >> "$TMP_DEB"
+                    echo "[ Vulkan info device name ] : $(vulkaninfo|grep deviceName|cut -d"=" -f2)" >> "$TMP_DBG"
             fi
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             if [ ! -x "$(which vkcube 2>/dev/null)" ]
                 then
-                    echo "[!]vkcube not found[!]"  >> "$TMP_DEB"
+                    echo "[!]vkcube not found[!]"  >> "$TMP_DBG"
                 else
                     vkcube --c 50
                     if [ $? -eq 0 ]
                         then
-                            echo "[ Vulkan cube test ] : Passed successfully!" >> "$TMP_DEB"
+                            echo "[ Vulkan cube test ] : Passed successfully!" >> "$TMP_DBG"
                         else
-                            echo "[!] Vkcube test completed with error [!]" >> "$TMP_DEB"
+                            echo "[!] Vkcube test completed with error [!]" >> "$TMP_DBG"
                     fi
             fi
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             if [ ! -x "$(which gamemoderun 2>/dev/null)" ]
                 then
-                    echo "[!]gamemod not found[!]"  >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[!]gamemod not found[!]"  >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ -f "$WTRX_LOG" ]
                 then
-                    echo "[ Winetricks log ] :" >> "$TMP_DEB"
-                    cat "$WTRX_LOG" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ Winetricks log ] :" >> "$TMP_DBG"
+                    cat "$WTRX_LOG" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ "$WINED3D" == 1 ]
                 then
-                    echo "[ WineD3D ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ WineD3D ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ WineD3D ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ WineD3D ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [[ "$DXVK" == 1 && "$WINED3D" != 1 ]]
                 then
-                    echo "[ DXVK ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DXVK ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ DXVK ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DXVK ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ -n "$DXVK_VERSION" ]
                 then
-                    echo "[ DXVK version ] : $DXVK_VERSION" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DXVK version ] : $DXVK_VERSION" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [[ "$VKD3D" == 1 && "$WINED3D" != 1 ]]
                 then
-                    echo "[ VKD3D ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ VKD3D ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ VKD3D ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ VKD3D ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ -n "$VKD3D_VERSION" ]
                 then
-                    echo "[ VKD3D version ] : $VKD3D_VERSION" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ VKD3D version ] : $VKD3D_VERSION" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [[ "$DXVK_NVAPI" == 1 && -n "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
                 then
-                    echo "[ DXVK-NVAPI ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DXVK-NVAPI ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ DXVK-NVAPI ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DXVK-NVAPI ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ -n "$DXVK_NVAPI_VERSION" ]
                 then
-                    echo "[ DXVK-NVAPI version ] : $DXVK_NVAPI_VERSION" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DXVK-NVAPI version ] : $DXVK_NVAPI_VERSION" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ "$D3D_EXTRAS" == 1 ]
                 then
-                    echo "[ D3D EXTRAS ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ D3D EXTRAS ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ D3D EXTRAS ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ D3D EXTRAS ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ -n "$D3D_EXTRAS_VERSION" ]
                 then
-                    echo "[ D3D EXTRAS version ] : $D3D_EXTRAS_VERSION" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ D3D EXTRAS version ] : $D3D_EXTRAS_VERSION" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ "$DGVOODOO2" == 1 ]
                 then
-                    echo "[ DGVOODOO2 ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DGVOODOO2 ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ DGVOODOO2 ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DGVOODOO2 ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ -n "$DGVOODOO2_VERSION" ]
                 then
-                    echo "[ DGVOODOO2 version ] : $DGVOODOO2_VERSION" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ DGVOODOO2 version ] : $DGVOODOO2_VERSION" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ "$WINE_NVML" == 1 ]
                 then
-                    echo "[ WINE-NVML ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ WINE-NVML ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ WINE-NVML ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ WINE-NVML ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ -n "$WINE_NVML_VERSION" ]
                 then
-                    echo "[ WINE-NVML version ] : $WINE_NVML_VERSION" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ WINE-NVML version ] : $WINE_NVML_VERSION" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ "$BATTLEYE" == 1 ]
                 then
-                    echo "[ PROTON BATTLEYE ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ PROTON BATTLEYE ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ PROTON BATTLEYE ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ PROTON BATTLEYE ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
             if [ "$EAC" == 1 ]
                 then
-                    echo "[ PROTON EAC ] : ON" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ PROTON EAC ] : ON" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
                 else
-                    echo "[ PROTON EAC ] : OFF" >> "$TMP_DEB"
-                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
+                    echo "[ PROTON EAC ] : OFF" >> "$TMP_DBG"
+                    echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             fi
-            echo "[ Network status ] : $([ "$NETSTATUS" == 1 ] && echo ONLINE || echo OFFLINE)" >> "$TMP_DEB"
-            echo "---------------------------------------------------------------------------------------" >> "$TMP_DEB"
-            echo " -------------------------------------------" >> "$TMP_DEB"
-            echo "|[             Starting logging            ]|" >> "$TMP_DEB"
-            echo " -------------------------------------------" >> "$TMP_DEB"
+            echo "[ Network status ] : $([ "$NETSTATUS" == 1 ] && echo ONLINE || echo OFFLINE)" >> "$TMP_DBG"
+            echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
+            echo " -------------------------------------------" >> "$TMP_DBG"
+            echo "|[             Starting logging            ]|" >> "$TMP_DBG"
+            echo " -------------------------------------------" >> "$TMP_DBG"
         else
             lu_prerun
             export WINEDEBUG="-all"
@@ -2049,7 +2041,7 @@ lu_run() {
             if [ -n "$LU_SHELL_EXE" ]
                 then
                     unset LU_SHELL_PTH TERMINAL LU_SHELL_EXE LD_LIBRARY_PATH
-                    $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
+                    $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
                     clear_log  2>/dev/null
                     $LW_EDITOR "$LOG_FILE" 2>/dev/null &
             elif [ -n "$LU_SHELL_PTH" ]
@@ -2057,13 +2049,13 @@ lu_run() {
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
                     $TERM_APP $LWSHELL
             else
-                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
+                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
                 clear_log  2>/dev/null
                 $LW_EDITOR "$LOG_FILE" 2>/dev/null &
             fi
     elif [ "$LOG" == 1 ]
         then
-            echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
+            echo -en "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n"
             $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG|& tee -a "$LOG_FILE"
             clear_log  2>/dev/null
             $LW_EDITOR "$LOG_FILE" 2>/dev/null &
@@ -2074,7 +2066,7 @@ lu_run() {
                     if [ "$LOG" == 1 ]
                         then
                             unset LU_SHELL_EXE TERMINAL
-                            $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
+                            $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
                             clear_log  2>/dev/null
                             $LW_EDITOR "$LOG_FILE" 2>/dev/null &
                         else
@@ -2089,13 +2081,13 @@ lu_run() {
                 if [ -n "$LU_LNK" ]
                     then
                         export TMP_OUT="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').out"
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
                     else
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
+                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n' ; $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
                 fi
             fi
     else
-        echo -en "$(cat "$TMP_DEB" 2>/dev/null)\n$PRINT_VARS\n"
+        echo -en "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n"
         $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
     unset LD_LIBRARY_PATH
@@ -2105,7 +2097,7 @@ lu_run() {
     gamma_sw 2>/dev/null
     dis_displ_sw 2>/dev/null
     resol_sw 2>/dev/null
-    try_rm "$TMP_DEB" "$TMP_OUT" &>/dev/null
+    try_rm "$TMP_DBG" "$TMP_OUT" &>/dev/null
     check_tray
     if [[ ! -n "$FORCE_TRAY" && -n "$TRAY_PID" ]]
         then
@@ -2113,10 +2105,9 @@ lu_run() {
                 then
                     check_tray; check_wine_pids; check_luwine_sh_pid
                     [[ ! -n "$WINE_PIDS" && ! -n "$LW_SH_PID" && -n "$TRAY_PID" ]] && lu_killtray
-                    #[ -n "$SQFUSE_PIDS" ] && \
-                    #    kill $SQFUSE_PIDS 2>/dev/null
             fi
     fi
+    wait
 }
 
 lu_prestart() {
@@ -2694,10 +2685,8 @@ lu_config() {
                         fi
                 done
         fi
-        (IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
-            $([ -n "$YADSCROLL" ] && echo "--scroll") \
-            $RESHADE_SETT \
-        1> /tmp/ressett$LWCFGKEY & )
+        ( IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
+            $([ -n "$YADSCROLL" ] && echo "--scroll") $RESHADE_SETT 1> /tmp/ressett$LWCFGKEY & )
 
         echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form $([ -n "$YADSCROLL" ] && echo "--scroll") \
             --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
@@ -3090,9 +3079,7 @@ winetricks() {
     stop_loadbar
 }
 
-lu_openpfx() {
-    $LW_FLMGR "$WINEPREFIX/drive_c/" 2>/dev/null &
-}
+lu_openpfx() { $LW_FLMGR "$WINEPREFIX/drive_c/" 2>/dev/null ; }
 
 lu_exit() {
     check_tray; check_wine_pids; check_exes; check_luwine_sh_pid
@@ -3114,8 +3101,6 @@ lu_exit() {
             sleep 2
             try_rm /tmp/FORCE_EXIT /tmp/envbackup* /tmp/syssett* /tmp/winesett* /tmp/ressett* /tmp/settbtn* &>/dev/null
             kill $(pgrep -fa "$LW_NAME"|awk '{print$1}')
-            [ -n "$SQFUSE_PIDS" ] && \
-                kill $SQFUSE_PIDS 2>/dev/null
         else
             print_error yad "Lutris Wine Killer" "Lutris Wine not runing!" &
     fi
@@ -3467,7 +3452,7 @@ lu_help() {
 {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}\n \
 {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
         \nLutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
-        " &>/dev/null &
+        " &>/dev/null
 }
 
 lu_version() {
@@ -3512,12 +3497,25 @@ lu_version() {
             export WINE_NVML_VER="[ WINE-NVML ]  : $WINE_NVML_VERSION\n"
             echo -en "$WINE_NVML_VER"
     fi
-    print_info yad "Lutris Wine Version Info" "Lutris Wine v${LW_VERSION} by $LW_DEVELOPERS\n\n${WINE_VER}${DXVK_VER}${VKD3D_VER}${DXVK_NVAPI_VER}${D3DEXTRAS_VER}${DGVOODOO2_VER}${WINE_NVML_VER}" &>/dev/null &
+    print_info yad "Lutris Wine Version Info" "Lutris Wine v${LW_VERSION} by $LW_DEVELOPERS\n\n${WINE_VER}${DXVK_VER}${VKD3D_VER}${DXVK_NVAPI_VER}${D3DEXTRAS_VER}${DGVOODOO2_VER}${WINE_NVML_VER}" &>/dev/null
 }
 
 check_shell() {
     [ -n "$1" ] && export LWSHELL="$1"
     [ ! -n "$LWSHELL" ] && export LWSHELL="$(which bash 2>/dev/null)"
+}
+
+check_tray() {
+    unset TRAY_PID FORCE_TRAY
+    export TRAY_PID="$(pgrep -fa yad|grep "\--notification"|\
+                       grep -iF "Lutris Wine"|awk '{print $1}')"
+    [ -n "$(pgrep -fa "$LW_NAME"|grep -o "noclose")" ] && \
+        export FORCE_TRAY='1'
+}
+
+noclosetray() {
+    [[ -n "$FORCE_TRAY" && -n "$TRAY_PID" ]] && \
+    while [ -d "/proc/$TRAY_PID" ]; do sleep 1; done
 }
 
 lu_tray() {
@@ -3562,6 +3560,7 @@ Kill running EXE!$LWSHELL -c '"$LW_SOURCE" -killexe'!"$LW_DEF_ICO"| \
 Kill SHELL!$LWSHELL -c '"$LW_SOURCE" -killshell'!"$LW_DEF_ICO"| \
 Kill tray!$LWSHELL -c '"$LW_SOURCE" -killtray'!"$LW_DEF_ICO"| \
 FORCE EXIT!$LWSHELL -c '"$LW_SOURCE" -exit'!"$LW_DEF_ICO"|" &
+            export TRAY_PID=$!
             noclosetray &
     fi
 }
@@ -4505,7 +4504,7 @@ check_winepfx() {
             fi
     fi
     [ ! -d "$WINEPREFIX/drive_c/users/$USER" ] && try_ln "$WINEPREFIX/drive_c/users/steamuser" "$WINEPREFIX/drive_c/users/$USER"
-    for comprt in $(seq 1 32)
+    for comprt in {1..32}
         do
             if [ ! -L "$WINEPREFIX/dosdevices/com$comprt" ]
                 then
@@ -4860,7 +4859,8 @@ check_reset_pulse() {
     [ -n "$1" ] && export RESET_PULSE="$1"
     if [ "$RESET_PULSE" == 1 ]
         then
-            if [[ -n "$(pgrep pulseeffects)" && -n "$(pgrep pulseaudio)" ]]
+            if [[ -n "$(which pulseeffects 2>/dev/null)" && \
+                  -n "$(pgrep pulseeffects)" && -n "$(pgrep pulseaudio)" ]]
                 then
                     pkill -15 pulseeffects
                     pulseaudio -k
@@ -5576,7 +5576,7 @@ lu_pfxbackup() {
                     if makesquash_$CMPRSS_METHOD "$WINEPREFIX" "$LW_DEF_WINEPFXBKP_DIR" 'lwpfx' $ZSTD_CMPRSS_LVL
                         then
                             print_info notify "Prefix backup completed!"
-                            $LW_FLMGR "$LW_DEF_WINEPFXBKP_DIR" &>/dev/null &
+                            $LW_FLMGR "$LW_DEF_WINEPFXBKP_DIR" &>/dev/null
                         else
                             print_error yad "Prefix backup" "Cannot create prefix backup!"
                             return 1
@@ -5723,6 +5723,7 @@ lu_backupmnt() {
         else print_error yad "Mount error" "squashfuse not found in your system!"
              return 1
     fi
+    wait
 }
 
 lu_backupunmnt() {

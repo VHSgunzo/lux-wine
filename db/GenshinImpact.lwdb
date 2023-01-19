@@ -2,7 +2,7 @@
 check_win_version '10'
 
 check_deps() {
-    if [ -z "$(which xdelta3 2>/dev/null)" ]
+    if [ ! -n "$(which xdelta3 2>/dev/null)" ]
         then
             print_error yad "xdelta3 not found in your system! Install xdelta3 in your system! \nArch-based: sudo pacman -S xdelta3"
             return 1
@@ -10,10 +10,10 @@ check_deps() {
 }
 
 check_gi_patch() {
-    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch330"
+    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch340"
     if [ ! -d "$DIR" ]
         then
-            if try_download "https://github.com/niizam/gi_patch/releases/download/v3.3/gi_patch330.tar.gz" "$WINEPREFIX/drive_c/Program Files"
+            if try_download "https://github.com/niizam/gi_patch/releases/download/v3.4/gi_patch340.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                 then
                     if unpack_tar_gz "$DIR.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                         then
@@ -29,17 +29,26 @@ check_gi_patch() {
     fi
 }
 
+helper_pkexec() {
+    if [ "$ENABLE_HOSTEXEC" == 1 ]
+        then
+            hostexec pkexec sh -c "$1"||return 1
+        else
+            pkexec sh -c "$1"||return 1
+    fi
+}
+
 launch_helper() {
     DATADIR=$(find -type d -name "*_Data")
     FILE="UnityPlayer.dll"
     CEXE1="$DATADIR/upload_crash.exe"
     CEXE2="$DATADIR/Plugins/crashreport.exe"
     sum=($(md5sum $FILE))
-    if [ "$sum" == "34459dd7e3e040c9c9dd7d501fd42937" ]
+    if [ "$sum" == "782fa080d71257396383dc90df6c286e" ]
         then
             print_info notify "Patch is already applied!"
         else
-            if [ "${sum}" == "168f62f318099bfe95c1974e3184ac4c" ]
+            if [ "${sum}" == "a8238a3be126723b7226b16447a6cb81" ]
                 then
                     reltype="os"
                     print_info notify "Applying patch for: International (OS) version"
@@ -50,25 +59,25 @@ launch_helper() {
             if print_question "Hereby you are violating the game's Terms of Service! \nDo you accept the risk and possible consequences?"
                 then
                     print_info notify "Setting up blocked servers"
-                    if [ -z "$(grep "Genshin logging servers" /etc/hosts)" ]
+                    if [ ! -n "$(grep "Genshin logging servers" /etc/hosts)" ]
                         then
                             print_info yad "Blocking logging servers in /etc/hosts\n\n0.0.0.0 log-upload-os.hoyoverse.com\n0.0.0.0 overseauspider.yuanshen.com"
-                            pkexec sh -c 'echo -e "\n# Genshin logging servers (do not remove!)\n0.0.0.0 log-upload-os.hoyoverse.com\n0.0.0.0 overseauspider.yuanshen.com\n" >> /etc/hosts'
+                            helper_pkexec "echo -e '\n# Genshin logging servers ( do not remove! )\n0.0.0.0 log-upload-os.hoyoverse.com\n0.0.0.0 overseauspider.yuanshen.com\n' >> /etc/hosts"||return 1
                         else
-                            if [ ! -z "$(grep -A1 'Genshin logging servers' /etc/hosts|grep -o 'log-upload-os.mihoyo.com' /etc/hosts)" ]
+                            if [ -n "$(grep -A1 'Genshin logging servers' /etc/hosts|grep -o 'log-upload-os.mihoyo.com' /etc/hosts)" ]
                                 then
                                     print_info yad "Need to change logging server in /etc/hosts! \nlog-upload-os.mihoyo.com\nto\nlog-upload-os.hoyoverse.com"
-                                    pkexec sh -c "sed -i 's/log-upload-os.mihoyo.com/log-upload-os.hoyoverse.com/g' /etc/hosts"
+                                    helper_pkexec "sed -i 's/log-upload-os.mihoyo.com/log-upload-os.hoyoverse.com/g' /etc/hosts"||return 1
                                     print_info notify "Logging server changed in /etc/hosts!"
                                 else
                                     print_info notify "Logging servers are already blocked. Skip."
                             fi
                     fi
-                    if [ -z "$(grep "Optional Unity proxy" /etc/hosts)" ]
+                    if [ ! -n "$(grep "Optional Unity proxy" /etc/hosts)" ]
                         then
                             if print_question "Blocking common Unity proxy/cdn servers in /etc/hosts\nIf issues arise in other games consider commenting a few lines to check what makes the difference.\n\n0.0.0.0 prd-lender.cdp.internal.unity3d.com\n0.0.0.0 thind-prd-knob.data.ie.unity3d.com\n0.0.0.0 thind-gke-usc.prd.data.corp.unity3d.com\n0.0.0.0 cdp.cloud.unity3d.com\n0.0.0.0 remote-config-proxy-prd.uca.cloud.unity3d.com\n\nBlock Unity proxy/cdn servers?"
                                 then
-                                    pkexec sh -c 'echo -e "# Optional Unity proxy/cdn servers\n0.0.0.0 prd-lender.cdp.internal.unity3d.com\n0.0.0.0 thind-prd-knob.data.ie.unity3d.com\n0.0.0.0 thind-gke-usc.prd.data.corp.unity3d.com\n0.0.0.0 cdp.cloud.unity3d.com\n0.0.0.0 remote-config-proxy-prd.uca.cloud.unity3d.com\n" >> /etc/hosts'
+                                    helper_pkexec "echo -e '# Optional Unity proxy/cdn servers\n0.0.0.0 prd-lender.cdp.internal.unity3d.com\n0.0.0.0 thind-prd-knob.data.ie.unity3d.com\n0.0.0.0 thind-gke-usc.prd.data.corp.unity3d.com\n0.0.0.0 cdp.cloud.unity3d.com\n0.0.0.0 remote-config-proxy-prd.uca.cloud.unity3d.com\n' >> /etc/hosts"||return 1
                             fi
                         else
                             print_info notify "Unity proxy/cdn servers are already blocked. Skip."
@@ -97,7 +106,8 @@ launch_helper() {
                     return 1
             fi
     fi
-    [ ! -f "$WINEPREFIX/drive_c/users/$USER/Temp/mhyprot2.Sys" ] && try_cp "mhyprot2.Sys" "$WINEPREFIX/drive_c/users/$USER/Temp/"
+    [[ ! -f "$WINEPREFIX/drive_c/users/$USER/Temp/mhyprot3.Sys" && -f "mhyprot3.Sys" ]] && \
+        try_cp "mhyprot3.Sys" "$WINEPREFIX/drive_c/users/$USER/Temp/mhyprot3.sys"
     $WINE regedit mhyprot2_running.reg >/dev/null 2>&1
 }
 

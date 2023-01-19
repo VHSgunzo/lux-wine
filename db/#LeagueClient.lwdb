@@ -21,6 +21,16 @@ final_check() {
     fi
 }
 
+
+helper_pkexec() {
+    if [ "$ENABLE_HOSTEXEC" == 1 ]
+        then
+            hostexec pkexec sh -c "$1"||return 1
+        else
+            pkexec sh -c "$1"||return 1
+    fi
+}
+
 syscall_check() {
     # If abi.vsyscall32=0 is already set, no need to do anything
     if [ "$(cat /proc/sys/abi/vsyscall32)" -eq 0 ]
@@ -31,7 +41,7 @@ syscall_check() {
         then
             if dialog --question --text="It looks like you already configured your system to work with League anticheat, and saved the setting to persist across reboots. However, for some reason the persistence part did not work.\n\nFor now, would you like to enable the setting again until the next reboot?"
                 then
-                    pkexec sh -c 'sysctl -w abi.vsyscall32=0'
+                    helper_pkexec 'sysctl -w abi.vsyscall32=0'||return 1
                     return 0
                 else
                     return 1
@@ -54,10 +64,10 @@ syscall_check() {
 
             case "$RESULT" in
                 "$once")
-                    pkexec sh -c 'sysctl -w abi.vsyscall32=0'
+                    helper_pkexec 'sysctl -w abi.vsyscall32=0'||return 1
                     return 0 ;;
                 "$persist")
-                    pkexec sh -c 'echo "abi.vsyscall32 = 0" >> /etc/sysctl.conf && sysctl -p'
+                    helper_pkexec "echo 'abi.vsyscall32 = 0' >> /etc/sysctl.conf && sysctl -p"||return 1
                     return 0 ;;
                 "$manual")
                     dialog --info --no-wrap --text="To change the setting (a kernel parameter) until next boot, run:\n\nsudo sh -c 'sysctl -w abi.vsyscall32=0'\n\nTo persist the setting between reboots, run:\n\nsudo sh -c 'echo \"abi.vsyscall32 = 0\" >> /etc/sysctl.conf &amp;&amp; sysctl -p'"
