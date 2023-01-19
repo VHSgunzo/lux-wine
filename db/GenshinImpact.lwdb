@@ -10,10 +10,10 @@ check_deps() {
 }
 
 check_gi_patch() {
-    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch330"
+    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch340"
     if [ ! -d "$DIR" ]
         then
-            if try_download "https://github.com/niizam/gi_patch/releases/download/v3.3/gi_patch330.tar.gz" "$WINEPREFIX/drive_c/Program Files"
+            if try_download "https://github.com/niizam/gi_patch/releases/download/v3.4/gi_patch340.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                 then
                     if unpack_tar_gz "$DIR.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                         then
@@ -35,11 +35,11 @@ launch_helper() {
     CEXE1="$DATADIR/upload_crash.exe"
     CEXE2="$DATADIR/Plugins/crashreport.exe"
     sum=($(md5sum $FILE))
-    if [ "$sum" == "34459dd7e3e040c9c9dd7d501fd42937" ]
+    if [ "$sum" == "782fa080d71257396383dc90df6c286e" ]
         then
             print_info notify "Patch is already applied!"
         else
-            if [ "${sum}" == "168f62f318099bfe95c1974e3184ac4c" ]
+            if [ "${sum}" == "a8238a3be126723b7226b16447a6cb81" ]
                 then
                     reltype="os"
                     print_info notify "Applying patch for: International (OS) version"
