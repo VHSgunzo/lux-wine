@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.75.6"
+export LW_VERSION="0.75.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -826,17 +826,17 @@ wine_is_death() {
 check_display() {
     if [ -n "$(which xrandr 2>/dev/null)" ]
         then
-            if [ -n "$(xrandr --current|grep -ow 'primary')" ]
+            if [ -n "$(xrandr --current|grep -ow 'connected primary')" ]
                 then
-                    export CHK_PRIMDISPL_OUT="xrandr --current|grep -w 'connected'|grep -w 'primary'|grep '[0-9]x[0-9]'"
-                    export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep '[0-9]x[0-9]'"
-                    export PRIMDISPL_RES="$(eval $CHK_PRIMDISPL_OUT|sed -n -e 's/.* connected primary \([^ +]*\).*/\1/p')"
+                    export CHK_PRIMDISPL_OUT="xrandr --current|grep -w 'connected'|grep -w 'primary'|grep -P '\d+x\d+'"
+                    export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep -P '\d+x\d+'"
+                    export PRIMDISPL_RES="$(eval $CHK_PRIMDISPL_OUT|grep -Po '\d+x\d+')"
             # Old xfce4 bug (xrandr not print 'primary') (Linux Lite, MX Linux, PCLinuxOS, PeppermintOS, Sparky Linux)
             elif [ -n "$(xrandr --current|grep -owm1 'connected')" ]
                 then
-                    export CHK_PRIMDISPL_OUT="xrandr --current|grep -wm1 'connected'|grep '[0-9]x[0-9]'"
-                    export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep -v '+0+0'|grep '[0-9]x[0-9]'"
-                    export PRIMDISPL_RES="$(eval $CHK_PRIMDISPL_OUT|sed -n -e 's/.* connected \([^ +]*\).*/\1/p')"
+                    export CHK_PRIMDISPL_OUT="xrandr --current|grep -wm1 'connected'|grep -P '\d+x\d+'"
+                    export CHK_OTHDISPL_OUT="xrandr --current|grep -w 'connected'|grep -v 'primary'|grep -v '+0+0'|grep -P '\d+x\d+'"
+                    export PRIMDISPL_RES="$(eval $CHK_PRIMDISPL_OUT|grep -Po '\d+x\d+')"
             else
                 print_error yad "Could not determine display settings!"
             fi
@@ -2746,27 +2746,27 @@ lu_config() {
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lutris Wine settings for $EXE_FULL_NAME" $([ -n "$YADSCROLL" ] && echo "--scroll") \
-                    --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
+                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
         elif [[ -n "$LU_EXE" && -n "$RUN_EXE" && ! -n "$FIRST_RUN" ]]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lutris Wine settings for $EXE_FULL_NAME" $([ -n "$YADSCROLL" ] && echo "--scroll") \
-                    --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
+                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ -n "$FIRST_RUN" ]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" \
                     --title="Lutris Wine settings" $([ -n "$YADSCROLL" ] && echo "--scroll") \
-                    --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
+                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
             yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                 --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                 --title="Lutris Wine settings" $([ -n "$YADSCROLL" ] && echo "--scroll") \
-                --width=$SETTWIDTH --height=$SETTHEIGHT --text-align=center --center --window-icon="$LW_DEF_ICO" \
+                --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         fi
         case $? in
@@ -2786,8 +2786,10 @@ lu_config() {
         fi
     }
     export -f btn_tools
-    SETTWIDTH="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5")"
-    SETTHEIGHT="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5")"
+    SETTWIDTH="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5"  2>/dev/null)"
+    [ ! -n "$SETTWIDTH" ] && SETTWIDTH="800" && YADSCROLL=1
+    SETTHEIGHT="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5"  2>/dev/null)"
+    [ ! -n "$SETTHEIGHT" ] && SETTHEIGHT="600" && YADSCROLL=1
     if [[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]]
         then
             if [[ ! -n "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
