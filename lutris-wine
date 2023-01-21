@@ -218,38 +218,50 @@ check_wine_pids() {
     if [[ "$WINE_VERSION" == "System" && "$NEW_WINE_VERSION" != "System" ]] \
         || [[ "$OLD_WINE_VERSION" == "System" && "$NEW_WINE_VERSION" != "System" ]]
         then
-            export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$(dirname "$SYS_WINE")"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+            export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|\
+                                    grep -ie "$(dirname "$SYS_WINE")"|\
+                                    grep -E 'wine(64)?-preloader|wineserver'|\
+                                    awk -F/ '{print $3}')"
     elif [[ -n "$OLD_WINE_VERSION" && "$OLD_WINE_VERSION" != "System" ]]
         then
-            export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$(readlink -f "$LW_WINE_DIR/$OLD_WINE_VERSION")"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+            export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|\
+                                    grep -ie "$(readlink -f "$LW_WINE_DIR/$OLD_WINE_VERSION")"|\
+                                    grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
     else
-        export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|grep -ie "$(readlink -f "$LW_WINE_DIR/$WINE_VERSION")"|grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
+        export CHK_WINE_PIDS="$(ls -l /proc/*/exe 2>/dev/null|\
+                                grep -ie "$(readlink -f "$LW_WINE_DIR/$WINE_VERSION")"|\
+                                grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}')"
     fi
-    [ -n "$CHK_WINE_PIDS" ] && export WINE_PIDS="$CHK_WINE_PIDS"
+    [ -n "$CHK_WINE_PIDS" ] && \
+        export WINE_PIDS="$CHK_WINE_PIDS"
 }
 
 check_luwine_pid() {
     unset LU_WINE_PID CHK_LU_WINE_PID
     CHK_LU_WINE_PID="$(pgrep "$LW_NAME")"
-    [ -n "$CHK_LU_WINE_PID" ] && export LU_WINE_PID="$CHK_LU_WINE_PID"
+    [ -n "$CHK_LU_WINE_PID" ] && \
+        export LU_WINE_PID="$CHK_LU_WINE_PID"
 }
 
 check_luwine_sh_pid() {
     unset LW_SH_PID CHK_LW_SH_PID CHK_LW_SH_PIDS
-    export CHK_LW_SH_PIDS="$(pgrep -fa "$LW_NAME"|grep "\-shell"|awk '{print$1}' 2>/dev/null)"
+    export CHK_LW_SH_PIDS="$(pgrep -fa "$LW_NAME"|grep "\-shell"|\
+                             awk '{print$1}' 2>/dev/null)"
     for lwshpid in $CHK_LW_SH_PIDS
         do
-            export CHK_LW_SH_PID="$(pgrep -faP "$lwshpid"|grep "$(echo "$TERM_APP"|awk '{print$1}')"|awk '{print$1}' 2>/dev/null)"
-            [ -n "$CHK_LW_SH_PID" ] && export LW_SH_PID="$CHK_LW_SH_PID"
+            export CHK_LW_SH_PID="$(pgrep -faP "$lwshpid"|grep "$(echo "$TERM_APP"|\
+                                    awk '{print$1}')"|awk '{print$1}' 2>/dev/null)"
+            [ -n "$CHK_LW_SH_PID" ] && \
+                export LW_SH_PID="$CHK_LW_SH_PID"
     done
 }
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE
     RUN_EXES="$(ps -o pid=,cmd= -p $(ls -l /proc/*/exe 2>/dev/null|\
-                grep -E 'wine(64)?-preloader|wineserver'|\
-                awk -F/ '{print $3}') 2>/dev/null|grep -v 'winedevice'|\
-                grep -v 'windows.sys.*'|grep -v 'wineserver')"
+                grep -E 'wine(64)?-preloader|wineserver'|awk -F/ '{print $3}') \
+                2>/dev/null|grep -v 'winedevice'|grep -v 'windows.sys.*'|\
+                grep -v 'wineserver'|grep -Pv '\d+ start.exe /exec')"
     if [ -n "$RUN_EXES" ]
         then
             export EXE_PIDS="$(echo "$RUN_EXES"|awk '{print$1}')"
@@ -833,7 +845,7 @@ check_display() {
             export PRIMDISPLCFG="$(eval $CHK_PRIMDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--primary","--mode "$4,"--pos "$5"x"$6,"--rotate "$7}' 2>/dev/null)"
             export OTHDISPLCFG="$(eval $CHK_OTHDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--mode "$3,"--pos "$4"x"$5,"--rotate "$6}' 2>/dev/null)"
             #export PRIMDISPL_RESES="$(xrandr --current|grep -a15 'primary'|grep -v '^[a-zA-Z]'|grep -o '\b.*[0-9]x[0-9]*\b'|sort -rn|awk '!seen[$0]++')"
-            [ $(echo "$PRIMDISPL_RES"|cut -d'x' -f2) -le 1024 ] && \
+            [[ "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)" -le 1024 ]] && \
                 export YADSCROLL=1
         else
             print_error yad "xrandr not found in your system!"
