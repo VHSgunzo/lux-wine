@@ -26,7 +26,7 @@ depends=('aria2' 'qt5-tools' 'xterm' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi'
          'libxrandr' 'lib32-libxrandr' 'xorg-xrandr' 'bc' 'xorg-xgamma' 'lsb-release'
          'iputils' 'curl' 'xdelta3' 'xdg-utils'
          'desktop-file-utils' 'squashfs-tools' 'squashfuse' 'fuse2' 'reshade-shaders-git'
-         'winetricks' 'innoextract' 'p7zip' 'openbsd-netcat' 'xdg-user-dirs'
+         'winetricks' 'innoextract' 'p7zip' 'gnu-netcat' 'xdg-user-dirs'
 )
 makedepends=('git')
 optdepends=('lib32-vulkan-radeon' 'vulkan-radeon' 'xf86-video-amdgpu'
