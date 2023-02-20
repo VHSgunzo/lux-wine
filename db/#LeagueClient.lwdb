@@ -25,7 +25,7 @@ final_check() {
 helper_pkexec() {
     if [ "$ENABLE_HOSTEXEC" == 1 ]
         then
-            hostexec pkexec sh -c "$1"||return 1
+            hostexec -su sh -c "$1"||return 1
         else
             pkexec sh -c "$1"||return 1
     fi
