@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -init %f
+Exec="/usr/bin/lutris-wine" -init %f
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Name=Forced initialization

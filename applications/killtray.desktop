@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -killtray
+Exec="/usr/bin/lutris-wine" -killtray
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 Name=Kill tray
 Name[ru_RU]=Убить трей

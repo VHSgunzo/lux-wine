@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -killshell
+Exec="/usr/bin/lutris-wine" -killshell
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 Name=Kill SHELL
 Name[ru_RU]=Убить SHELL

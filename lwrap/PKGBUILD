@@ -1,8 +1,9 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
-pkgname='lutris-wine-git'
+pkgname='lwrap'
+gitrepo='lutris-wine'
 pkgver='0.75.9'
 pkgrel='1'
-pkgdesc='Easy launch of your Windows applications and games with Wine/Proton'
+pkgdesc='Lutris Wine wrapper for Runimage container'
 arch=('x86_64')
 url='https://github.com/VHSgunzo/lutris-wine'
 license=('MIT')
@@ -36,17 +37,19 @@ optdepends=('lib32-vulkan-radeon' 'vulkan-radeon' 'xf86-video-amdgpu'
             'nvidia-settings' 'nvidia-utils' 'opencl-nvidia' 'linux-zen' 'linux-zen-headers'
             'vulkan-swrast' 'llvm' 'lib32-llvm' 'wine' 'latencyflex-git' 'latencyflex-wine-git'
 )
-provides=("${pkgname%-git}")
-conflicts=("${pkgname%-git}")
-source=("${pkgname}::git+https://github.com/VHSgunzo/lutris-wine.git")
+provides=("$pkgname")
+conflicts=("$pkgname")
+source=("${gitrepo}::git+https://github.com/VHSgunzo/${gitrepo}.git")
 sha256sums=('SKIP')
 
 pkgver() {
-  cd "$srcdir/${pkgname}"
-  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+  cd "$srcdir/$gitrepo"
+  git describe --long --tags|sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 package() {
-    cd $srcdir/${pkgname}
-    make DESTDIR="${pkgdir}" install
+    install -dm755 "$pkgdir/opt"
+    (cd "$srcdir/$gitrepo" && rm -rf screenshots .git*)
+    cp -ar --no-preserve=ownership "$srcdir/$gitrepo" "$pkgdir/opt/$pkgname"
+    install -Dm755 "$srcdir/$gitrepo/$pkgname/$pkgname" "$pkgdir/usr/bin/$pkgname"
 }

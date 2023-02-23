@@ -36,5 +36,12 @@ uninstall:
 	$(RM) -rfv "$(DESTDIR)/usr/share/kservices5/ServiceMenus/LutrisWine"*
 	$(RM) -rfv "$(DESTDIR)/usr/share/lutris-wine"
 	$(RM) -rfv "$(DESTDIR)/usr/share/licenses/lutris-wine"
+	$(RM) -rfv "$(HOME)/.local/bin/lutris-wine"
+	$(RM) -rfv "$(HOME)/.config/menus/applications-merged/LutrisWine.menu"
+	$(RM) -rfv "$(HOME)/.local/share/applications/LutrisWine"
+	$(RM) -rfv "$(HOME)/.local/share/desktop-directories/LutrisWine"*
+	$(RM) -rfv "$(HOME)/.local/share/kservices5/ServiceMenus/LutrisWine"*
+	$(RM) -rfv "$(HOME)/.local/share/LutrisWine"
+	$(RM) -rfv "$(HOME)/LutrisWine"
 
 .PHONY: install uninstall

@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -pfxrestore %f
+Exec="/usr/bin/lutris-wine" -pfxrestore %f
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 MimeType=application/vnd.squashfs;application/x-ms-dos-executable;application/x-msdos-program
 Name=Restore prefix from backup

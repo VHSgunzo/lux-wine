@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -winemgr
+Exec="/usr/bin/lutris-wine" -winemgr
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 Name=Wine manager
 Name[ru_RU]=Wine менеджер

@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -tray noclose
+Exec="/usr/bin/lutris-wine" -tray noclose
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 Name=Tray
 Name[ru_RU]=Трей

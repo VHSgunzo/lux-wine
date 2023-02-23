@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Lutris Wine
-Exec=lutris-wine -appcfg
+Exec="/usr/bin/lutris-wine" -appcfg
 Icon=/usr/share/lutris-wine/icons/default_icon.png
 Name=Apps settings
 Name[ru_RU]=Настройки приложений

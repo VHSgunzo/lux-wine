@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.75.8"
+export LW_VERSION="0.75.9"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -11,7 +11,8 @@ export RESETCOLOR='\033[1;00m'
 
 export ENVKEY=$RANDOM
 export GDK_BACKEND="x11"
-if [ -n "$RUNDIR" ]
+
+if [ "$RUNROOTFSTYPE" == "superlite" ]
     then
         export LW_EDITOR="pluma"
         export LW_FLMGR="spacefm"
@@ -20,25 +21,37 @@ if [ -n "$RUNDIR" ]
         export LW_EDITOR="xdg-open"
         export LW_FLMGR="xdg-open"
 fi
+
+[ ! -n "$LW_SYS_DIR" ] && export LW_SYS_DIR="/usr/share/lutris-wine"
 [ ! -n "$LW_SOURCE" ] && export LW_SOURCE="$0"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LutrisWine"
+[[ ! -n "$LW_THEMES_DIR" && -d "$LW_DIR/themes" ]] && \
+    export LW_THEMES_DIR="$LW_DIR/themes"||\
+    export LW_THEMES_DIR="$LW_SYS_DIR/themes"
+[[ ! -n "$LW_DB_DIR" && -d "$LW_DIR/db" ]] && \
+    export LW_DB_DIR="$LW_DIR/db"||\
+    export LW_DB_DIR="$LW_SYS_DIR/db"
+[[ ! -n "$LW_ICONS_DIR" && -d "$LW_DIR/icons" ]] && \
+    export LW_ICONS_DIR="$LW_DIR/icons"||\
+    export LW_ICONS_DIR="$LW_SYS_DIR/icons"
+[[ ! -n "$LW_GIF_DIR" && -d "$LW_DIR/gif" ]] && \
+    export LW_GIF_DIR="$LW_DIR/gif"||\
+    export LW_GIF_DIR="$LW_SYS_DIR/gif"
+[ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="$LW_GIF_DIR/default_loading.gif"
+[ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="$LW_ICONS_DIR/default_icon.png"
 [ ! -n "$LU_DIR" ] && export LU_DIR="$HOME/.local/share/lutris"
 [ ! -n "$LU_CACHE_DIR" ] && export LU_CACHE_DIR="$HOME/.cache/lutris"
 [ ! -n "$LU_CONFIG_DIR" ] && export LU_CONFIG_DIR="$HOME/.config/lutris"
-[ ! -n "$LW_THEMES_DIR" ] && export LW_THEMES_DIR="/usr/share/lutris-wine/themes"
 [ ! -n "$LW_WINE_DIR" ] && export LW_WINE_DIR="$LW_DIR/runners/wine"
 [ ! -n "$LW_RUNTIME_DIR" ] && export LW_RUNTIME_DIR="$LW_DIR/runtime"
 [ ! -n "$LW_MENU_APP_DIR" ] && export LW_MENU_APP_DIR="$HOME/.local/share/applications"
 [ ! -n "$LW_APP_DIR" ] && export LW_APP_DIR="$LW_MENU_APP_DIR/LutrisWineApp"
 [ ! -n "$LW_WTRX_DIR" ] && export LW_WTRX_DIR="$LW_RUNTIME_DIR/winetricks"
-[ ! -n "$LW_DB_DIR" ] && export LW_DB_DIR="/usr/share/lutris-wine/db"
 [ ! -n "$LW_DEF_CFG" ] && export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
 [ ! -n "$LW_CFG" ] && export LW_CFG="$LW_DEF_CFG"
 [ ! -n "$VKBASALT_CONFIG_FILE" ] && export VKBASALT_CONFIG_FILE="$LW_DIR/vkBasalt.conf"
 [ ! -n "$LW_RESHADE_DIR" ] && export LW_RESHADE_DIR="/opt/reshade"
-[ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="/usr/share/lutris-wine/icons/default_icon.png"
-[ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="/usr/share/lutris-wine/gif/default_loading.gif"
 [ ! -n "$LW_DEF_WPFXS_DIR" ] && export LW_DEF_WPFXS_DIR="$LW_DIR/wprefixes"
 [ ! -n "$LW_DEF_WINEPFX" ] && export LW_DEF_WINEPFX="$LW_DEF_WPFXS_DIR/defprefix"
 [ ! -n "$LW_DEF_WINEPFXBKP_DIR" ] && export LW_DEF_WINEPFXBKP_DIR="$LW_DIR/prefix_backups"
@@ -1451,15 +1464,18 @@ create_shortcut() {
     if [ -n "$1" ]
         then
             exe2png "$1"
-            export DESKF="${SHRT_PATH}/${SHRT_NAME}.desktop"
+            DESKF="${SHRT_PATH}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
             if print_question "Shortcuts Creator" "Change application name [ $SHRT_NAME ] ?"
                 then
                     ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lutris Wine application" "$SHRT_NAME")"
-                    [ -n "$ADD_APP_NAME" ] && export SHRT_NAME="$ADD_APP_NAME"
+                    [ -n "$ADD_APP_NAME" ] && \
+                        SHRT_NAME="$ADD_APP_NAME"
             fi
-            echo "Name=${SHRT_NAME}" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"$1\"" >> "$DESKF"
+            ([[ "$RUNSRC" =~ "lwrun" ]] && \
+                LW_SOURCE="$RUNSRC"
+            echo "Name=$SHRT_NAME" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' '$1'" >> "$DESKF"
             echo "Type=Application" >> "$DESKF"
             echo "Categories=Lutris Wine App" >> "$DESKF"
             echo "StartupNotify=true" >> "$DESKF"
@@ -1470,96 +1486,96 @@ create_shortcut() {
             echo "Name=Remove from menu" >> "$DESKF"
             echo "Name[ru_RU]=Удалить из меню" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-rmapp '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -rmapp '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action config]" >> "$DESKF"
             echo "Name=Settings" >> "$DESKF"
             echo "Name[ru_RU]=Настройки" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-config '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -config '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action openpfx]" >> "$DESKF"
             echo "Name=Open drive C:\\\\\\" >> "$DESKF"
             echo "Name[ru_RU]=Открыть диск C:\\\\\\" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-openpfx '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -openpfx '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action debug]" >> "$DESKF"
             echo "Name=DEBUG" >> "$DESKF"
             echo "Name[ru_RU]=ДЕБАГ" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-debug '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -debug '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action cmd]" >> "$DESKF"
             echo "Name=Open in CMD" >> "$DESKF"
             echo "Name[ru_RU]=Открыть в CMD" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-cmd '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -cmd '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action explorer]" >> "$DESKF"
             echo "Name=Explorer" >> "$DESKF"
             echo "Name[ru_RU]=Рабочий стол" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-explorer '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -explorer '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action control]" >> "$DESKF"
             echo "Name=Control panel" >> "$DESKF"
             echo "Name[ru_RU]=Панель управления" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-control '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -control '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action regedit]" >> "$DESKF"
             echo "Name=Registry editor" >> "$DESKF"
             echo "Name[ru_RU]=Редактор реестра" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-regedit '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -regedit '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action winecfg]" >> "$DESKF"
             echo "Name=Wine settings" >> "$DESKF"
             echo "Name[ru_RU]=Настройки Wine" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-winecfg '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -winecfg '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action taskmgr]" >> "$DESKF"
             echo "Name=Task manager" >> "$DESKF"
             echo "Name[ru_RU]=Диспетчер задач" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-taskmgr '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -taskmgr '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action uninstaller]" >> "$DESKF"
             echo "Name=Wine uninstaller" >> "$DESKF"
             echo "Name[ru_RU]=Устан/удал программ" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-uninstaller '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -uninstaller '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action winetricks]" >> "$DESKF"
             echo "Name=Winetricks" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-winetricks '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -winetricks '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action clearpfx]" >> "$DESKF"
             echo "Name=Clear prefix" >> "$DESKF"
             echo "Name[ru_RU]=Очистить префикс" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-clearpfx '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -clearpfx '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action pfxbackup]" >> "$DESKF"
             echo "Name=Create prefix backup" >> "$DESKF"
             echo "Name[ru_RU]=Создать бекап префикса" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-pfxbackup '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -pfxbackup '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action pfxrestore]" >> "$DESKF"
             echo "Name=Restore prefix from backup" >> "$DESKF"
             echo "Name[ru_RU]=Восстановить префикс" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-pfxrestore '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -pfxrestore '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action killwine]" >> "$DESKF"
             echo "Name=Kill Wine processes" >> "$DESKF"
             echo "Name[ru_RU]=Убить процессы Wine" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-killwine '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -killwine '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action version]" >> "$DESKF"
             echo "Name=Version info" >> "$DESKF"
             echo "Name[ru_RU]=Версия" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-version '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -version '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action init]" >> "$DESKF"
             echo "Name=Forced initialization" >> "$DESKF"
             echo "Name[ru_RU]=Принудительная инициализация" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-init '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -init '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action addtolu]" >> "$DESKF"
             echo "Name=Add to Lutris" >> "$DESKF"
             echo "Name[ru_RU]=Добавить в Lutris" >> "$DESKF"
             echo "Icon="$LUPNG"" >> "$DESKF"
-            echo "Exec=\"$LW_SOURCE\" \"-addtolu '$1'\"" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -addtolu '$1'" >> "$DESKF")
             chmod u+x "$DESKF"
             echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}completed!\n$RESETCOLOR"
             if print_question "Shortcuts Creator" \
@@ -5477,7 +5493,7 @@ makesquash_zstd() {
                         else squashpath="$2/"
                     fi
             fi
-            if [ -n "$(which 'mksquashfs' 2>/dev/null)" ]
+            if [ -n "$(which mksquashfs 2>/dev/null)" ]
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").zst.$extension"
                     print_info "Making SquashFS ZSTD image : [ $squashmane ]\n[ FROM ]: [ $squashsource ] [ COMPRESS LVL ]: $compres_lvl \n[  TO  ]: [ ${squashpath}$squashmane ]"
@@ -5511,7 +5527,7 @@ makesquash_xz() {
                         else squashpath="$2/"
                     fi
             fi
-            if [ -n "$(which 'mksquashfs' 2>/dev/null)" ]
+            if [ -n "$(which mksquashfs 2>/dev/null)" ]
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").xz.$extension"
                     print_info "Making SquashFS XZ image : [ $squashmane ]\n[ FROM ]: [ $squashsource ]\n[  TO  ]: [ ${squashpath}$squashmane ]"
@@ -5544,7 +5560,7 @@ unpack_squash() {
                         else unsquashpath="$2/"
                     fi
             fi
-            if [ -n "$(which 'unsquashfs' 2>/dev/null)" ]
+            if [ -n "$(which unsquashfs 2>/dev/null)" ]
                 then
                     unsquashimage="$(basename "$unsquashsource")"
                     unsquashmane="$(echo "$unsquashimage"|awk -F'.' '{print $1}')"
@@ -5702,7 +5718,7 @@ lu_pfxrestore() {
 
 lu_backupmnt() {
     [ -f "$1" ] && export LU_LWPFX="$1"
-    if [ -n "$(which 'squashfuse' 2>/dev/null)" ]
+    if [ -n "$(which squashfuse 2>/dev/null)" ]
         then
             if [ -f "$LU_LWPFX" ]
                 then
@@ -5750,7 +5766,7 @@ lu_backupmnt() {
 
 lu_backupunmnt() {
     [ -f "$1" ] && export LU_LWPFX="$1"
-    if [ -n "$(which 'fusermount' 2>/dev/null)" ]
+    if [ -n "$(which fusermount 2>/dev/null)" ]
         then
             if [ -f "$LU_LWPFX" ]
                 then
