@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.75.9"
+export LW_VERSION="0.76.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -26,18 +26,26 @@ fi
 [ ! -n "$LW_SOURCE" ] && export LW_SOURCE="$0"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LutrisWine"
-[[ ! -n "$LW_THEMES_DIR" && -d "$LW_DIR/themes" ]] && \
+if [ ! -n "$LW_THEMES_DIR" ]
+    then [ -d "$LW_DIR/themes" ] && \
     export LW_THEMES_DIR="$LW_DIR/themes"||\
     export LW_THEMES_DIR="$LW_SYS_DIR/themes"
-[[ ! -n "$LW_DB_DIR" && -d "$LW_DIR/db" ]] && \
+fi
+if [ ! -n "$LW_DB_DIR" ]
+    then [ -d "$LW_DIR/db" ] && \
     export LW_DB_DIR="$LW_DIR/db"||\
     export LW_DB_DIR="$LW_SYS_DIR/db"
-[[ ! -n "$LW_ICONS_DIR" && -d "$LW_DIR/icons" ]] && \
+fi
+if [ ! -n "$LW_ICONS_DIR" ]
+    then [ -d "$LW_DIR/icons" ] && \
     export LW_ICONS_DIR="$LW_DIR/icons"||\
     export LW_ICONS_DIR="$LW_SYS_DIR/icons"
-[[ ! -n "$LW_GIF_DIR" && -d "$LW_DIR/gif" ]] && \
+fi
+if [ ! -n "$LW_GIF_DIR" ]
+    then [ -d "$LW_DIR/gif" ] && \
     export LW_GIF_DIR="$LW_DIR/gif"||\
     export LW_GIF_DIR="$LW_SYS_DIR/gif"
+fi
 [ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="$LW_GIF_DIR/default_loading.gif"
 [ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="$LW_ICONS_DIR/default_icon.png"
 [ ! -n "$LU_DIR" ] && export LU_DIR="$HOME/.local/share/lutris"
@@ -867,7 +875,7 @@ check_display() {
             export OTHDISPLCFG="$(eval $CHK_OTHDISPL_OUT|sed 's/(//'| awk -F'[ \+]' '{print "--output "$1,"--mode "$3,"--pos "$4"x"$5,"--rotate "$6}' 2>/dev/null)"
             #export PRIMDISPL_RESES="$(xrandr --current|grep -a15 'primary'|grep -v '^[a-zA-Z]'|grep -o '\b.*[0-9]x[0-9]*\b'|sort -rn|awk '!seen[$0]++')"
             [[ "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)" -le 1024 ]] && \
-                export YADSCROLL=1
+                YADSCROLL=("--scroll")
         else
             print_error yad "xrandr not found in your system!"
     fi
@@ -1859,7 +1867,9 @@ check_luwine_wcfg_cenv() {
 }
 
 import_luwine_wcfg() {
+    set -a
     source "$LW_CFG"
+    set +a
     [ "$WINE_VERSION" == "Default" ] \
     && export "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     export WINE_IN_USE="$WINE_VERSION"
@@ -2543,7 +2553,7 @@ lu_config() {
     DGVOOLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dgvoodoo2" 2>/dev/null|grep -v '.*.tar.*') \n v2.64 \n v2.79.1 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
     NVMLLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/wine_nvml" 2>/dev/null|grep -v '.*.tar.*') \n v0.1 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
     CMPRSSLST="xz \n zstd"
-    FSRMODELST="ultra \n quality \n balanced \n performance"
+    FSRMODELST="ultra \n quality \n balanced \n performance \n Disabled"
     lwconfig_save() {
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE WINE_DXGI D3D_EXTRAS DGVOODOO2 \
             DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION DXR VKD3DCFG MUST_HAVE_DLL \
@@ -2560,7 +2570,7 @@ lu_config() {
                                 then
                                     echo "$CFGVAR=$CFGPARAM"
                             fi
-                    done 3< <(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM|sed 's/^/export /') \
+                    done 3< <(echo "$LWCFGVAR"|tr ' ' '\n'|eval $SEDLWPRM) \
                          4< <(echo -e "$(cat "/tmp/winesett$LWCFGKEY" 2>/dev/null)\n\
                                        $(cat "/tmp/syssett$LWCFGKEY" 2>/dev/null)"|eval $SEDLWPRM))"
 
@@ -2577,7 +2587,7 @@ lu_config() {
         if [ -n "$(echo "$WCFGOUT"|head -1)" ]
             then
                 echo "$WCFGOUT" > "$LW_CFG"
-                echo "export VKBASALT_EFFECTS='$FX_RESULT'" >> "$LW_CFG"
+                echo "VKBASALT_EFFECTS='$FX_RESULT'" >> "$LW_CFG"
                 WINEWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')"
                 WINEPFXWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINEPREFIX.*$'|cut -d'=' -f2|tr -d \')"
                 [[ "$WINEPFXWCFGOUT" == "$WINEPREFIX" && -f "$WINEPREFIX/update_pfx.log" ]] \
@@ -2588,8 +2598,9 @@ lu_config() {
                         export WINEPREFIX="$WINEPFXWCFGOUT"
                 fi
                 CURDEFWINE="$(cat "$WINEPREFIX/.defwine" 2>/dev/null)"
-                if [[ "$WINEWCFGOUT" != "$CURDEFWINE" && "$WINEWCFGOUT" != "Default" ]] \
-                    || [[ "$WINEWCFGOUT" == "Default" && "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \'|cut -d'=' -f2)" != "$CURDEFWINE" ]]
+                if [[ "$WINEWCFGOUT" != "$CURDEFWINE" && "$WINEWCFGOUT" != "Default" ]] || \
+                    [[ "$WINEWCFGOUT" == "Default" && "$(grep -wo 'WINE_VERSION.*$' \
+                             "$LW_DEF_CFG"|tr -d \'|cut -d'=' -f2)" != "$CURDEFWINE" ]]
                     then
                         export NEW_WINE_VERSION="$WINEWCFGOUT"
                         export OLD_WINE_VERSION="$CURDEFWINE"
@@ -2617,29 +2628,32 @@ lu_config() {
         try_rm "$LW_CFG" "$LW_CENV" &>/dev/null
         BTNTLS=1 cleanrun "$FULLCMDLINE"
     }
+    cfg_items() {
+        echo -e "$1\n$(echo -e "$1\n$2"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX
+    }
     lwconfig_menu() {
-        yad --plug=$LWCFGKEY --tabnum=1 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ -n "$YADSCROLL" ] && echo "--scroll") \
-            --field="Wine version::CB" "$(echo -e "$WINE_VERSION\n$(echo -e "$WINE_VERSION\n$WINELST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Windows version::CB" "$(echo -e "$WIN_VER\n$(echo -e "$WIN_VER\n$WINVERLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="Wine architecture::CB" "$(echo -e "$WINEARCH\n$(echo -e "$WINEARCH\n$WARCHLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+        yad --plug=$LWCFGKEY --tabnum=1 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 "${YADSCROLL[@]}" \
+            --field="Wine version::CB" "$(cfg_items "$WINE_VERSION" "$WINELST")" \
+            --field="Windows version::CB" "$(cfg_items "$WIN_VER" "$WINVERLST")" \
+            --field="Wine architecture::CB" "$(cfg_items "$WINEARCH" "$WARCHLST")" \
             --field="Wine prefix::DIR" "$WINEPREFIX" \
-            --field="Wine theme::CB" "$(echo -e "$WINE_THEME\n$(echo -e "$WINE_THEME\n$WINETHEMESLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="WINE DLL OVERRIDES::CBE" "$(echo -e "$WDLLOVER\n$(echo -e "$WDLLOVER\n$WDLLOVERLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="WINE MONO OVERRIDES::CBE" "$(echo -e "$WMONOVER\n$(echo -e "$WMONOVER\n$WMONOOVERLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="D3D mode::CB" "$(echo -e "$WD3DMODE\n$(echo -e "$WD3DMODE\n$WD3DMODELST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Wine theme::CB" "$(cfg_items "$WINE_THEME" "$WINETHEMESLST")" \
+            --field="WINE DLL OVERRIDES::CBE" "$(cfg_items "$WDLLOVER" "$WDLLOVERLST")" \
+            --field="WINE MONO OVERRIDES::CBE" "$(cfg_items "$WMONOVER" "$WMONOOVERLST")" \
+            --field="D3D mode::CB" "$(cfg_items "$WD3DMODE" "$WD3DMODELST")" \
             --field="DXVK with Wine DXGI:CHK" "$WINE_DXGI" \
             --field="D3D EXTRAS:CHK" "$D3D_EXTRAS" \
             --field="DGVOODOO2:CHK" "$DGVOODOO2" \
-            --field="DXVK version::CBE" "$(echo -e "$DXVK_VERSION\n$(echo -e "$DXVK_VERSION\n$DXVKLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="VKD3D version::CBE" "$(echo -e "$VKD3D_VERSION\n$(echo -e "$VKD3D_VERSION\n$VKD3DLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DXVK-NVAPI version::CBE" "$(echo -e "$DXVK_NVAPI_VERSION\n$(echo -e "$DXVK_NVAPI_VERSION\n$DXNVALST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="D3D EXTRAS version::CBE" "$(echo -e "$D3D_EXTRAS_VERSION\n$(echo -e "$D3D_EXTRAS_VERSION\n$D3DXTRLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DGVOODOO2 version::CBE" "$(echo -e "$DGVOODOO2_VERSION\n$(echo -e "$DGVOODOO2_VERSION\n$DGVOOLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="WINE-NVML version::CBE" "$(echo -e "$WINE_NVML_VERSION\n$(echo -e "$WINE_NVML_VERSION\n$NVMLLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="DXR/RTX version::CB" "$(echo -e "$DXR\n$(echo -e "$DXR\n$DXRLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="VKD3D config::CBE" "$(echo -e "$VKD3DCFG\n$(echo -e "$VKD3DCFG\n$VKD3DCFGLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="MUST HAVE DLL::CBE" "$(echo -e "$MUST_HAVE_DLL\n$(echo -e "$MUST_HAVE_DLL\n$MHAVEDLLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="AMD FidelityFX Super Resolution 1.0::CB" "$(echo -e "$FSR_MODE\n$(echo -e "$FSR_MODE\n$FSRMODELST\n Disabled"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="DXVK version::CBE" "$(cfg_items "$DXVK_VERSION" "$DXVKLST")" \
+            --field="VKD3D version::CBE" "$(cfg_items "$VKD3D_VERSION" "$VKD3DLST")" \
+            --field="DXVK-NVAPI version::CBE" "$(cfg_items "$DXVK_NVAPI_VERSION" "$DXNVALST")" \
+            --field="D3D EXTRAS version::CBE" "$(cfg_items "$D3D_EXTRAS_VERSION" "$D3DXTRLST")" \
+            --field="DGVOODOO2 version::CBE" "$(cfg_items "$DGVOODOO2_VERSION" "$DGVOOLST")" \
+            --field="WINE-NVML version::CBE" "$(cfg_items "$WINE_NVML_VERSION" "$NVMLLST")" \
+            --field="DXR/RTX version::CB" "$(cfg_items "$DXR" "$DXRLST")" \
+            --field="VKD3D config::CBE" "$(cfg_items "$VKD3DCFG" "$VKD3DCFGLST")" \
+            --field="MUST HAVE DLL::CBE" "$(cfg_items "$MUST_HAVE_DLL" "$MHAVEDLLST")" \
+            --field="AMD FidelityFX Super Resolution 1.0::CB" "$(cfg_items "$FSR_MODE" "$FSRMODELST")" \
             --field="Wine prefix sandbox:CHK" "$WINE_SANDBOX" \
             --field="Esync:CHK" "$ESYNC" \
             --field="Fsync:CHK" "$FSYNC" \
@@ -2663,7 +2677,7 @@ lu_config() {
             --field="LatencyFleX (NVIDIA Reflex):CHK" "$LATENCYFLEX" \
         1> /tmp/winesett$LWCFGKEY &
 
-        yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 $([ -n "$YADSCROLL" ] && echo "--scroll") \
+        yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 "${YADSCROLL[@]}" \
             --field="Check update days (0-disabled)::NUM" "$CHK_UPDATE" \
             --field="Lutris runtime:CHK" "$RUNTIME" \
             --field="Prefer system libs:CHK" "$PREF_SYS_LIBS" \
@@ -2679,9 +2693,9 @@ lu_config() {
             --field="LOG:CHK" "$LOG" \
             --field="DEBUG:CHK" "$DEBUG" \
             --field="Use system Winetricks:CHK" "$SYS_WINETRICKS" \
-            --field="CPU limit (0-disabled)::CB" "$(echo -e "$CPU_LIMIT\n$(echo -e "$CPU_LIMIT\n$(seq 0 $(cat '/proc/cpuinfo'|grep "processor"|wc -l))"|eval $SEDLWPRM|sort -un)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="Backup compression method::CB" "$(echo -e "$CMPRSS_METHOD\n$(echo -e "$CMPRSS_METHOD\n$CMPRSSLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="ZSTD compression level::CB" "$(echo -e "$ZSTD_CMPRSS_LVL\n$(echo -e "$ZSTD_CMPRSS_LVL\n$(seq 1 22)"|eval $SEDLWPRM|sort -un)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="CPU limit (0-disabled)::CB" "$(cfg_items "$CPU_LIMIT" "$(seq 0 $(cat '/proc/cpuinfo'|grep "processor"|wc -l))")" \
+            --field="Backup compression method::CB" "$(cfg_items "$CMPRSS_METHOD" "$CMPRSSLST")" \
+            --field="ZSTD compression level::CB" "$(cfg_items "$ZSTD_CMPRSS_LVL" "$(seq 1 22)")" \
             --field="Disable no primary displays:CHK" "$DIS_OTH_DISPL" \
             --field="Restore resolution:CHK" "$RESTORE_RESOL" \
             --field="Restore gamma:CHK" "$RESTORE_GAMMA" \
@@ -2690,19 +2704,19 @@ lu_config() {
             --field="Reduce PulseAudio latency:CHK" "$PULSE_LTCY" \
             --field="Open in terminal:CHK" "$TERMINAL" \
             --field="Hold terminal:CHK" "$HOLD_TERMINAL" \
-            --field="Terminal app::CB" "$(echo -e "$LW_TERM_APP\n$(echo -e "$LW_TERM_APP\n$TERMAPPLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
-            --field="Downloader::CB" "$(echo -e "$LW_DOWNLOADER\n$(echo -e "$LW_DOWNLOADER\n$DOWNLOADERLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="Terminal app::CB" "$(cfg_items "$LW_TERM_APP" "$TERMAPPLST")" \
+            --field="Downloader::CB" "$(cfg_items "$LW_DOWNLOADER" "$DOWNLOADERLST")" \
             --field="Don't launch tray:CHK" "$NO_TRAY" \
             --field="Switch to US keyboard layout:CHK" "$US_LAYOUT" \
             --field="VkBasalt:CHK" "$VKBASALT" \
-            --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(echo -e "$VKBASALT_FFX_CAS\n$(echo -e "$VKBASALT_FFX_CAS\n$(seq 0.1 0.1 1|tr ',' '.')\n Disabled"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
-            --field="Vulkan ICD loader::CB" "$(echo -e "$VKICDFILES\n$(echo -e "$VKICDFILES\n$VKICDFILESLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(cfg_items "$VKBASALT_FFX_CAS" "$(seq 0.1 0.1 1|tr ',' '.')\n Disabled")" \
+            --field="Vulkan ICD loader::CB" "$(cfg_items "$VKICDFILES" "$VKICDFILESLST")" \
             --field="GameMode:CHK" "$GAMEMODE" \
-            --field="MangoHud::CB" "$(echo -e "$LWMANGOHUD\n$(echo -e "$LWMANGOHUD\n$MANGOHUDLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="MangoHud::CB" "$(cfg_items "$LWMANGOHUD" "$MANGOHUDLST")" \
             --field="MangoHud User config:CHK" "$MANGOHUD_USER_CONF" \
-            --field="MangoHud config::CBE" "$(echo -e "$MANGOHUDCFG\n$(echo -e "$MANGOHUDCFG\n no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,show_fps_limit,resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM|eval $AWKFIX)" \
+            --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" " no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,show_fps_limit,resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12")" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
-            --field="Vsync::CB" "$(echo -e "$VSYNC\n$(echo -e "$VSYNC\n$VSYNCLST"|eval $SEDLWPRM|eval $SORTU)"|eval $SEDLWPRM|eval $TRLWPRM)" \
+            --field="Vsync::CB" "$(cfg_items "$VSYNC" "$VSYNCLST")" \
             --field="NVIDIA Prime Render Offload:CHK" "$PRIME" \
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
@@ -2722,16 +2736,16 @@ lu_config() {
                 done
         fi
         ( IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
-            $([ -n "$YADSCROLL" ] && echo "--scroll") $RESHADE_SETT 1> /tmp/ressett$LWCFGKEY & )
+             "${YADSCROLL[@]}" $RESHADE_SETT 1> /tmp/ressett$LWCFGKEY & )
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form $([ -n "$YADSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form "${YADSCROLL[@]}" \
             --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form $([ -n "$YADSCROLL" ] && echo "--scroll") \
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form "${YADSCROLL[@]}" \
             --field="Log file [ $WTRX_LOG ]:TXT" "$(cat "$WTRX_LOG" 2>/dev/null)" 2>/dev/null)" > /tmp/wlogsett$LWCFGKEY &
 
         [ ! -n "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=6 --columns=2 --form \
-            $([ -n "$YADSCROLL" ] && echo "--scroll") \
+            "${YADSCROLL[@]}" \
             --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
             --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
             --field="Open CMD:FBTN" "$LWSHELL -c 'lu_cmd'" \
@@ -2769,27 +2783,27 @@ lu_config() {
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
-                    --title="Lutris Wine settings for $EXE_FULL_NAME" $([ -n "$YADSCROLL" ] && echo "--scroll") \
+                    --title="Lutris Wine settings for $EXE_FULL_NAME" "${YADSCROLL[@]}" \
                     --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
         elif [[ -n "$LU_EXE" && -n "$RUN_EXE" && ! -n "$FIRST_RUN" ]]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
-                    --title="Lutris Wine settings for $EXE_FULL_NAME" $([ -n "$YADSCROLL" ] && echo "--scroll") \
+                    --title="Lutris Wine settings for $EXE_FULL_NAME" "${YADSCROLL[@]}" \
                     --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ -n "$FIRST_RUN" ]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                     --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" \
-                    --title="Lutris Wine settings" $([ -n "$YADSCROLL" ] && echo "--scroll") \
+                    --title="Lutris Wine settings" "${YADSCROLL[@]}" \
                     --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
             yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
                 --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
-                --title="Lutris Wine settings" $([ -n "$YADSCROLL" ] && echo "--scroll") \
+                --title="Lutris Wine settings" "${YADSCROLL[@]}" \
                 --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         fi
@@ -2811,9 +2825,9 @@ lu_config() {
     }
     export -f btn_tools
     SETTWIDTH="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f1)/1.5"  2>/dev/null)"
-    [ ! -n "$SETTWIDTH" ] && SETTWIDTH="800" && YADSCROLL=1
+    [ ! -n "$SETTWIDTH" ] && SETTWIDTH="800" && YADSCROLL=("--scroll")
     SETTHEIGHT="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5"  2>/dev/null)"
-    [ ! -n "$SETTHEIGHT" ] && SETTHEIGHT="600" && YADSCROLL=1
+    [ ! -n "$SETTHEIGHT" ] && SETTHEIGHT="600" && YADSCROLL=("--scroll")
     if [[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]]
         then
             if [[ ! -n "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
@@ -3551,22 +3565,13 @@ check_tray() {
         export FORCE_TRAY='1'
 }
 
-noclosetray() {
-    [[ -n "$FORCE_TRAY" && -n "$TRAY_PID" ]] && \
-    while [ -d "/proc/$TRAY_PID" ]; do sleep 1; done
-}
-
-lu_tray() {
-    check_shell
-    check_tray
-    if [[ ! -n "$TRAY_PID" && "$NO_TRAY" != 1 ]]
-        then
-            yad --notification --no-middle --text="Lutris Wine" \
-                --window-icon="$LW_DEF_ICO" \
-                --image="$LW_DEF_ICO" \
-                --command="$([ ! -n "$LU_EXE" ] && echo "$LWSHELL -c '"$LW_SOURCE"'"||echo :)" \
-                --tooltip="Lutris Wine" \
-                --menu="| \
+yad_tray() {
+    yad --notification --no-middle --text="Lutris Wine" \
+        --window-icon="$LW_DEF_ICO" \
+        --image="$LW_DEF_ICO" \
+        --command="$([ ! -n "$LU_EXE" ] && echo "$LWSHELL -c '"$LW_SOURCE"'"||echo :)" \
+        --tooltip="Lutris Wine" \
+        --menu="| \
 Explorer!$LWSHELL -c '"$LW_SOURCE" -explorer'!"$LW_DEF_ICO"| \
 Task manager!$LWSHELL -c '"$LW_SOURCE" -taskmgr'!"$LW_DEF_ICO"| \
 Open CMD!$LWSHELL -c '"$LW_SOURCE" -cmd'!"$LW_DEF_ICO"| \
@@ -3597,9 +3602,18 @@ Kill Wine processes!$LWSHELL -c '"$LW_SOURCE" -killwine'!"$LW_DEF_ICO"| \
 Kill running EXE!$LWSHELL -c '"$LW_SOURCE" -killexe'!"$LW_DEF_ICO"| \
 Kill SHELL!$LWSHELL -c '"$LW_SOURCE" -killshell'!"$LW_DEF_ICO"| \
 Kill tray!$LWSHELL -c '"$LW_SOURCE" -killtray'!"$LW_DEF_ICO"| \
-FORCE EXIT!$LWSHELL -c '"$LW_SOURCE" -exit'!"$LW_DEF_ICO"|" &
-            export TRAY_PID=$!
-            noclosetray &
+FORCE EXIT!$LWSHELL -c '"$LW_SOURCE" -exit'!"$LW_DEF_ICO"|"
+}
+
+lu_tray() {
+    check_shell
+    check_tray
+    if [[ ! -n "$TRAY_PID" && "$NO_TRAY" != 1 ]]
+        then
+            if [ -n "$FORCE_TRAY" ]
+                then yad_tray
+                else yad_tray &
+            fi
     fi
 }
 
@@ -5368,7 +5382,7 @@ export_all_functions() {
     export TRLWPRM="awk '!x[\$0]++'|tr '\n' '!'|sed 's/.$//'"
     export SORTU="sort -u"
     export -f print_var print_error print_info check_lupid check_tray check_wine_pids check_luwine_pid check_vkd3dconfig try_rm check_themes import_cenv \
-        check_luwine_sh_pid check_exes noclosetray check_compositor try_mkdir check_symlink check_netcore try_download check_cpu_limit ld_lib_upd \
+        check_luwine_sh_pid check_exes yad_tray check_compositor try_mkdir check_symlink check_netcore try_download check_cpu_limit ld_lib_upd \
         unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher check_proton_d3dlib \
         compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png add_to_lutris gamma_sw vkd3dcfg_upd check_downloader \
         create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_wcfg check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd select_lwpfx \

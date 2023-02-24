@@ -1,7 +1,7 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname='lwrap'
 gitrepo='lutris-wine'
-pkgver='0.75.9'
+pkgver='0.76.1'
 pkgrel='1'
 pkgdesc='Lutris Wine wrapper for Runimage container'
 arch=('x86_64')
@@ -49,7 +49,8 @@ pkgver() {
 
 package() {
     install -dm755 "$pkgdir/opt"
+    install -dm755 "$pkgdir/usr/bin"
     (cd "$srcdir/$gitrepo" && rm -rf screenshots .git*)
     cp -ar --no-preserve=ownership "$srcdir/$gitrepo" "$pkgdir/opt/$pkgname"
-    install -Dm755 "$srcdir/$gitrepo/$pkgname/$pkgname" "$pkgdir/usr/bin/$pkgname"
+    ln -sfr "$pkgdir/opt/$pkgname/$pkgname/$pkgname" "$pkgdir/usr/bin/$pkgname"
 }

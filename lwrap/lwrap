@@ -9,6 +9,16 @@ RESETCOLOR='\033[1;00m'
 SYS_LWSRC="/usr/bin/lutris-wine"
 LW_DIR="$HOME/.local/share/LutrisWine"
 HOME_LWSRC="$LW_DIR/lutris-wine"
+GIT_LWSRC="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main/lutris-wine"
+HOME_DESK_APP="$HOME/.local/share/applications"
+HOME_DESK_DIR="$HOME/.local/share/desktop-directories"
+RUNSRCRPTH="$(realpath "$RUNSRC" 2>/dev/null)"
+F_RC="$HOME/.config/fish/config.fish"
+B_RC="$HOME/.bashrc"
+Z_RC="$HOME/.zshrc"
+HOME_BIN="$HOME/.local/bin"
+HOME_LWRUN="$HOME_BIN/lwrun"
+HOME_LWRAP="$LW_DIR/lwrap"
 
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
@@ -43,65 +53,60 @@ warn_msg() {
     fi
 }
 
+add_path() { echo -e '\nexport PATH="$HOME/.local/bin:$PATH"' >> "$1" ; }
+
+check_path() {
+    [ -f "$1" ] && ! grep -om1 '/.local/bin' "$1" &>/dev/null && return 0||return 1
+}
+
 make_install() {
-    DESKEXEC="$(([[ "$RUNSRC" =~ "lwrun" ]] && echo "$RUNSRC")||\
-               ([ -x "$HOME_LWSRC" ] && echo "$HOME_LWSRC")||\
-               ([ -x "$SYS_LWSRC" ] && echo "$SYS_LWSRC"))"
-    install -Dm755 lutris-wine "$HOME_LWSRC"
-    install -Dm644 LutrisWine.menu "$HOME/.config/menus/applications-merged/LutrisWine.menu"
-    install -Dm644 LutrisWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LutrisWineService.desktop"
-    install -Dm644 LICENSE "$LW_DIR/LICENSE"
     (IFS=$'\n'
-    if [ -n "$DESKEXEC" ]
-        then
-            for DESKFL in $(grep -rm1 '^Exec=".*"' ./*|cut -d ':' -f1)
-                do sed -i "s|^Exec=\".*\"|Exec=\"$DESKEXEC\"|g" "$DESKFL"
-            done
-    fi
+    for DESKFL in $(grep -rm1 '^Exec=".*"' ./*|cut -d ':' -f1)
+        do sed -i "s|^Exec=\".*\"|Exec=\"$HOME_LWRAP\"|g" "$DESKFL"
+    done
     for DESKFL in $(grep -rm1 'Icon=/.*/lutris-wine/icons/.*.png$' ./*|cut -d ':' -f1)
         do sed -i "s|Icon=/.*/lutris-wine/icons/|Icon=$LW_DIR/icons/|g" "$DESKFL"
-    done
-    for APP in $(ls -1 applications)
-        do install -Dm644 "applications/$APP" "$HOME/.local/share/applications/LutrisWine/$APP"
-    done
-    for DIR in $(ls -1 directories)
-        do install -Dm644 "directories/$DIR" "$HOME/.local/share/desktop-directories/$DIR"
-    done
-    for ICON in $(ls -1 icons)
-        do install -Dm644 "icons/$ICON" "$LW_DIR/icons/$ICON"
-    done
-    for GIF in $(ls -1 gif)
-        do install -Dm644 "gif/$GIF" "$LW_DIR/gif/$GIF"
-    done
-    for THEME in $(ls -1 themes)
-        do install -Dm644 "themes/$THEME" "$LW_DIR/themes/$THEME"
-    done
-    for DB in $(ls -1 db)
-        do install -Dm644 "db/$DB" "$LW_DIR/db/$DB"
     done)
-    [ -f "$HOME/.bashrc" ] && ! grep -om1 '/.local/bin' "$HOME/.bashrc" &>/dev/null && \
-        echo -e '\nexport PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
-    [ -f "$HOME/.zshrc" ] && ! grep -om1 '/.local/bin' "$HOME/.zshrc" &>/dev/null && \
-        echo -e '\nexport PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
+    install -Dm755 lutris-wine "$HOME_LWSRC"
+    install -Dm755 lwrap/lwrap "$HOME_LWRAP"
+    install -Dm644 LutrisWine.menu "$HOME/.config/menus/applications-merged/LutrisWine.menu"
+    install -Dm644 LutrisWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LutrisWineService.desktop"
+    mkdir -p "$HOME_DESK_APP"
+    mkdir -p "$HOME_DESK_DIR"
+    cp -rf applications "$HOME_DESK_APP/LutrisWine"
+    cp -rf directories/* "$HOME_DESK_DIR/"
+    cp -rf LICENSE "$LW_DIR/"
+    cp -rf themes "$LW_DIR/"
+    cp -rf icons "$LW_DIR/"
+    cp -rf gif "$LW_DIR/"
+    cp -rf db "$LW_DIR/"
+    check_path "$B_RC" && add_path "$B_RC"
+    check_path "$Z_RC" && add_path "$Z_RC"
+    check_path "$F_RC" && echo -e \
+        '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$F_RC"
+    update-desktop-database -q "$HOME_DESK_APP" &>/dev/null
 }
 
 uninstall_lw() {
     info_msg "Removing Lutris Wine..."
+    rm -rf "$HOME_DESK_APP/LutrisWine"
+    rm -rf "$HOME_DESK_DIR/LutrisWine"*
     rm -rf "$HOME/.config/menus/applications-merged/LutrisWine.menu"
-    rm -rf "$HOME/.local/share/applications/LutrisWine"
-    rm -rf "$HOME/.local/share/desktop-directories/LutrisWine"*
     rm -rf "$HOME/.local/share/kservices5/ServiceMenus/LutrisWine"*
+    rm -rf "$HOME_LWSRC"
+    rm -rf "$HOME_LWRAP"
+    rm -rf "$HOME_LWRUN"
     if [ "$1" == "all" ]
         then
             rm -rf "$LW_DIR"
             rm -rf "$HOME/LutrisWine"
+            rm -rf "$HOME_DESK_APP/LutrisWine"*
         else
             rm -rf "$LW_DIR/icons"
             rm -rf "$LW_DIR/gif"
             rm -rf "$LW_DIR/themes"
             rm -rf "$LW_DIR/db"
             rm -rf "$LW_DIR/LICENSE"
-            rm -rf "$LW_DIR/lutris-wine"
             rm -rf "$LW_DIR/.lwcfgchksum"
     fi
     info_msg "Lutris Wine removed!"
@@ -144,6 +149,7 @@ install_lw() {
         error_msg "Failed to install Lutris Wine!"
         exit 1
     fi
+    ln_lwrun
     [ -x "$HOME_LWSRC" ] && \
         info_msg "Lutris Wine installed!"
 }
@@ -152,7 +158,7 @@ update_lw() {
     if [ -x "$HOME_LWSRC" ]
         then
             info_msg "Checking the Lutris Wine update..."
-            GIT_LW_VERSION="$(curl -s "https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main/lutris-wine" 2>/dev/null|get_lw_version)"
+            GIT_LW_VERSION="$(curl -s "$GIT_LWSRC" 2>/dev/null|get_lw_version)"
             LW_VERSION="$(get_lw_version "$HOME_LWSRC")"
             if [[ -n "$GIT_LW_VERSION" && -n "$LW_VERSION" ]]
                 then
@@ -175,6 +181,16 @@ update_lw() {
     fi
 }
 
+ln_lwrun() {
+    if [[ -x "$RUNSRCRPTH" && "$RUNSRC" =~ "lwrun" && \
+        "$(realpath "$HOME_LWRUN" 2>/dev/null)" != "$RUNSRCRPTH" ]]
+        then
+            info_msg "Update lwrun link..."
+            mkdir -p "$HOME_BIN"
+            ln -sf "$RUNSRCRPTH" "$HOME_LWRUN"
+    fi
+}
+
 lw_wrapper() {
     if [ ! -x "$HOME_LWSRC" ]
         then
@@ -183,10 +199,7 @@ lw_wrapper() {
         then
             update_lw
     fi
-
-    [[ "$RUNSRC" =~ "lwrun" && "$(realpath "$HOME/.local/bin/lwrun" 2>/dev/null)" != "$RUNSRC" ]] && \
-        mkdir -p "$HOME/.local/bin" && ln -sf "$(realpath "$RUNSRC")" "$HOME/.local/bin/lwrun"
-
+    ln_lwrun
     if [ -x "$HOME_LWSRC" ]
         then
             LWRUN="$HOME_LWSRC"
@@ -197,13 +210,28 @@ lw_wrapper() {
         error_msg "lutris-wine not found!"
         exit 1
     fi
-
     "$LWRUN" "$@"
+    return $?
 }
 
-case $1 in
-    --install) uninstall_lw "$2" ; install_lw ;;
-    --update) update_lw ;;
-    --uninstall) uninstall_lw "$2" ;;
-    *) lw_wrapper "$@" ;;
-esac
+if ! [[ "$RUNSRC" =~ "lwrun" ]]
+    then
+        if [ -x "$HOME_LWRUN" ]
+            then
+                "$HOME_LWRUN" "$@"
+        elif [ -x "$(which lwrun 2>/dev/null)" ]
+            then
+                "$(which lwrun)" "$@"
+        else
+            error_msg "lwrun not found, install it first!"
+            exit 1
+        fi
+    else
+        case $1 in
+            --install) uninstall_lw "$2" ; install_lw ;;
+            --update) update_lw ;;
+            --uninstall) uninstall_lw "$2" ;;
+            *) lw_wrapper "$@" ;;
+        esac
+fi
+exit $?
