@@ -95,10 +95,12 @@ uninstall_lw() {
     rm -rf "$HOME/.local/share/kservices5/ServiceMenus/LutrisWine"*
     rm -rf "$HOME_LWSRC"
     rm -rf "$HOME_LWRAP"
-    rm -rf "$HOME_LWRUN"
+    [ -L "$HOME_LWRUN" ] && \
+        rm -rf "$HOME_LWRUN"
     if [ "$1" == "all" ]
         then
             rm -rf "$LW_DIR"
+            rm -rf "$HOME_LWRUN"
             rm -rf "$HOME/LutrisWine"
             rm -rf "$HOME_DESK_APP/LutrisWine"*
         else
