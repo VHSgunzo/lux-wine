@@ -1,7 +1,7 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname='lwrap'
 gitrepo='lutris-wine'
-pkgver='0.76.1'
+pkgver='0.76.2'
 pkgrel='1'
 pkgdesc='Lutris Wine wrapper for Runimage container'
 arch=('x86_64')

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.76.1"
+export LW_VERSION="0.76.2"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -171,10 +171,10 @@ print_error() {
                 --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
     elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
-            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" "$3" &
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Error' "$2" "$3" &
     elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
-            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" &
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Error' "$2" &
     fi
 }
 
@@ -198,10 +198,10 @@ print_info() {
                 --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
     elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
-            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" "$3" &
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Info' "$2" "$3" &
     elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
         then
-            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine' "$2" &
+            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Info' "$2" &
     fi
 }
 
@@ -361,19 +361,19 @@ check_git_release() {
                         then
                             if [ ! -n "$(grep -o "DXVK_NVAPI_VERSION" "$LW_CFG")" ]
                                 then
-                                    echo "export DXVK_NVAPI_VERSION='v$dll_version'" >> "$LW_CFG"
+                                    echo "DXVK_NVAPI_VERSION='v$dll_version'" >> "$LW_CFG"
                                     import_luwine_wcfg
                                 else
-                                    sed -i "s/export DXVK_NVAPI_VERSION.*/export DXVK_NVAPI_VERSION='v$dll_version'/" "$LW_CFG"
+                                    sed -i "s/DXVK_NVAPI_VERSION.*/DXVK_NVAPI_VERSION='v$dll_version'/" "$LW_CFG"
                                     import_luwine_wcfg
                             fi
                         else
                             if [ ! -n "$(grep -io "$1_version" "$LW_CFG")" ]
                                 then
-                                    echo "export $(echo "$1_version"|tr [:lower:] [:upper:])='v$dll_version'" >> "$LW_CFG"
+                                    echo "$(echo "$1_version"|tr [:lower:] [:upper:])='v$dll_version'" >> "$LW_CFG"
                                     import_luwine_wcfg
                                 else
-                                    sed -i "s/export $(echo "$1_version"|tr [:lower:] [:upper:]).*/export $(echo "$1_version"|tr [:lower:] [:upper:])='v$dll_version'/" "$LW_CFG"
+                                    sed -i "s/$(echo "$1_version"|tr [:lower:] [:upper:]).*/$(echo "$1_version"|tr [:lower:] [:upper:])='v$dll_version'/" "$LW_CFG"
                                     import_luwine_wcfg
                             fi
                     fi
@@ -2297,11 +2297,12 @@ check_first_run() {
                     xdg-mime default LutrisWine.desktop "$winemimetype"
             done
             update-desktop-database -q "$LW_MENU_APP_DIR"
+            [ ! -L "$HOME/LutrisWine" ] && \
+                try_ln "$LW_DIR" "$HOME/"
             touch "$LW_DIR/.firstrun"
             [ "$1" != "-init" ] && full_init
             unset FIRST_RUN
     fi
-    [ ! -d "$HOME/LutrisWine" ] && try_ln "$LW_DIR" "$HOME/"
 }
 
 check_virt_desktop() {
@@ -3154,7 +3155,7 @@ lu_exit() {
             try_rm /tmp/FORCE_EXIT /tmp/envbackup* /tmp/syssett* /tmp/winesett* /tmp/ressett* /tmp/settbtn* &>/dev/null
             kill $(pgrep -fa "$LW_NAME"|awk '{print$1}')
         else
-            print_error yad "Lutris Wine Killer" "Lutris Wine not runing!" &
+            print_error yad "Lutris Wine Killer" "Lutris Wine not runing!"
     fi
 }
 
@@ -3190,7 +3191,7 @@ lu_killshell() {
             done
             print_info notify "Lutris Wine SHELL processes successfully killed!"
     else
-        print_error yad "SHELL Killer" "Lutris Wine SHELL processes not found!" &
+        print_error yad "SHELL Killer" "Lutris Wine SHELL processes not found!"
     fi
 }
 
@@ -3205,7 +3206,7 @@ lu_killtray() {
             kill "$TRAY_PID" 2>/dev/null
             try_rm /tmp/FORCE_EXIT
     else
-        print_error yad "Tray Killer" "Lutris Wine not runing in tray!" &
+        print_error yad "Tray Killer" "Lutris Wine not runing in tray!"
     fi
 }
 
@@ -3224,7 +3225,7 @@ lu_killwine() {
             print_info notify "Wine processes successfully killed!"
             try_rm /tmp/FORCE_EXIT
     else
-        print_error yad "Lutris Wine Killer" "Wine processes not found!" &
+        print_error yad "Lutris Wine Killer" "Wine processes not found!"
     fi
 }
 
@@ -3240,7 +3241,7 @@ lu_killexe() {
             print_info notify "EXE processes successfully killed!"
             try_rm /tmp/FORCE_EXIT
     else
-        print_error yad "Lutris Wine EXE Killer" "Lutris Wine EXE processes not found!" &
+        print_error yad "Lutris Wine EXE Killer" "Lutris Wine EXE processes not found!"
     fi
 }
 
@@ -3939,7 +3940,7 @@ check_themes() {
                     fi
             fi
         else
-            print_error yad "Lutris Wine themes not found!" &
+            print_error yad "Lutris Wine themes not found!"
             return 1
     fi
 }
@@ -5417,11 +5418,11 @@ check_loadbar_cover() {
                 then
                     export LOADBARGIF="$LW_DEF_LOAD_GIF"
                     sed -i "s@export LOADBARGIF.*@export LOADBARGIF='$LW_DEF_LOAD_GIF'@g" "$LW_CFG" 2>/dev/null
-                    print_error yad "Lutris Wine Cover Loader" "Unsupported loading bar cover file! Reset to default cover." &
+                    print_error yad "Lutris Wine Cover Loader" "Unsupported loading bar cover file! Reset to default cover."
                 else
                     export LOADBAR=0
                     sed -i "s/export LOADBAR.*/export LOADBAR='0'/g" "$LW_CFG" 2>/dev/null
-                    print_error yad "Lutris Wine Cover Loader" "Not found default loading bar cover! Cover is disabled!" &
+                    print_error yad "Lutris Wine Cover Loader" "Not found default loading bar cover! Cover is disabled!"
             fi
     fi
 }
@@ -5681,7 +5682,7 @@ lu_pfxrestore() {
                 try_rm "$PFXRESTORE_DIR" &>/dev/null
                 try_mv "${LW_DEF_TMP}/$LWPFX_NAME" "${LW_DEF_WPFXS_DIR}/"
                 print_info notify "The prefix backup is successfully restored!"
-                $LW_FLMGR "$PFXRESTORE_DIR" &>/dev/null &
+                $LW_FLMGR "$PFXRESTORE_DIR" &>/dev/null
                 return 0
             else
                 try_rm "${LW_DEF_TMP}/$LWPFX_NAME" &>/dev/null
