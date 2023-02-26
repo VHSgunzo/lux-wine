@@ -13,7 +13,7 @@ GIT_LWSRC="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main/lutris-wi
 GIT_LWRUN="https://github.com/VHSgunzo/runimage/releases"
 HOME_DESK_APP="$HOME/.local/share/applications"
 HOME_DESK_DIR="$HOME/.local/share/desktop-directories"
-RUNSRCRPTH="$(realpath "$RUNSRC" 2>/dev/null)"
+RUNSRCRPTH="$(readlink -f "$RUNSRC")"
 F_RC="$HOME/.config/fish/config.fish"
 B_RC="$HOME/.bashrc"
 Z_RC="$HOME/.zshrc"
@@ -23,6 +23,7 @@ LWRAP="$LWBIN_DIR/lwrap"
 LWBASH="$LWBIN_DIR/bash"
 LWRUN="$LWBIN_DIR/lwrun"
 RUNIMAGE_LN="$LWBIN_DIR/runimage"
+REALP_LWRUN="$(readlink -f "$LWRUN")"
 
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
@@ -115,8 +116,9 @@ try_install_lwrun() {
                     is_lwrun && \
                     return 1||exit 1
             fi
-    elif [[ "$RUNSRCRPTH" =~ "Run" ]]
+    elif [[ "$RUNSRCRPTH" =~ "Run" && "$REALP_LWRUN" != "$RUNSRCRPTH" ]]
         then
+            echo sgdgfsdfg
             ln -sf "$RUNSRCRPTH" "$LWRUN"
     fi
 }
@@ -235,14 +237,13 @@ update_lw() {
 ln_lwrun() {
     if is_lwrun
         then
-            REALP_LWRUN="$(realpath "$LWRUN" 2>/dev/null)"
-            if [ "$(realpath "$LWRUN_LN" 2>/dev/null)" != "$REALP_LWRUN" ]
+            if [ "$(readlink -f "$LWRUN_LN")" != "$REALP_LWRUN" ]
                 then
                     info_msg "Update lwrun link..."
                     mkdir -p "$HBIN_DIR"
                     ln -sf "$LWRUN" "$LWRUN_LN"
             fi
-            if [ "$(realpath "$RUNIMAGE_LN" 2>/dev/null)" != "$REALP_LWRUN" ]
+            if [ "$(readlink -f "$RUNIMAGE_LN")" != "$REALP_LWRUN" ]
                 then
                     info_msg "Update runimage link..."
                     mkdir -p "$LWBIN_DIR"
