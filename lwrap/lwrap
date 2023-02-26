@@ -97,13 +97,29 @@ make_install() {
     check_path "$F_RC" && echo -e \
         '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$F_RC"
     update-desktop-database -q "$HOME_DESK_APP" &>/dev/null
-    [[ -x "$RUNSRCRPTH" && ! -x "$LWRUN" ]] && \
-        mv -f "$RUNSRCRPTH" "$LWRUN" && \
-        chmod u+x "$LWRUN"
+}
+
+try_install_lwrun() {
+    if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
+        "$RUNSRCRPTH" != "$LWRUN" ]]
+        then
+            info_msg "Installing lwrun..."
+            mkdir -p "$LWBIN_DIR"
+            if mv -f "$RUNSRCRPTH" "$LWRUN"
+                then
+                    chmod u+x "$LWRUN"
+                    ln_lwrun
+                    info_msg "lwrun installed!"
+                else
+                    error_msg "Failed to install lwrun!"
+                    is_lwrun && \
+                    return 1||exit 1
+            fi
+    fi
 }
 
 uninstall_lw() {
-    if [ "$1" == "force" ] || is_lw_installed
+    if [ "$1" == "force" ] || is_lw
         then
             info_msg "Removing Lutris Wine..."
             rm -rf "$HOME_DESK_APP/LutrisWine"
@@ -153,7 +169,9 @@ is_net_conn() {
     fi
 }
 
-is_lw_installed() { [[ -x "$LWSRC" && -x "$LWRUN" && -x "$LWRAP" ]] ; }
+is_lw() { [[ -x "$LWSRC" && -x "$LWRAP" ]] ; }
+
+is_lwrun() { [ -x "$LWRUN" ] ; }
 
 install_lw() {
     TMP_LW="/tmp/lutris-wine.$RANDOM"
@@ -175,12 +193,8 @@ install_lw() {
             [ -d "$TMP_LW" ] && \
                 rm -rf "$TMP_LW"*)
     fi
-    [ ! -x "$LWRUN" ] && \
-        try_dl_lwrun
-    if is_lw_installed
+    if is_lw
         then
-            RUNSRCRPTH="$LWRUN"
-            ln_lwrun
             info_msg "Lutris Wine installed!"
         else
             error_msg "Failed to install Lutris Wine!"
@@ -189,7 +203,7 @@ install_lw() {
 }
 
 update_lw() {
-    if is_lw_installed
+    if is_lw
         then
             info_msg "Checking the Lutris Wine update..."
             GIT_LW_VERSION="$(NO_ARIA2C=1 try_dl "$GIT_LWSRC" \
@@ -216,15 +230,15 @@ update_lw() {
 }
 
 ln_lwrun() {
-    if [ -x "$RUNSRCRPTH" ]
+    if is_lwrun
         then
-            if [ "$(realpath "$LWRUN_LN" 2>/dev/null)" != "$RUNSRCRPTH" ]
+            if [ "$(realpath "$LWRUN_LN" 2>/dev/null)" != "$LWRUN" ]
                 then
                     info_msg "Update lwrun link..."
                     mkdir -p "$HBIN_DIR"
-                    ln -sf "$RUNSRCRPTH" "$LWRUN_LN"
+                    ln -sf "$LWRUN" "$LWRUN_LN"
             fi
-            if [[ -x "$LWRUN" && "$(realpath "$RUNIMAGE_LN" 2>/dev/null)" != "$LWRUN" ]]
+            if [ "$(realpath "$RUNIMAGE_LN" 2>/dev/null)" != "$LWRUN" ]
                 then
                     info_msg "Update runimage link..."
                     mkdir -p "$LWBIN_DIR"
@@ -260,7 +274,7 @@ try_dl() {
                         -t 3 -T 5 -w 0.5 "$1" -O "$FILEDIR/$FILENAME"
             elif is_bin_exist curl &>/dev/null
                 then
-                    curl --insecure --fail -L "$1" -o "$FILEDIR/$FILENAME"
+                    curl --progress-bar --insecure --fail -L "$1" -o "$FILEDIR/$FILENAME"
             else
                 error_msg "Downloader not found!"
                 exit 1
@@ -271,19 +285,21 @@ try_dl() {
 }
 
 try_dl_lwrun() {
+    local TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
     GIT_LWRUN_VERSION="$(NO_ARIA2C=1 try_dl "$GIT_LWRUN/latest" \
             /dev/stdout|& grep -m1 "Release v.*"|awk '{print$2}')"
     if [ -n "$GIT_LWRUN_VERSION" ] && try_dl \
         "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/runimage.superlite" \
-            "$LWRUN"
+            "$TMP_LWRUN"
         then
             info_msg "lwrun downloaded!"
-            chmod u+x "$LWRUN"
+            RUNSRCRPTH="$TMP_LWRUN" \
+            RUNSRC="lwrun" try_install_lwrun
         else
             error_msg "Failed to download lwrun!"
-            [ -f "$LWRUN" ] && \
-                rm -rf "$LWRUN"*
+            [ -f "$TMP_LWRUN" ] && \
+                rm -rf "$TMP_LWRUN"*
             exit 1
     fi
 }
@@ -292,6 +308,8 @@ case $1 in
     --uninstall) uninstall_lw "$2"
                  exit ;;
     --install) install_lw "$2"
+               try_install_lwrun
+               is_lwrun||try_dl_lwrun
                exit ;;
     --update) update_lw
               exit ;;
@@ -299,9 +317,11 @@ esac
 
 if [[ "$RUNSRC" =~ "lwrun" ]]
     then
-        if ! is_lw_installed
+        try_install_lwrun
+        if ! is_lw || ! is_lwrun
             then
-                install_lw
+                is_lw||install_lw
+                is_lwrun||try_dl_lwrun
         elif [ ! -x "$(find "$LWSRC" -mtime -3 \
             -print 2>/dev/null)" ] && is_net_conn
             then
@@ -320,7 +340,7 @@ if [[ "$RUNSRC" =~ "lwrun" ]]
         if [ -x "$LWRUN_LN" ]
             then
                 "$LWRUN_LN" "$@"
-        elif [ -x "$LWRUN" ]
+        elif is_lwrun
             then
                 "$LWRUN" "$@"
         elif [ -x "$(which_bin lwrun)" ]
@@ -329,9 +349,8 @@ if [[ "$RUNSRC" =~ "lwrun" ]]
         else
             if is_net_conn
                 then
-                    try_dl_lwrun
-                    ! is_lw_installed && \
-                        install_lw
+                    is_lw||install_lw
+                    is_lwrun||try_dl_lwrun
                     "$LWRUN" "$@"
                 else
                     error_msg "lwrun not found, download and install it first!"
