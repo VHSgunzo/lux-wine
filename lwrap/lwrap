@@ -101,7 +101,7 @@ make_install() {
 
 try_install_lwrun() {
     if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
-        "$RUNSRCRPTH" != "$LWRUN" ]]
+        "$RUNSRCRPTH" != "$LWRUN" && ! "$RUNSRCRPTH" =~ "Run" ]]
         then
             info_msg "Installing lwrun..."
             mkdir -p "$LWBIN_DIR"
@@ -115,6 +115,9 @@ try_install_lwrun() {
                     is_lwrun && \
                     return 1||exit 1
             fi
+    elif [[ "$RUNSRCRPTH" =~ "Run" ]]
+        then
+            ln -sf "$RUNSRCRPTH" "$LWRUN"
     fi
 }
 
@@ -232,13 +235,14 @@ update_lw() {
 ln_lwrun() {
     if is_lwrun
         then
-            if [ "$(realpath "$LWRUN_LN" 2>/dev/null)" != "$LWRUN" ]
+            REALP_LWRUN="$(realpath "$LWRUN" 2>/dev/null)"
+            if [ "$(realpath "$LWRUN_LN" 2>/dev/null)" != "$REALP_LWRUN" ]
                 then
                     info_msg "Update lwrun link..."
                     mkdir -p "$HBIN_DIR"
                     ln -sf "$LWRUN" "$LWRUN_LN"
             fi
-            if [ "$(realpath "$RUNIMAGE_LN" 2>/dev/null)" != "$LWRUN" ]
+            if [ "$(realpath "$RUNIMAGE_LN" 2>/dev/null)" != "$REALP_LWRUN" ]
                 then
                     info_msg "Update runimage link..."
                     mkdir -p "$LWBIN_DIR"
