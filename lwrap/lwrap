@@ -99,13 +99,16 @@ make_install() {
 }
 
 try_install_lwrun() {
+    REALP_LWRUN="$(readrealpath "$LWRUN")"
     if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
         "$RUNSRCRPTH" != "$LWRUN" && ! "$RUNSRCRPTH" =~ "Run" ]]
         then
             info_msg "Installing lwrun..."
             mkdir -p "$LWBIN_DIR"
-            if mv -f "$RUNSRCRPTH" "$LWRUN"
+            rm -f "$LWRUN"
+            if cp -f "$RUNSRCRPTH" "$LWRUN"
                 then
+                    rm -f "$RUNSRCRPTH"
                     chmod u+x "$LWRUN"
                     ln_lwrun
                     info_msg "lwrun installed!"
@@ -114,10 +117,30 @@ try_install_lwrun() {
                     is_lwrun && \
                     return 1||exit 1
             fi
-    elif [[ "$RUNSRCRPTH" =~ "Run" && "$REALP_LWRUN" != "$RUNSRCRPTH" ]]
+    elif [[ "$RUNSRCRPTH" =~ "Run" && "$RUNSRCRPTH" != "$REALP_LWRUN" ]]
         then
-            echo sgdgfsdfg
             ln -sf "$RUNSRCRPTH" "$LWRUN"
+            ln_lwrun
+    fi
+}
+
+ln_lwrun() {
+    if is_lwrun
+        then
+            REALP_LWRUN="$(readrealpath "$LWRUN")"
+            if [ "$(readrealpath "$LWRUN_LN")" != "$REALP_LWRUN" ]
+                then
+                    info_msg "Update lwrun link..."
+                    mkdir -p "$HBIN_DIR"
+                    ln -sfr "$LWRUN" "$LWRUN_LN"
+            fi
+            if [ "$(readrealpath "$RUNIMAGE_LN")" != "$REALP_LWRUN" ]
+                then
+                    info_msg "Update runimage link..."
+                    mkdir -p "$LWBIN_DIR"
+                    ln -sfr "$LWRUN" "$RUNIMAGE_LN"
+                    ln -sfr "$LWRUN" "$HBIN_DIR/runimage-lw"
+            fi
     fi
 }
 
@@ -232,25 +255,6 @@ update_lw() {
     fi
 }
 
-ln_lwrun() {
-    if is_lwrun
-        then
-            if [ "$(readrealpath "$LWRUN_LN")" != "$REALP_LWRUN" ]
-                then
-                    info_msg "Update lwrun link..."
-                    mkdir -p "$HBIN_DIR"
-                    ln -sf "$LWRUN" "$LWRUN_LN"
-            fi
-            if [ "$(readrealpath "$RUNIMAGE_LN")" != "$REALP_LWRUN" ]
-                then
-                    info_msg "Update runimage link..."
-                    mkdir -p "$LWBIN_DIR"
-                    ln -sfr "$LWRUN" "$RUNIMAGE_LN"
-                    ln -sfr "$LWRUN" "$HBIN_DIR/runimage-lw"
-            fi
-    fi
-}
-
 is_bin_exist() { command -v "$@" &>/dev/null ; }
 
 which_bin() { command -v "$@" ; }
@@ -316,7 +320,6 @@ readrealpath() {
     fi
 }
 
-REALP_LWRUN="$(readrealpath "$LWRUN")"
 RUNSRCRPTH="$(readrealpath "$RUNSRC")"
 
 case $1 in
@@ -342,7 +345,6 @@ if [[ "$RUNSRC" =~ "lwrun" ]]
             then
                 update_lw
         fi
-        ln_lwrun
         if [ -x "$LWSRC" ]
             then
                 RUN_LW="$LWSRC"

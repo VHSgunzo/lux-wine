@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.76.2"
+export LW_VERSION="0.76.3"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -23,6 +23,9 @@ if [ "$RUNROOTFSTYPE" == "superlite" ]
 fi
 
 [ ! -n "$LW_SYS_DIR" ] && export LW_SYS_DIR="/usr/share/lutris-wine"
+[ ! -n "$LWRAP_DIR" ] && export LWRAP_DIR="/opt/lwrap"
+[ ! -n "$LWRAP_PFX_DIR" ] && export LWRAP_PFX_DIR="$LWRAP_DIR/prefix_backups"
+[ ! -n "$LWRAP_DEFPFX" ] && export LWRAP_DEFPFX="$LWRAP_PFX_DIR/defprefix.xz.lwpfx"
 [ ! -n "$LW_SOURCE" ] && export LW_SOURCE="$0"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LutrisWine"
@@ -73,6 +76,7 @@ fi
 [ ! -n "$SYS_LU" ] && export SYS_LU="$(which lutris 2>/dev/null)"
 [ ! -n "$CMPRSS_METHOD" ] && export CMPRSS_METHOD='zstd'
 [ ! -n "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
+[ ! -n "$SYS_LDLIBPTH" ] && export SYS_LDLIBPTH="$LD_LIBRARY_PATH"
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
 export > /tmp/envbackup$ENVKEY
@@ -1214,7 +1218,7 @@ try_shutdown_wine() {
                     else
                         kill -9 $WINE_PIDS 2>/dev/null
                     fi
-                    unset LD_LIBRARY_PATH
+                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
                     wine_is_death
                 else
                     return 1
@@ -1239,7 +1243,7 @@ try_shutdown_wine() {
             else
                 kill -9 $WINE_PIDS 2>/dev/null
             fi
-            unset LD_LIBRARY_PATH
+            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
             wine_is_death
     fi
 }
@@ -1249,12 +1253,6 @@ try_fix_wrtx() {
         then
             print_info "Fix winetricks dotnet20"
             sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$LW_WTRX_DIR/winetricks" 2>/dev/null
-    fi
-    if [ ! -n "$(grep -o 'check_ld_library' "$LW_WTRX_DIR/winetricks")" ]
-        then
-            print_info "Fix winetricks LD_LIBRARY_PATH"
-            sed -i "$(( $(sed -n '/w_do_call()$/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    check_ld_library" "$LW_WTRX_DIR/winetricks" 2>/dev/null
-            sed -i "$(( $(sed -n '/subshell must/=' "$LW_WTRX_DIR/winetricks") + 1))a\\    unset LD_LIBRARY_PATH" "$LW_WTRX_DIR/winetricks" 2>/dev/null
     fi
 }
 
@@ -1329,11 +1327,11 @@ reg_edit() {
             check_ld_library
             if DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 $WINE regedit "$1" &>/dev/null
                 then
-                    unset LD_LIBRARY_PATH
+                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
                     print_info notify "Data from $REGFL has been successfully added to Lutris Wine registry!"
                     try_shutdown_wine
                 else
-                    unset LD_LIBRARY_PATH
+                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
                     print_error yad "Failed to add data to Lutris Wine registry!"
             fi
     fi
@@ -1637,7 +1635,7 @@ lu_debug() {
                 "VKBASALT_CONFIG_FILE" "VK_ICD_FILENAMES" "__GL_THREADED_OPTIMIZATIONS" "DXVK_STATE_CACHE_PATH" "__GLX_VENDOR_LIBRARY_NAME" "__NV_PRIME_RENDER_OFFLOAD" \
                 "WINE_FULLSCREEN_FSR_MODE" "DXVK_STATE_CACHE" "__GL_DXVK_OPTIMIZATIONS" "__GL_SHADER_DISK_CACHE_PATH" "__GL_SHADER_DISK_CACHE" "__GL_SHADER_DISK_CACHE_SIZE" \
                 "WD3DMODE" "MEDIACONV_AUDIO_DUMP_FILE" "MEDIACONV_AUDIO_TRANSCODED_FILE" "MEDIACONV_VIDEO_DUMP_FILE" "MEDIACONV_VIDEO_TRANSCODED_FILE" "LW_STEAMAPPS_DIR")"
-            #unset LD_LIBRARY_PATH
+            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             echo "[ Date and time of start debug ] : $(date)" >> "$TMP_DBG"
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
@@ -2136,7 +2134,7 @@ lu_run() {
         echo -en "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n"
         $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "$@" $EXE_ARG
     fi
-    unset LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
     post_launch 2>/dev/null
     stop_loadbar
     compositor_sw 2>/dev/null
@@ -2344,6 +2342,17 @@ check_steamapps() {
             fi
         else
             unset STMEAC STMBATTLEYE
+    fi
+    STMPRTNGE="/usr/share/steam/compatibilitytools.d/ge-proton"
+    if [[ -f "$STMPRTNGE/files/bin/wine" && -f "$STMPRTNGE/version" ]]
+        then
+            STMPRTNGE_V="$(cat "$STMPRTNGE/version"|awk '{print$2}')"
+            if [[ -n "$STMPRTNGE_V" && ! -d "$LW_WINE_DIR/$STMPRTNGE_V" ]]
+                then
+                    try_mkdir "$LW_WINE_DIR"
+                    try_ln "$STMPRTNGE/files" "$LW_WINE_DIR/$STMPRTNGE_V"
+                    print_info notify "Found $STMPRTNGE_V in Steam and linked to Lutris Wine"
+            fi
     fi
 }
 
@@ -3920,12 +3929,12 @@ check_themes() {
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" regedit "$LW_THEMES_DIR/$WINE_THEME.reg" &>/dev/null
                             [ "$?" == 0 ] && export THEMEOK=1
-                            unset LD_LIBRARY_PATH
+                            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
                     elif [ -f "$WINE" ]
                         then
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" regedit "$LW_THEMES_DIR/$WINE_THEME.reg" &>/dev/null
                             [ "$?" == 0 ] && export THEMEOK=1
-                            unset LD_LIBRARY_PATH
+                            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
                     fi
                     if [ -n "$THEMEOK" ]
                         then
@@ -3934,7 +3943,8 @@ check_themes() {
                             print_info notify "Lutris Wine theme successfully changed to $WINE_THEME"
                             try_shutdown_wine
                         else
-                            unset LD_LIBRARY_PATH THEMEOK
+                            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
+                            unset THEMEOK
                             print_error yad "Lutris Wine theme not changed to $WINE_THEME"
                             return 1
                     fi
@@ -4487,12 +4497,12 @@ winepfx_init() {
         then
             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -i &>/dev/null
             [ "$?" == 0 ] && export PFXINITOK=1
-            unset LD_LIBRARY_PATH
+            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
     elif [ -f "$WINE" ]
         then
             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -i &>/dev/null
             [ "$?" == 0 ] && export PFXINITOK=1
-            unset LD_LIBRARY_PATH
+            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
     fi
     if [ -n "$PFXINITOK" ]
         then
@@ -4501,7 +4511,8 @@ winepfx_init() {
             try_shutdown_wine
             export NEEDCHKDLL=1
         else
-            unset LD_LIBRARY_PATH PFXINITOK
+            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
+            unset PFXINITOK
             print_error yad "Lutris Wine prefix initialization completed with error!"
             return 1
     fi
@@ -4522,6 +4533,12 @@ check_winepfx() {
                     print_error yad "An error occurred when moving the default prefix from the old path!"
                     exit 1
             fi
+    fi
+    if [[ "$WINEPREFIX" =~ "defprefix" && -f "$LWRAP_DEFPFX" ]] && \
+        [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" \
+        || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
+        then
+            NO_FLMGR=1 lu_pfxrestore "$LWRAP_DEFPFX"
     fi
     PFXARCH="$(grep -o '#arch=.*$' "$WINEPREFIX/system.reg" 2>/dev/null|cut -d'=' -f2)"
     if [[ -n "$PFXARCH" && "$WINEARCH" != "$PFXARCH" ]]
@@ -4758,7 +4775,7 @@ check_ld_library() {
 check_path() {
     [ -n "$1" ] && path_upd "$1"
     [[ -n "$(which -a 'cabextract' 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)" \
-    && -d "$WINEDIR" && -f "$WINEDIR/bin/cabextract" ]] && try_rm "$WINEDIR/bin/cabextract"
+    && -d "$WINEDIR" && -f "$WINEDIR/bin/cabextract" ]] && try_rm "$WINEDIR/bin/cabextract" &>/dev/null
     path_upd "$WINEDIR/bin"
 }
 
@@ -4949,12 +4966,12 @@ check_win_version() {
                 then
                     DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" winecfg -v win$WIN_VER &>/dev/null
                     [ "$?" == 0 ] && export WINVEROK=1
-                    unset LD_LIBRARY_PATH
+                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
             elif [ -f "$WINE" ]
                 then
                     DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" winecfg -v win$WIN_VER &>/dev/null
                     [ "$?" == 0 ] && export WINVEROK=1
-                    unset LD_LIBRARY_PATH
+                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
             fi
             if [ -n "$WINVEROK" ]
                 then
@@ -4962,7 +4979,8 @@ check_win_version() {
                     print_info notify "Windows version changed to Windows $WIN_VER"
                     try_shutdown_wine
                 else
-                    unset LD_LIBRARY_PATH WINVEROK
+                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
+                    unset WINVEROK
                     print_error yad "Windows version not changed to Windows $WIN_VER"
                     return 1
             fi
@@ -5682,7 +5700,8 @@ lu_pfxrestore() {
                 try_rm "$PFXRESTORE_DIR" &>/dev/null
                 try_mv "${LW_DEF_TMP}/$LWPFX_NAME" "${LW_DEF_WPFXS_DIR}/"
                 print_info notify "The prefix backup is successfully restored!"
-                $LW_FLMGR "$PFXRESTORE_DIR" &>/dev/null
+                [ "$NO_FLMGR" != 1 ] && \
+                    $LW_FLMGR "$PFXRESTORE_DIR" &>/dev/null
                 return 0
             else
                 try_rm "${LW_DEF_TMP}/$LWPFX_NAME" &>/dev/null
