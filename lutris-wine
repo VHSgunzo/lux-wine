@@ -77,6 +77,10 @@ fi
 [ ! -n "$CMPRSS_METHOD" ] && export CMPRSS_METHOD='zstd'
 [ ! -n "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
 [ ! -n "$SYS_LDLIBPTH" ] && export SYS_LDLIBPTH="$LD_LIBRARY_PATH"
+[ ! -n "$DEF_MANGOHUDCFG" ] && export DEF_MANGOHUDCFG="no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
+cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
+engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
+resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
 export > /tmp/envbackup$ENVKEY
@@ -120,7 +124,7 @@ check_def_config() {
     [ ! -n "$EAC" ] && export EAC=1
     [ ! -n "$EXE_LWDB" ] && export EXE_LWDB=1
     [ ! -n "$GL_THRD_OPTI" ] && export GL_THRD_OPTI=1
-    [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='vcrun2019 mfc42'
+    [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='vcrun2022 mfc42'
     [ ! -n "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
     export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
     export VKD3D_GIT_RELEASE_URL="https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases"
@@ -183,29 +187,32 @@ print_error() {
 }
 
 print_info() {
-    if [[ "$1" == "yad" && -n "$2" && -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && -n "$3" ]]
+    if [ "$QUIET_MODE" != 1 ]
         then
-            echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
-    elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && ! -n "$3" ]]
-        then
-            echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
-    else
-        echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
-    fi
-    if [[ "$1" == "yad" && -n "$2" && -n "$3" ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="$2" --text="$3" \
-                --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
-    elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lutris Wine Info" \
-                --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
-    elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
-        then
-            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Info' "$2" "$3" &
-    elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
-        then
-            notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Info' "$2" &
+            if [[ "$1" == "yad" && -n "$2" && -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && -n "$3" ]]
+                then
+                    echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
+            elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && ! -n "$3" ]]
+                then
+                    echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
+            else
+                echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
+            fi
+            if [[ "$1" == "yad" && -n "$2" && -n "$3" ]]
+                then
+                    yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="$2" --text="$3" \
+                        --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
+            elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]]
+                then
+                    yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lutris Wine Info" \
+                        --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lutris Wine
+            elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
+                then
+                    notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Info' "$2" "$3" &
+            elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
+                then
+                    notify-send -i "$LW_DEF_ICO" -a 'Lutris Wine Info' "$2" &
+            fi
     fi
 }
 
@@ -1140,15 +1147,11 @@ check_musthave_dll() {
             [ ! -f "$WTRX_LOG" ] && touch "$WTRX_LOG"
             for need_install_dll in $MUST_HAVE_DLL
                 do
-                    if [[ "$need_install_dll" == "vcrun2015" || "$need_install_dll" == "vcrun2017" ]]
+                    if [[ "$need_install_dll" == "vcrun2015" || \
+                          "$need_install_dll" == "vcrun2017" || \
+                          "$need_install_dll" == "vcrun2019" ]]
                         then
-                            need_install_dll="vcrun2019"
-                            sed -i '/vcrun2015/d' "$WTRX_LOG"
-                            sed -i '/vcrun2017/d' "$WTRX_LOG"
-                    elif [ "$need_install_dll" == "vcrun2019" ]
-                        then
-                            sed -i '/vcrun2015/d' "$WTRX_LOG"
-                            sed -i '/vcrun2017/d' "$WTRX_LOG"
+                            need_install_dll="vcrun2022"
                     fi
                     if [ ! -n "$(grep -wo "$need_install_dll" "$WTRX_LOG" 2>/dev/null)" ]
                         then
@@ -1855,7 +1858,7 @@ dis_cmd_msg() {
 check_luwine_wcfg_cenv() {
     try_mkdir "$LW_WINE_DIR"
     [ ! -n "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ] \
-    && echo "export WINE_VERSION='SETWINE'" >> "$LW_CFG"
+    && echo "WINE_VERSION='SETWINE'" >> "$LW_CFG"
     [ -n "$(grep -wo "WINEPREFIX='$LW_DIR/winepfx'" "$LW_DEF_CFG" 2>/dev/null)" ] \
     && sed -i "s@WINEPREFIX=.*@WINEPREFIX='$LW_DEF_WINEPFX'@" "$LW_DEF_CFG" 2>/dev/null
     [ -n "$(grep -wo "WINEPREFIX='$LW_DIR/winepfx'" "$LW_CFG" 2>/dev/null)" ] \
@@ -1904,7 +1907,7 @@ check_def_wine() {
             --center --on-top 2>/dev/null|sed '/^TRUE$/d'|sed '/^$/d')"
     }
     export_wine_changes() {
-        sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
+        sed -i "s/WINE_VERSION.*/WINE_VERSION=\'$SETWINE\'/g" "$LW_CFG"
         export NEW_WINE_VERSION="$SETWINE"
         export OLD_WINE_VERSION="$WINE_VERSION"
         export OLD_WINE="$WINE"
@@ -1923,7 +1926,7 @@ check_def_wine() {
             print_info "System Wine found"
             if print_question "Lutris Wine Manager" "System Wine found, do you want to select it as default?"
                 then
-                    sed -i "s/export WINE_VERSION.*/export WINE_VERSION=\'System\'/g" "$LW_CFG"
+                    sed -i "s/WINE_VERSION.*/WINE_VERSION=\'System\'/g" "$LW_CFG"
                     export NEW_WINE_VERSION="System"
                     export OLD_WINE_VERSION="$WINE_VERSION"
                     export OLD_WINE="$WINE"
@@ -2417,6 +2420,7 @@ lite_init() {
             check_display
             check_shell
             check_steamapps
+            check_videodrv
             check_def_wine
             check_proton_d3dlib
             check_path
@@ -2437,7 +2441,6 @@ full_init() {
             check_crash_dialog
             check_winepfx
             check_wd3dmode
-            check_videodrv
             check_compositor
             check_netcore
             check_wdllover
@@ -2515,7 +2518,7 @@ lu_start() {
                     fi
                 else
                     export LU_START="$(yad --window-icon="$LW_DEF_ICO" --title "Specify file to run in Lutris Wine:" --file --center --on-top \
-                        --file-filter="*.exe *.lnk *.bat *.msi *.reg"  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
+                        --file-filter="*.exe *.lnk *.bat *.msi *.reg" --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
                     if [ -f "$LU_START" ]
                         then
                             lite_init "$LU_START"
@@ -2544,7 +2547,7 @@ lu_config() {
     WMONOOVERLST="Microsoft.Xna.Framework.*,Gac=n \n Disabled"
     WINVERLST="10 \n \n 8 \n 7 \n xp"
     WARCHLST="win64 \n win32"
-    MHAVEDLLST="vcrun2019 mfc42 \n vcrun6 vcrun6sp6 vcrun2010 vcrun2012 vcrun2013 vcrun2019 mfc120 mfc42 msvcirt dotnet20 xna40 dotnet46 \n physx \n Disabled"
+    MHAVEDLLST="vcrun2022 mfc42 \n vcrun6 vcrun6sp6 vcrun2005 vcrun2008 vcrun2010 vcrun2012 vcrun2013 vcrun2022 mfc120 mfc42 msvcirt physx dotnet20 xna40 dotnet48 \n physx \n Disabled"
     TERMAPPLST="$(for whichterm in {konsole,gnome-terminal,kitty,deepin-terminal,xfce4-terminal,xterm} ; do which $whichterm 2>/dev/null ; done)"
     DOWNLOADERLST="$(for whichdwnl in {aria2c,wget} ; do echo "$(basename "$(which $whichdwnl 2>/dev/null)" 2>/dev/null)" ; done)"
     VSYNCLST="Enabled \n Disabled \n Default"
@@ -2724,7 +2727,7 @@ lu_config() {
             --field="GameMode:CHK" "$GAMEMODE" \
             --field="MangoHud::CB" "$(cfg_items "$LWMANGOHUD" "$MANGOHUDLST")" \
             --field="MangoHud User config:CHK" "$MANGOHUD_USER_CONF" \
-            --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" " no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,show_fps_limit,resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12")" \
+            --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" "$DEF_MANGOHUDCFG")" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
             --field="Vsync::CB" "$(cfg_items "$VSYNC" "$VSYNCLST")" \
             --field="NVIDIA Prime Render Offload:CHK" "$PRIME" \
@@ -3097,7 +3100,7 @@ winetricks() {
                         || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && -n "$WTRX_RUN" ]] \
                         || [[ ! -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && -n "$LU_EXE" && ! -n "$WTRX_RUN" ]]
                         then
-                            $TERM_APP $LWSHELL -c "print_info 'Using System winetricks!!' ; \
+                            $TERM_APP $LWSHELL -c "print_info 'Using System winetricks!' ; \
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks"
                     elif [[ -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                         then
@@ -3982,10 +3985,7 @@ check_mangohud() {
                     fi
                     if [[ ! -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
                         then
-export MANGOHUD_CONFIG="no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
-cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
-engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
-resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"
+                            export MANGOHUD_CONFIG="$DEF_MANGOHUDCFG"
                     elif [[ -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
                         then
                             export MANGOHUD_CONFIG="$MANGOHUDCFG"
@@ -4015,10 +4015,7 @@ check_fps_limit() {
                                     export MANGOHUD_CONFIG="$(echo "${MANGOHUDCFG},toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0")"
                             fi
                         else
-export MANGOHUD_CONFIG="no_display,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
-cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
-engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
-resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12,toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0"
+                            export MANGOHUD_CONFIG="$DEF_MANGOHUDCFG,toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0"
                     fi
              elif [ -n "$(which strangle 2>/dev/null)" ]
                 then
@@ -4162,8 +4159,10 @@ get_proton_d3dlib() {
 }
 
 check_proton_d3dlib() {
-    get_proton_d3dlib 'ln'
-    if [[ -n "$P_DXVK" || -n "$P_NVAPI" || -n "$P_VKD3D" ]]
+    [[ ! "$(realpath "$WINEDIR")" =~ "$LW_WINE_DIR" ]] && \
+        get_proton_d3dlib 'cp'||\
+        get_proton_d3dlib 'ln'
+    if [ "$WINED3D" != 1 ] && [[ -n "$P_DXVK" || -n "$P_NVAPI" || -n "$P_VKD3D" ]]
         then
             if print_question "Set DXVK, DXVK-NVAPI and VKD3D from $WINE_IN_USE as default?"
                 then
@@ -4172,19 +4171,19 @@ check_proton_d3dlib() {
                             if [ -d "$LW_RUNTIME_DIR/$pd3ddll/$WINE_IN_USE" ]
                                 then
                                     if [ "$pd3ddll" == "dxvk-nvapi" ]
-                                       then
-                                           if [ ! -n "$(grep -o "DXVK_NVAPI_VERSION" "$LW_CFG")" ]
-                                               then
-                                                   echo "export DXVK_NVAPI_VERSION='$WINE_IN_USE'" >> "$LW_CFG"
-                                               else
-                                                   sed -i "s/export DXVK_NVAPI_VERSION.*/export DXVK_NVAPI_VERSION='$WINE_IN_USE'/" "$LW_CFG"
-                                           fi
-                                       else
+                                    then
+                                        if [ ! -n "$(grep -o "DXVK_NVAPI_VERSION" "$LW_CFG")" ]
+                                            then
+                                                echo "DXVK_NVAPI_VERSION='$WINE_IN_USE'" >> "$LW_CFG"
+                                            else
+                                                sed -i "s/DXVK_NVAPI_VERSION.*/DXVK_NVAPI_VERSION='$WINE_IN_USE'/" "$LW_CFG"
+                                        fi
+                                    else
                                             if [ ! -n "$(grep -io "${pd3ddll}_version" "$LW_CFG")" ]
                                                 then
-                                                    echo "export $(echo "${pd3ddll}_version"|tr [:lower:] [:upper:])='$WINE_IN_USE'" >> "$LW_CFG"
+                                                    echo "$(echo "${pd3ddll}_version"|tr [:lower:] [:upper:])='$WINE_IN_USE'" >> "$LW_CFG"
                                                 else
-                                                    sed -i "s/export $(echo "${pd3ddll}_version"|tr [:lower:] [:upper:]).*/export $(echo "${pd3ddll}_version"|tr [:lower:] [:upper:])='$WINE_IN_USE'/" "$LW_CFG"
+                                                    sed -i "s/$(echo "${pd3ddll}_version"|tr [:lower:] [:upper:]).*/$(echo "${pd3ddll}_version"|tr [:lower:] [:upper:])='$WINE_IN_USE'/" "$LW_CFG"
                                             fi
                                     fi
                             fi
@@ -4192,7 +4191,6 @@ check_proton_d3dlib() {
                     import_luwine_wcfg
                     check_def_wine
                     check_winepfx
-                    unset WINED3D
                     check_dxvk 1
                     check_dxvk-nvapi 1
                     check_vkd3d 1
@@ -4534,11 +4532,11 @@ check_winepfx() {
                     exit 1
             fi
     fi
-    if [[ "$WINEPREFIX" =~ "defprefix" && -f "$LWRAP_DEFPFX" ]] && \
+    if [[ "$WINEARCH" == "win64" && "$WINEPREFIX" =~ "defprefix" && -f "$LWRAP_DEFPFX" ]] && \
         [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" \
         || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
         then
-            NO_FLMGR=1 lu_pfxrestore "$LWRAP_DEFPFX"
+            DEFPFXRESTORE=1 NO_FLMGR=1 lu_pfxrestore "$LWRAP_DEFPFX"
     fi
     PFXARCH="$(grep -o '#arch=.*$' "$WINEPREFIX/system.reg" 2>/dev/null|cut -d'=' -f2)"
     if [[ -n "$PFXARCH" && "$WINEARCH" != "$PFXARCH" ]]
@@ -4912,7 +4910,7 @@ check_vkbasalt_eff() {
                             sed -i "s/effects = .*/effects = $VKBASALT_OTHEFF/" "$VKBASALT_CONFIG_FILE"
                         else
                             sed -i "/effects.*/d" "$VKBASALT_CONFIG_FILE" 2>/dev/null
-                            sed -i "s/export VKBASALT.*/export VKBASALT='0'/" "$LW_CFG" 2>/dev/null
+                            sed -i "s/VKBASALT.*/VKBASALT='0'/" "$LW_CFG" 2>/dev/null
                             export DISABLE_VKBASALT=1
                             unset VKBASALT
                     fi
@@ -5104,7 +5102,7 @@ upd_ubuntu1804-x86_64() {
     FORCE_UPDATE=1 check_ubuntu1804-x86_64
 }
 upd_d3d_extras() {
-    sed -i '/export D3D_EXTRAS_VERSION.*/d' "$LW_CFG" 2>/dev/null
+    sed -i '/D3D_EXTRAS_VERSION.*/d' "$LW_CFG" 2>/dev/null
     unset D3D_EXTRAS_VERSION
     export D3D_EXTRAS=1
     export NEEDCHKDLL=1
@@ -5112,7 +5110,7 @@ upd_d3d_extras() {
     check_d3d_extras
 }
 upd_dgvoodoo2() {
-    sed -i '/export DGVOODOO2_VERSION.*/d' "$LW_CFG" 2>/dev/null
+    sed -i '/DGVOODOO2_VERSION.*/d' "$LW_CFG" 2>/dev/null
     unset DGVOODOO2_VERSION
     export DGVOODOO2=1
     export NEEDCHKDLL=1
@@ -5120,7 +5118,7 @@ upd_dgvoodoo2() {
     check_dgvoodoo2
 }
 upd_dxvk() {
-    sed -i '/export DXVK_VERSION.*/d' "$LW_CFG" 2>/dev/null
+    sed -i '/DXVK_VERSION.*/d' "$LW_CFG" 2>/dev/null
     unset DXVK_VERSION
     export DXVK=1
     export NEEDCHKDLL=1
@@ -5128,7 +5126,7 @@ upd_dxvk() {
     check_dxvk
 }
 upd_dxvk_nvapi() {
-    sed -i '/export DXVK_NVAPI_VERSION.*/d' "$LW_CFG" 2>/dev/null
+    sed -i '/DXVK_NVAPI_VERSION.*/d' "$LW_CFG" 2>/dev/null
     unset DXVK_NVAPI_VERSION
     export DXVK=1
     export DXVK_NVAPI=1
@@ -5137,7 +5135,7 @@ upd_dxvk_nvapi() {
     check_dxvk-nvapi
 }
 upd_vkd3d() {
-    sed -i '/export VKD3D_VERSION.*/d' "$LW_CFG" 2>/dev/null
+    sed -i '/VKD3D_VERSION.*/d' "$LW_CFG" 2>/dev/null
     unset VKD3D_VERSION
     export VKD3D=1
     export NEEDCHKDLL=1
@@ -5145,7 +5143,7 @@ upd_vkd3d() {
     check_vkd3d
 }
 upd_wine_nvml() {
-    sed -i '/export WINE_NVML_VERSION.*/d' "$LW_CFG" 2>/dev/null
+    sed -i '/WINE_NVML_VERSION.*/d' "$LW_CFG" 2>/dev/null
     unset WINE_NVML_VERSION
     export DXVK=1
     export WINE_NVML=1
@@ -5296,7 +5294,7 @@ check_us_switcher() {
     if [[ "$US_LAYOUT" == 1 && ! -n "$(which xkb-switch 2>/dev/null)" ]]
         then
             export US_LAYOUT=0
-            sed -i "s/export US_LAYOUT.*/export US_LAYOUT='0'/g" "$LW_CFG" 2>/dev/null
+            sed -i "s/US_LAYOUT.*/US_LAYOUT='0'/g" "$LW_CFG" 2>/dev/null
             print_error yad "Lutris Wine Layout Switcher" "xkb-switch not found in your system! Keyboard layout not switch to US!"
     fi
 }
@@ -5342,7 +5340,7 @@ check_videodrv() {
     disable_native_d3dlls() {
         unset DXVK DXVK_NVAPI VKD3D
         export WINED3D=1
-        export NOVULKAN=1
+        export WD3DMODE="WineD3D"
         print_info notify "Vulkan API is unavailable in your system!"
     }
     #SYSGLXINFO="$(DISABLE_MANGOHUD=1 glxinfo -B 2>/dev/null|grep "Device")"
@@ -5435,11 +5433,11 @@ check_loadbar_cover() {
             if [ -f "$LW_DEF_LOAD_GIF" ]
                 then
                     export LOADBARGIF="$LW_DEF_LOAD_GIF"
-                    sed -i "s@export LOADBARGIF.*@export LOADBARGIF='$LW_DEF_LOAD_GIF'@g" "$LW_CFG" 2>/dev/null
+                    sed -i "s@LOADBARGIF.*@LOADBARGIF='$LW_DEF_LOAD_GIF'@g" "$LW_CFG" 2>/dev/null
                     print_error yad "Lutris Wine Cover Loader" "Unsupported loading bar cover file! Reset to default cover."
                 else
                     export LOADBAR=0
-                    sed -i "s/export LOADBAR.*/export LOADBAR='0'/g" "$LW_CFG" 2>/dev/null
+                    sed -i "s/LOADBAR.*/LOADBAR='0'/g" "$LW_CFG" 2>/dev/null
                     print_error yad "Lutris Wine Cover Loader" "Not found default loading bar cover! Cover is disabled!"
             fi
     fi
@@ -5723,7 +5721,11 @@ lu_pfxrestore() {
                             pfxrestore||return 1
                     fi
                 else
-                    if print_question "Prefix restore" "Are you sure you want to restore this prefix backup image?\n[ $LU_LWPFX ]"
+                    [ "$DEFPFXRESTORE" == 1 ] && \
+                        PFXRESTORE_MSG="The default prefix is not initialized! \nDo you want to restore the default prefix from the backup?"||\
+                        PFXRESTORE_MSG="Are you sure you want to restore this prefix backup image?"
+                    if [[ "$DEFPFXRESTORE" == 1 && "$NETSTATUS" == 0 ]]||\
+                        print_question "Prefix restore" "${PFXRESTORE_MSG}\n[ $LU_LWPFX ]"
                         then
                             pfxrestore||return 1
                     fi

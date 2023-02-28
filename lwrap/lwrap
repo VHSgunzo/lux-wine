@@ -86,6 +86,7 @@ make_install() {
     mkdir -p "$HOME_DESK_DIR"
     cp -rf applications "$HOME_DESK_APP/LutrisWine"
     cp -rf directories/* "$HOME_DESK_DIR/"
+    cp -rf registry_patch "$LW_DIR/"
     cp -rf LICENSE "$LW_DIR/"
     cp -rf themes "$LW_DIR/"
     cp -rf icons "$LW_DIR/"
@@ -98,6 +99,21 @@ make_install() {
     update-desktop-database -q "$HOME_DESK_APP" &>/dev/null
 }
 
+mv_lwrun() {
+    if [ -w "$1" ] || [ -w "$(dirname "$1")" ]
+        then
+            mv -f "$1" "$2"
+            local ret=$?
+        else
+            [ -L "$2" ] && \
+                rm -f "$2"
+            cp -f "$1" "$2"
+            local ret=$?
+            rm -f "$1"
+    fi
+    return $ret
+}
+
 try_install_lwrun() {
     REALP_LWRUN="$(readrealpath "$LWRUN")"
     if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
@@ -105,10 +121,8 @@ try_install_lwrun() {
         then
             info_msg "Installing lwrun..."
             mkdir -p "$LWBIN_DIR"
-            rm -f "$LWRUN"
-            if cp -f "$RUNSRCRPTH" "$LWRUN"
+            if mv_lwrun "$RUNSRCRPTH" "$LWRUN"
                 then
-                    rm -f "$RUNSRCRPTH"
                     chmod u+x "$LWRUN"
                     ln_lwrun
                     info_msg "lwrun installed!"
@@ -164,6 +178,7 @@ uninstall_lw() {
                     rm -rf "$LW_DIR/db"
                     rm -rf "$LW_DIR/LICENSE"
                     rm -rf "$LW_DIR/.lwcfgchksum"
+                    rm -rf "$LW_DIR/registry_patch"
                 else
                     rm -rf "$LW_DIR"
                     rm -rf "$LWRUN_LN"
