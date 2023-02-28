@@ -100,18 +100,11 @@ make_install() {
 }
 
 mv_lwrun() {
-    if [ -w "$1" ] || [ -w "$(dirname "$1")" ]
-        then
-            mv -f "$1" "$2"
-            local ret=$?
-        else
-            [ -L "$2" ] && \
-                rm -f "$2"
+    if [ -w "$1" ]
+        then mv -f "$1" "$2"
+        else [ -L "$2" ] && rm -f "$2"
             cp -f "$1" "$2"
-            local ret=$?
-            rm -f "$1"
     fi
-    return $ret
 }
 
 try_install_lwrun() {
