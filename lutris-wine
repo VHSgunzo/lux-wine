@@ -130,7 +130,6 @@ check_def_config() {
     export NVAPI_GIT_RELEASE_URL="https://api.github.com/repos/jp7677/dxvk-nvapi/releases"
     export D3D_GIT_RELEASE_URL="https://api.github.com/repos/lutris/d3d_extras/releases"
     export DGVO_GIT_RELEASE_URL="https://api.github.com/repos/lutris/dgvoodoo2/releases"
-    export WTRX_GIT_RELEASE_URL="https://api.github.com/repos/lutris/winetricks/releases"
     export BUILD_GIT_RELEASE_URL="https://api.github.com/repos/lutris/buildbot/releases"
     export NVML_GIT_RELEASE_URL="https://api.github.com/repos/VHSgunzo/nvml/releases"
     export WLU_GIT_RELEASE_URL="https://api.github.com/repos/lutris/wine/releases"
@@ -1146,12 +1145,6 @@ check_musthave_dll() {
             [ ! -f "$WTRX_LOG" ] && touch "$WTRX_LOG"
             for need_install_dll in $MUST_HAVE_DLL
                 do
-                    if [[ "$need_install_dll" == "vcrun2015" || \
-                          "$need_install_dll" == "vcrun2017" || \
-                          "$need_install_dll" == "vcrun2019" ]]
-                        then
-                            need_install_dll="vcrun2022"
-                    fi
                     if [ ! -n "$(grep -wo "$need_install_dll" "$WTRX_LOG" 2>/dev/null)" ]
                         then
                             if [ ! -n "$NEED_INSTALL_DLLS" ]
@@ -1256,6 +1249,7 @@ try_fix_wrtx() {
             print_info "Fix winetricks dotnet20"
             sed -i 's@https://download.microsoft.com/download/a/3/f/a3f1bf98-18f3-4036-9b68-8e6de530ce0a/NetFx64.exe@https://github.com/VHSgunzo/dotnet20/releases/download/dotnet20/NetFx64.exe@' "$LW_WTRX_DIR/winetricks" 2>/dev/null
     fi
+    chmod u+x "$LW_WTRX_DIR/winetricks"
 }
 
 vkd3dcfg_upd() {
@@ -4400,10 +4394,6 @@ check_eac() {
 
 runtime_manager() {
     try_mkdir "$LW_RUNTIME_DIR"
-    if [ "$1" == "winetricks" ]
-    then GIT_RELEASE_URL="$WTRX_GIT_RELEASE_URL"
-    else GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
-    fi
     [ ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ] && FORCE_UPDATE=1
     if [[ -n "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 \
         && ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
@@ -4989,8 +4979,15 @@ check_resizable_bar() {
 check_winetricks() {
     if [[ "$SYS_WINETRICKS" != 1 || "$FORCE_UPDATE" == 1 ]]
         then
-            runtime_manager "winetricks" && \
-                try_fix_wrtx
+            if [[ "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && \
+                ! -n "$(find "$LW_WTRX_DIR" -type f -name "winetricks" \
+                    -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || \
+                [ "$FORCE_UPDATE" == 1 ]
+                then
+                    try_mkdir "$LW_WTRX_DIR"
+                    try_download "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks" \
+                        "$LW_WTRX_DIR" && try_fix_wrtx
+            fi
     fi
 }
 
