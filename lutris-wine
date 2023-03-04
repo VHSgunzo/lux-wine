@@ -1600,7 +1600,7 @@ create_shortcut() {
                 then
                     lu_config
             fi
-            if [ -n "$SYS_LU" ]
+            if [[ -n "$SYS_LU" && ! "$RUNSRC" =~ "lwrun" ]]
                 then
                     if print_question "Shortcuts Creator" "Do you want to add it to Lutris?"
                         then

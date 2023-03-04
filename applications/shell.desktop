@@ -2,7 +2,6 @@
 Categories=Lutris Wine
 Exec="/usr/bin/lutris-wine" -shell %f
 Icon=/usr/share/lutris-wine/icons/default_icon.png
-MimeType=text/x-shellscript;inode/directory
 Name=SHELL
 Name[ru_RU]=SHELL
 NoDisplay=false

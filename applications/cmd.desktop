@@ -2,7 +2,7 @@
 Categories=Lutris Wine
 Exec="/usr/bin/lutris-wine" -cmd %f
 Icon=/usr/share/lutris-wine/icons/default_icon.png
-MimeType=application/x-ms-dos-executable;application/x-msdos-program;inode/directory
+MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Name=CMD
 Name[ru_RU]=CMD
 NoDisplay=false
