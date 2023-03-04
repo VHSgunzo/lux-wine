@@ -80,7 +80,7 @@ fi
 [ ! -n "$DEF_MANGOHUDCFG" ] && export DEF_MANGOHUDCFG="no_display,time,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
 cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
 engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
-resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-left,text_color=ffffff,toggle_hud=Shift_R+F12"
+resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-right,text_color=ffffff,toggle_hud=Shift_R+F12"
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
 export > /tmp/envbackup$ENVKEY
