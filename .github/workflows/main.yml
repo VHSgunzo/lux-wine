@@ -21,7 +21,7 @@ jobs:
       - name: Build archlinux packages
         uses: countstarlight/arch-makepkg-action@master
         with:
-          scripts: "makepkg --nodeps && cd lwrap && makepkg --nodeps"
+          scripts: "cd lwrap && makepkg --nodeps && cd ../ && makepkg --nodeps"
 
       - name: Release
         uses: softprops/action-gh-release@v1
