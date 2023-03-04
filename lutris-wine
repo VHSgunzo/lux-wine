@@ -3430,11 +3430,12 @@ lu_shortcut() {
 }
 
 lu_help() {
-    if [ ! -n "$(pgrep -fa yad|grep "Lutris Wine usage info"|awk '{print$1}')" ]; then :
+    if [ ! -n "$(pgrep -fa xterm|grep "Lutris Wine usage info"|awk '{print$1}')" ]; then :
         else
             print_error yad "Lutris Wine usage info" "Lutris Wine usage info already runing!"
             exit 1
     fi
+    echo_help() {
     echo -e "
         ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS
             ${RED}Usage:
@@ -3478,46 +3479,15 @@ lu_help() {
             {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
             {ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
         $RESETCOLOR" >&2
-        print_info yad "Lutris Wine usage info" \
-        "┌──[$USER@`uname -a|awk '{print$2}'`]─[$PWD]\n└──╼ \$ $LW_NAME {$LW_NAME argument} blabla.exe {exe arguments} \n\n \
-        -explorer \t\t\t\t\t Wine explorer\n \
-        -cmd \t\t\t\t\t Open CMD or open file in CMD\n \
-        -shell \t\t\t\t\t Open SHELL or open file in SHELL\n \
-        -config \t\t\t\t\t Settings\n \
-        -appcfg \t\t\t\t\t Apps Settings\n \
-        -regedit \t\t\t\t\t Registry editor\n \
-        -control \t\t\t\t\t Control panel\n \
-        -winecfg \t\t\t\t\t Wine settings\n \
-        -winemgr {delonly} \t\t\t Wine manager\n \
-        -taskmgr \t\t\t\t\t Task manager\n \
-        -uninstaller \t\t\t\t Wine uninstaller\n \
-        -winetricks {arguments} \t\t Winetricks\n \
-        -openpfx \t\t\t\t\t Open drive C:\\\\\n \
-        -killwine \t\t\t\t\t Kill Wine processes\n \
-        -killtray \t\t\t\t\t Kill tray\n \
-        -killexe \t\t\t\t\t Kill running EXE\n \
-        -killshell \t\t\t\t\t Kill SHELL\n \
-        -exit \t\t\t\t\t Force Exit\n \
-        -clearpfx \t\t\t\t\t Clear prefix\n \
-        -rmapp \t\t\t\t\t Remove menu app\n \
-        -shortcut \t\t\t\t\t Create shortcut\n \
-        -addtolu \t\t\t\t\t Add to Lutris\n \
-        -debug \t\t\t\t\t DEBUG\n \
-        -help \t\t\t\t\t Show this usage info\n \
-        -version \t\t\t\t\t Show version info\n \
-        -tray {noclose} \t\t\t\t Tray\n \
-        -init \t\t\t\t\t Forced initialization\n \
-        -pfxbackup {xz}\t\t\t Create prefix backup\n \
-        -pfxrestore \t\t\t\t Restore prefix from backup\n \
-        -backupmnt \t\t\t\t Mount prefix backup\n \
-        -backupunmnt \t\t\t\t Unmount prefix backup\n \
-        -update {all} \t\t\t\t Runtime updater\n \
-{dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {nvml|wine_nvml}\n \
-{inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}\n \
-{dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}\n \
-{ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}\n \
-        \nLutris Wine v${LW_VERSION} by $LW_DEVELOPERS \
-        " &>/dev/null
+        }
+        if [ "$NOT_TERM" != 1 ]
+            then
+                echo_help
+            else
+                export -f echo_help
+                xterm -hold -fa 'Monospace' -fs 10 -geometry 100x43 -bg black -fg white \
+                    -T "Lutris Wine usage info" -e bash -c 'echo_help' 2>/dev/null
+        fi
 }
 
 lu_version() {
