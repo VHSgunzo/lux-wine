@@ -4394,6 +4394,7 @@ check_eac() {
 
 runtime_manager() {
     try_mkdir "$LW_RUNTIME_DIR"
+    GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
     [ ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ] && FORCE_UPDATE=1
     if [[ -n "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 \
         && ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
