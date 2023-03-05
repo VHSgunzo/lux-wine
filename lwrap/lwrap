@@ -280,14 +280,14 @@ try_dl() {
             fi
             [ ! -d "$FILEDIR" ] && \
                 mkdir -p "$FILEDIR"
-            if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c &>/dev/null
+            if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c
                 then
                     aria2c -x 13 -s 13 --allow-overwrite -d "$FILEDIR" -o "$FILENAME" "$1"
-            elif is_exe_exist wget &>/dev/null
+            elif is_exe_exist wget
                 then
                     wget -q --show-progress --no-check-certificate --content-disposition \
                         -t 3 -T 5 -w 0.5 "$1" -O "$FILEDIR/$FILENAME"
-            elif is_exe_exist curl &>/dev/null
+            elif is_exe_exist curl
                 then
                     curl --progress-bar --insecure --fail -L "$1" -o "$FILEDIR/$FILENAME"
             else
