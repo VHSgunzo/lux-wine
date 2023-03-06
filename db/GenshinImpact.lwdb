@@ -10,10 +10,10 @@ check_deps() {
 }
 
 check_gi_patch() {
-    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch340"
+    DIR="$WINEPREFIX/drive_c/Program Files/gi_patch350"
     if [ ! -d "$DIR" ]
         then
-            if try_download "https://github.com/niizam/gi_patch/releases/download/v3.4/gi_patch340.tar.gz" "$WINEPREFIX/drive_c/Program Files"
+            if try_download "https://github.com/VHSgunzo/gi_patch/releases/download/v3.5/gi_patch350.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                 then
                     if unpack_tar_gz "$DIR.tar.gz" "$WINEPREFIX/drive_c/Program Files"
                         then
@@ -44,11 +44,11 @@ launch_helper() {
     CEXE1="$DATADIR/upload_crash.exe"
     CEXE2="$DATADIR/Plugins/crashreport.exe"
     sum=($(md5sum $FILE))
-    if [ "$sum" == "782fa080d71257396383dc90df6c286e" ]
+    if [ "$sum" == "429749603ec62e24d5f61e6dda2487ce" ]
         then
             print_info notify "Patch is already applied!"
         else
-            if [ "${sum}" == "a8238a3be126723b7226b16447a6cb81" ]
+            if [ "${sum}" == "a604cf90f46408063bed148855fc4443" ]
                 then
                     reltype="os"
                     print_info notify "Applying patch for: International (OS) version"
@@ -108,7 +108,12 @@ launch_helper() {
     fi
     [[ ! -f "$WINEPREFIX/drive_c/users/$USER/Temp/mhyprot3.Sys" && -f "mhyprot3.Sys" ]] && \
         try_cp "mhyprot3.Sys" "$WINEPREFIX/drive_c/users/$USER/Temp/mhyprot3.sys"
-    $WINE regedit mhyprot2_running.reg >/dev/null 2>&1
+    if ! grep -om1 "ImagePath.*%TEMP%.*mhyprot3.sys" "$WINEPREFIX/system.reg" &>/dev/null
+        then
+            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" \
+                regedit mhyprot2_running.reg &>/dev/null
+            try_shutdown_wine
+    fi
 }
 
 if check_deps

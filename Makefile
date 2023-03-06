@@ -27,6 +27,9 @@ install:
 	(IFS=$$'\n' ; for DB in $$($(LS) -1 db) ; do \
 	$(INSTALL) -Dm644 "db/$$DB" "$(DESTDIR)/usr/share/lutris-wine/db/$$DB" ; \
 	done)
+	(IFS=$$'\n' ; for REG in $$($(LS) -1 registry_patch) ; do \
+	$(INSTALL) -Dm644 "registry_patch/$$REG" "$(DESTDIR)/usr/share/lutris-wine/registry_patch/$$REG" ; \
+	done)
 
 uninstall:
 	$(RM) -rfv "$(DESTDIR)/usr/bin/lutris-wine"
