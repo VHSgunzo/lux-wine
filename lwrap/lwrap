@@ -203,29 +203,45 @@ is_net_conn() {
     fi
 }
 
+exzip() {
+    if is_exe_exist unzip
+        then
+            unzip "$1" -d "$2" &>/dev/null
+    elif is_exe_exist 7z
+        then
+            7z x "$1" -o"$2" &>/dev/null
+    elif is_exe_exist bsdtar
+        then
+            mkdir -p "$2"
+            bsdtar -x -f "$1" -C "$2" &>/dev/null
+    else
+        error_msg "zip archivator not found!"
+        exit 1
+    fi
+}
+
 is_lw() { [[ -x "$LWSRC" && -x "$LWRAP" ]] ; }
 
 is_lwrun() { [ -x "$LWRUN" ] ; }
 
 install_lw() {
+    rm_tmplw() { [[ -d "$TMP_LW" || -f "$TMP_LW.zip" ]] && rm -rf "$TMP_LW"* ; }
     TMP_LW="/tmp/lutris-wine.$RANDOM"
     info_msg "Installing Lutris Wine..."
     if [ "$1" != "local" ] && try_dl \
         "https://github.com/VHSgunzo/lutris-wine/archive/refs/heads/main.zip" \
             "$TMP_LW.zip"
         then
-            (unzip "$TMP_LW.zip" -d "$TMP_LW" &>/dev/null && \
+            (exzip "$TMP_LW.zip" "$TMP_LW" && \
             cd "$TMP_LW/lutris-wine-main" && \
             make_install "$1"
-            [ -d "$TMP_LW" ] && \
-                rm -rf "$TMP_LW"*)
+            rm_tmplw)
     elif [ -d "/opt/lwrap" ]
         then
             (cp -rf "/opt/lwrap" "$TMP_LW" && \
             cd "$TMP_LW" && \
             make_install "$1"
-            [ -d "$TMP_LW" ] && \
-                rm -rf "$TMP_LW"*)
+            rm_tmplw)
     fi
     if is_lw
         then
@@ -268,7 +284,7 @@ is_exe_exist() { command -v "$@" &>/dev/null ; }
 which_exe() { command -v "$@" ; }
 
 try_dl_lwrun() {
-    local TMP_LWRUN="$LWRUN.new$BASHPID"
+    TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
     GIT_LWRUN_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 try_dl "$GIT_LWRUN/latest" \
             /dev/stdout|& grep -m1 "Release v.*"|awk '{print$2}')"
@@ -290,24 +306,46 @@ try_dl_lwrun() {
 try_dl() {
     if [ -n "$1" ]
         then
-            local URL="$1"
+            URL="$1"
             if [ -n "$2" ]
                 then
-                    local FILEDIR="$(dirname "$2")"
-                    local FILENAME="$(basename "$2")"
+                    FILEDIR="$(dirname "$2")"
+                    FILENAME="$(basename "$2")"
                 else
-                    local FILEDIR="."
-                    local FILENAME="$(basename "$1")"
+                    FILEDIR="."
+                    FILENAME="$(basename "$1")"
             fi
             [ ! -d "$FILEDIR" ] && \
                 mkdir -p "$FILEDIR"
-            if [[ "$NOT_TERM" == 1 && "$NO_DL_GUI" != 1 ]] && is_exe_exist yad
+            if [[ "$NOT_TERM" == 1 && "$NO_DL_GUI" != 1 ]] && \
+                (is_exe_exist yad||is_exe_exist zenity)
                 then
                     set -o pipefail
-                    yad_dl_progress() {
-                        yad --progress --percentage=0 --text="Download:\t$FILENAME\n$URL" \
-                            --auto-close --no-escape --selectable-labels --auto-kill \
-                            --center --on-top --fixed --no-buttons --undecorated --skip-taskbar
+                    dl_repeat() {
+                        if is_exe_exist yad
+                            then
+                                yad --image="dialog-error" --button="CANCEL:1" --center \
+                                    --button="REPEAT:0" --title="Download interrupted!" \
+                                    --text="Failed to download : $FILENAME" --on-top --fixed
+                        elif is_exe_exist zenity
+                            then
+                                zenity --question --title="Download interrupted!" --no-wrap \
+                                    --text="Failed to download : $FILENAME \nWould you like to repeat it?"
+                        else return 1
+                        fi
+                    }
+                    dl_progress() {
+                        if is_exe_exist yad
+                            then
+                                yad --progress --percentage=0 --text="Download:\t$FILENAME\n$URL" \
+                                    --auto-close --no-escape --selectable-labels --auto-kill \
+                                    --center --on-top --fixed --no-buttons --undecorated --skip-taskbar
+                        elif is_exe_exist zenity
+                            then
+                                zenity --progress --text="Connecting to $URL" --width=650 --height=40 \
+                                     --auto-close --no-cancel --title="Download: $FILENAME"
+                        else return 1
+                        fi
                     }
                     if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c
                         then
@@ -315,18 +353,18 @@ try_dl() {
                                 "$FILENAME" -d "$FILEDIR" "$URL"|stdbuf -o0 grep 'ETA'|\
                                 sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|\
                                 stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'|\
-                            yad_dl_progress
+                            dl_progress
                     elif is_exe_exist wget
                         then
                             wget --no-check-certificate --content-disposition -t 3 -T 5 \
                                 -w 0.5 "$URL" -O "$FILEDIR/$FILENAME"|& tr '\r' '\n'|\
                                 sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./'|\
-                            yad_dl_progress
+                            dl_progress
                     elif is_exe_exist curl
                         then
                             curl --progress-bar --insecure --fail -L "$1" -o \
                                 "$FILEDIR/$FILENAME" |& tr '\r' '\n'|sed -ur 's/[# ]+/#/g;'|\
-                            yad_dl_progress
+                            dl_progress
                     else
                         error_msg "Downloader not found!"
                         exit 1
@@ -335,12 +373,9 @@ try_dl() {
                         then
                             [ -f "$FILEDIR/$FILENAME" ] && \
                                 rm -rf "$FILEDIR/$FILENAME" "$FILEDIR/"*.aria2
-                            if yad --image="dialog-error" --button="CANCEL:1" --center \
-                                --button="REPEAT:0" --title="Download interrupted!" \
-                                --text="Failed to download : $FILENAME" --on-top --fixed
-                                then try_dl_gui "$1" "$2"
-                                else return 1
-                            fi
+                            dl_repeat && \
+                            try_dl "$1" "$2"||\
+                            return 1
                         else return 0
                     fi
                 else
@@ -380,9 +415,9 @@ RUNSRCRPTH="$(readrealpath "$RUNSRC")"
 case $1 in
     --uninstall) uninstall_lw "$2"
                  exit $? ;;
-    --install) install_lw "$2"
-               try_install_lwrun
+    --install) try_install_lwrun
                is_lwrun||try_dl_lwrun
+               install_lw "$2"
                exit $? ;;
     --update) update_lw
               exit $? ;;
@@ -391,10 +426,9 @@ esac
 if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
     then
         try_install_lwrun
-        if ! is_lw || ! is_lwrun
+        if ! is_lw
             then
-                is_lw||install_lw
-                is_lwrun||try_dl_lwrun
+                install_lw
         elif [ ! -x "$(find "$LWSRC" -mtime -3 \
             -print 2>/dev/null)" ] && is_net_conn
             then
@@ -421,8 +455,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
         else
             if is_net_conn
                 then
-                    is_lw||install_lw
-                    is_lwrun||try_dl_lwrun
+                    try_dl_lwrun
                     "$LWRUN" "$@"
                 else
                     error_msg "lwrun not found, download and install it first!"
