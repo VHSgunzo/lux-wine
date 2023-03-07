@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.76.4"
+export LW_VERSION="0.76.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -309,7 +309,7 @@ check_exes() {
         then
             export EXE_PIDS="$(echo "$RUN_EXES"|awk '{print$1}')"
             [[ -n "$EXE_DIR" && -n "$EXE_NAME" ]] && \
-                export RUN_EXE="$(echo "$EXE_PIDS"|xargs -I {} lsof -p {}|\
+                export RUN_EXE="$(ps -o cmd= -p $EXE_PIDS 2>/dev/null|\
                                   grep -iE "($EXE_DIR|$EXE_NAME)" 2>/dev/null)"
     fi
 }
@@ -2342,10 +2342,11 @@ check_steamapps() {
         else
             unset STMEAC STMBATTLEYE
     fi
-    STMPRTNGE="/usr/share/steam/compatibilitytools.d/ge-proton"
-    if [[ -f "$STMPRTNGE/files/bin/wine" && -f "$STMPRTNGE/version" ]]
+    SYS_STM_COMPAT_DIR="/usr/share/steam/compatibilitytools.d"
+    STMPRTNGE="$SYS_STM_COMPAT_DIR/$(ls -1t "$SYS_STM_COMPAT_DIR"|grep -m1 "GE-Proton")"
+    if [[ -f "$STMPRTNGE/files/bin/wine" ]]
         then
-            STMPRTNGE_V="$(cat "$STMPRTNGE/version"|awk '{print$2}')"
+            STMPRTNGE_V="$(basename "$STMPRTNGE")"
             if [[ -n "$STMPRTNGE_V" && ! -d "$LW_WINE_DIR/$STMPRTNGE_V" ]]
                 then
                     try_mkdir "$LW_WINE_DIR"

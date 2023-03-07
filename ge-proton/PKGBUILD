@@ -1,6 +1,6 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 pkgname='GE-Proton'
-pkgver='7.49'
+pkgver='7.50'
 pkgrel='1'
 pkgsrcname="${pkgname}${pkgver/./-}"
 pkgdesc='Lutris Wine GE-Proton for Runimage container'
@@ -13,7 +13,7 @@ source=("$pkgsrcname.tar.gz::https://github.com/GloriousEggroll/proton-ge-custom
 sha256sums=('SKIP')
 
 package() {
-    install_dir="$pkgdir/usr/share/steam/compatibilitytools.d/ge-proton"
+    install_dir="$pkgdir/usr/share/steam/compatibilitytools.d/$pkgsrcname"
     install -dm755 "$install_dir"
     cp -ar --no-preserve=ownership "$srcdir/$pkgsrcname"/* "$install_dir/"
     ln -sf "$pkgdir/usr/bin/cabextract" "$install_dir/files/bin/cabextract"

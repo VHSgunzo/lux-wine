@@ -240,8 +240,8 @@ update_lw() {
     if is_lw
         then
             info_msg "Checking the Lutris Wine update..."
-            GIT_LW_VERSION="$(NO_ARIA2C=1 try_dl "$GIT_LWSRC" \
-                            /dev/stdout|& get_lw_version)"
+            GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 try_dl \
+                    "$GIT_LWSRC" /dev/stdout|& get_lw_version)"
             LW_VERSION="$(get_lw_version "$LWSRC")"
             if [[ -n "$GIT_LW_VERSION" && -n "$LW_VERSION" ]]
                 then
@@ -267,42 +267,10 @@ is_exe_exist() { command -v "$@" &>/dev/null ; }
 
 which_exe() { command -v "$@" ; }
 
-try_dl() {
-    if [ -n "$1" ]
-        then
-            if [ -n "$2" ]
-                then
-                    local FILEDIR="$(dirname "$2")"
-                    local FILENAME="$(basename "$2")"
-                else
-                    local FILEDIR="."
-                    local FILENAME="$(basename "$1")"
-            fi
-            [ ! -d "$FILEDIR" ] && \
-                mkdir -p "$FILEDIR"
-            if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c
-                then
-                    aria2c -x 13 -s 13 --allow-overwrite -d "$FILEDIR" -o "$FILENAME" "$1"
-            elif is_exe_exist wget
-                then
-                    wget -q --show-progress --no-check-certificate --content-disposition \
-                        -t 3 -T 5 -w 0.5 "$1" -O "$FILEDIR/$FILENAME"
-            elif is_exe_exist curl
-                then
-                    curl --progress-bar --insecure --fail -L "$1" -o "$FILEDIR/$FILENAME"
-            else
-                error_msg "Downloader not found!"
-                exit 1
-            fi
-            return $?
-    fi
-    return 1
-}
-
 try_dl_lwrun() {
     local TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
-    GIT_LWRUN_VERSION="$(NO_ARIA2C=1 try_dl "$GIT_LWRUN/latest" \
+    GIT_LWRUN_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 try_dl "$GIT_LWRUN/latest" \
             /dev/stdout|& grep -m1 "Release v.*"|awk '{print$2}')"
     if [ -n "$GIT_LWRUN_VERSION" ] && try_dl \
         "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/runimage.superlite" \
@@ -319,6 +287,85 @@ try_dl_lwrun() {
     fi
 }
 
+try_dl() {
+    if [ -n "$1" ]
+        then
+            local URL="$1"
+            if [ -n "$2" ]
+                then
+                    local FILEDIR="$(dirname "$2")"
+                    local FILENAME="$(basename "$2")"
+                else
+                    local FILEDIR="."
+                    local FILENAME="$(basename "$1")"
+            fi
+            [ ! -d "$FILEDIR" ] && \
+                mkdir -p "$FILEDIR"
+            if [[ "$NOT_TERM" == 1 && "$NO_DL_GUI" != 1 ]] && is_exe_exist yad
+                then
+                    set -o pipefail
+                    yad_dl_progress() {
+                        yad --progress --percentage=0 --text="Download:\t$FILENAME\n$URL" \
+                            --auto-close --no-escape --selectable-labels --auto-kill \
+                            --center --on-top --fixed --no-buttons --undecorated --skip-taskbar
+                    }
+                    if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c
+                        then
+                            aria2c -x 13 -s 13 --allow-overwrite --summary-interval=1 -o \
+                                "$FILENAME" -d "$FILEDIR" "$URL"|stdbuf -o0 grep 'ETA'|\
+                                sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|\
+                                stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'|\
+                            yad_dl_progress
+                    elif is_exe_exist wget
+                        then
+                            wget --no-check-certificate --content-disposition -t 3 -T 5 \
+                                -w 0.5 "$URL" -O "$FILEDIR/$FILENAME"|& tr '\r' '\n'|\
+                                sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./'|\
+                            yad_dl_progress
+                    elif is_exe_exist curl
+                        then
+                            curl --progress-bar --insecure --fail -L "$1" -o \
+                                "$FILEDIR/$FILENAME" |& tr '\r' '\n'|sed -ur 's/[# ]+/#/g;'|\
+                            yad_dl_progress
+                    else
+                        error_msg "Downloader not found!"
+                        exit 1
+                    fi
+                    if [ "${PIPESTATUS[0]}" != 0 ]
+                        then
+                            [ -f "$FILEDIR/$FILENAME" ] && \
+                                rm -rf "$FILEDIR/$FILENAME" "$FILEDIR/"*.aria2
+                            if yad --image="dialog-error" --button="CANCEL:1" --center \
+                                --button="REPEAT:0" --title="Download interrupted!" \
+                                --text="Failed to download : $FILENAME" --on-top --fixed
+                                then try_dl_gui "$1" "$2"
+                                else return 1
+                            fi
+                        else return 0
+                    fi
+                else
+                    if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c
+                        then
+                            aria2c -x 13 -s 13 --allow-overwrite -d "$FILEDIR" -o "$FILENAME" "$URL"
+                    elif is_exe_exist wget
+                        then
+                            wget -q --show-progress --no-check-certificate --content-disposition \
+                                -t 3 -T 5 -w 0.5 "$URL" -O "$FILEDIR/$FILENAME"
+                    elif is_exe_exist curl
+                        then
+                            curl --progress-bar --insecure --fail -L "$URL" -o "$FILEDIR/$FILENAME"
+                    else
+                        error_msg "Downloader not found!"
+                        exit 1
+                    fi
+                    return $?
+            fi
+        else
+            error_msg "Specify download URL!"
+            return 1
+    fi
+}
+
 readrealpath() {
     if is_exe_exist readlink
         then readlink -f "$@" 2>/dev/null
@@ -332,16 +379,16 @@ RUNSRCRPTH="$(readrealpath "$RUNSRC")"
 
 case $1 in
     --uninstall) uninstall_lw "$2"
-                 exit ;;
+                 exit $? ;;
     --install) install_lw "$2"
                try_install_lwrun
                is_lwrun||try_dl_lwrun
-               exit ;;
+               exit $? ;;
     --update) update_lw
-              exit ;;
+              exit $? ;;
 esac
 
-if [[ "$RUNSRC" =~ "lwrun" ]]
+if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
     then
         try_install_lwrun
         if ! is_lw || ! is_lwrun
