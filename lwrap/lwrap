@@ -22,6 +22,7 @@ LWRAP="$LWBIN_DIR/lwrap"
 LWBASH="$LWBIN_DIR/bash"
 LWRUN="$LWBIN_DIR/lwrun"
 RUNIMAGE_LN="$LWBIN_DIR/runimage"
+CHK_UPDATE='3'
 
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
@@ -183,13 +184,6 @@ uninstall_lw() {
     info_msg "Lutris Wine removed!"
 }
 
-get_lw_version() {
-    if [ -n "$1" ]
-        then grep -m1 'LW_VERSION' "$1" 2>/dev/null|grep -Po '\d+'|sed ':a;/$/N;s/\n//;ta'
-        else grep -m1 'LW_VERSION'|grep -Po '\d+'|sed ':a;/$/N;s/\n//;ta'
-    fi
-}
-
 is_net_conn() {
     if is_exe_exist nc
         then nc -zw1 github.com 443 &>/dev/null
@@ -252,19 +246,31 @@ install_lw() {
     fi
 }
 
+vers_parser() { grep -Po '\d+'|sed ':a;/$/N;s/\n//;ta' ; }
+
+get_lw_version() {
+    if [ -n "$1" ]
+        then grep -m1 'LW_VERSION' "$1" 2>/dev/null|vers_parser
+        else grep -m1 'LW_VERSION'|vers_parser
+    fi
+}
+
 update_lw() {
     if is_lw
         then
             info_msg "Checking the Lutris Wine update..."
-            GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 try_dl \
-                    "$GIT_LWSRC" /dev/stdout|& get_lw_version)"
+            GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 \
+                try_dl "$GIT_LWSRC" /dev/stdout|& get_lw_version)"
             LW_VERSION="$(get_lw_version "$LWSRC")"
             if [[ -n "$GIT_LW_VERSION" && -n "$LW_VERSION" ]]
                 then
-                    if [ "$(get_lw_version "$LWSRC")" -lt "$GIT_LW_VERSION" ]
+                    if [ "$LW_VERSION" -lt "$GIT_LW_VERSION" ]
                         then
-                            info_msg "Lutris Wine update..."
-                            install_lw
+                            if is_update "Lutris Wine"
+                                then
+                                    info_msg "Lutris Wine update..."
+                                    install_lw
+                            fi
                         else
                             info_msg "The latest version is already installed!"
                             touch "$LWSRC"
@@ -279,15 +285,16 @@ update_lw() {
     fi
 }
 
-is_exe_exist() { command -v "$@" &>/dev/null ; }
-
-which_exe() { command -v "$@" ; }
+get_lwrun_git_ver() {
+    NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl "$GIT_LWRUN/latest" \
+        /dev/stdout|& grep -m1 "Release v.*"|awk '{print$2}'
+}
 
 try_dl_lwrun() {
     TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
-    GIT_LWRUN_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 try_dl "$GIT_LWRUN/latest" \
-            /dev/stdout|& grep -m1 "Release v.*"|awk '{print$2}')"
+    [ ! -n "$GIT_LWRUN_VERSION" ] && \
+        GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
     if [ -n "$GIT_LWRUN_VERSION" ] && try_dl \
         "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/runimage.superlite" \
             "$TMP_LWRUN"
@@ -303,7 +310,131 @@ try_dl_lwrun() {
     fi
 }
 
+runimage_lw() {
+    [ "$HOSTEXEC_IN_TERM" == 1 ] && \
+        HOSTEXEC_IN_TERM="-t"||\
+        unset HOSTEXEC_IN_TERM
+    if [ "$ENABLE_HOSTEXEC" == 1 ]
+        then hostexec $HOSTEXEC_IN_TERM importenv '$RUNPID' \
+                env DONT_NOTIFY=1 "$RUNIMAGE_LN" "$@"
+        else "$RUNIMAGE_LN" "$@"
+    fi
+}
+
+yn_case() {
+    while true
+        do
+            read -p "$(echo -e "${RED}$1 ${GREEN}(y/n) ${BLUE}> $RESETCOLOR")" yn
+            case $yn in
+                [Yy] ) return 0 ;;
+                [Nn] ) return 1 ;;
+            esac
+    done
+}
+
+is_update() {
+    [ "$FORCE_UPDATE" == 1 ] && \
+        return 0
+    IS_UPD_TITLE="Update ${1}..."
+    [ -n "$2" ] && \
+        IS_UPD_TEXT="$2"||\
+        IS_UPD_TEXT="$1 update is available!\nDo you want to update now?"
+    if [ "$NOT_TERM" != 1 ]
+        then
+            yn_case "$IS_UPD_TEXT"||return 1
+    elif is_exe_exist yad
+        then
+            yad --image="dialog-question" --button="NO:1" --button="YES:0" --title="$IS_UPD_TITLE" \
+                --text="$IS_UPD_TEXT" --center --on-top --fixed --selectable-labels
+    elif is_exe_exist zenity
+        then
+            zenity --question --title="$DL_REP_TITLE" --no-wrap \
+                --text="$IS_UPD_TEXT"
+    else return 1
+    fi
+}
+
+no_color() { sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" ; }
+
+update_runimage() {
+    is_update "RunImage" "Do you want to check updates for RunImage packages?" && \
+        HOSTEXEC_IN_TERM=1 runimage_lw --rU
+}
+
+update_lwrun() {
+    if is_lwrun
+        then
+            info_msg "Checking the lwrun update..."
+            GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+            GIT_LWRUN_VERSION_PARS="$(echo "$GIT_LWRUN_VERSION"|vers_parser)"
+            [ -n "$RUNIMAGE_VERSION" ] && \
+                LWRUN_VERSION="$(echo "$RUNIMAGE_VERSION"|vers_parser)"||\
+                LWRUN_VERSION="$(runimage_lw --rV|no_color|\
+                    grep 'RunImage version:'|awk '{print$7}'|vers_parser)"
+            if [[ -n "$GIT_LWRUN_VERSION_PARS" && -n "$LWRUN_VERSION" ]]
+                then
+                    if [ "$LWRUN_VERSION" -lt "$GIT_LWRUN_VERSION_PARS" ]
+                        then
+                            if is_update "lwrun"
+                                then
+                                    info_msg "lwrun update..."
+                                    try_dl_lwrun
+                            fi
+                        else
+                            info_msg "The latest version is already installed!"
+                            touch "$LWRUN"
+                    fi
+                    update_runimage
+                else
+                    error_msg "Failed to check for updates!"
+                    return 1
+            fi
+        else
+            error_msg "lwrun is not installed!"
+            exit 1
+    fi
+}
+
+is_exe_exist() { command -v "$@" &>/dev/null ; }
+
+which_exe() { command -v "$@" ; }
+
 try_dl() {
+    rm_fail_dl() {
+        [ -f "$FILEDIR/$FILENAME" ] && \
+            rm -rf "$FILEDIR/$FILENAME" \
+            "$FILEDIR/$FILENAME"*.aria2
+    }
+    dl_ret() {
+        if [ "$1" != 0 ]
+            then
+                rm_fail_dl
+                dl_repeat && \
+                try_dl "$1" "$2"||\
+                return 1
+            else return 0
+        fi
+    }
+    dl_repeat() {
+        [ "$NO_DL_REPEAT" == 1 ] && \
+            return 1
+        DL_REP_TITLE="Download interrupted!"
+        DL_REP_TEXT="Failed to download : $FILENAME \nWould you like to repeat it?"
+        if [[ "$NOT_TERM" != 1 || "$NO_DL_GUI" == 1 ]]
+            then
+                yn_case "$DL_REP_TEXT"||return 1
+        elif is_exe_exist yad
+            then
+                yad --image="dialog-error" --button="CANCEL:1" --center \
+                    --button="REPEAT:0" --title="$DL_REP_TITLE" \
+                    --text="$DL_REP_TEXT" --on-top --fixed
+        elif is_exe_exist zenity
+            then
+                zenity --question --title="$DL_REP_TITLE" --no-wrap \
+                    --text="$DL_REP_TEXT"
+        else return 1
+        fi
+    }
     if [ -n "$1" ]
         then
             URL="$1"
@@ -321,19 +452,6 @@ try_dl() {
                 (is_exe_exist yad||is_exe_exist zenity)
                 then
                     set -o pipefail
-                    dl_repeat() {
-                        if is_exe_exist yad
-                            then
-                                yad --image="dialog-error" --button="CANCEL:1" --center \
-                                    --button="REPEAT:0" --title="Download interrupted!" \
-                                    --text="Failed to download : $FILENAME" --on-top --fixed
-                        elif is_exe_exist zenity
-                            then
-                                zenity --question --title="Download interrupted!" --no-wrap \
-                                    --text="Failed to download : $FILENAME \nWould you like to repeat it?"
-                        else return 1
-                        fi
-                    }
                     dl_progress() {
                         if is_exe_exist yad
                             then
@@ -369,15 +487,7 @@ try_dl() {
                         error_msg "Downloader not found!"
                         exit 1
                     fi
-                    if [ "${PIPESTATUS[0]}" != 0 ]
-                        then
-                            [ -f "$FILEDIR/$FILENAME" ] && \
-                                rm -rf "$FILEDIR/$FILENAME" "$FILEDIR/"*.aria2
-                            dl_repeat && \
-                            try_dl "$1" "$2"||\
-                            return 1
-                        else return 0
-                    fi
+                    dl_ret "${PIPESTATUS[0]}"||return 1
                 else
                     if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c
                         then
@@ -393,7 +503,7 @@ try_dl() {
                         error_msg "Downloader not found!"
                         exit 1
                     fi
-                    return $?
+                    dl_ret "$?"||return 1
             fi
         else
             error_msg "Specify download URL!"
@@ -410,38 +520,58 @@ readrealpath() {
     fi
 }
 
+print_help() {
+    HLPHOSTNAME="$(uname -a|awk '{print$2}')"
+    [[ "$RUNSRC" =~ "lwrun" ]] && \
+        HLPEXENAME="lwrun"||\
+        HLPEXENAME="lwrap"
+    echo -e "
+    ${RED}Usage:
+        $RED┌──[$GREEN$RUNUSER$YELLOW@$BLUE${RUNHOSTNAME}$RED]─[$GREEN$PWD$RED]
+        $RED└──╼ \$$GREEN $HLPEXENAME ${BLUE}{args}
+
+        ${BLUE}--lwrap-help $GREEN                   Show this usage info
+        ${BLUE}--install    $YELLOW{force|local}$GREEN      Re/Install Lutris Wine and lwrun
+        ${BLUE}--update     $GREEN                   Update Lutris Wine, lwrun and container packages
+        ${BLUE}--uninstall  $YELLOW{force|update}$GREEN     Install Lutris Wine and lwrun
+        "
+}
+
 RUNSRCRPTH="$(readrealpath "$RUNSRC")"
 
 case $1 in
+    --lwrap-help) print_help
+                  exit ;;
     --uninstall) uninstall_lw "$2"
                  exit $? ;;
     --install) try_install_lwrun
                is_lwrun||try_dl_lwrun
                install_lw "$2"
                exit $? ;;
-    --update) update_lw
+    --update) FORCE_UPDATE=1
+              update_lwrun
+              update_lw
               exit $? ;;
 esac
 
 if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
     then
         try_install_lwrun
-        if ! is_lw
+        is_lw||install_lw
+        if is_net_conn
             then
-                install_lw
-        elif [ ! -x "$(find "$LWSRC" -mtime -3 \
-            -print 2>/dev/null)" ] && is_net_conn
-            then
-                update_lw
+                if [ ! -x "$(find "$LWSRC" -mtime -$CHK_UPDATE \
+                    -print 2>/dev/null)" ]
+                    then
+                        update_lw
+                fi
+                if [ ! -x "$(find "$LWRUN" -mtime -$CHK_UPDATE \
+                    -print 2>/dev/null)" ]
+                    then
+                        update_lwrun
+                fi
         fi
-        if [ -x "$LWSRC" ]
-            then
-                RUN_LW="$LWSRC"
-            else
-                error_msg "lutris-wine not found!"
-                exit 1
-        fi
-        "$RUN_LW" "$@"
+        "$LWSRC" "$@"
     else
         if [ -x "$LWRUN_LN" ]
             then
