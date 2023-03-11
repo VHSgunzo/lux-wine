@@ -66,38 +66,41 @@ make_install() {
         then QUIET_MODE=1 uninstall_lw force
         else QUIET_MODE=1 uninstall_lw update
     fi
-    (IFS=$'\n'
-    for DESKFL in $(grep -rm1 '^Exec=".*"' ./*|cut -d ':' -f1)
-        do sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g" "$DESKFL"
-    done
-    for DESKFL in $(grep -rm1 'Icon=/.*/lutris-wine/icons/.*.png$' ./*|cut -d ':' -f1)
-        do sed -i "s|Icon=/.*/lutris-wine/icons/|Icon=$LW_DIR/icons/|g" "$DESKFL"
-    done)
-    if [ -x "$RUNSTATIC/bash" ]
-        then
-            sed -i "1 s|^.*$|#!$LWBASH|" lwrap/lwrap
-            install -Dm755 "$RUNSTATIC/bash" "$LWBASH"
-    fi
     install -Dm755 lutris-wine "$LWSRC"
-    install -Dm755 lwrap/lwrap "$LWRAP"
-    install -Dm644 LutrisWine.menu "$HOME/.config/menus/applications-merged/LutrisWine.menu"
-    install -Dm644 LutrisWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LutrisWineService.desktop"
-    install -Dm755 applications/LutrisWine.desktop "$HOME/Desktop/LutrisWine.desktop"
-    mkdir -p "$HOME_DESK_APP"
-    mkdir -p "$HOME_DESK_DIR"
-    cp -rf applications "$HOME_DESK_APP/LutrisWine"
-    cp -rf directories/* "$HOME_DESK_DIR/"
+    if is_not_pts_home
+        then
+            (IFS=$'\n'
+            for DESKFL in $(grep -rm1 '^Exec=".*"' ./*|cut -d ':' -f1)
+                do sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g" "$DESKFL"
+            done
+            for DESKFL in $(grep -rm1 'Icon=/.*/lutris-wine/icons/.*.png$' ./*|cut -d ':' -f1)
+                do sed -i "s|Icon=/.*/lutris-wine/icons/|Icon=$LW_DIR/icons/|g" "$DESKFL"
+            done)
+            if [ -x "$RUNSTATIC/bash" ]
+                then
+                    sed -i "1 s|^.*$|#!$LWBASH|" lwrap/lwrap
+                    install -Dm755 "$RUNSTATIC/bash" "$LWBASH"
+            fi
+            install -Dm755 lwrap/lwrap "$LWRAP"
+            install -Dm644 LutrisWine.menu "$HOME/.config/menus/applications-merged/LutrisWine.menu"
+            install -Dm644 LutrisWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LutrisWineService.desktop"
+            install -Dm755 applications/LutrisWine.desktop "$HOME/Desktop/LutrisWine.desktop"
+            mkdir -p "$HOME_DESK_APP"
+            mkdir -p "$HOME_DESK_DIR"
+            cp -rf applications "$HOME_DESK_APP/LutrisWine"
+            cp -rf directories/* "$HOME_DESK_DIR/"
+            add_path "$B_RC"
+            add_path "$Z_RC"
+            check_path "$F_RC" && echo -e \
+                '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$F_RC"
+            update-desktop-database -q "$HOME_DESK_APP" &>/dev/null
+    fi
     cp -rf registry_patch "$LW_DIR/"
     cp -rf LICENSE "$LW_DIR/"
     cp -rf themes "$LW_DIR/"
     cp -rf icons "$LW_DIR/"
     cp -rf gif "$LW_DIR/"
     cp -rf db "$LW_DIR/"
-    add_path "$B_RC"
-    add_path "$Z_RC"
-    check_path "$F_RC" && echo -e \
-        '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$F_RC"
-    update-desktop-database -q "$HOME_DESK_APP" &>/dev/null
 }
 
 mv_lwrun() {
@@ -108,27 +111,36 @@ mv_lwrun() {
     fi
 }
 
+is_not_pts_home() {
+    [[ "$SANDBOX_HOME" != 1 && "$SANDBOX_HOME_DL" != 1 && ! -d "$SANDBOXHOMEDIR/lwrap" && \
+    "$PORTABLE_HOME" != 1 && "$TMP_HOME" != 1 && "$TMP_HOME_DL" != 1 && ! -d "$PORTABLEHOMEDIR/lwrap" ]]
+}
+
 try_install_lwrun() {
-    REALP_LWRUN="$(readrealpath "$LWRUN")"
-    if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
-        "$RUNSRCRPTH" != "$LWRUN" && ! "$RUNSRCRPTH" =~ "Run" ]]
+    if is_not_pts_home
         then
-            info_msg "Installing lwrun..."
-            mkdir -p "$LWBIN_DIR"
-            if mv_lwrun "$RUNSRCRPTH" "$LWRUN"
+            REALP_LWRUN="$(readrealpath "$LWRUN")"
+            if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
+                "$RUNSRCRPTH" != "$LWRUN" && ! "$RUNSRCRPTH" =~ "Run" ]]
                 then
-                    chmod u+x "$LWRUN"
+                    info_msg "Installing lwrun..."
+                    mkdir -p "$LWBIN_DIR"
+                    if mv_lwrun "$RUNSRCRPTH" "$LWRUN"
+                        then
+                            chmod u+x "$LWRUN"
+                            ln_lwrun
+                            info_msg "lwrun installed!"
+                        else
+                            error_msg "Failed to install lwrun!"
+                            is_lwrun && \
+                            return 1||exit 1
+                    fi
+            elif [[ "$RUNSRCRPTH" =~ "Run" && "$RUNSRCRPTH" != "$REALP_LWRUN" ]]
+                then
+                    mkdir -p "$LWBIN_DIR"
+                    ln -sf "$RUNSRCRPTH" "$LWRUN"
                     ln_lwrun
-                    info_msg "lwrun installed!"
-                else
-                    error_msg "Failed to install lwrun!"
-                    is_lwrun && \
-                    return 1||exit 1
             fi
-    elif [[ "$RUNSRCRPTH" =~ "Run" && "$RUNSRCRPTH" != "$REALP_LWRUN" ]]
-        then
-            ln -sf "$RUNSRCRPTH" "$LWRUN"
-            ln_lwrun
     fi
 }
 
@@ -214,7 +226,7 @@ exzip() {
     fi
 }
 
-is_lw() { [[ -x "$LWSRC" && -x "$LWRAP" ]] ; }
+is_lw() { (is_not_pts_home && [[ -x "$LWSRC" && -x "$LWRAP" ]])||[ -x "$LWSRC" ] ; }
 
 is_lwrun() { [ -x "$LWRUN" ] ; }
 
@@ -565,7 +577,8 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                     then
                         update_lw
                 fi
-                if [ ! -x "$(find "$LWRUN" -mtime -$CHK_UPDATE \
+                if is_not_pts_home && \
+                [ ! -x "$(find "$LWRUN" -mtime -$CHK_UPDATE \
                     -print 2>/dev/null)" ]
                     then
                         update_lwrun
