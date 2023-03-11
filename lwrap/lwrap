@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Test redirection
 # Lutris Wine wrapper for Runimage container
 
 RED='\033[1;91m'
