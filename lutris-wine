@@ -2343,7 +2343,7 @@ check_steamapps() {
             unset STMEAC STMBATTLEYE
     fi
     SYS_STM_COMPAT_DIR="/usr/share/steam/compatibilitytools.d"
-    STMPRTNGE="$SYS_STM_COMPAT_DIR/$(ls -1t "$SYS_STM_COMPAT_DIR"|grep -im1 "GE-Proton")"
+    STMPRTNGE="$SYS_STM_COMPAT_DIR/$(ls -1t "$SYS_STM_COMPAT_DIR" 2>/dev/null|grep -im1 "GE-Proton")"
     if [[ -f "$STMPRTNGE/files/bin/wine" ]]
         then
             STMPRTNGE_V="$(basename "$STMPRTNGE")"

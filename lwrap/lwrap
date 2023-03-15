@@ -7,6 +7,7 @@ GREEN='\033[1;92m'
 YELLOW='\033[1;33m'
 RESETCOLOR='\033[1;00m'
 LW_DIR="$HOME/.local/share/LutrisWine"
+LW_CFG="$LW_DIR/luwine.wcfg"
 LWBIN_DIR="$LW_DIR/bin"
 LWSRC="$LWBIN_DIR/lutris-wine"
 GIT_LWSRC="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main/lutris-wine"
@@ -21,7 +22,18 @@ LWRUN_LN="$HBIN_DIR/lwrun"
 LWRAP="$LWBIN_DIR/lwrap"
 LWBASH="$LWBIN_DIR/bash"
 LWRUN="$LWBIN_DIR/lwrun"
-RUNIMAGE_LN="$LWBIN_DIR/runimage"
+RUNIMAGE_LW="$LWBIN_DIR/runimage-lw"
+
+if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]] && \
+   [[ -x "$LWRAP" && "$NO_EXT_LWRAP" != 1 ]]
+    then
+        NO_EXT_LWRAP=1 "$LWRAP" "$@"
+        exit $?
+fi
+unset NO_EXT_LWRAP
+
+[[ -f "$LW_CFG" && -n "$(grep -wo '^CHK_UPDATE' "$LW_CFG")" ]] && \
+    CHK_UPDATE="$(grep -w '^CHK_UPDATE' "$LW_CFG"|cut -d'=' -f2|sed "s|'||g;s|\"||g")"||\
 CHK_UPDATE='3'
 
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
@@ -154,11 +166,11 @@ ln_lwrun() {
                     mkdir -p "$HBIN_DIR"
                     ln -sfr "$LWRUN" "$LWRUN_LN"
             fi
-            if [ "$(readrealpath "$RUNIMAGE_LN")" != "$REALP_LWRUN" ]
+            if [ "$(readrealpath "$RUNIMAGE_LW")" != "$REALP_LWRUN" ]
                 then
                     info_msg "Update runimage link..."
                     mkdir -p "$LWBIN_DIR"
-                    ln -sfr "$LWRUN" "$RUNIMAGE_LN"
+                    ln -sfr "$LWRUN" "$RUNIMAGE_LW"
                     ln -sfr "$LWRUN" "$HBIN_DIR/runimage-lw"
             fi
     fi
@@ -328,8 +340,8 @@ runimage_lw() {
         unset HOSTEXEC_IN_TERM
     if [ "$ENABLE_HOSTEXEC" == 1 ]
         then hostexec $HOSTEXEC_IN_TERM importenv '$RUNPID' \
-                env DONT_NOTIFY=1 "$RUNIMAGE_LN" "$@"
-        else "$RUNIMAGE_LN" "$@"
+                env DONT_NOTIFY=1 "$RUNIMAGE_LW" "$@"
+        else "$RUNIMAGE_LW" "$@"
     fi
 }
 
@@ -570,7 +582,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
     then
         try_install_lwrun
         is_lw||install_lw
-        if is_net_conn
+        if [ "$CHK_UPDATE" != 0 ] && is_net_conn
             then
                 if [ ! -x "$(find "$LWSRC" -mtime -$CHK_UPDATE \
                     -print 2>/dev/null)" ]
