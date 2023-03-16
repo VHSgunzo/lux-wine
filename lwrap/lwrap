@@ -314,14 +314,20 @@ get_lwrun_git_ver() {
         /dev/stdout|& grep -m1 "Release v.*"|awk '{print$2}'
 }
 
+get_lwrun_url() {
+    NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl "$GIT_LWRUN/tag/$1" \
+        /dev/stdout|& grep -w 'runimage.superlite'|\
+        grep -o 'https.*9JjieEEKM'|sed 's|\&amp;|\&|g'
+}
+
 try_dl_lwrun() {
     TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
     [ ! -n "$GIT_LWRUN_VERSION" ] && \
         GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
-    if [ -n "$GIT_LWRUN_VERSION" ] && try_dl \
-        "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/runimage.superlite" \
-            "$TMP_LWRUN"
+    [ -n "$GIT_LWRUN_VERSION" ] && \
+        LWRUN_URL="$(get_lwrun_url "$GIT_LWRUN_VERSION")"
+    if [ -n "$LWRUN_URL" ] && try_dl "$LWRUN_URL" "$TMP_LWRUN"
         then
             info_msg "lwrun downloaded!"
             RUNSRCRPTH="$TMP_LWRUN" \
