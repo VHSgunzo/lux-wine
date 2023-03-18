@@ -483,6 +483,10 @@ try_dl() {
                 then
                     set -o pipefail
                     dl_progress() {
+                        [[ "$URL" =~ '&key=' ]] && \
+                            local URL="$(echo "$URL"|sed "s|\&key=.*||g")"
+                        [[ "$URL" =~ '&' && ! "$URL" =~ '&amp;' ]] && \
+                            local URL="$(echo "$URL"|sed "s|\&|\&amp;|g")"
                         if is_exe_exist yad
                             then
                                 yad --progress --percentage=0 --text="Download:\t$FILENAME\n$URL" \
