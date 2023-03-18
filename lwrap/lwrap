@@ -315,7 +315,7 @@ get_lwrun_git_ver() {
 }
 
 get_lwrun_url() {
-    GAPI_KEY='AIzaSyCI5Z4CtXHD24LeoxL8paaPwY9JjieEEKM'
+    local GAPI_KEY='AIzaSyCI5Z4CtXHD24LeoxL8paaPwY9JjieEEKM'
     echo "$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl "$GIT_LWRUN/tag/$1" \
         /dev/stdout|& grep -w 'runimage.superlite'|\
         grep -o 'https.*media')&key=$GAPI_KEY"
