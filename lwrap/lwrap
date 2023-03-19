@@ -441,7 +441,7 @@ try_dl() {
             then
                 rm_fail_dl
                 dl_repeat && \
-                try_dl "$1" "$2"||\
+                try_dl "$URL" "$FILEDIR/$FILENAME"||\
                 return 1
             else return 0
         fi
