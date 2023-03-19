@@ -1856,10 +1856,6 @@ check_luwine_wcfg_cenv() {
     try_mkdir "$LW_WINE_DIR"
     [ ! -n "$(grep -wo "WINE_VERSION" "$LW_CFG" 2>/dev/null)" ] \
     && echo "WINE_VERSION='SETWINE'" >> "$LW_CFG"
-    [ -n "$(grep -wo "WINEPREFIX='$LW_DIR/winepfx'" "$LW_DEF_CFG" 2>/dev/null)" ] \
-    && sed -i "s@WINEPREFIX=.*@WINEPREFIX='$LW_DEF_WINEPFX'@" "$LW_DEF_CFG" 2>/dev/null
-    [ -n "$(grep -wo "WINEPREFIX='$LW_DIR/winepfx'" "$LW_CFG" 2>/dev/null)" ] \
-    && sed -i "s@WINEPREFIX=.*@WINEPREFIX='$LW_DEF_WINEPFX'@" "$LW_CFG" 2>/dev/null
     import_luwine_wcfg
     import_cenv
 }
@@ -2619,7 +2615,7 @@ lu_config() {
                 fi
                 if [ -n "$LU_EXE" ]
                     then
-                        check_symlink "$LW_APPCFG"
+                        try_rm_broken_link "$LW_APPCFG"
                         if [ ! -L "$LW_APPCFG" ]
                             then
                                 try_mkdir "$LW_APPCFG_DIR"
@@ -4480,19 +4476,6 @@ winepfx_init() {
 check_winepfx() {
     [ -n "$1" ] && export WINEPREFIX="$1"
     [ -n "$2" ] && export WINEARCH="$2"
-    if [ -d "$LW_DIR/winepfx" ]
-        then
-            print_info notify "The default prefix found is on the old path and will be moved!"
-            try_mkdir "$LW_DEF_WINEPFX"
-            if try_mv "$LW_DIR/winepfx/"* "$LW_DEF_WINEPFX/"
-                then
-                    try_rm "$LW_DIR/winepfx"
-                    print_info notify "The default prefix successfully moved!"
-                else
-                    print_error yad "An error occurred when moving the default prefix from the old path!"
-                    exit 1
-            fi
-    fi
     if [[ "$WINEARCH" == "win64" && "$WINEPREFIX" =~ "defprefix" && -f "$LWRAP_DEFPFX" ]] && \
         [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" \
         || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
@@ -4524,8 +4507,10 @@ check_winepfx() {
     try_mkdir "$WINEPREFIX/drive_c"
     try_mkdir "$WINEPREFIX/dosdevices"
     try_mkdir "$WINEPREFIX/drive_c/users/steamuser"
-    [ ! -d "$WINEPREFIX/dosdevices/c:" ] && try_ln "$WINEPREFIX/drive_c" "$WINEPREFIX/dosdevices/c:"
-    [ ! -d "$WINEPREFIX/dosdevices/z:" ] && try_ln "/" "$WINEPREFIX/dosdevices/z:"
+    [ ! -d "$WINEPREFIX/dosdevices/c:" ] && \
+        try_ln "$WINEPREFIX/drive_c" "$WINEPREFIX/dosdevices/c:"
+    [ ! -d "$WINEPREFIX/dosdevices/z:" ] && \
+        try_ln "/" "$WINEPREFIX/dosdevices/z:"
     if [[ -d "$WINEPREFIX/drive_c/users/$USER" && ! -L "$WINEPREFIX/drive_c/users/$USER" ]]
         then
             if try_cp "$WINEPREFIX/drive_c/users/$USER/"* "$WINEPREFIX/drive_c/users/steamuser/"
@@ -4533,7 +4518,8 @@ check_winepfx() {
                     try_rm "$WINEPREFIX/drive_c/users/$USER"
             fi
     fi
-    [ ! -d "$WINEPREFIX/drive_c/users/$USER" ] && try_ln "$WINEPREFIX/drive_c/users/steamuser" "$WINEPREFIX/drive_c/users/$USER"
+    [ ! -d "$WINEPREFIX/drive_c/users/$USER" ] && \
+        try_ln "$WINEPREFIX/drive_c/users/steamuser" "$WINEPREFIX/drive_c/users/$USER"
     for comprt in {1..32}
         do
             if [ ! -L "$WINEPREFIX/dosdevices/com$comprt" ]
@@ -4576,11 +4562,11 @@ check_winepfx() {
                     fi
             fi
     done 3< <(printf '%s\n' "${DESKTOP_XDG[@]}") 4< <(printf '%s\n' "${DEF_WDESK_DIR[@]}"))
+    try_rm_broken_link "$WINEPREFIX/drive_c/users/steamuser"
     (IFS=$'\n' ; for winedir_ln in ${DEF_WDESK_MYDIR[@]/Desktop}
         do
             DESKDIRLNK="$WINEPREFIX/drive_c/users/steamuser/$winedir_ln"
             NOMYDESKDIR="$WINEPREFIX/drive_c/users/steamuser/$(echo "$winedir_ln"|sed 's/^My //')"
-            check_symlink "$DESKDIRLNK"
             if [[ ! -L "$DESKDIRLNK" && ! -d "$DESKDIRLNK" ]]
                 then
                     try_mkdir "$NOMYDESKDIR"
@@ -4603,23 +4589,31 @@ check_winepfx() {
             try_rm "$DESKLOCSETT" &>/dev/null
             try_ln "$WINEPREFIX/drive_c/users/steamuser/AppData/Local" "$DESKLOCSETT"
     fi
-    try_mkdir "$WINEPREFIX/drive_c/windows/Fonts/"
+    WPFX_FONTS="$WINEPREFIX/drive_c/windows/Fonts"
+    WINE_FONTS="$WINEDIR/share/fonts"
+    try_mkdir "$WPFX_FONTS"
     if [ "$WINE_VERSION" == "System" ]
         then
-            try_ln "/usr/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
+            [[ -f  "/usr/share/wine/fonts/tahoma.ttf" && ! -f "$WPFX_FONTS/tahoma.ttf" ]] && \
+                try_ln "/usr/share/wine/fonts/tahoma.ttf" "$WPFX_FONTS/tahoma.ttf"
         else
-            try_ln "$WINEDIR/share/fonts/"LiberationSans-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arial.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationSans-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"arialbd.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationSerif-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"times.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationMono-Regular.ttf "$WINEPREFIX/drive_c/windows/Fonts/"cour.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"LiberationMono-Bold.ttf "$WINEPREFIX/drive_c/windows/Fonts/"courbd.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"msyh.ttf "$WINEPREFIX/drive_c/windows/Fonts/"msyh.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"malgun.ttf "$WINEPREFIX/drive_c/windows/Fonts/"malgun.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"micross.ttf "$WINEPREFIX/drive_c/windows/Fonts/"micross.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"nirmala.ttf "$WINEPREFIX/drive_c/windows/Fonts/"nirmala.ttf &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"simsun.ttc "$WINEPREFIX/drive_c/windows/Fonts/"simsun.ttc &>/dev/null
-            try_ln "$WINEDIR/share/fonts/"msgothic.ttc "$WINEPREFIX/drive_c/windows/Fonts/"msgothic.ttc &>/dev/null
-            try_ln "$WINEDIR/share/wine/fonts/"tahoma.ttf "$WINEPREFIX/drive_c/windows/Fonts/"tahoma.ttf &>/dev/null
+            [[ -f "$WINE_FONTS/LiberationSans-Regular.ttf" && ! -f "$WPFX_FONTS/arial.ttf" ]] && \
+                try_ln "$WINE_FONTS/LiberationSans-Regular.ttf" "$WPFX_FONTS/arial.ttf"
+            [[ -f "$WINE_FONTS/LiberationSans-Bold.ttf" && ! -f "$WPFX_FONTS/arialbd.ttf" ]] && \
+                try_ln "$WINE_FONTS/LiberationSans-Bold.ttf" "$WPFX_FONTS/arialbd.ttf"
+            [[ -f "$WINE_FONTS/LiberationSerif-Regular.ttf" && ! -f "$WPFX_FONTS/times.ttf" ]] && \
+                try_ln "$WINE_FONTS/LiberationSerif-Regular.ttf" "$WPFX_FONTS/times.ttf"
+            [[ -f "$WINE_FONTS/LiberationMono-Regular.ttf" && ! -f "$WPFX_FONTS/cour.ttf" ]] && \
+                try_ln "$WINE_FONTS/LiberationMono-Regular.ttf" "$WPFX_FONTS/cour.ttf"
+            [[ -f "$WINE_FONTS/LiberationMono-Bold.ttf" && ! -f "$WPFX_FONTS/courbd.ttf" ]] && \
+                try_ln "$WINE_FONTS/LiberationMono-Bold.ttf" "$WPFX_FONTS/courbd.ttf"
+            [[ -f "$WINEDIR/share/wine/fonts/tahoma.ttf" && ! -f "$WPFX_FONTS/tahoma.ttf" ]] && \
+                try_ln "$WINEDIR/share/wine/fonts/tahoma.ttf" "$WPFX_FONTS/tahoma.ttf"
+            for font in {msyh.ttf,malgun.ttf,micross.ttf,nirmala.ttf,simsun.ttc,msgothic.ttc}
+                do
+                    [[ -f "$WINE_FONTS/$font" && ! -f "$WPFX_FONTS/$font" ]] && \
+                        try_ln "$WINE_FONTS/$font" "$WPFX_FONTS/$font"
+            done
     fi
 }
 
@@ -5278,7 +5272,7 @@ export_all_functions() {
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr updcfgchksum lite_init \
         us_layout_sw check_mangohud check_wd3dmode check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
         check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell unpack_squash \
-        check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover \
+        check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
         runtime_manager upd_battleye \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all \
@@ -5341,10 +5335,7 @@ lu_appcfg() {
             print_error yad "Lutris Wine Applications Settings" "Lutris Wine Applications Settings already runing!"
             exit 1
     fi
-    (IFS=$'\n' ; for CHKLWAPPCFG in $(ls -1 -t "$LW_APPCFG_DIR"/*.wcfg 2>/dev/null)
-        do
-            check_symlink "$CHKLWAPPCFG"
-    done)
+    try_rm_broken_link "$LW_APPCFG_DIR"
     LWAPPSCFG="$(cd "$LW_APPCFG_DIR" 2>/dev/null && ls -1 -t *.wcfg 2>/dev/null)"
     if [[ -n "$(echo "$LWAPPSCFG"|head -1)" ]]
         then
@@ -5554,6 +5545,8 @@ select_lwpfx() {
     fi
 }
 
+try_rm_broken_link() { find -L "$1" -maxdepth 1 -type l -exec rm -rfv {} \; ; }
+
 lu_pfxrestore() {
     [ -f "$1" ] && export LU_LWPFX="$1"
     select_lwpfx_for_restore() {
@@ -5568,6 +5561,7 @@ lu_pfxrestore() {
             then
                 try_rm "$PFXRESTORE_DIR" &>/dev/null
                 try_mv "${LW_DEF_TMP}/$LWPFX_NAME" "${LW_DEF_WPFXS_DIR}/"
+                try_rm "$LW_DIR/.lwcfgchksum"
                 print_info notify "The prefix backup is successfully restored!"
                 [ "$NO_FLMGR" != 1 ] && \
                     $LW_FLMGR "$PFXRESTORE_DIR" &>/dev/null
@@ -5578,6 +5572,12 @@ lu_pfxrestore() {
                 return 1
         fi
     }
+    if [[ -f "$LWRAP_DEFPFX" && ! -f "$LW_DEF_WINEPFXBKP_DIR/defprefix.xz.lwpfx" ]]
+        then
+            print_info notify "Found lwrap backup of default prefix!"
+            try_mkdir "$LW_DEF_WINEPFXBKP_DIR"
+            try_ln "$LWRAP_DEFPFX" "$LW_DEF_WINEPFXBKP_DIR"
+    fi
     if [ -f "$LU_LWPFX" ]
         then
             LWPFX_NAME="$(basename "$LU_LWPFX"|awk -F'.' '{print $1}')"
@@ -5603,6 +5603,7 @@ lu_pfxrestore() {
             fi
         else
             LWPFX_NAME="$(basename "$WINEPREFIX")"
+            try_rm_broken_link "$LW_DEF_WINEPFXBKP_DIR"
             LWPFX_BKPS="$(ls -1 "$LW_DEF_WINEPFXBKP_DIR" 2>/dev/null|grep -w "^${LWPFX_NAME}.*\.lwpfx$")"
             if [ "$(echo "$LWPFX_BKPS"|eval $SEDLWPRM|wc -l)" -gt 1 ]
                 then
@@ -5612,8 +5613,9 @@ lu_pfxrestore() {
                 then
                     lu_pfxrestore "$LW_DEF_WINEPFXBKP_DIR/$LWPFX_BKPS"
             else
-                print_error "No backups for the current prefix were found in the backup directory!"
-                if print_question "Prefix restore" "No backups for the current prefix were found in the backup directory! \nDo you want to choose a prefix backup from another location?"
+                PFXRESTORENOBKP_MSG="No backups for the current prefix were found in the backup directory!"
+                print_error "$PFXRESTORENOBKP_MSG"
+                if print_question "Prefix restore" "$PFXRESTORENOBKP_MSG \nDo you want to choose a prefix backup from another location?"
                     then
                         select_lwpfx_for_restore
                     else
