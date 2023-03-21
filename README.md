@@ -1,16 +1,31 @@
-# Lutris Wine
-## Supports:
+# **Lutris Wine**
+This project allows you to easily run your favorite applications and games for Windows on almost any Linux x86_64 distribution using a specially configured Wine/Proton and [RunImage](https://github.com/VHSgunzo/runimage) container.
+
+## Requirements:
+
+* Supported architectures `x86_64`
+* The minimum recommended `Linux kernel` version is `4.18+` with support for `user namespaces`, but `5.0+` would be better.
+* `FUSE` (but not necessarily, because it is possible to work in unpacked form without `FUSE` mounting)
+
+## **Installation**:
 ```
-All Arch-based distributions
+curl -sL lwrap.github.io|bash
+```
+
+## **Forced check for updates**:
+```
+lwrun --update
+```
+
+## **Removing**:
+```
+lwrun --uninstall
 ```
 
 ## Features:
-- [x] Easy setup
-- [x] Full system integration
+- [x] Easy installation without root rights and dependencies
 - [x] Quick initialization and launch
-- [x] Does not use containerization like steam runtime
-- [x] This is not another game launcher
-- [x] Launch *.exe *.lnk *.bat *.msi *.reg files in one click
+- [x] Launch *.exe *.lnk *.bat *.msi *.reg files
 - [x] Ability to specify EXE arguments and save them in settings
 - [x] Tray mode
 - [x] Automatic download of necessary Wine libraries
@@ -68,7 +83,7 @@ All Arch-based distributions
       * Registry editor
 ```
 - [x] GUI for custom apps configs
-- [x] Built-in fixed Winetricks
+- [x] Built-in Winetricks
 - [x] System Winetricks support
 - [x] Quick open drive C:\
 - [x] Killer stuff:
@@ -89,7 +104,6 @@ All Arch-based distributions
 - [x] Wine MONO overrides
 - [x] Disabling MONO (.NET Core)
 - [x] Various optimizations for better gaming performance
-- [x] Ability to use Lutris runtime (with system library priority if needed)
 - [x] Custom EXE DB launch helper [scripts](https://github.com/VHSgunzo/lutris-wine/blob/main/db)
 - [x] Custom loading bar animation
 - [x] Old OpenGL String
@@ -124,9 +138,73 @@ All Arch-based distributions
       * WINE_DISABLE_WRITE_WATCH
       * __GL_THREADED_OPTIMIZATIONS
 ```
-- [ ] And much more
 
-## To get started:
+## Terminal usage:
+```
+┌──[user@linux]─[~]
+└──╼ $ lwrun {arg} blabla.exe {exe args}
+
+      -explorer               Wine explorer
+      -cmd                    Open CMD or open file in CMD
+      -shell                  Open SHELL or open file in SHELL
+      -config                 Settings
+      -appcfg                 Apps Settings
+      -regedit                Registry editor
+      -control                Control panel
+      -winecfg                Wine settings
+      -winemgr {delonly}      Wine manager
+      -taskmgr                Task manager
+      -uninstaller            Wine uninstaller
+      -winetricks {arguments} Winetricks
+      -openpfx                Open drive C:\
+      -killwine               Kill Wine processes
+      -killtray               Kill tray
+      -killexe                Kill running EXE
+      -killshell              Kill SHELL
+      -exit                   Force exit
+      -clearpfx               Clear prefix
+      -rmapp                  Remove menu app
+      -shortcut               Create shortcut
+      -addtolu                Add to Lutris
+      -debug                  DEBUG
+      -help                   Show this usage info
+      -version                Show version info
+      -tray {noclose}         Tray
+      -init                   Forced initialization
+      -pfxbackup {xz}         Make prefix backup
+      -pfxrestore             Restore prefix from backup
+      -backupmnt              Mount prefix backup
+      -backupunmnt            Unmount prefix backup
+      -update {all}           Runtime updater
+      {dx|dxvk} {vkd|vkd3d} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
+      {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
+      {dg|dgvoodoo2} {nvml|wine_nvml}
+```
+## Screenshots:
+![appcfg.png](./screenshots/appcfg.png?raw=true "appcfg")
+![rmapp.png](./screenshots/rmapp.png?raw=true "rmapp")
+![update.png](./screenshots/update.png?raw=true "update")
+![tray.png](./screenshots/cmd.png?raw=true "cmd")
+![config1.png](./screenshots/config1.png?raw=true "config1")
+![config2.png](./screenshots/config2.png?raw=true "config2")
+![config3.png](./screenshots/config3.png?raw=true "config3")
+![config4.png](./screenshots/config4.png?raw=true "config4")
+![configforapp.png](./screenshots/configforapp.png?raw=true "configforapp")
+![contextmenu.png](./screenshots/contextmenu.png?raw=true "contextmenu")
+![control.png](./screenshots/control.png?raw=true "control")
+![explorer.png](./screenshots/explorer.png?raw=true "explorer")
+![help.png](./screenshots/help.png?raw=true "help")
+![menu.png](./screenshots/menu.png?raw=true "menu")
+![tray.png](./screenshots/tray.png?raw=true "tray")
+![openwith.png](./screenshots/openwith.png?raw=true "openwith")
+![regedit.png](./screenshots/regedit.png?raw=true "regedit")
+![taskmgr.png](./screenshots/taskmgr.png?raw=true "taskmgr")
+![uninstaller.png](./screenshots/uninstaller.png?raw=true "uninstaller")
+![wineapp.png](./screenshots/wineapp.png?raw=true "wineapp")
+![winecfg.png](./screenshots/winecfg.png?raw=true "winecfg")
+![winemgr.png](./screenshots/winemgr.png?raw=true "winemgr")
+
+## Classic installation on Arch Linux (without [RunImage](https://github.com/VHSgunzo/runimage) container):
 * **Enable multilib in the pacman config:**
 ```
 sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -156,72 +234,5 @@ sudo reboot
 ```
 yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 ```
-## Video with the installation process:
+## Video with the classic installation process:
 [![Lutris Wine installation process](https://img.youtube.com/vi/rzmIOUjDpSU/0.jpg)](https://www.youtube.com/watch?v=rzmIOUjDpSU)
-
-## Terminal usage:
-```
-┌──[user@arch]─[~]
-└──╼ $ lutris-wine {lutris-wine argument} blabla.exe {exe arguments}
-
--explorer               Wine explorer
--cmd                    Open CMD or open file in CMD
--shell                  Open SHELL or open file in SHELL
--config                 Settings
--appcfg                 Apps Settings
--regedit                Registry editor
--control                Control panel
--winecfg                Wine settings
--winemgr {delonly}      Wine manager
--taskmgr                Task manager
--uninstaller            Wine uninstaller
--winetricks {arguments} Winetricks
--openpfx                Open drive C:\
--killwine               Kill Wine processes
--killtray               Kill tray
--killexe                Kill running EXE
--killshell              Kill SHELL
--exit                   Force exit
--clearpfx               Clear prefix
--rmapp                  Remove menu app
--shortcut               Create shortcut
--addtolu                Add to Lutris
--debug                  DEBUG
--help                   Show this usage info
--version                Show version info
--tray {noclose}         Tray
--init                   Forced initialization
--pfxbackup {xz}         Make prefix backup
--pfxrestore             Restore prefix from backup
--backupmnt              Mount prefix backup
--backupunmnt            Unmount prefix backup
--update {all}           Runtime updater
-{dx|dxvk} {p7|p7zip} {vkd|vkd3d} {ub1804_8664|ubuntu1804-x86_64} {resh|reshade}
-{inn|innoextract} {net|network-tools} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
-{dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
-{ga|gamectrlrdb|gamecontrollerdb} {dg|dgvoodoo2} {ub1804_686|ubuntu1804-i686}
-{nvml|wine_nvml}
-```
-## Screenshots:
-![appcfg.png](./screenshots/appcfg.png?raw=true "appcfg")
-![rmapp.png](./screenshots/rmapp.png?raw=true "rmapp")
-![update.png](./screenshots/update.png?raw=true "update")
-![tray.png](./screenshots/cmd.png?raw=true "cmd")
-![config1.png](./screenshots/config1.png?raw=true "config1")
-![config2.png](./screenshots/config2.png?raw=true "config2")
-![config3.png](./screenshots/config3.png?raw=true "config3")
-![config4.png](./screenshots/config4.png?raw=true "config4")
-![configforapp.png](./screenshots/configforapp.png?raw=true "configforapp")
-![contextmenu.png](./screenshots/contextmenu.png?raw=true "contextmenu")
-![control.png](./screenshots/control.png?raw=true "control")
-![explorer.png](./screenshots/explorer.png?raw=true "explorer")
-![help.png](./screenshots/help.png?raw=true "help")
-![menu.png](./screenshots/menu.png?raw=true "menu")
-![tray.png](./screenshots/tray.png?raw=true "tray")
-![openwith.png](./screenshots/openwith.png?raw=true "openwith")
-![regedit.png](./screenshots/regedit.png?raw=true "regedit")
-![taskmgr.png](./screenshots/taskmgr.png?raw=true "taskmgr")
-![uninstaller.png](./screenshots/uninstaller.png?raw=true "uninstaller")
-![wineapp.png](./screenshots/wineapp.png?raw=true "wineapp")
-![winecfg.png](./screenshots/winecfg.png?raw=true "winecfg")
-![winemgr.png](./screenshots/winemgr.png?raw=true "winemgr")
