@@ -23,8 +23,10 @@ lwrun --update
 ```
 lwrun --uninstall
 ```
+## **Usage:**
+* ### **The launch of your Windows games and applications is carried out from your file manager or from the built-in LW file manager or from the application menu when creating a shortcut for the EXE**
 
-## Terminal usage:
+## **Terminal usage**:
 ```
 ┌──[user@linux]─[~]
 └──╼ $ lwrun {arg} blabla.exe {exe args}
