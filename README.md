@@ -14,12 +14,12 @@ This project allows you to easily run your favorite applications and games for W
 curl -sL lwrap.github.io|bash
 ```
 
-## **Forced check for updates**:
+### **Forced check for updates**:
 ```
 lwrun --update
 ```
 
-## **Removing**:
+### **Removing**:
 ```
 lwrun --uninstall
 ```
