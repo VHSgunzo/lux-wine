@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.76.6"
+export LW_VERSION="0.76.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -116,7 +116,7 @@ check_def_config() {
     [ ! -n "$WMONOVER" ] && export WMONOVER="Microsoft.Xna.Framework.*,Gac=n"
     [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe='
     [ ! -n "$WINE_THEME" ] && export WINE_THEME='Breeze Dark'
-    [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='OpenGL'
+    [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='Vulkan'
     [ ! -n "$FPS_LIMIT" ] && export FPS_LIMIT="75"
     [ ! -n "$GAMEMODE" ] && export GAMEMODE=1
     [ ! -n "$GSTREAMER" ] && export GSTREAMER=1
@@ -3931,15 +3931,15 @@ us_layout_sw() {
 
 check_mangohud() {
     [ -n "$1" ] && export LWMANGOHUD="$1"
-    if [[ "$LWMANGOHUD" == "OpenGL" || "$LWMANGOHUD" == "Vulkan" ]]
+    if [[ "$LWMANGOHUD" != "Disabled" ]]
         then
             if [ -n "$(which mangohud 2>/dev/null)" ]
                 then
-                    if [ "$LWMANGOHUD" == "Vulkan" ]
+                    if [[ "$LWMANGOHUD" == "Vulkan" && "$WINED3D" != 1 ]]
                         then
                             export RUN_MANGOHUD="mangohud"
-                    elif [ "$LWMANGOHUD" == "OpenGL" ]
-                        then
+                        else
+                            print_info "MANGOHUD in OpenGL mode!"
                             export RUN_MANGOHUD="mangohud --dlsym"
                     fi
                     if [[ ! -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
@@ -4293,12 +4293,12 @@ check_dxvk-nvapi() {
                 else
                     export DXVK_NVAPI=0
                     wdllover_upd "${ALLNVAPIDLLS}=b"
-                    print_error yad "DXVK NVAPI is disabled!"
+                    print_error yad "DXVK-NVAPI is disabled!"
             fi
         else
             export DXVK_NVAPI=0
             wdllover_upd "${ALLNVAPIDLLS}=b"
-            print_info "DXVK NVAPI is disabled!"
+            print_info "DXVK-NVAPI is disabled!"
     fi
 }
 
@@ -4329,13 +4329,19 @@ check_dgvoodoo2() {
     [ -n "$1" ] && export DGVOODOO2="$1"
     [ -n "$2" ] && export DGVOODOO2_VERSION="$2"
     export ALLDGVOODOO2DLLS="d3dimm,ddraw,glide2x,glide3x,glide"
-    [ "$DGVOODOO2_VERSION" == "Default" ] && export "$(grep -wo 'DGVOODOO2_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
-    if [ "$DGVOODOO2" == 1 ]
+    [ "$DGVOODOO2_VERSION" == "Default" ] && \
+        export "$(grep -wo 'DGVOODOO2_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+    if [[ "$DGVOODOO2" == 1 && "$WINED3D" != 1 ]]
         then
             GIT_RELEASE_URL="$DGVO_GIT_RELEASE_URL"
             if dll_manager "dgvoodoo2" "$DGVOODOO2_VERSION"
                 then
+                    print_info "DGVOODOO2 is enabled!"
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
+                    DGVOODOO2_CFG="$LW_DIR/runtime/dgvoodoo2/$DGVOODOO2_VERSION/dgVoodoo.conf"
+                    PFX_DGVOODOO2_CFG="$PFX_DLL32_PTH/dgVoodoo.conf"
+                    [[ -f "$DGVOODOO2_CFG" && ! -f "$PFX_DGVOODOO2_CFG" ]] && \
+                        try_cp "$DGVOODOO2_CFG" "$PFX_DGVOODOO2_CFG"
                 else
                     export DGVOODOO2=0
                     wdllover_upd "${ALLDGVOODOO2DLLS}=b"
@@ -4344,7 +4350,8 @@ check_dgvoodoo2() {
         else
             export DGVOODOO2=0
             wdllover_upd "${ALLDGVOODOO2DLLS}=b"
-            print_info "DGVOODOO2 is disabled!"
+            [ "$WINED3D" == 1 ] && \
+                print_info "DGVOODOO2 is disabled!"
     fi
 }
 
@@ -4496,6 +4503,7 @@ check_winepfx() {
     if [ "$WINEARCH" == "win32" ]
         then
             export PFX_DLL32_PTH="$WINEPREFIX/drive_c/windows/system32"
+            unset PFX_DLL64_PTH
         else
             export PFX_DLL32_PTH="$WINEPREFIX/drive_c/windows/syswow64"
             export PFX_DLL64_PTH="$WINEPREFIX/drive_c/windows/system32"
@@ -4815,7 +4823,7 @@ check_vkbasalt_cfg() {
 
 check_vkbasalt_eff() {
     [ -n "$1" ] && export VKBASALT="$1"
-    if [[ "$VKBASALT" == 1 ]]
+    if [[ "$VKBASALT" == 1 && "$WINED3D" != 1 ]]
         then
             export ENABLE_VKBASALT=1
             if [ ! -n "$(grep -wo "effects" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]
