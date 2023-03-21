@@ -24,6 +24,48 @@ lwrun --update
 lwrun --uninstall
 ```
 
+## Terminal usage:
+```
+┌──[user@linux]─[~]
+└──╼ $ lwrun {arg} blabla.exe {exe args}
+
+      -explorer               Wine explorer
+      -cmd                    Open CMD or open file in CMD
+      -shell                  Open SHELL or open file in SHELL
+      -config                 Settings
+      -appcfg                 Apps Settings
+      -regedit                Registry editor
+      -control                Control panel
+      -winecfg                Wine settings
+      -winemgr {delonly}      Wine manager
+      -taskmgr                Task manager
+      -uninstaller            Wine uninstaller
+      -winetricks {arguments} Winetricks
+      -openpfx                Open drive C:\
+      -killwine               Kill Wine processes
+      -killtray               Kill tray
+      -killexe                Kill running EXE
+      -killshell              Kill SHELL
+      -exit                   Force exit
+      -clearpfx               Clear prefix
+      -rmapp                  Remove menu app
+      -shortcut               Create shortcut
+      -addtolu                Add to Lutris
+      -debug                  DEBUG
+      -help                   Show this usage info
+      -version                Show version info
+      -tray {noclose}         Tray
+      -init                   Forced initialization
+      -pfxbackup {xz}         Make prefix backup
+      -pfxrestore             Restore prefix from backup
+      -backupmnt              Mount prefix backup
+      -backupunmnt            Unmount prefix backup
+      -update {all}           Runtime updater
+      {dx|dxvk} {vkd|vkd3d} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
+      {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
+      {dg|dgvoodoo2} {nvml|wine_nvml}
+```
+
 ## Features:
 - [x] Easy installation without root rights and dependencies
 - [x] Quick initialization and launch
@@ -141,47 +183,6 @@ lwrun --uninstall
       * __GL_THREADED_OPTIMIZATIONS
 ```
 
-## Terminal usage:
-```
-┌──[user@linux]─[~]
-└──╼ $ lwrun {arg} blabla.exe {exe args}
-
-      -explorer               Wine explorer
-      -cmd                    Open CMD or open file in CMD
-      -shell                  Open SHELL or open file in SHELL
-      -config                 Settings
-      -appcfg                 Apps Settings
-      -regedit                Registry editor
-      -control                Control panel
-      -winecfg                Wine settings
-      -winemgr {delonly}      Wine manager
-      -taskmgr                Task manager
-      -uninstaller            Wine uninstaller
-      -winetricks {arguments} Winetricks
-      -openpfx                Open drive C:\
-      -killwine               Kill Wine processes
-      -killtray               Kill tray
-      -killexe                Kill running EXE
-      -killshell              Kill SHELL
-      -exit                   Force exit
-      -clearpfx               Clear prefix
-      -rmapp                  Remove menu app
-      -shortcut               Create shortcut
-      -addtolu                Add to Lutris
-      -debug                  DEBUG
-      -help                   Show this usage info
-      -version                Show version info
-      -tray {noclose}         Tray
-      -init                   Forced initialization
-      -pfxbackup {xz}         Make prefix backup
-      -pfxrestore             Restore prefix from backup
-      -backupmnt              Mount prefix backup
-      -backupunmnt            Unmount prefix backup
-      -update {all}           Runtime updater
-      {dx|dxvk} {vkd|vkd3d} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
-      {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
-      {dg|dgvoodoo2} {nvml|wine_nvml}
-```
 ## Screenshots:
 ![appcfg.png](./screenshots/appcfg.png?raw=true "appcfg")
 ![rmapp.png](./screenshots/rmapp.png?raw=true "rmapp")
