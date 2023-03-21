@@ -123,7 +123,6 @@ check_def_config() {
     [ ! -n "$WD3DMODE" ] && export WD3DMODE='DXVK+NVAPI+VKD3D'
     [ ! -n "$WINE_SANDBOX" ] && export WINE_SANDBOX=1
     [ ! -n "$D3D_EXTRAS" ] && export D3D_EXTRAS=1
-    [ ! -n "$DGVOODOO2" ] && export DGVOODOO2=1
     [ ! -n "$BATTLEYE" ] && export BATTLEYE=1
     [ ! -n "$EAC" ] && export EAC=1
     [ ! -n "$EXE_LWDB" ] && export EXE_LWDB=1
@@ -3688,7 +3687,7 @@ lu_winemgr() {
             for WLU_DW in $(echo "$WLU_SET"|eval $SEDLWPRM)
                 do
                     unset WLU_DW_URL
-                    export WLU_DW_URL="$(echo "$WLU_GIT_LIST"|grep $WLU_DW)"
+                    export WLU_DW_URL="$(echo "$WLU_GIT_LIST"|grep "$WLU_DW")"
                     if [ -n "$WLU_DW_URL" ]
                         then
                             print_info notify "Download and install $WLU_DW"
@@ -3720,7 +3719,7 @@ lu_winemgr() {
             for PGE_DW in $(echo "$PGE_SET"|eval $SEDLWPRM)
                 do
                     unset PGE_DW_URL
-                    export PGE_DW_URL="$(echo "$PGE_GIT_LIST"|grep $PGE_DW)"
+                    export PGE_DW_URL="$(echo "$PGE_GIT_LIST"|grep "/$PGE_DW/")"
                     if [ -n "$PGE_DW_URL" ]
                         then
                             print_info notify "Download and install $PGE_DW..."
@@ -3764,7 +3763,7 @@ lu_winemgr() {
             for WGE_DW in $(echo "$WGE_SET"|eval $SEDLWPRM)
                 do
                     unset WGE_DW_URL
-                    export WGE_DW_URL="$(echo "$WGE_GIT_LIST"|grep $WGE_DW)"
+                    export WGE_DW_URL="$(echo "$WGE_GIT_LIST"|grep "$WGE_DW")"
                     if [ -n "$WGE_DW_URL" ]
                         then
                             print_info notify "Download and install $WGE_DW"
@@ -3796,7 +3795,7 @@ lu_winemgr() {
             for WK4_DW in $(echo "$WK4_SET"|eval $SEDLWPRM)
                 do
                     unset WK4_DW_URL
-                    export WK4_DW_URL="$(echo "$WK4_GIT_LIST"|grep $WK4_DW)"
+                    export WK4_DW_URL="$(echo "$WK4_GIT_LIST"|grep "$WK4_DW")"
                     if [ -n "$WK4_DW_URL" ]
                         then
                             print_info notify "Download and install $WK4_DW..."
