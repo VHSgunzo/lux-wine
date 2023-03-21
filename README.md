@@ -6,6 +6,8 @@ This project allows you to easily run your favorite applications and games for W
 * Supported architectures `x86_64`
 * The minimum recommended `Linux kernel` version is `4.18+` with support for `user namespaces`, but `5.0+` would be better.
 * `FUSE` (but not necessarily, because it is possible to work in unpacked form without `FUSE` mounting)
+* Driver for your graphics card (In most cases, Mesa will be enough, but not for Nvidia xD)
+* Some kind of desktop environment (but not necessarily, since if desired, you can install the desktop directly into the [RunImage](https://github.com/VHSgunzo/runimage) container)
 
 ## **Installation**:
 ```
