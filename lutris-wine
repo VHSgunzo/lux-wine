@@ -4329,10 +4329,10 @@ check_dgvoodoo2() {
     [ -n "$1" ] && export DGVOODOO2="$1"
     [ -n "$2" ] && export DGVOODOO2_VERSION="$2"
     export ALLDGVOODOO2DLLS="d3dimm,ddraw,glide2x,glide3x,glide"
-    [ "$DGVOODOO2_VERSION" == "Default" ] && \
-        export "$(grep -wo 'DGVOODOO2_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [[ "$DGVOODOO2" == 1 && "$WINED3D" != 1 ]]
         then
+            [ "$DGVOODOO2_VERSION" == "Default" ] && \
+                export "$(grep -wo 'DGVOODOO2_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
             GIT_RELEASE_URL="$DGVO_GIT_RELEASE_URL"
             if dll_manager "dgvoodoo2" "$DGVOODOO2_VERSION"
                 then
