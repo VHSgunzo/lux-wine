@@ -14,15 +14,9 @@ This project allows you to easily run your favorite applications and games for W
 curl -sL lwrap.github.io|bash
 ```
 
-### **Forced check for updates**:
-```
-lwrun --update
-```
+## Video of the installation process:
+[![Lutris Wine installation process](https://img.youtube.com/vi/3UM_01q4Rm0/0.jpg)](https://www.youtube.com/watch?v=3UM_01q4Rm0)
 
-### **Removing**:
-```
-lwrun --uninstall
-```
 ## **Usage:**
 * ### **The launch of your Windows games and applications is carried out from your file manager or from the built-in LW file manager or from the application menu when creating a shortcut for the EXE**
 
@@ -68,10 +62,21 @@ lwrun --uninstall
       {dg|dgvoodoo2} {nvml|wine_nvml}
 ```
 
+### **Forced check for updates**:
+```
+lwrun --update
+```
+
+### **Removing**:
+```
+lwrun --uninstall
+```
+
 ## Features:
 - [x] Easy installation without root rights and dependencies
 - [x] Quick initialization and launch
 - [x] Launch *.exe *.lnk *.bat *.msi *.reg files
+- [x] Sandboxed network
 - [x] Ability to specify EXE arguments and save them in settings
 - [x] Tray mode
 - [x] Automatic download of necessary Wine libraries
@@ -239,5 +244,5 @@ sudo reboot
 ```
 yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
 ```
-## Video with the classic installation process:
+## Video of the classic installation process:
 [![Lutris Wine installation process](https://img.youtube.com/vi/rzmIOUjDpSU/0.jpg)](https://www.youtube.com/watch?v=rzmIOUjDpSU)
