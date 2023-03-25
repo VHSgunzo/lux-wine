@@ -538,8 +538,9 @@ try_dl() {
                                     dl_progress
                             elif is_exe_exist curl
                                 then
-                                    curl --progress-bar --insecure --fail -L "$1" -o \
-                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|sed -ur 's/[# ]+/#/g;'|\
+                                    curl --progress-bar --insecure --fail -L "$URL" -o \
+                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|sed -ur 's|[# ]+|&|g'|\
+                                        stdbuf -o0 awk '{print"#Downloading at "$2,"\n"$2}'|\
                                     dl_progress
                             else
                                 err_no_downloader
