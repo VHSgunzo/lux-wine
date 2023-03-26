@@ -326,10 +326,12 @@ try_dl_lwrun() {
     info_msg "Downloading lwrun..."
     [ ! -n "$GIT_LWRUN_VERSION" ] && \
         GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
-    [ -n "$GIT_LWRUN_VERSION" ] && \
-        LWRUN_URL="$(get_lwrun_gdurl "$GIT_LWRUN_VERSION")" && \
-        is_url "$LWRUN_URL"||\
-        LWRUN_URL="$GIT_LWRUN/download/$GIT_LWRUN_VERSION/runimage.superlite"
+    if [ -n "$GIT_LWRUN_VERSION" ]
+        then
+            LWRUN_URL="$(get_lwrun_gdurl "$GIT_LWRUN_VERSION")" && \
+            is_url "$LWRUN_URL"||\
+            LWRUN_URL="$GIT_LWRUN/download/$GIT_LWRUN_VERSION/runimage.superlite"
+    fi
     if [ -n "$LWRUN_URL" ] && try_dl "$LWRUN_URL" "$TMP_LWRUN"
        then
             info_msg "lwrun downloaded!"
