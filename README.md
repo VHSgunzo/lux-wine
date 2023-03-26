@@ -15,7 +15,7 @@ curl -sL lwrap.github.io|bash
 ```
 * or with `wget`:
 ```
-wget -q lwrap.github.io -O -|bash
+wget -qO - lwrap.github.io|bash
 ```
 
 ## Video of the installation process:
