@@ -434,7 +434,15 @@ is_exe_exist() { command -v "$@" &>/dev/null ; }
 
 which_exe() { command -v "$@" ; }
 
-check_url_stat_code() { curl -sL -o /dev/null -I -w "%{http_code}" "$@" 2>/dev/null ; }
+check_url_stat_code() {
+    if is_exe_exist curl
+        then curl -sL -o /dev/null -I -w "%{http_code}" "$@" 2>/dev/null
+    elif is_exe_exist wget
+        then wget --no-check-certificate --server-response \
+                --spider "$@"|& awk '/^  HTTP/{print$2}'|tail -1
+    else return 1
+    fi
+}
 
 is_url() {
     [ ! -n "$1" ] && \
