@@ -13,6 +13,10 @@ This project allows you to easily run your favorite applications and games for W
 ```
 curl -sL lwrap.github.io|bash
 ```
+* or with `wget`:
+```
+wget -q lwrap.github.io -O -|bash
+```
 
 ## Video of the installation process:
 [![Lutris Wine installation process](https://img.youtube.com/vi/3UM_01q4Rm0/0.jpg)](https://www.youtube.com/watch?v=3UM_01q4Rm0)
