@@ -27,7 +27,7 @@ wget -qO - lwrap.github.io|bash
 ## **Terminal usage**:
 ```
 ┌──[user@linux]─[~]
-└──╼ $ lwrun {arg} blabla.exe {exe args}
+└──╼ $ lwrun {lwrun arg} blabla.exe {exe args}
 
       -explorer               Wine explorer
       -cmd                    Open CMD or open file in CMD

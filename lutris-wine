@@ -3426,11 +3426,13 @@ lu_help() {
             exit 1
     fi
     echo_help() {
+    [[ "$RUNSRC" =~ "lwrun" ]] && \
+        local LW_NAME="lwrun"
     echo -e "
         ${GREEN}Lutris Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
-            $RED└──╼ \$$GREEN $LW_NAME $BLUE{$LW_NAME argument} ${RED}blabla.exe $YELLOW{exe arguments}
+            $RED└──╼ \$$GREEN $LW_NAME $BLUE{$LW_NAME arg} ${RED}blabla.exe $YELLOW{exe args}
 
             ${RED}-explorer $GREEN               Wine explorer
             ${RED}-cmd $GREEN                    Open CMD or open file in CMD
