@@ -2248,7 +2248,7 @@ check_db_script() {
         then
             if [ -n "$(file "$EXE_LWDBFL"|grep -wo "shell script")" ]
                 then
-                    print_info notify "EXE DB script: '$EXE_LWDBFL'"
+                    print_info notify "EXE DB: '$EXE_LWDBFL'"
                 else
                     unset EXE_LWDBFL
                     sed -i '/EXE_LWDBFL.*/d' "$LW_CFG" 2>/dev/null
@@ -2560,7 +2560,7 @@ lu_config() {
     CMPRSSLST="xz \n zstd"
     FSRMODELST="ultra \n quality \n balanced \n performance \n Disabled"
     lwconfig_save() {
-        LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE WINE_DXGI D3D_EXTRAS DGVOODOO2 \
+        LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE DISABLE_NVAPI WINE_DXGI D3D_EXTRAS DGVOODOO2 \
             DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION DXR VKD3DCFG MUST_HAVE_DLL \
             FSR_MODE WINE_SANDBOX ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING GL_THRD_OPTI \
             NO_WRITE_WATCH HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD DIS_NETCORE \
@@ -2646,6 +2646,7 @@ lu_config() {
             --field="WINE DLL OVERRIDES::CBE" "$(cfg_items "$WDLLOVER" "$WDLLOVERLST")" \
             --field="WINE MONO OVERRIDES::CBE" "$(cfg_items "$WMONOVER" "$WMONOOVERLST")" \
             --field="D3D mode::CB" "$(cfg_items "$WD3DMODE" "$WD3DMODELST")" \
+            --field="Disable NVAPI:CHK" "$DISABLE_NVAPI" \
             --field="DXVK with Wine DXGI:CHK" "$WINE_DXGI" \
             --field="D3D EXTRAS:CHK" "$D3D_EXTRAS" \
             --field="DGVOODOO2:CHK" "$DGVOODOO2" \
@@ -4164,9 +4165,10 @@ check_dxvk() {
     [ -n "$1" ] && export DXVK="$1"
     [ -n "$2" ] && export DXVK_VERSION="$2"
     export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi"
-    [ "$DXVK_VERSION" == "Default" ] && export "$(grep -wo 'DXVK_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [[ "$DXVK" == 1 && "$WINED3D" != 1 ]]
         then
+            [ "$DXVK_VERSION" == "Default" ] && \
+                export "$(grep -wo 'DXVK_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
             GIT_RELEASE_URL="$DXVK_GIT_RELEASE_URL"
             if [[ -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d12.dll" || -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d12.dll" ]]
                 then
@@ -4212,10 +4214,18 @@ check_dxvk() {
 check_vkd3d() {
     [ -n "$1" ] && export VKD3D="$1"
     [ -n "$2" ] && export VKD3D_VERSION="$2"
-    export ALLVKD3DDLLS="d3d12"
-    [ "$VKD3D_VERSION" == "Default" ] && export "$(grep -wo 'VKD3D_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+    export ALLVKD3DDLLS="d3d12,d3d12core"
     if [[ "$VKD3D" == 1 && "$WINED3D" != 1 ]]
         then
+            [ "$VKD3D_VERSION" == "Default" ] && \
+                export "$(grep -wo 'VKD3D_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
+            for arch in {x32,x86,x64}
+                do
+                    CHKVKD3DFL="$LW_RUNTIME_DIR/vkd3d/$VKD3D_VERSION/$arch/d3d12"
+                    [[ -f "${CHKVKD3DFL}.dll" && ! -f "${CHKVKD3DFL}core.dll" ]] && \
+                        try_ln "${CHKVKD3DFL}.dll" "${CHKVKD3DFL}core.dll" && \
+                        export NEEDCHKDLL=1 && rm -rf "$LW_RUNTIME_DIR/vkd3d/$VKD3D_VERSION/.all_dlls"
+            done
             GIT_RELEASE_URL="$VKD3D_GIT_RELEASE_URL"
             if dll_manager "vkd3d" "$VKD3D_VERSION"
                 then
@@ -4240,10 +4250,11 @@ check_wine_nvml() {
     [ -n "$1" ] && export WINE_NVML="$1"
     [ -n "$2" ] && export WINE_NVML_VERSION="$2"
     export ALLNVMLDLLS="nvml"
-    [ "$WINE_NVML_VERSION" == "Default" ] && export "$(grep -wo 'WINE_NVML_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [[ "$WINE_NVML" == 1 && "$DXVK_NVAPI" == 1 && "$DXVK" != 0 \
         && -n "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
         then
+            [ "$WINE_NVML_VERSION" == "Default" ] && \
+                export "$(grep -wo 'WINE_NVML_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
             GIT_RELEASE_URL="$NVML_GIT_RELEASE_URL"
             if dll_manager "wine_nvml" "$WINE_NVML_VERSION"
                 then
@@ -4261,9 +4272,11 @@ check_dxvk-nvapi() {
     [ -n "$1" ] && export DXVK_NVAPI="$1"
     [ -n "$2" ] && export DXVK_NVAPI_VERSION="$2"
     export ALLNVAPIDLLS="nvapi,nvapi64,nvml,nvcuda"
-    [ "$DXVK_NVAPI_VERSION" == "Default" ] && export "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
-    if [[ "$DXVK_NVAPI" == 1 && "$DXVK" != 0 && -n "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
+    if [[ "$DISABLE_NVAPI" != 1 && "$DXVK_NVAPI" == 1 && "$DXVK" != 0 && \
+        -n "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
         then
+            [ "$DXVK_NVAPI_VERSION" == "Default" ] && \
+                export "$(grep -wo 'DXVK_NVAPI_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
             GIT_RELEASE_URL="$NVAPI_GIT_RELEASE_URL"
             if dll_manager "dxvk-nvapi" "$DXVK_NVAPI_VERSION"
                 then
@@ -4308,9 +4321,10 @@ check_d3d_extras() {
     [ -n "$1" ] && export D3D_EXTRAS="$1"
     [ -n "$2" ] && export D3D_EXTRAS_VERSION="$2"
     export ALLD3DEXTRADLLS="d3dcompiler_33,d3dcompiler_34,d3dcompiler_35,d3dcompiler_36,d3dcompiler_37,d3dcompiler_38,d3dcompiler_39,d3dcompiler_40,d3dcompiler_41,d3dcompiler_42,d3dcompiler_43,d3dcompiler_46,d3dcompiler_47,d3dx10_33,d3dx10_34,d3dx10_35,d3dx10_36,d3dx10_37,d3dx10_38,d3dx10_39,d3dx10_40,d3dx10_41,d3dx10_42,d3dx10_43,d3dx10,d3dx11_42,d3dx11_43,d3dx9_24,d3dx9_25,d3dx9_26,d3dx9_27,d3dx9_28,d3dx9_29,d3dx9_30,d3dx9_31,d3dx9_32,d3dx9_33,d3dx9_34,d3dx9_35,d3dx9_36,d3dx9_37,d3dx9_38,d3dx9_39,d3dx9_40,d3dx9_41,d3dx9_42,d3dx9_43"
-    [ "$D3D_EXTRAS_VERSION" == "Default" ] && export "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     if [ "$D3D_EXTRAS" == 1 ]
         then
+            [ "$D3D_EXTRAS_VERSION" == "Default" ] && \
+                export "$(grep -wo 'D3D_EXTRAS_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
             GIT_RELEASE_URL="$D3D_GIT_RELEASE_URL"
             if dll_manager "d3d_extras" "$D3D_EXTRAS_VERSION"
                 then

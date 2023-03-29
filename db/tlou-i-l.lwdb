@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# The Last Of Us Part I fix for Nvidia
+
+if [[ -f "$PFX_DLL32_PTH/d3d12.dll" && -f "$PFX_DLL64_PTH/d3d12.dll" ]] && \
+[[ ! -f "$PFX_DLL32_PTH/d3d12core.dll" || ! -f "$PFX_DLL64_PTH/d3d12core.dll" ]]
+    then
+        try_ln "$PFX_DLL32_PTH/d3d12.dll" "$PFX_DLL32_PTH/d3d12core.dll"
+        try_ln "$PFX_DLL64_PTH/d3d12.dll" "$PFX_DLL64_PTH/d3d12core.dll"
+fi
+
+if [ -n "$(lspci|grep -o NVIDIA)" ]
+    then
+        unset DXVK_ENABLE_NVAPI DXVK_NVAPIHACK
+        export WINEDLLOVERRIDES="$(echo "$WINEDLLOVERRIDES"|\
+        sed 's|nvapi,nvapi64=n;nvcuda=b;nvml=n|nvapi,nvapi64,nvml,nvcuda=b|g')"
+fi
