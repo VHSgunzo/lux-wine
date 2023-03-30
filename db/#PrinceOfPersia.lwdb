@@ -12,5 +12,4 @@ if [ -f "$POP_EXE" ]
         done
         sleep 10
         kill $(pidof "$LU_EXE") 2>/dev/null) &
-    else return 1
 fi

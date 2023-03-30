@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mime-type xmlns="http://www.freedesktop.org/standards/shared-mime-info" type="application/xaml+xml">
+  <!--Created automatically by update-mime-database. DO NOT EDIT!-->
+  <glob pattern="*.xaml"/>
+  <comment>Windows Markup File</comment>
+</mime-type>

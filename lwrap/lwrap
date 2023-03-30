@@ -23,6 +23,7 @@ LWRAP="$LWBIN_DIR/lwrap"
 LWBASH="$LWBIN_DIR/bash"
 LWRUN="$LWBIN_DIR/lwrun"
 RUNIMAGE_LW="$LWBIN_DIR/runimage-lw"
+CHK_UPDATE='3'
 
 if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]] && \
    [[ -x "$LWRAP" && "$NO_EXT_LWRAP" != 1 ]]
@@ -31,10 +32,6 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]] && \
         exit $?
 fi
 unset NO_EXT_LWRAP
-
-[[ -f "$LW_CFG" && -n "$(grep -wo '^CHK_UPDATE' "$LW_CFG")" ]] && \
-    CHK_UPDATE="$(grep -w '^CHK_UPDATE' "$LW_CFG"|cut -d'=' -f2|sed "s|'||g;s|\"||g")"||\
-CHK_UPDATE='3'
 
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
@@ -96,9 +93,11 @@ make_install() {
             install -Dm755 lwrap/lwrap "$LWRAP"
             install -Dm644 LutrisWine.menu "$HOME/.config/menus/applications-merged/LutrisWine.menu"
             install -Dm644 LutrisWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LutrisWineService.desktop"
+            [ ! -f "$LW_DIR/.firstrun" ] && \
             install -Dm755 applications/LutrisWine.desktop "$HOME/Desktop/LutrisWine.desktop"
             mkdir -p "$HOME_DESK_APP"
             mkdir -p "$HOME_DESK_DIR"
+            cp -rf mime "$HOME/.local/share/mime"
             cp -rf applications "$HOME_DESK_APP/LutrisWine"
             cp -rf directories/* "$HOME_DESK_DIR/"
             add_path "$B_RC"
@@ -106,6 +105,7 @@ make_install() {
             check_path "$F_RC" && echo -e \
                 '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$F_RC"
             update-desktop-database -q "$HOME_DESK_APP" &>/dev/null
+            update-mime-database "$HOME/.local/share/mime" &>/dev/null
     fi
     cp -rf registry_patch "$LW_DIR/"
     cp -rf LICENSE "$LW_DIR/"

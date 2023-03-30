@@ -82,6 +82,7 @@ fi
 [ ! -n "$CMPRSS_METHOD" ] && export CMPRSS_METHOD='zstd'
 [ ! -n "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
 [ ! -n "$SYS_LDLIBPTH" ] && export SYS_LDLIBPTH="$LD_LIBRARY_PATH"
+[ ! -n "$SYS_STM_COMPAT_DIR" ] && export SYS_STM_COMPAT_DIR="/usr/share/steam/compatibilitytools.d"
 [ ! -n "$DEF_MANGOHUDCFG" ] && export DEF_MANGOHUDCFG="no_display,time,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
 cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
 engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
@@ -2337,7 +2338,6 @@ check_steamapps() {
         else
             unset STMEAC STMBATTLEYE
     fi
-    SYS_STM_COMPAT_DIR="/usr/share/steam/compatibilitytools.d"
     STMPRTNGE="$SYS_STM_COMPAT_DIR/$(ls -1t "$SYS_STM_COMPAT_DIR" 2>/dev/null|grep -im1 "GE-Proton")"
     if [[ -f "$STMPRTNGE/files/bin/wine" ]]
         then
@@ -4121,7 +4121,7 @@ get_proton_d3dlib() {
 }
 
 check_proton_d3dlib() {
-    [[ ! "$(realpath "$WINEDIR")" =~ "$LW_WINE_DIR" ]] && \
+    [[ "$(realpath "$WINEDIR")" =~ "$SYS_STM_COMPAT_DIR" ]] && \
         get_proton_d3dlib 'cp'||\
         get_proton_d3dlib 'ln'
     if [ "$WINED3D" != 1 ] && [[ -n "$P_DXVK" || -n "$P_NVAPI" || -n "$P_VKD3D" ]]
@@ -4133,14 +4133,14 @@ check_proton_d3dlib() {
                             if [ -d "$LW_RUNTIME_DIR/$pd3ddll/$WINE_IN_USE" ]
                                 then
                                     if [ "$pd3ddll" == "dxvk-nvapi" ]
-                                    then
-                                        if [ ! -n "$(grep -o "DXVK_NVAPI_VERSION" "$LW_CFG")" ]
-                                            then
-                                                echo "DXVK_NVAPI_VERSION='$WINE_IN_USE'" >> "$LW_CFG"
-                                            else
-                                                sed -i "s/DXVK_NVAPI_VERSION.*/DXVK_NVAPI_VERSION='$WINE_IN_USE'/" "$LW_CFG"
-                                        fi
-                                    else
+                                        then
+                                            if [ ! -n "$(grep -o "DXVK_NVAPI_VERSION" "$LW_CFG")" ]
+                                                then
+                                                    echo "DXVK_NVAPI_VERSION='$WINE_IN_USE'" >> "$LW_CFG"
+                                                else
+                                                    sed -i "s/DXVK_NVAPI_VERSION.*/DXVK_NVAPI_VERSION='$WINE_IN_USE'/" "$LW_CFG"
+                                            fi
+                                        else
                                             if [ ! -n "$(grep -io "${pd3ddll}_version" "$LW_CFG")" ]
                                                 then
                                                     echo "$(echo "${pd3ddll}_version"|tr [:lower:] [:upper:])='$WINE_IN_USE'" >> "$LW_CFG"
@@ -5568,7 +5568,7 @@ select_lwpfx() {
     fi
 }
 
-try_rm_broken_link() { find -L "$1" -maxdepth 1 -type l -exec rm -rfv {} \; ; }
+try_rm_broken_link() { find -L "$1" -maxdepth 1 -type l -exec rm -rfv {} \; 2>/dev/null ; }
 
 lu_pfxrestore() {
     [ -f "$1" ] && export LU_LWPFX="$1"
