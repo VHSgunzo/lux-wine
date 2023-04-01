@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+check_win_version '10'
 
 # The Last Of Us Part I fix for Nvidia
 
@@ -7,6 +8,21 @@ if [[ -f "$PFX_DLL32_PTH/d3d12.dll" && -f "$PFX_DLL64_PTH/d3d12.dll" ]] && \
     then
         try_ln "$PFX_DLL32_PTH/d3d12.dll" "$PFX_DLL32_PTH/d3d12core.dll"
         try_ln "$PFX_DLL64_PTH/d3d12.dll" "$PFX_DLL64_PTH/d3d12core.dll"
+fi
+
+oodle_dll="$EXE_PATH/oo2core_9_win64.dll"
+oodle_chksum="019cafd2a2a955e4b12b34492162a9261053bef09c6cf3209a85b25a9952c613"
+oodle_dll_chksum=($(sha256sum "$oodle_dll" 2>/dev/null))
+if [ "$oodle_dll_chksum" != "$oodle_chksum" ]
+    then
+        if try_download "https://github.com/VHSgunzo/wine-dlls/releases/download/oodle-v2.9.5/oo2core_9_win64.dll" "$LW_DEF_TMP"
+            then
+                try_mv "$oodle_dll" "$oodle_dll.back"
+                try_mv "$LW_DEF_TMP/oo2core_9_win64.dll" "$oodle_dll"
+            else
+                try_rm "$LW_DEF_TMP/oo2core_9_win64.dll" &>/dev/null
+                print_error yad "Failed to download Oodle Decompression Library v2.9.5\nCrashes are possible when compiling shaders!"
+        fi
 fi
 
 if [ -n "$(lspci|grep -o NVIDIA)" ]
