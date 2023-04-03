@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+check_win_version 10
+check_mangohud 0

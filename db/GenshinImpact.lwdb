@@ -1,5 +1,5 @@
 #!/bin/bash
-check_win_version '10'
+check_win_version 10
 
 check_deps() {
     if [ ! -n "$(which xdelta3 2>/dev/null)" ]

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.76.7"
+export LW_VERSION="0.76.9"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -21,6 +21,10 @@ if [ "$RUNROOTFSTYPE" == "superlite" ]
         export LW_EDITOR="xdg-open"
         export LW_FLMGR="xdg-open"
 fi
+
+is_exe_exist() { command -v "$@" &>/dev/null ; }
+
+which_exe() { command -v "$@" ; }
 
 [ ! -n "$LW_SYS_DIR" ] && export LW_SYS_DIR="/usr/share/lutris-wine"
 [ ! -n "$LWRAP_DIR" ] && export LWRAP_DIR="/opt/lwrap"
@@ -78,7 +82,7 @@ fi
 [ ! -n "$LW_APPCFG_DIR" ] && export LW_APPCFG_DIR="$LW_DIR/appcfg"
 [ ! -n "$VLK_ICD_DIR" ] && export VLK_ICD_DIR="/usr/share/vulkan/icd.d"
 [ ! -n "$SYS_WINE" ] && export SYS_WINE="$(which -a wine 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)"
-[ ! -n "$SYS_LU" ] && export SYS_LU="$(which lutris 2>/dev/null)"
+[ ! -n "$SYS_LU" ] && export SYS_LU="$(which_exe lutris)"
 [ ! -n "$CMPRSS_METHOD" ] && export CMPRSS_METHOD='zstd'
 [ ! -n "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
 [ ! -n "$SYS_LDLIBPTH" ] && export SYS_LDLIBPTH="$LD_LIBRARY_PATH"
@@ -117,7 +121,7 @@ check_def_config() {
     [ ! -n "$WMONOVER" ] && export WMONOVER="Microsoft.Xna.Framework.*,Gac=n"
     [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe='
     [ ! -n "$WINE_THEME" ] && export WINE_THEME='Breeze Dark'
-    [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='Vulkan'
+    [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD=1
     [ ! -n "$FPS_LIMIT" ] && export FPS_LIMIT="75"
     [ ! -n "$GAMEMODE" ] && export GAMEMODE=1
     [ ! -n "$GSTREAMER" ] && export GSTREAMER=1
@@ -867,7 +871,7 @@ wine_is_death() {
 }
 
 check_display() {
-    if [ -n "$(which xrandr 2>/dev/null)" ]
+    if is_exe_exist xrandr
         then
             if [ -n "$(xrandr --current|grep -ow 'connected primary')" ]
                 then
@@ -1018,7 +1022,7 @@ check_restore_gamma() {
 
 gamma_sw() {
     restore_gamma() {
-        if [ -n "$(which xgamma 2>/dev/null)" ]
+        if is_exe_exist xgamma
             then
                 xgamma -gamma 1.0
             else
@@ -1339,7 +1343,7 @@ reg_edit() {
 }
 
 exe2png() {
-    if [[ -n "$(which wrestool 2>/dev/null)" && -n "$(which convert 2>/dev/null)" ]]
+    if is_exe_exist wrestool && is_exe_exist convert
         then
             export SHRT_NAME="$(basename "$1"|sed 's/.exe//')"
             export SHRT_PATH="$(cd "$(dirname "$1")" >/dev/null 2>&1 && pwd)"
@@ -1670,24 +1674,22 @@ lu_debug() {
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
             echo "[ Graphic cards and drivers ] :" >> "$TMP_DBG"
             echo "$(lspci -k|grep -EA3 'VGA|3D|Display')" >> "$TMP_DBG"
-            if [ ! -x "$(which glxinfo 2>/dev/null)" ]
+            if is_exe_exist glxinfo
                 then
-                    echo "[!]glxinfo not found[!]"  >> "$TMP_DBG"
-                else
                     glxinfo -B >> "$TMP_DBG"
+                else
+                    echo "[!]glxinfo not found[!]"  >> "$TMP_DBG"
             fi
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
-            if [ ! -x "$(which vulkaninfo 2>/dev/null)" ]
+            if is_exe_exist vulkaninfo
                 then
-                    echo "[!]vulkaninfo not found[!]"  >> "$TMP_DBG"
-                else
                     echo "[ Vulkan info device name ] : $(vulkaninfo|grep deviceName|cut -d"=" -f2)" >> "$TMP_DBG"
+                else
+                    echo "[!]vulkaninfo not found[!]"  >> "$TMP_DBG"
             fi
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
-            if [ ! -x "$(which vkcube 2>/dev/null)" ]
+            if is_exe_exist vkcube
                 then
-                    echo "[!]vkcube not found[!]"  >> "$TMP_DBG"
-                else
                     vkcube --c 50
                     if [ $? -eq 0 ]
                         then
@@ -1695,9 +1697,11 @@ lu_debug() {
                         else
                             echo "[!] Vkcube test completed with error [!]" >> "$TMP_DBG"
                     fi
+                else
+                    echo "[!]vkcube not found[!]"  >> "$TMP_DBG"
             fi
             echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
-            if [ ! -x "$(which gamemoderun 2>/dev/null)" ]
+            if ! is_exe_exist gamemoderun
                 then
                     echo "[!]gamemod not found[!]"  >> "$TMP_DBG"
                     echo "---------------------------------------------------------------------------------------" >> "$TMP_DBG"
@@ -1875,7 +1879,12 @@ import_luwine_wcfg() {
 }
 
 import_cenv() {
-    [ -f "$LW_CENV" ] && source "$LW_CENV"
+    if [ -f "$LW_CENV" ]
+        then
+            set -a
+            source "$LW_CENV"
+            set +a
+    fi
 }
 
 updcfgchksum() {
@@ -2163,6 +2172,7 @@ lu_prestart() {
     elif [ -n "$LU_BAT" ]
         then
             dis_debug_msg
+            LOADBAR=0
             TERMINAL=1
             UNSET_CMPSTR_SW=1
             lu_run "$LU_EXE"
@@ -2311,8 +2321,9 @@ check_virt_desktop() {
 check_downloader() {
     [ ! -n "$LW_DOWNLOADER" ] && export LW_DOWNLOADER="$(for whichdwnl in {aria2c,wget}
         do
-            echo "$(basename "$(which $whichdwnl 2>/dev/null)" 2>/dev/null)"
-    done|sed '/^$/d'|head -1)"
+            is_exe_exist "$whichdwnl" && \
+                echo "$whichdwnl" && break
+    done)"
     [ ! -n "$LW_DOWNLOADER" ] && print_error yad "Downloader not found in your system! You must install aria2c or wget!" && exit 1
     export WINETRICKS_DOWNLOADER="$LW_DOWNLOADER"
 }
@@ -2540,8 +2551,8 @@ lu_config() {
     WINVERLST="10 \n \n 8 \n 7 \n xp"
     WARCHLST="win64 \n win32"
     MHAVEDLLST="vcrun2022 mfc42 \n vcrun6 vcrun6sp6 vcrun2005 vcrun2008 vcrun2010 vcrun2012 vcrun2013 vcrun2022 mfc120 mfc42 msvcirt physx dotnet20 xna40 dotnet48 \n physx \n Disabled"
-    TERMAPPLST="$(for whichterm in {konsole,gnome-terminal,kitty,deepin-terminal,xfce4-terminal,xterm} ; do which $whichterm 2>/dev/null ; done)"
-    DOWNLOADERLST="$(for whichdwnl in {aria2c,wget} ; do echo "$(basename "$(which $whichdwnl 2>/dev/null)" 2>/dev/null)" ; done)"
+    TERMAPPLST="$(for whichterm in {konsole,gnome-terminal,kitty,deepin-terminal,xfce4-terminal,xterm} ; do which_exe "$whichterm" ; done)"
+    DOWNLOADERLST="$(for whichdwnl in {aria2c,wget} ; do is_exe_exist "$whichdwnl" && echo "$whichdwnl" ; done)"
     VSYNCLST="Enabled \n Disabled \n Default"
     MANGOHUDLST="OpenGL \n Vulkan \n Disabled"
     DXRLST="1.0 \n 1.1 \n Disabled"
@@ -2716,7 +2727,7 @@ lu_config() {
             --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(cfg_items "$VKBASALT_FFX_CAS" "$(seq 0.1 0.1 1|tr ',' '.')\n Disabled")" \
             --field="Vulkan ICD loader::CB" "$(cfg_items "$VKICDFILES" "$VKICDFILESLST")" \
             --field="GameMode:CHK" "$GAMEMODE" \
-            --field="MangoHud::CB" "$(cfg_items "$LWMANGOHUD" "$MANGOHUDLST")" \
+            --field="MangoHud:CHK" "$LWMANGOHUD" \
             --field="MangoHud User config:CHK" "$MANGOHUD_USER_CONF" \
             --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" "$DEF_MANGOHUDCFG")" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
@@ -2947,6 +2958,7 @@ cleanrun() {
 lu_cmd() {
     UNSET_CMPSTR_SW=1
     TERMINAL=1
+    LOADBAR=0
     export DEBUG=0
     if [ -f "$2" ]
        then
@@ -2966,6 +2978,7 @@ lu_shell() {
     full_init
     UNSET_CMPSTR_SW=1
     TERMINAL=1
+    LOADBAR=0
     export DEBUG=0
     if [ -f "$2" ]
         then
@@ -3305,6 +3318,7 @@ lu_clearpfx() {
             fi
             if [ "$PFXARCH_MISMATCH" != 1 ] && print_question "Prefix Cleaner" "Do you want to initialize prefix right now?"
                 then
+                    export PFX_OVER_RESTORE=1
                     SETT_INIT=1 lite_init "$@"
                     SETT_INIT=1 full_init
             fi
@@ -3529,7 +3543,7 @@ lu_version() {
 
 check_shell() {
     [ -n "$1" ] && export LWSHELL="$1"
-    [ ! -n "$LWSHELL" ] && export LWSHELL="$(which bash 2>/dev/null)"
+    [ ! -n "$LWSHELL" ] && export LWSHELL="$(which_exe bash)"
 }
 
 check_tray() {
@@ -3923,7 +3937,7 @@ check_themes() {
 us_layout_sw() {
     if [ "$US_LAYOUT" == 1 ]
         then
-            if [ -n "$(which xkb-switch 2>/dev/null)" ]
+            if is_exe_exist xkb-switch
                 then
                     xkb-switch -s us 2>/dev/null
                 else
@@ -3934,11 +3948,11 @@ us_layout_sw() {
 
 check_mangohud() {
     [ -n "$1" ] && export LWMANGOHUD="$1"
-    if [[ "$LWMANGOHUD" != "Disabled" ]]
+    if [[ "$LWMANGOHUD" != "0" && "$LWMANGOHUD" != "Disabled" ]]
         then
-            if [ -n "$(which mangohud 2>/dev/null)" ]
+            if is_exe_exist mangohud
                 then
-                    if [[ "$LWMANGOHUD" == "Vulkan" && "$WINED3D" != 1 ]]
+                    if [ "$WINED3D" != 1 ]
                         then
                             export RUN_MANGOHUD="mangohud"
                         else
@@ -3970,18 +3984,19 @@ check_fps_limit() {
         then
             if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 && -n "$RUN_MANGOHUD" ]]
                 then
+                    add_fps_limit="toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0"
                     if [ -n "$MANGOHUDCFG" ]
                         then
-                            if [ ! -n "$(echo $MANGOHUDCFG|grep -wo "fps_limit")" ]
-                                then
-                                    export MANGOHUD_CONFIG="$(echo "${MANGOHUDCFG},toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0")"
-                            fi
+                            [[ ! "$MANGOHUDCFG" =~ "fps_limit" ]] && \
+                                export MANGOHUD_CONFIG="${MANGOHUDCFG},$add_fps_limit"
                         else
-                            export MANGOHUD_CONFIG="$DEF_MANGOHUDCFG,toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0"
+                            export MANGOHUD_CONFIG="${DEF_MANGOHUDCFG},$add_fps_limit"
                     fi
-             elif [ -n "$(which strangle 2>/dev/null)" ]
+             elif is_exe_exist strangle
                 then
-                    export RUN_FPSLIMIT="strangle -f $FPS_LIMIT"
+                    [ "$WINED3D" == "1" ] && \
+                        export RUN_FPSLIMIT="strangle -f $FPS_LIMIT"||\
+                        export RUN_FPSLIMIT="strangle -n -k -f $FPS_LIMIT"
                 else
                     print_error yad "libstrangle and MANGOHUD not available, FPS limiter is disabled!"
                     unset RUN_FPSLIMIT
@@ -3995,7 +4010,7 @@ check_gamemode() {
     [ -n "$1" ] && export GAMEMODE="$1"
     if [ "$GAMEMODE" == 1 ]
         then
-            if [ -n "$(which gamemoderun 2>/dev/null)" ]
+            if is_exe_exist gamemoderun
                 then
                     export RUN_GAMEMODE="gamemoderun"
                 else
@@ -4164,7 +4179,7 @@ check_proton_d3dlib() {
 check_dxvk() {
     [ -n "$1" ] && export DXVK="$1"
     [ -n "$2" ] && export DXVK_VERSION="$2"
-    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi"
+    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi,openvr_api_dxvk,dxvk_config"
     if [[ "$DXVK" == 1 && "$WINED3D" != 1 ]]
         then
             [ "$DXVK_VERSION" == "Default" ] && \
@@ -4182,7 +4197,7 @@ check_dxvk() {
                                 then
                                     try_ln "$WINEDIR/lib/wine/i386-windows/dxgi.dll" "$PFX_DLL32_PTH" &>/dev/null
                             fi
-                            if [ "$WINEARCH" != "win32" ]
+                            if [ "$WINEARCH" == "win64" ]
                                 then
                                     if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
                                         then
@@ -4230,7 +4245,7 @@ check_vkd3d() {
             if dll_manager "vkd3d" "$VKD3D_VERSION"
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
-                    export VKD3D_FEATURE_LEVEL=12_0
+                    export VKD3D_FEATURE_LEVEL=12_1
                     try_mkdir "$LW_DEF_CACHE/vkd3d_cache"
                     export VKD3D_SHADER_CACHE_PATH="$LW_DEF_CACHE/vkd3d_cache"
                     unset GIT_RELEASE_URL
@@ -4307,11 +4322,13 @@ check_dxvk-nvapi() {
                     wdllover_upd "nvapi,nvapi64=n;nvcuda=b"
                 else
                     export DXVK_NVAPI=0
+                    unset DXVK_ENABLE_NVAPI DXVK_NVAPIHACK
                     wdllover_upd "${ALLNVAPIDLLS}=b"
                     print_error yad "DXVK-NVAPI is disabled!"
             fi
         else
             export DXVK_NVAPI=0
+            unset DXVK_ENABLE_NVAPI DXVK_NVAPIHACK
             wdllover_upd "${ALLNVAPIDLLS}=b"
             print_info "DXVK-NVAPI is disabled!"
     fi
@@ -4375,7 +4392,7 @@ check_battleye() {
     [ -n "$1" ] && export BATTLEYE="$1"
     if [ "$BATTLEYE" == 1 ]
         then
-            if [ -d "$STMBATTLEYE" ]
+            if [[ -d "$STMBATTLEYE" && "$FORCE_UPDATE" != 1 ]]
                 then
                     export PROTON_BATTLEYE_RUNTIME="$STMBATTLEYE"
                 else
@@ -4398,7 +4415,7 @@ check_eac() {
     [ -n "$1" ] && export EAC="$1"
     if [ "$EAC" == 1 ]
         then
-            if [ -d "$STMEAC" ]
+            if [[ -d "$STMEAC" && "$FORCE_UPDATE" != 1 ]]
                 then
                     export PROTON_EAC_RUNTIME="$STMEAC"
                 else
@@ -4420,9 +4437,10 @@ runtime_manager() {
     try_mkdir "$LW_RUNTIME_DIR"
     GIT_RELEASE_URL="$BUILD_GIT_RELEASE_URL"
     [ ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -print 2>/dev/null)" ] && FORCE_UPDATE=1
-    if [[ -n "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 \
-        && ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
-        || [ -n "$FORCE_UPDATE" ]
+    #if [[ -n "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 \
+    #    && ! -n "$(cd "$LW_RUNTIME_DIR" ; find ~+ -type d -name "$1"* -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
+    #    || [ -n "$FORCE_UPDATE" ]
+    if [ "$FORCE_UPDATE" == 1 ]
         then
             if [ "$NETSTATUS" == 1 ]
                 then
@@ -4498,6 +4516,7 @@ winepfx_init() {
 check_winepfx() {
     [ -n "$1" ] && export WINEPREFIX="$1"
     [ -n "$2" ] && export WINEARCH="$2"
+    WPFX_STEAMUSER_DIR="$WINEPREFIX/drive_c/users/steamuser"
     if [[ "$WINEARCH" == "win64" && "$WINEPREFIX" =~ "defprefix" && -f "$LWRAP_DEFPFX" ]] && \
         [[ ! -f "$WINEPREFIX/userdef.reg" || ! -f "$WINEPREFIX/system.reg" \
         || ! -f "$WINEPREFIX/user.reg" || ! -f "$WINEPREFIX/.update-timestamp" ]]
@@ -4512,9 +4531,6 @@ check_winepfx() {
             "The prefix architecture [ $PFXARCH ] mismatch with config file [ $WINEARCH ]\nIt is necessary to clear the current prefix, or initialize a new one!"
             PFXARCH_MISMATCH=1 lu_clearpfx
     fi
-    DESKTOP_XDG=("DESKTOP" "DOCUMENTS" "MUSIC" "VIDEOS" "PICTURES" "DOWNLOAD" "TEMPLATES")
-    DEF_WDESK_MYDIR=("Desktop" "My Documents" "My Music" "My Videos" "My Pictures" "My Downloads" "My Templates")
-    DEF_WDESK_DIR=("Desktop" "Documents" "Music" "Videos" "Pictures" "Downloads" "Templates")
     export WTRX_LOG="$WINEPREFIX/winetricks.log"
     if [ "$WINEARCH" == "win32" ]
         then
@@ -4529,20 +4545,20 @@ check_winepfx() {
     try_mkdir "$PFX_DLL32_PTH"
     try_mkdir "$WINEPREFIX/drive_c"
     try_mkdir "$WINEPREFIX/dosdevices"
-    try_mkdir "$WINEPREFIX/drive_c/users/steamuser"
+    try_mkdir "$WPFX_STEAMUSER_DIR"
     [ ! -d "$WINEPREFIX/dosdevices/c:" ] && \
         try_ln "$WINEPREFIX/drive_c" "$WINEPREFIX/dosdevices/c:"
     [ ! -d "$WINEPREFIX/dosdevices/z:" ] && \
         try_ln "/" "$WINEPREFIX/dosdevices/z:"
     if [[ -d "$WINEPREFIX/drive_c/users/$USER" && ! -L "$WINEPREFIX/drive_c/users/$USER" ]]
         then
-            if try_cp "$WINEPREFIX/drive_c/users/$USER/"* "$WINEPREFIX/drive_c/users/steamuser/"
+            if try_cp "$WINEPREFIX/drive_c/users/$USER/"* "$WPFX_STEAMUSER_DIR/"
                 then
                     try_rm "$WINEPREFIX/drive_c/users/$USER"
             fi
     fi
     [ ! -d "$WINEPREFIX/drive_c/users/$USER" ] && \
-        try_ln "$WINEPREFIX/drive_c/users/steamuser" "$WINEPREFIX/drive_c/users/$USER"
+        try_ln "$WPFX_STEAMUSER_DIR" "$WINEPREFIX/drive_c/users/$USER"
     for comprt in {1..32}
         do
             if [ ! -L "$WINEPREFIX/dosdevices/com$comprt" ]
@@ -4555,24 +4571,12 @@ check_winepfx() {
         then
             winepfx_init
     fi
-    (IFS=$'\n' ; while read XDGDESK_DIR <&3 && read WINEDESK_DIR <&4
+    DEF_WDESK_DIR=("Desktop" "Documents" "Music" "Videos" "Pictures" "Downloads" "Templates")
+    (IFS=$'\n' ; for WINEDESK_DIR in "${DEF_WDESK_DIR[@]}"
         do
-            XDGUSERDIRPTH="$(xdg-user-dir $XDGDESK_DIR)"
-            WDESKDIRPTH="$WINEPREFIX/drive_c/users/steamuser/$WINEDESK_DIR"
-            if [[ -n "$WINE_SANDBOX" && "$WINE_SANDBOX" == 0 ]]
-                then
-                    if [ "$DESKLNK" != "$XDGUSERDIRPTH" ]
-                        then
-                            if [[ ! -L "$WDESKDIRPTH" && -d "$WDESKDIRPTH" ]]
-                                then
-                                    try_mv "$WDESKDIRPTH" "$WDESKDIRPTH.bc"
-                            elif [[ -L "$WDESKDIRPTH" && ! -d "$WDESKDIRPTH" ]]
-                                then
-                                    try_rm "$WDESKDIRPTH"
-                            fi
-                            [ ! -d "$WDESKDIRPTH" ] && try_ln "$XDGUSERDIRPTH" "$WDESKDIRPTH"
-                    fi
-            elif [[ -n "$WINE_SANDBOX" && "$WINE_SANDBOX" == 1 ]]
+            XDGUSERDIRPTH="$HOME/$WINEDESK_DIR"
+            WDESKDIRPTH="$WPFX_STEAMUSER_DIR/$WINEDESK_DIR"
+            if [ "$WINE_SANDBOX" == 1 ]
                 then
                     if [[ -L "$WDESKDIRPTH" && -d "$WDESKDIRPTH.bc" ]]
                         then
@@ -4583,34 +4587,54 @@ check_winepfx() {
                             try_rm "$WDESKDIRPTH"
                             try_mkdir $WDESKDIRPTH
                     fi
-            fi
-    done 3< <(printf '%s\n' "${DESKTOP_XDG[@]}") 4< <(printf '%s\n' "${DEF_WDESK_DIR[@]}"))
-    try_rm_broken_link "$WINEPREFIX/drive_c/users/steamuser"
-    (IFS=$'\n' ; for winedir_ln in ${DEF_WDESK_MYDIR[@]/Desktop}
-        do
-            DESKDIRLNK="$WINEPREFIX/drive_c/users/steamuser/$winedir_ln"
-            NOMYDESKDIR="$WINEPREFIX/drive_c/users/steamuser/$(echo "$winedir_ln"|sed 's/^My //')"
-            if [[ ! -L "$DESKDIRLNK" && ! -d "$DESKDIRLNK" ]]
-                then
-                    try_mkdir "$NOMYDESKDIR"
-                    try_ln "$NOMYDESKDIR" "$DESKDIRLNK"
-            elif [[ -L "$DESKDIRLNK" && ! -n "$(readlink -f "$DESKDIRLNK"|grep -o 'steamuser')" ]]
-                then
-                    try_rm "$DESKDIRLNK"
-                    try_ln "$NOMYDESKDIR" "$DESKDIRLNK"
+                else
+                    DESKLNK="$(readlink -f "$WDESKDIRPTH")"
+                    if [ "$DESKLNK" != "$XDGUSERDIRPTH" ]
+                        then
+                            if [[ ! -L "$WDESKDIRPTH" && -d "$WDESKDIRPTH" ]]
+                                then
+                                    try_mv "$WDESKDIRPTH" "$WDESKDIRPTH.bc"
+                            elif [[ -L "$WDESKDIRPTH" && ! -d "$WDESKDIRPTH" ]]
+                                then
+                                    try_rm "$WDESKDIRPTH"
+                            fi
+                            [ ! -d "$WDESKDIRPTH" ] && \
+                                try_ln "$XDGUSERDIRPTH" "$WDESKDIRPTH"
+                    fi
             fi
     done)
-    DESKAPPDATA="$WINEPREFIX/drive_c/users/steamuser/Application Data"
-    DESKLOCSETT="$WINEPREFIX/drive_c/users/steamuser/Local Settings"
+    try_rm_broken_link "$WPFX_STEAMUSER_DIR"
+    local test_mydocu="$WPFX_STEAMUSER_DIR/My Documents"
+    if [[ ! -L "$test_mydocu" && ! -d "$test_mydocu" ]]
+        then
+            echo pizdes
+            DEF_WDESK_MYDIR=("Desktop" "My Documents" "My Music" "My Videos" "My Pictures" "My Downloads" "My Templates")
+            (IFS=$'\n' ; for winedir_ln in ${DEF_WDESK_MYDIR[@]/Desktop}
+                do
+                    DESKDIRLNK="$WPFX_STEAMUSER_DIR/$winedir_ln"
+                    NOMYDESKDIR="$WPFX_STEAMUSER_DIR/$(echo "$winedir_ln"|sed 's/^My //')"
+                    if [[ ! -L "$DESKDIRLNK" && ! -d "$DESKDIRLNK" ]]
+                        then
+                            try_mkdir "$NOMYDESKDIR"
+                            try_ln "$NOMYDESKDIR" "$DESKDIRLNK"
+                    elif [[ -L "$DESKDIRLNK" && ! -n "$(readlink -f "$DESKDIRLNK"|grep -o 'steamuser')" ]]
+                        then
+                            try_rm "$DESKDIRLNK"
+                            try_ln "$NOMYDESKDIR" "$DESKDIRLNK"
+                    fi
+            done)
+    fi
+    DESKAPPDATA="$WPFX_STEAMUSER_DIR/Application Data"
+    DESKLOCSETT="$WPFX_STEAMUSER_DIR/Local Settings"
     if [[ ! -d "$DESKAPPDATA" || ! -n "$(readlink -f "$DESKAPPDATA"|grep -o 'steamuser')" ]]
         then
             try_rm "$DESKAPPDATA" &>/dev/null
-            try_ln "$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming" "$DESKAPPDATA"
+            try_ln "$WPFX_STEAMUSER_DIR/AppData/Roaming" "$DESKAPPDATA"
     fi
     if [[ ! -d "$DESKLOCSETT" || ! -n "$(readlink -f "$DESKLOCSETT"|grep -o 'steamuser')" ]]
         then
             try_rm "$DESKLOCSETT" &>/dev/null
-            try_ln "$WINEPREFIX/drive_c/users/steamuser/AppData/Local" "$DESKLOCSETT"
+            try_ln "$WPFX_STEAMUSER_DIR/AppData/Local" "$DESKLOCSETT"
     fi
     WPFX_FONTS="$WINEPREFIX/drive_c/windows/Fonts"
     WINE_FONTS="$WINEDIR/share/fonts"
@@ -4731,24 +4755,25 @@ check_ld_library() {
 
 check_path() {
     [ -n "$1" ] && path_upd "$1"
-    [[ -n "$(which -a 'cabextract' 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)" \
-    && -d "$WINEDIR" && -f "$WINEDIR/bin/cabextract" ]] && try_rm "$WINEDIR/bin/cabextract" &>/dev/null
+    [[ -d "$WINEDIR" && -f "$WINEDIR/bin/cabextract" && \
+    -n "$(which -a cabextract 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)" ]] && \
+        try_rm "$WINEDIR/bin/cabextract" &>/dev/null
     path_upd "$WINEDIR/bin"
 }
 
 check_hold_terminal() {
     if [[ "$HOLD_TERMINAL" == 1 ]]
         then
-            if [[ "$1" == "gnome" || -n "$(echo "$LW_TERM_APP"|grep -wo "gnome-terminal")" ]]
+            if [[ "$1" == "gnome" || "$LW_TERM_APP" =~ "gnome-terminal" ]]
                 then
                     unset HOLD_TERMINAL TERM_HOLD
-            elif [[ "$1" == "lxterm" || -n "$(echo "$LW_TERM_APP"|grep -wo "lxterminal")" ]]
+            elif [[ "$1" == "lxterm" || "$LW_TERM_APP" =~ "lxterminal" ]]
                 then
                     unset HOLD_TERMINAL TERM_HOLD
-            elif [[ "$1" == "xterm" || -n "$(echo "$LW_TERM_APP"|grep -wo 'xterm')" ]]
+            elif [[ "$1" == "xterm" || "$LW_TERM_APP" =~ "xterm" ]]
                 then
                     export TERM_HOLD="-hold"
-            elif [[ "$1" == "deepin" || -n "$(echo "$LW_TERM_APP"|grep -wo 'deepin')" ]]
+            elif [[ "$1" == "deepin" || "$LW_TERM_APP" =~ "deepin" ]]
                 then
                     export TERM_HOLD="--keep-open"
             else
@@ -4762,43 +4787,43 @@ check_hold_terminal() {
 check_terminal() {
     [ -n "$1" ] && export LW_TERM_APP="$1"
     check_hold_terminal
-    if [[ -n "$LW_TERM_APP" && -n "$(which "$(basename "$LW_TERM_APP")" 2>/dev/null)" ]]
+    if [[ -n "$LW_TERM_APP" && -n "$(which_exe "$(basename "$LW_TERM_APP")" 2>/dev/null)" ]]
         then
-            if [ -n "$(echo "$LW_TERM_APP"|grep -wo "gnome-terminal")" ]
+            if [[ "$LW_TERM_APP" =~ "gnome-terminal" ]]
                 then
                     export TERM_APP="$LW_TERM_APP --wait --"
-            elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "lxterminal")" ]
+            elif [[ "$LW_TERM_APP" =~ "lxterminal" ]]
                 then
                     export TERM_APP="$LW_TERM_APP -e"
-            elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "xfce4-terminal")" ]
+            elif [[ "$LW_TERM_APP" =~ "xfce4-terminal" ]]
                 then
                     export TERM_APP="$LW_TERM_APP --disable-server $TERM_HOLD -x"
-            elif [ -n "$(echo "$LW_TERM_APP"|grep -wo "xterm")" ]
+            elif [[ "$LW_TERM_APP" =~ "xterm" ]]
                 then
                     export TERM_APP="$LW_TERM_APP -bg black -fg white $TERM_HOLD -e"
             else
                 export TERM_APP="$LW_TERM_APP $TERM_HOLD -e"
             fi
         else
-            if [ -n "$(which konsole 2>/dev/null)" ]
+            if is_exe_exist konsole
                 then
                     export TERM_APP="konsole $TERM_HOLD -e"
-            elif [ -n "$(which gnome-terminal 2>/dev/null)" ]
+            elif is_exe_exist gnome-terminal
                 then
                     check_hold_terminal gnome
                     export TERM_APP="gnome-terminal --wait --"
-            elif [ -n "$(which kitty 2>/dev/null)" ]
+            elif is_exe_exist kitty
                 then
                     export TERM_APP="kitty $TERM_HOLD -e"
-            elif [ -n "$(which deepin-terminal 2>/dev/null)" ]
+            elif is_exe_exist deepin-terminal
                 then
                     check_hold_terminal deepin
                     export TERM_APP="deepin-terminal $TERM_HOLD -e"
-            elif [ -n "$(which lxterminal 2>/dev/null)" ]
+            elif is_exe_exist lxterminal
                 then
                     check_hold_terminal lxterm
                     export TERM_APP="lxterminal -e"
-            elif [ -n "$(which xfce4-terminal 2>/dev/null)" ]
+            elif is_exe_exist xfce4-terminal
                 then
                     export TERM_APP="xfce4-terminal --disable-server $TERM_HOLD -x"
             else
@@ -4815,7 +4840,9 @@ check_pulse_latency() {
 
 check_vkbasalt_cfg() {
     try_mkdir "$(dirname "$VKBASALT_CONFIG_FILE")"
-    if [[ ! -f "$VKBASALT_CONFIG_FILE" && -d "$LW_RESHADE_DIR" ]] || [[ -f "$VKBASALT_CONFIG_FILE" && -d "$LW_RESHADE_DIR" && ! -n "$(grep -wo "$LW_RESHADE_DIR" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
+    if [[ ! -f "$VKBASALT_CONFIG_FILE" && -d "$LW_RESHADE_DIR" ]] || \
+    [[ -f "$VKBASALT_CONFIG_FILE" && -d "$LW_RESHADE_DIR" && \
+        ! -n "$(grep -wo "$LW_RESHADE_DIR" "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
         then
             echo -e "reshadeTexturePath = "$LW_RESHADE_DIR"/textures\nreshadeIncludePath = "$LW_RESHADE_DIR"/shaders" > "$VKBASALT_CONFIG_FILE"
             (while read RES_NAME <&3 && read RES_FLPTH <&4
@@ -4823,7 +4850,8 @@ check_vkbasalt_cfg() {
                     echo "$RES_NAME = $RES_FLPTH"
             done 3< <(ls -1 "$LW_RESHADE_DIR"/shaders/*.fx|sed 's/.fx$//'|xargs -I {} basename {}) \
                  4< <(ls -1 "$LW_RESHADE_DIR"/shaders/*.fx)) >> "$VKBASALT_CONFIG_FILE"
-    elif [[ -f "$VKBASALT_CONFIG_FILE" && ! -d "$LW_RESHADE_DIR" && -n "$(grep -wo 'reshadeTexturePath' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
+    elif [[ -f "$VKBASALT_CONFIG_FILE" && ! -d "$LW_RESHADE_DIR" && \
+            -n "$(grep -wo 'reshadeTexturePath' "$VKBASALT_CONFIG_FILE" 2>/dev/null)" ]]
         then
             try_rm "$VKBASALT_CONFIG_FILE"
             export VKBASALT_EFFECTS="cas"
@@ -4876,8 +4904,8 @@ check_vkbasalt_eff() {
                     sed -i "/casSharpness.*/d" "$VKBASALT_CONFIG_FILE" 2>/dev/null
             fi
         else
+            unset VKBASALT ENABLE_VKBASALT
             export DISABLE_VKBASALT=1
-            unset VKBASALT
             print_info notify "VkBasalt is disabled!"
     fi
 }
@@ -4886,8 +4914,8 @@ check_reset_pulse() {
     [ -n "$1" ] && export RESET_PULSE="$1"
     if [ "$RESET_PULSE" == 1 ]
         then
-            if [[ -n "$(which pulseeffects 2>/dev/null)" && \
-                  -n "$(pgrep pulseeffects)" && -n "$(pgrep pulseaudio)" ]]
+            if is_exe_exist pulseeffects && \
+                 [[ -n "$(pgrep pulseeffects)" && -n "$(pgrep pulseaudio)" ]]
                 then
                     pkill -15 pulseeffects
                     pulseaudio -k
@@ -4915,7 +4943,8 @@ check_win_version() {
     [ -n "$1" ] && export WIN_VER="$1"
     if [ ! -n "$(cat "$WINEPREFIX/system.reg" 2>/dev/null|grep -i "Microsoft Windows $WIN_VER" 2>/dev/null)" ]
         then
-            [[ -n "$WIN_VER" && "$WIN_VER" == "xp" ]] && export WIN_VER="xp64"
+            [[ "$WIN_VER" == "xp" && "$WINEARCH" == "win64" ]] && \
+                export WIN_VER="xp64"
             check_wine_pids
             [[ ! -n "$WINE_PIDS" && -n "$OLD_WINE" ]] && unset OLD_WINE
             check_ld_library
@@ -5004,10 +5033,11 @@ check_resizable_bar() {
 check_winetricks() {
     if [[ "$SYS_WINETRICKS" != 1 || "$FORCE_UPDATE" == 1 ]]
         then
-            if [[ "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && \
-                ! -n "$(find "$LW_WTRX_DIR" -type f -name "winetricks" \
-                    -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || \
-                [ "$FORCE_UPDATE" == 1 ]
+            #if [[ "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 && \
+            #    ! -n "$(find "$LW_WTRX_DIR" -type f -name "winetricks" \
+            #        -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] || \
+            #    [ "$FORCE_UPDATE" == 1 ]
+            if [[ ! -f "$LW_WTRX_DIR/winetricks" || "$FORCE_UPDATE" == 1 ]]
                 then
                     try_mkdir "$LW_WTRX_DIR"
                     try_download "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks" \
@@ -5020,10 +5050,10 @@ upd_winetricks() {
     FORCE_UPDATE=1 check_winetricks
 }
 upd_battleye() {
-    FORCE_UPDATE=1 check_battleye
+    FORCE_UPDATE=1 check_battleye 1
 }
 upd_eac() {
-    FORCE_UPDATE=1 check_eac
+    FORCE_UPDATE=1 check_eac 1
 }
 upd_d3d_extras() {
     sed -i '/D3D_EXTRAS_VERSION.*/d' "$LW_CFG" 2>/dev/null
@@ -5179,7 +5209,7 @@ lu_update() {
 
 check_us_switcher() {
     [ -n "$1" ] && export US_LAYOUT="$1"
-    if [[ "$US_LAYOUT" == 1 && ! -n "$(which xkb-switch 2>/dev/null)" ]]
+    if [ "$US_LAYOUT" == 1 ] && ! is_exe_exist xkb-switch
         then
             export US_LAYOUT=0
             sed -i "s/US_LAYOUT.*/US_LAYOUT='0'/g" "$LW_CFG" 2>/dev/null
@@ -5188,14 +5218,14 @@ check_us_switcher() {
 }
 
 check_other_fixes() {
-    if [ -n "$(cat "$WINEPREFIX/system.reg" 2>/dev/null|grep -wm 1 "Origin.exe"|awk '{print $1}')" ]
+    if [ -n "$(grep -wm1 "Origin.exe" "$WINEPREFIX/system.reg" 2>/dev/null)" ]
         then
             sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg" 2>/dev/null|grep 'OriginWebHelperService'|awk '{print $1}') + 3)))
             sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
     fi
     for fix_reg in "PnkBstrA.exe" "PnkBstrB.exe"
         do
-            if [ -n "$(cat "$WINEPREFIX/system.reg" 2>/dev/null|grep -wm 1 "$fix_reg"|awk '{print $1}')" ]
+            if [ -n "$(grep -wm1 "$fix_reg" "$WINEPREFIX/system.reg" 2>/dev/null)" ]
                 then
                     sysreg_norig=$((($(cat -n "$WINEPREFIX/system.reg" | grep "$fix_reg" | awk '{print $1}') + 3)))
                     sed -i "${sysreg_norig}s/dword:0000000[1-2]/dword:00000003/" "$WINEPREFIX/system.reg"
@@ -5222,6 +5252,7 @@ check_other_fixes() {
     export __GL_SHADER_DISK_CACHE_PATH="$LW_DEF_CACHE/gl_shader_cache"
     export __GL_SHADER_DISK_CACHE=1
     export __GL_SHADER_DISK_CACHE_SIZE="1000000000"
+    export RADV_PERFTEST='rt,gpl'
 }
 
 check_videodrv() {
@@ -5231,17 +5262,16 @@ check_videodrv() {
         export WD3DMODE="WineD3D"
         print_info notify "Vulkan API is unavailable in your system!"
     }
-    #SYSGLXINFO="$(DISABLE_MANGOHUD=1 glxinfo -B 2>/dev/null|grep "Device")"
-    SYSVKINFO="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 vulkaninfo --summary 2>/dev/null|grep driverName|awk '{print$3}')"
-    if [ ! -n "$(echo "$SYSVKINFO"|head -1)" ]
+    if is_exe_exist lsvkdev
         then
-            disable_native_d3dlls
-    elif [[ -n "$(echo "$SYSVKINFO"|grep -wo "llvmpipe")" && "$(echo "$SYSVKINFO"|wc -l)" == 1 ]]
-        then
-            disable_native_d3dlls
-    elif [[ -n "$(echo "$SYSGLXINFO"|grep -wo "virgl")" && "$(echo "$SYSGLXINFO"|wc -l)" == 1 ]]
-        then
-            disable_native_d3dlls
+            SYS_VK_DRV="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 lsvkdev -d 2>/dev/null)"
+    else
+        SYS_VK_DRV="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 vulkaninfo --summary \
+                    2>/dev/null|grep driverName|awk '{print$3}'|head -1)"
+    fi
+    VK_DRV_BLKLST=("llvmpipe" "virgl")
+    if [ ! -n "$SYS_VK_DRV" ] || [[ "${VK_DRV_BLKLST[@]}" =~ "$SYS_VK_DRV" ]]
+        then disable_native_d3dlls
     fi
 }
 
@@ -5297,7 +5327,7 @@ export_all_functions() {
         check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell unpack_squash \
         check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
-        runtime_manager upd_battleye \
+        runtime_manager upd_battleye is_exe_exist which_exe \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config \
         settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
@@ -5332,7 +5362,7 @@ check_loadbar_cover() {
 }
 
 loadbar_cover() {
-    if [ "$LOADBAR" != 0 ]
+    if [[ "$LOADBAR" != 0 && "$TERMINAL" != 1 ]]
         then
             if [ -n "$1" ]
                 then GIF_FILE="$1"
@@ -5409,7 +5439,7 @@ makesquash_zstd() {
                         else squashpath="$2/"
                     fi
             fi
-            if [ -n "$(which mksquashfs 2>/dev/null)" ]
+            if is_exe_exist mksquashfs
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").zst.$extension"
                     print_info "Making SquashFS ZSTD image : [ $squashmane ]\n[ FROM ]: [ $squashsource ] [ COMPRESS LVL ]: $compres_lvl \n[  TO  ]: [ ${squashpath}$squashmane ]"
@@ -5443,7 +5473,7 @@ makesquash_xz() {
                         else squashpath="$2/"
                     fi
             fi
-            if [ -n "$(which mksquashfs 2>/dev/null)" ]
+            if is_exe_exist mksquashfs
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").xz.$extension"
                     print_info "Making SquashFS XZ image : [ $squashmane ]\n[ FROM ]: [ $squashsource ]\n[  TO  ]: [ ${squashpath}$squashmane ]"
@@ -5476,7 +5506,7 @@ unpack_squash() {
                         else unsquashpath="$2/"
                     fi
             fi
-            if [ -n "$(which unsquashfs 2>/dev/null)" ]
+            if is_exe_exist unsquashfs
                 then
                     unsquashimage="$(basename "$unsquashsource")"
                     unsquashmane="$(echo "$unsquashimage"|awk -F'.' '{print $1}')"
@@ -5577,13 +5607,19 @@ lu_pfxrestore() {
         select_lwpfx "$1" && lu_pfxrestore
     }
     pfxrestore() {
-        try_mkdir "$LW_DEF_TMP"
-        try_mkdir "$LW_DEF_WPFXS_DIR"
-        try_rm "${LW_DEF_TMP}/$LWPFX_NAME" &>/dev/null
-        if unpack_squash "$LU_LWPFX" "$LW_DEF_TMP"
+        if [ "$PFX_OVER_RESTORE" != 1 ]
             then
-                try_rm "$PFXRESTORE_DIR" &>/dev/null
-                try_mv "${LW_DEF_TMP}/$LWPFX_NAME" "${LW_DEF_WPFXS_DIR}/"
+                try_mkdir "$LW_DEF_TMP"
+                try_mkdir "$LW_DEF_WPFXS_DIR"
+                try_rm "${LW_DEF_TMP}/$LWPFX_NAME" &>/dev/null
+        fi
+        if unpack_squash "$LU_LWPFX" "$([ "$PFX_OVER_RESTORE" == 1 ] && echo "${LW_DEF_WPFXS_DIR}/"||echo "$LW_DEF_TMP")"
+            then
+                if [ "$PFX_OVER_RESTORE" != 1 ]
+                    then
+                        try_rm "$PFXRESTORE_DIR" &>/dev/null
+                        try_mv "${LW_DEF_TMP}/$LWPFX_NAME" "${LW_DEF_WPFXS_DIR}/"
+                fi
                 try_rm "$LW_DIR/.lwcfgchksum"
                 print_info notify "The prefix backup is successfully restored!"
                 [ "$NO_FLMGR" != 1 ] && \
@@ -5650,7 +5686,7 @@ lu_pfxrestore() {
 
 lu_backupmnt() {
     [ -f "$1" ] && export LU_LWPFX="$1"
-    if [ -n "$(which squashfuse 2>/dev/null)" ]
+    if is_exe_exist squashfuse
         then
             if [ -f "$LU_LWPFX" ]
                 then
@@ -5698,7 +5734,7 @@ lu_backupmnt() {
 
 lu_backupunmnt() {
     [ -f "$1" ] && export LU_LWPFX="$1"
-    if [ -n "$(which fusermount 2>/dev/null)" ]
+    if is_exe_exist fusermount
         then
             if [ -f "$LU_LWPFX" ]
                 then

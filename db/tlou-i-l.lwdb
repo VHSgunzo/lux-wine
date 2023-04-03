@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-check_win_version '10'
+check_win_version 10
 
 # The Last Of Us Part I fix for Nvidia
 
@@ -29,5 +29,6 @@ if [ -n "$(lspci|grep -o NVIDIA)" ]
     then
         export NVAPI_GIT_RELEASE_URL="https://api.github.com/repos/VHSgunzo/nvapi/releases"
         export DXVK_NVAPI_DRIVER_VERSION=53141
+        export CHK_UPDATE=0
         check_dxvk-nvapi '1' 'v0.6.2-14-gc10c4fc'
 fi

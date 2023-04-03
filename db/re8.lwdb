@@ -1,6 +1,6 @@
 #!/bin/bash
-check_win_version '10'
+check_win_version 10
 try_mkdir "$WINEPREFIX/drive_c/Program Files (x86)/Steam/userdata/418370/remote/win64_save"
-check_gstreamer '1'
-check_mangohud 'Disabled'
-check_dxr 'Disabled'
+check_gstreamer 1
+check_mangohud Disabled
+check_dxr Disabled
