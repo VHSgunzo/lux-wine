@@ -76,6 +76,14 @@ lwrun --update
 lwrun --uninstall
 ```
 
+## Keyboard shortcuts:
+### **MangoHud:**
+* Show/Hide `MangoHud`: `R_Shift+F12`
+* Disable/Enable `FPS limit`: `L_Shift+F1`
+
+### **VkBasalt:**
+* Disable/Enable `VkBasalt Effects`: `HOME`
+
 ## Features:
 - [x] Easy installation without root rights and dependencies
 - [x] Quick initialization and launch
