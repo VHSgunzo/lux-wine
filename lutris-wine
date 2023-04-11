@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.76.9"
+export LW_VERSION="0.77.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -3952,12 +3952,13 @@ check_mangohud() {
         then
             if is_exe_exist mangohud
                 then
-                    if [ "$WINED3D" != 1 ]
+                    if [ "$WINED3D" == 1 ]
                         then
-                            export RUN_MANGOHUD="mangohud"
-                        else
                             print_info "MANGOHUD in OpenGL mode!"
                             export RUN_MANGOHUD="mangohud --dlsym"
+                        else
+                            export MANGOHUD=1
+                            unset RUN_MANGOHUD
                     fi
                     if [[ ! -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
                         then
@@ -3982,7 +3983,7 @@ check_fps_limit() {
     [ -n "$1" ] && export FPS_LIMIT="$1"
     if [[ -n "$FPS_LIMIT" && "$FPS_LIMIT" != 0 ]]
         then
-            if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 && -n "$RUN_MANGOHUD" ]]
+            if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 ]] && [[ -n "$RUN_MANGOHUD" || "$MANGOHUD" == 1 ]]
                 then
                     add_fps_limit="toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0"
                     if [ -n "$MANGOHUDCFG" ]

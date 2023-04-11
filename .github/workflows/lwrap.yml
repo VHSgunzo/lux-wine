@@ -1,4 +1,4 @@
-name: 'Submodule Notify Parent'
+name: 'Update lwrap'
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   notify:
-    name: 'Submodule Notify Parent'
+    name: 'Update lwrap'
     runs-on: ubuntu-latest
 
     defaults:
