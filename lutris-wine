@@ -4219,11 +4219,13 @@ check_dxvk() {
                     export DXVK=0
                     wdllover_upd "${ALLDXVKDLLS}=b"
                     print_error yad "DXVK is disabled!"
+                    return 1
             fi
         else
             export DXVK=0
             wdllover_upd "${ALLDXVKDLLS}=b"
             print_info "DXVK is disabled!"
+            return 1
     fi
 }
 
@@ -4254,11 +4256,13 @@ check_vkd3d() {
                     export VKD3D=0
                     wdllover_upd "${ALLVKD3DDLLS}=b"
                     print_error yad "VKD3D is disabled!"
+                    return 1
             fi
         else
             export VKD3D=0
             wdllover_upd "${ALLVKD3DDLLS}=b"
             print_info "VKD3D is disabled!"
+            return 1
     fi
 }
 
@@ -4326,12 +4330,14 @@ check_dxvk-nvapi() {
                     unset DXVK_ENABLE_NVAPI DXVK_NVAPIHACK
                     wdllover_upd "${ALLNVAPIDLLS}=b"
                     print_error yad "DXVK-NVAPI is disabled!"
+                    return 1
             fi
         else
             export DXVK_NVAPI=0
             unset DXVK_ENABLE_NVAPI DXVK_NVAPIHACK
             wdllover_upd "${ALLNVAPIDLLS}=b"
             print_info "DXVK-NVAPI is disabled!"
+            return 1
     fi
 }
 
@@ -4351,11 +4357,13 @@ check_d3d_extras() {
                     export D3D_EXTRAS=0
                     wdllover_upd "${ALLD3DEXTRADLLS}=b"
                     print_error yad "D3D EXTRAS is disabled!"
+                    return 1
             fi
         else
             export D3D_EXTRAS=0
             wdllover_upd "${ALLD3DEXTRADLLS}=b"
             print_info "D3D EXTRAS is disabled!"
+            return 1
     fi
 }
 
@@ -4380,12 +4388,14 @@ check_dgvoodoo2() {
                     export DGVOODOO2=0
                     wdllover_upd "${ALLDGVOODOO2DLLS}=b"
                     print_error yad "DGVOODOO2 is disabled!"
+                    return 1
             fi
         else
             export DGVOODOO2=0
             wdllover_upd "${ALLDGVOODOO2DLLS}=b"
             [ "$WINED3D" == 1 ] && \
                 print_info "DGVOODOO2 is disabled!"
+            return 1
     fi
 }
 
