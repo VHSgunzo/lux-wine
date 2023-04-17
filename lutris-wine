@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.1"
+export LW_VERSION="0.77.2"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -4063,6 +4063,30 @@ check_wd3dmode() {
     esac
 }
 
+try_ln_wine_build_dll() {
+    for wine_build_dll in "$@"
+        do
+        if [ "$WINE_VERSION" == "System" ]
+            then
+                try_ln "/usr/lib32/wine/i386-windows/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                [ "$WINEARCH" != "win32" ] && \
+                    try_ln "/usr/lib/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+            else
+                if ! try_ln "$WINEDIR/lib/wine/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                    then
+                        try_ln "$WINEDIR/lib/wine/i386-windows/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                fi
+                if [ "$WINEARCH" != "win32" ]
+                    then
+                        if ! try_ln "$WINEDIR/lib64/wine/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                            then
+                                try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                        fi
+                fi
+        fi
+    done
+}
+
 check_wined3d() {
     [ -n "$1" ] && export WINED3D="$1"
     if [[ "$DXVK" == 0 && "$VKD3D" == 0 ]] || [ "$WINED3D" == 1 ]
@@ -4081,20 +4105,7 @@ check_wined3d() {
                             try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
                     fi
             fi
-            for wine_build_dll in d3d11 d3d10 d3d10core d3d10_1 d3d9
-                do
-                    if ! try_ln "$WINEDIR/lib/wine/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
-                        then
-                            try_ln "$WINEDIR/lib/wine/i386-windows/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
-                    fi
-                    if [ "$WINEARCH" != "win32" ]
-                        then
-                            if ! try_ln "$WINEDIR/lib64/wine/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
-                                then
-                                    try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
-                            fi
-                    fi
-            done
+            try_ln_wine_build_dll d3d11 d3d10 d3d10core d3d10_1 d3d9
     fi
 }
 
@@ -4137,7 +4148,7 @@ get_proton_d3dlib() {
 }
 
 check_proton_d3dlib() {
-    [[ "$(realpath "$WINEDIR")" =~ "$SYS_STM_COMPAT_DIR" ]] && \
+    [[ "$(realpath "$WINEDIR" 2>/dev/null)" =~ "$SYS_STM_COMPAT_DIR" ]] && \
         get_proton_d3dlib 'cp'||\
         get_proton_d3dlib 'ln'
     if [ "$WINED3D" != 1 ] && [[ -n "$P_DXVK" || -n "$P_NVAPI" || -n "$P_VKD3D" ]]
@@ -4186,10 +4197,10 @@ check_dxvk() {
             [ "$DXVK_VERSION" == "Default" ] && \
                 export "$(grep -wo 'DXVK_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
             GIT_RELEASE_URL="$DXVK_GIT_RELEASE_URL"
-            if [[ -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d12.dll" || -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d12.dll" ]]
-                then
-                    try_rm "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d12.dll" "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d12.dll"
-            fi
+            [[ -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d12.dll" || \
+            -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d12.dll" ]] && \
+                try_rm "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d12.dll" \
+                    "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d12.dll"
             if dll_manager "dxvk" "$DXVK_VERSION"
                 then
                     if [ "$WINE_DXGI" == 1 ]
@@ -4209,6 +4220,22 @@ check_dxvk() {
                             print_info notify "Used DXGI from Wine!"
                         else
                             wdllover_upd "$(echo $check_dlls_slk|sed 's/.dll//g'|tr ' ' ',')=n"
+                    fi
+                    if [[ ! -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d10_1.dll" || \
+                        ! -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d10_1.dll" ]]
+                        then
+                            [[ ! "$(ls -l "$PFX_DLL32_PTH/d3d10_1.dll" 2>/dev/null)" =~ "$WINE_VERSION" || \
+                               ! "$(ls -l "$PFX_DLL64_PTH/d3d10_1.dll" 2>/dev/null)" =~ "$WINE_VERSION" ]] && \
+                                try_ln_wine_build_dll d3d10_1
+                            wdllover_upd "d3d10_1=b"
+                    fi
+                    if [[ ! -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x64/d3d10.dll" || \
+                        ! -f "$LW_RUNTIME_DIR/dxvk/$DXVK_VERSION/x32/d3d10.dll" ]]
+                        then
+                            [[ ! "$(ls -l "$PFX_DLL32_PTH/d3d10.dll" 2>/dev/null)" =~ "$WINE_VERSION" || \
+                               ! "$(ls -l "$PFX_DLL64_PTH/d3d10.dll" 2>/dev/null)" =~ "$WINE_VERSION" ]] && \
+                                try_ln_wine_build_dll d3d10
+                            wdllover_upd "d3d10=b"
                     fi
                     try_mkdir "$LW_DEF_CACHE/dxvk_cache"
                     export DXVK_STATE_CACHE_PATH="$LW_DEF_CACHE/dxvk_cache"
@@ -5338,7 +5365,7 @@ export_all_functions() {
         check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell unpack_squash \
         check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
-        runtime_manager upd_battleye is_exe_exist which_exe \
+        runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config \
         settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
