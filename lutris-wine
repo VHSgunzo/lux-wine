@@ -4105,7 +4105,7 @@ check_wined3d() {
                             try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
                     fi
             fi
-            try_ln_wine_build_dll d3d11 d3d10 d3d10core d3d10_1 d3d9
+            try_ln_wine_build_dll d3d11 d3d10 d3d10core d3d10_1 d3d9 d3d12 d3d12core
     fi
 }
 
@@ -4706,7 +4706,7 @@ check_vulkan_icd() {
     [ -n "$1" ] && export VKICDFILES="$1"
     if [ "$VKICDFILES" == "AUTO" ]
         then
-            export VK_ICD_FILENAMES="$(find "$VLK_ICD_DIR" -type f 2>/dev/null|tr '\n' ':'|sed 's/.$//')"
+            unset VK_ICD_FILENAMES
     elif [ "$VKICDFILES" == "Nvidia" ]
         then
             export VK_ICD_FILENAMES="$(find "$VLK_ICD_DIR"/nvidia* -type f 2>/dev/null|tr '\n' ':'|sed 's/.$//')"
