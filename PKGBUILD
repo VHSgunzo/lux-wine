@@ -24,7 +24,7 @@ depends=('aria2' 'qt5-tools' 'xterm' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi'
          'libva-mesa-driver' 'mesa-demos' 'mesa-utils' 'mesa-vdpau' 'vulkan-mesa-layers'
          'lib32-vulkan-mesa-layers' 'libstrangle-git' 'openssl' 'libnotify' 'coreutils'
          'libxrandr' 'lib32-libxrandr' 'xorg-xrandr' 'bc' 'xorg-xgamma' 'lsb-release'
-         'iputils' 'curl' 'xdelta3' 'xdg-utils' 'lsvkdev'
+         'iputils' 'curl' 'xdelta3' 'xdg-utils' 'lsvkdev' 'wmctrl'
          'desktop-file-utils' 'squashfs-tools' 'squashfuse' 'fuse2' 'reshade-shaders-git'
          'winetricks-git' 'innoextract' 'p7zip' 'gnu-netcat' 'xdg-user-dirs'
 )
