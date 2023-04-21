@@ -5367,7 +5367,7 @@ export_all_functions() {
         check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
         runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll \
-        upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all ls_windows \
+        upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all windows_num \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config \
         settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
         run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps \
@@ -5400,7 +5400,7 @@ check_loadbar_cover() {
     fi
 }
 
-ls_windows() { wmctrl -l 2>/dev/null|grep -v '\-1' 2>/dev/null ; }
+windows_num() { wmctrl -l 2>/dev/null|grep -v '\-1' 2>/dev/null|wc -l ; }
 
 loadbar_cover() {
     if [[ "$LOADBAR" != 0 && "$TERMINAL" != 1 ]]
@@ -5416,12 +5416,12 @@ loadbar_cover() {
             export LOADBARPID="$!"
             if is_exe_exist wmctrl
                 then
-                    (sleep 1
-                    CUR_WIND_NUM="$(ls_windows|wc -l)"
+                    (sleep 0.5
+                    CUR_WIND_NUM="$(windows_num)"
                     if [ "$CUR_WIND_NUM" != 0 ]
                         then
-                            while [ "$CUR_WIND_NUM" == "$(ls_windows|wc -l)" ]
-                                do sleep 0.5
+                            while [ "$CUR_WIND_NUM" == "$(windows_num)" ]
+                                do sleep 0.1
                             done
                             stop_loadbar
                     fi) &
