@@ -5399,7 +5399,7 @@ check_loadbar_cover() {
     fi
 }
 
-windows_num() { wmctrl -l 2>/dev/null|wc -l ; }
+windows_num() { wmctrl -l 2>/dev/null|grep -v '^0x.* \-1 ' 2>/dev/null|wc -l ; }
 
 loadbar_cover() {
     if [[ "$LOADBAR" != 0 && "$TERMINAL" != 1 ]]
