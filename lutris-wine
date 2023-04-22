@@ -2537,14 +2537,18 @@ lu_start() {
     fi
 }
 
+find_vk_icd() { find "$VLK_ICD_DIR"/${1}* -type f 2>/dev/null ; }
+
 lu_config() {
     if [ ! -n "$(pgrep -fa yad|grep -v "\--notification"|grep -v grep|grep -wo "Lutris Wine settings"|awk '{print$1}')" ]; then :
         else
             print_error yad "Lutris Wine settings" "Lutris Wine settings already runing!"
             exit 1
     fi
+    ls_dlls() { ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/$1" 2>/dev/null|grep -v '.*.tar.*' ; }
+    is_exe_nofirstrun() { [[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] ; }
     export LWCFGKEY=$RANDOM
-    WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*') $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default') $([ -n "$SYS_WINE" ] && echo '\n System')"
+    WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*') $(is_exe_nofirstrun && echo '\n Default') $([ -n "$SYS_WINE" ] && echo '\n System')"
     WINETHEMESLST="$(ls -1 "$LW_THEMES_DIR" 2>/dev/null|sed 's/.reg//g')"
     WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe= \n Disabled"
     WMONOOVERLST="Microsoft.Xna.Framework.*,Gac=n \n Disabled"
@@ -2557,17 +2561,17 @@ lu_config() {
     MANGOHUDLST="OpenGL \n Vulkan \n Disabled"
     DXRLST="1.0 \n 1.1 \n Disabled"
     WD3DMODELST="DXVK+NVAPI \n VKD3D \n WineD3D \n DXVK+NVAPI+VKD3D"
-    VKICDFILESLST="AUTO $([ -n "$(find "$VLK_ICD_DIR"/nvidia* -type f 2>/dev/null)" ] && echo '\n Nvidia') \
-                        $([ -n "$(find "$VLK_ICD_DIR"/intel* -type f 2>/dev/null)" ] && echo '\n Intel') \
-                        $([ -n "$(find "$VLK_ICD_DIR"/radeon* -type f 2>/dev/null)" ] && echo '\n AMD') \
-                        $([ -n "$(find "$VLK_ICD_DIR"/lvp* -type f 2>/dev/null)" ] && echo '\n Lvp')"
-    DXVKLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk" 2>/dev/null|grep -v '.*.tar.*') \n v1.9.4 \n v1.10 \n v1.10.3 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    VKD3DLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/vkd3d" 2>/dev/null|grep -v '.*.tar.*') \n v2.5 \n v2.6 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
+    VKICDFILESLST="AUTO $([ -n "$(find_vk_icd nvidia)" ] && echo '\n Nvidia') \
+                        $([ -n "$(find_vk_icd intel)" ] && echo '\n Intel') \
+                        $([ -n "$(find_vk_icd radeon)" ] && echo '\n AMD') \
+                        $([ -n "$(find_vk_icd lvp)" ] && echo '\n Lvp')"
+    DXVKLST="$(ls_dlls dxvk) \n v1.9.4 \n v1.10 \n v1.10.3 \n latest $(is_exe_nofirstrun && echo '\n Default')"
+    VKD3DLST="$(ls_dlls vkd3d) \n v2.1 \n v2.5 \n v2.6 \n v2.7 \n v2.8 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     VKD3DCFGLST="force_bindless_texel_buffer,multi_queue \n Disabled"
-    D3DXTRLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/d3d_extras" 2>/dev/null|grep -v '.*.tar.*') \n v2 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    DXNVALST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dxvk-nvapi" 2>/dev/null|grep -v '.*.tar.*') \n v0.5.3 \n v0.5.4 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    DGVOOLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/dgvoodoo2" 2>/dev/null|grep -v '.*.tar.*') \n v2.64 \n v2.79.1 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
-    NVMLLST="$(ls -I "*.json" -1 -t "$LW_RUNTIME_DIR/wine_nvml" 2>/dev/null|grep -v '.*.tar.*') \n v0.1 \n latest $([[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] && echo '\n Default')"
+    D3DXTRLST="$(ls_dlls d3d_extras) \n v2 \n latest $(is_exe_nofirstrun && echo '\n Default')"
+    DXNVALST="$(ls_dlls dxvk-nvapi) \n v0.4 \n v0.5.3 \n v0.5.4 \n latest $(is_exe_nofirstrun && echo '\n Default')"
+    DGVOOLST="$(ls_dlls dgvoodoo2) \n v2.64 \n v2.79.1 \n v2.8 \n latest $(is_exe_nofirstrun && echo '\n Default')"
+    NVMLLST="$(ls_dlls wine_nvml) \n v0.1 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     CMPRSSLST="xz \n zstd"
     FSRMODELST="ultra \n quality \n balanced \n performance \n Disabled"
     lwconfig_save() {
@@ -2843,7 +2847,7 @@ lu_config() {
     [ ! -n "$SETTWIDTH" ] && SETTWIDTH="800" && YADSCROLL=("--scroll")
     SETTHEIGHT="$(bc <<< "$(echo "$PRIMDISPL_RES"|cut -d'x' -f2)/1.5"  2>/dev/null)"
     [ ! -n "$SETTHEIGHT" ] && SETTHEIGHT="600" && YADSCROLL=("--scroll")
-    if [[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]]
+    if is_exe_nofirstrun
         then
             if [[ ! -n "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null)" \
                 || -n "$(grep -wo 'WINE_VERSION.*$' "$EXE_CFG" 2>/dev/null|grep -wo 'Default')" ]]
@@ -4709,16 +4713,16 @@ check_vulkan_icd() {
             unset VK_ICD_FILENAMES
     elif [ "$VKICDFILES" == "Nvidia" ]
         then
-            export VK_ICD_FILENAMES="$(find "$VLK_ICD_DIR"/nvidia* -type f 2>/dev/null|tr '\n' ':'|sed 's/.$//')"
+            export VK_ICD_FILENAMES="$(find_vk_icd nvidia|tr '\n' ':'|sed 's/.$//')"
     elif [ "$VKICDFILES" == "Intel" ]
         then
-            export VK_ICD_FILENAMES="$(find "$VLK_ICD_DIR"/intel* -type f 2>/dev/null|tr '\n' ':'|sed 's/.$//')"
+            export VK_ICD_FILENAMES="$(find_vk_icd intel|tr '\n' ':'|sed 's/.$//')"
     elif [ "$VKICDFILES" == "AMD" ]
         then
-            export VK_ICD_FILENAMES="$(find "$VLK_ICD_DIR"/radeon* -type f 2>/dev/null|tr '\n' ':'|sed 's/.$//')"
+            export VK_ICD_FILENAMES="$(find_vk_icd radeon|tr '\n' ':'|sed 's/.$//')"
     elif [ "$VKICDFILES" == "Lvp" ]
         then
-            export VK_ICD_FILENAMES="$(find "$VLK_ICD_DIR"/lvp* -type f 2>/dev/null|tr '\n' ':'|sed 's/.$//')"
+            export VK_ICD_FILENAMES="$(find_vk_icd lvp|tr '\n' ':'|sed 's/.$//')"
     fi
 }
 
@@ -5365,7 +5369,7 @@ export_all_functions() {
         check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell unpack_squash \
         check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
-        runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll \
+        runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all windows_num \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config \
         settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
