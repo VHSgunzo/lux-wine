@@ -5404,7 +5404,7 @@ check_loadbar_cover() {
 }
 
 loadbar_cover() {
-    windows_num() { wmctrl -lp 2>/dev/null|awk '!($2 == "-1")'|grep -v "$LOADBARPID"|wc -l ; }
+    windows_num() { wmctrl -lp 2>/dev/null|awk '!($2 == "-1")'|awk '!($3 == "'$LOADBARPID'")'|wc -l ; }
     if [[ "$LOADBAR" != 0 && "$TERMINAL" != 1 ]]
         then
             [ -n "$1" ] && \
@@ -5414,8 +5414,8 @@ loadbar_cover() {
             GIF_SIZE_Y="$(file "$GIF_FILE" 2>/dev/null|awk '{print $9 + 20}')"
             yad --picture --filename="$GIF_FILE" $(is_exe_exist wmctrl||echo "--close-on-unfocus") \
                 --no-buttons --undecorated --on-top --center --skip-taskbar \
-                --width="$GIF_SIZE_X" --height="$GIF_SIZE_Y" $ENVKEY Lutris Wine &>/dev/null &
-            export LOADBARPID="$!"
+                --width="$GIF_SIZE_X" --height="$GIF_SIZE_Y" Lutris Wine &>/dev/null &
+            LOADBARPID="$!"
             if [[ -n "$LOADBARPID" && -d "/proc/$LOADBARPID" ]] && \
                 is_exe_exist wmctrl
                 then
