@@ -2333,20 +2333,19 @@ check_steamapps() {
     if [[ "$NO_STEAMAPPS" != 1 && -d "$LW_STEAMAPPS_DIR" && "$CHKSTEAMAPPS" == 1 ]]
         then
             try_mkdir "$LW_WINE_DIR"
-            STMXPRTN="$LW_STEAMAPPS_DIR/Proton - Experimental/files"
-            STM7PRTN="$LW_STEAMAPPS_DIR/Proton 7.0/dist"
             STMBATTLEYE="$LW_STEAMAPPS_DIR/Proton BattlEye Runtime"
             STMEAC="$LW_STEAMAPPS_DIR/Proton EasyAntiCheat Runtime"
-            if [[ -f "$STMXPRTN/bin/wine" && ! -d "$LW_WINE_DIR/Proton - Experimental" ]]
-                then
-                    try_ln "$STMXPRTN" "$LW_WINE_DIR/Proton - Experimental"
-                    print_info notify "Found Proton - Experimental in Steam and linked to Lutris Wine"
-            fi
-            if [[ -f "$STM7PRTN/bin/wine" && ! -d "$LW_WINE_DIR/Proton 7.0" ]]
-                then
-                    try_ln "$STM7PRTN" "$LW_WINE_DIR/Proton 7.0"
-                    print_info notify "Found Proton 7.0 in Steam and linked to Lutris Wine"
-            fi
+            for ver in '7.0' '8.0' '- Experimental'
+                do
+                    [[ "$ver" =~ "Experimental" ]] && \
+                        STMverPRTN="$LW_STEAMAPPS_DIR/Proton ${ver}/files"||\
+                        STMverPRTN="$LW_STEAMAPPS_DIR/Proton ${ver}/dist"
+                    if [[ -f "$STMverPRTN/bin/wine" && ! -d "$LW_WINE_DIR/Proton ${ver}" ]]
+                        then
+                            try_ln "$STMverPRTN" "$LW_WINE_DIR/Proton ${ver}"
+                            print_info notify "Found Proton ${ver} in Steam and linked to Lutris Wine"
+                    fi
+            done
         else
             unset STMEAC STMBATTLEYE
     fi
@@ -5400,7 +5399,7 @@ check_loadbar_cover() {
     fi
 }
 
-windows_num() { wmctrl -l 2>/dev/null|grep -v '\-1' 2>/dev/null|wc -l ; }
+windows_num() { wmctrl -l 2>/dev/null|wc -l ; }
 
 loadbar_cover() {
     if [[ "$LOADBAR" != 0 && "$TERMINAL" != 1 ]]
@@ -5418,13 +5417,10 @@ loadbar_cover() {
                 then
                     (sleep 0.5
                     CUR_WIND_NUM="$(windows_num)"
-                    if [ "$CUR_WIND_NUM" != 0 ]
-                        then
-                            while [ "$CUR_WIND_NUM" == "$(windows_num)" ]
-                                do sleep 0.1
-                            done
-                            stop_loadbar
-                    fi) &
+                    while [ "$CUR_WIND_NUM" == "$(windows_num)" ]
+                        do sleep 0.1
+                    done
+                    stop_loadbar) &
             fi
     fi
 }

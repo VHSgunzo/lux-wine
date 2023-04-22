@@ -110,7 +110,6 @@ lwrun --uninstall
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
 - [x] Switching DXR/RTX Version (if the video adapter support and depends on [VKD3D](https://github.com/HansKristian-Work/vkd3d-proton))
 - [x] DLSS (if the video adapter and game support and depends on [DXVK-NVAPI](https://github.com/jp7677/dxvk-nvapi) + [WINE-NVML](https://github.com/Saancreed/wine-nvml))
-- [x] Custom URL for runtime repo
 - [x] Custom [VKD3D](https://github.com/HansKristian-Work/vkd3d-proton) config
 - [x] [MangoHud](https://github.com/flightlessmango/MangoHud/releases) settings (with custom config support)
 - [x] [VkBasalt](https://github.com/DadSchoorse/vkBasalt/releases) settings
