@@ -5370,7 +5370,7 @@ export_all_functions() {
         check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
         runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd \
-        upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all \
+        upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all is_loadbar \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config \
         settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
         run_db_script check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps \
@@ -5403,6 +5403,8 @@ check_loadbar_cover() {
     fi
 }
 
+is_loadbar() { [[ -n "$LOADBARPID" && -d "/proc/$LOADBARPID" ]] ; }
+
 loadbar_cover() {
     windows_num() { wmctrl -lp 2>/dev/null|awk '!($2 == "-1")'|awk '!($3 == "'$LOADBARPID'")'|wc -l ; }
     if [[ "$LOADBAR" != 0 && "$TERMINAL" != 1 ]]
@@ -5416,11 +5418,12 @@ loadbar_cover() {
                 --no-buttons --undecorated --on-top --center --skip-taskbar \
                 --width="$GIF_SIZE_X" --height="$GIF_SIZE_Y" Lutris Wine &>/dev/null &
             LOADBARPID="$!"
-            if [[ -n "$LOADBARPID" && -d "/proc/$LOADBARPID" ]] && \
+            if is_loadbar && \
                 is_exe_exist wmctrl
                 then
                     (CUR_WIND_NUM="$(windows_num)"
-                    while [ "$CUR_WIND_NUM" == "$(windows_num)" ]
+                    while is_loadbar && \
+                    [ "$CUR_WIND_NUM" == "$(windows_num)" ]
                         do sleep 0.1
                     done
                     stop_loadbar) &
@@ -5428,11 +5431,7 @@ loadbar_cover() {
     fi
 }
 
-stop_loadbar() {
-    if [[ -n "$LOADBARPID" && -d "/proc/$LOADBARPID" ]]
-        then kill "$LOADBARPID" 2>/dev/null
-    fi
-}
+stop_loadbar() { is_loadbar && kill "$LOADBARPID" 2>/dev/null ; }
 
 lu_appcfg() {
     if [ ! -n "$(pgrep -fa yad|grep "Applications Settings"|awk '{print$1}')" ]; then :
