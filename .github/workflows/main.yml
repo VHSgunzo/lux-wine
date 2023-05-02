@@ -47,6 +47,6 @@ jobs:
           files: |
             lutris-wine-git-*.pkg*
             lwrap/lwrap-*.pkg*
-            target/x86_64-unknown-linux-gnu/release/lw-tray
+            lw-tray/target/x86_64-unknown-linux-gnu/release/lw-tray
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
