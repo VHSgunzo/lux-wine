@@ -18,6 +18,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          profile: minimal
+          toolchain: nightly
+          target: x86_64-unknown-linux-gnu
+
+      - name: Build tray
+        run: >
+          cd lw-tray ;
+          rustup component add rust-src --toolchain nightly ;
+          cargo build --release ;
+          mv -fv target/x86_64-unknown-linux-gnu/release/lw-tray ../ ;
+          cd ../ ;
+
       - name: Build archlinux packages
         uses: countstarlight/arch-makepkg-action@master
         with:
@@ -30,5 +47,6 @@ jobs:
           files: |
             lutris-wine-git-*.pkg*
             lwrap/lwrap-*.pkg*
+            lw-tray
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

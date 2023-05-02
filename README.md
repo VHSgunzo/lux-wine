@@ -60,6 +60,8 @@ wget -qO - lwrap.github.io|bash
       -pfxrestore             Restore prefix from backup
       -backupmnt              Mount prefix backup
       -backupunmnt            Unmount prefix backup
+      -lsapp                  Show a list of added apps
+      -runapp {num|app name}  Launch the added application
       -update {all}           Runtime updater
       {dx|dxvk} {vkd|vkd3d} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
       {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}

@@ -1,0 +1,18 @@
+[package]
+name = "lw-tray"
+version = "0.0.1"
+readme = "README.md"
+license-file = "LICENSE"
+repository = "https://github.com/VHSgunzo/lutris-wine"
+description = "Lutris Wine tray"
+
+[profile.release]
+lto = true
+panic = "abort"
+opt-level = "z"
+strip = "symbols"
+codegen-units = 1
+
+[dependencies]
+ksni = "*"
+execute = "*"
