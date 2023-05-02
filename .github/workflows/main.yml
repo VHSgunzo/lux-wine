@@ -29,7 +29,7 @@ jobs:
 
       - name: Build tray
         run: >
-          sudo apt update -y && sudo apt install dbus -y;
+          sudo apt update -y && sudo apt install dbus libdbus-1-dev -y;
           cd lw-tray ;
           rustup component add rust-src --toolchain nightly ;
           cargo build --release ;
