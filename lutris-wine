@@ -2386,7 +2386,7 @@ check_latencyflex() {
 lite_init() {
     DEPRECATE_INIT=("-killwine" "-killtray" "-killexe" "-killshell" "-exit" "-tray" "-lsapp" "-runapp")
     export_all_functions
-    if ! [[ "${DEPRECATE_INIT[@]}" =~ "$1" ]]
+    if ! [[ "${DEPRECATE_INIT[@]}" =~ "$1" ]] || [ ! -n "$1" ]
         then
             if [ ! -n "$SETT_INIT" ] && [[ -n "$(pgrep -fa 'zenity'|grep -w 'Runtime initialization'|awk '{print$1}')" \
                 || -n "$(pgrep -fa 'zenity'|grep -w 'Updating parameters'|awk '{print$1}')" ]]
@@ -3527,7 +3527,7 @@ check_tray() {
 try_get_tray() {
     if [[ ! -f "$LW_TRAY" && "$NETSTATUS" != 0 ]]
         then
-            lite_init "$HOME"
+            lite_init
             try_download "https://github.com/VHSgunzo/lutris-wine/releases/download/v$LW_VERSION/lw-tray" "$LW_BIN_DIR" && \
                 chmod u+x "$LW_TRAY"
     fi
