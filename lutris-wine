@@ -2278,9 +2278,20 @@ run_db_script() {
     fi
 }
 
-check_first_run() {
+is_first_run() {
     if [[ ! -f "$LW_DIR/.firstrun" && "$(cat "$LW_CFG" 2>/dev/null|wc -l)" -le 8 ]]
         then
+            export FIRST_RUN=1
+            return 0
+        else
+            return 1
+    fi
+}
+
+check_first_run() {
+    if is_first_run
+        then
+            try_get_tray
             for winemimetype in {application/x-ms-dos-executable,application/x-wine-extension-msp,application/x-msi,application/x-msdos-program,text/win-bat,application/x-ms-shortcut,text/x-ms-regedit}
                 do
                     xdg-mime default LutrisWine.desktop "$winemimetype"
@@ -3527,7 +3538,7 @@ check_tray() {
 try_get_tray() {
     if [[ ! -f "$LW_TRAY" && "$NETSTATUS" != 0 ]]
         then
-            lite_init
+            [ "$FIRST_RUN" != 1 ] && lite_init
             try_download "https://github.com/VHSgunzo/lutris-wine/releases/download/v$LW_VERSION/lw-tray" "$LW_BIN_DIR" && \
                 chmod u+x "$LW_TRAY"
     fi
@@ -4093,7 +4104,8 @@ check_proton_d3dlib() {
         get_proton_d3dlib 'ln'
     if [ "$WINED3D" != 1 ] && [[ -n "$P_DXVK" || -n "$P_NVAPI" || -n "$P_VKD3D" ]]
         then
-            if print_question "Set DXVK, DXVK-NVAPI and VKD3D from $WINE_IN_USE as default?"
+            if is_first_run||\
+                print_question "Set DXVK, DXVK-NVAPI and VKD3D from $WINE_IN_USE as default?"
                 then
                     for pd3ddll in {dxvk,dxvk-nvapi,vkd3d}
                         do
@@ -5641,7 +5653,8 @@ lu_pfxrestore() {
                     [ "$DEFPFXRESTORE" == 1 ] && \
                         PFXRESTORE_MSG="The default prefix is not initialized! \nDo you want to restore the default prefix from the backup?"||\
                         PFXRESTORE_MSG="Are you sure you want to restore this prefix backup image?"
-                    if [[ "$DEFPFXRESTORE" == 1 && "$NETSTATUS" == 0 ]]||\
+                    if [[ "$DEFPFXRESTORE" == 1 && "$NETSTATUS" == 0 ]]|| \
+                        [[ "$DEFPFXRESTORE" == 1 && "$FIRST_RUN" == 1 ]]||\
                         print_question "Prefix restore" "${PFXRESTORE_MSG}\n[ $LU_LWPFX ]"
                         then
                             pfxrestore||return 1
