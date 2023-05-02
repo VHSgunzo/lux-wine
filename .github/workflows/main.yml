@@ -33,7 +33,6 @@ jobs:
           cd lw-tray ;
           rustup component add rust-src --toolchain nightly ;
           cargo build --release ;
-          mv -fv target/x86_64-unknown-linux-gnu/release/lw-tray ../ ;
           cd ../ ;
 
       - name: Build archlinux packages
@@ -48,6 +47,6 @@ jobs:
           files: |
             lutris-wine-git-*.pkg*
             lwrap/lwrap-*.pkg*
-            lw-tray
+            target/x86_64-unknown-linux-gnu/release/lw-tray
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
