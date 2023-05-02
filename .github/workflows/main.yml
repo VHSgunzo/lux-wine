@@ -33,6 +33,8 @@ jobs:
           cd lw-tray ;
           rustup component add rust-src --toolchain nightly ;
           cargo build --release ;
+          mv -fv target/x86_64-unknown-linux-gnu/release/lw-tray ./ ;
+          rm -rf target ;
           cd ../ ;
 
       - name: Build archlinux packages
