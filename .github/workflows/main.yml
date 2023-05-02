@@ -29,6 +29,7 @@ jobs:
 
       - name: Build tray
         run: >
+          sudo pacman -Sy dbus --noconfirm ;
           cd lw-tray ;
           rustup component add rust-src --toolchain nightly ;
           cargo build --release ;
