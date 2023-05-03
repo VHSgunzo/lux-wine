@@ -1,7 +1,7 @@
 extern crate ksni;
 extern crate execute;
 use ksni::menu::*;
-use std::{process::{exit, Child}, time::Duration};
+use std::{process::{exit, Child}, time::Duration, fs};
 use execute::{shell, Execute};
 use std::{env, process::Stdio};
 
@@ -333,6 +333,16 @@ fn get_lw_apps() -> String {
     )
 }
 
+fn ls_lw_apps() -> Vec<String> {
+    let mut apps = vec![];
+    if let Ok(entries) = fs::read_dir(get_env("LW_APPS_DIR")) {
+        for app in entries {
+            apps.push(app.unwrap().file_name().to_str().unwrap().to_string())
+        }
+    }
+    apps
+}
+
 fn main() {
 
     let lw_apps = get_lw_apps();
@@ -354,14 +364,15 @@ fn main() {
     });
     let handle = service.handle();
     service.spawn();
-
+    
     loop {
+        let old_lw_apps = ls_lw_apps();
         std::thread::sleep(Duration::from_secs(1));
-        let new_lw_apps = get_lw_apps();
-        handle.update(|tray: &mut LwTray| {
-            if tray.lw_apps != new_lw_apps {
-                tray.lw_apps = new_lw_apps.clone()
-            }
-        });
+        let new_lw_apps = ls_lw_apps();
+        if new_lw_apps != old_lw_apps {
+            handle.update(|tray: &mut LwTray| {
+                tray.lw_apps = get_lw_apps()
+            });
+        }
     }
 }

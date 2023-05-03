@@ -1,6 +1,6 @@
 [package]
 name = "lw-tray"
-version = "0.0.1"
+version = "0.0.2"
 readme = "README.md"
 license-file = "LICENSE"
 repository = "https://github.com/VHSgunzo/lutris-wine"
