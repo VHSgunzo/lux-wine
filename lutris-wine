@@ -5671,9 +5671,9 @@ select_lwpfx() {
                     --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
     if [ -f "$LWPFX_FL" ]
         then
-            if [ -n "$(file "$LWPFX_FL"|grep -o 'Squashfs')" ]
+            if [ -n "$(file "$(realpath "$LWPFX_FL")"|grep -o 'Squashfs')" ]
                 then
-                    export LU_LWPFX="$LWPFX_FL"
+                    export LU_LWPFX="$(realpath "$LWPFX_FL")"
                     return 0
                 else
                     not_lwpfx "$1"
