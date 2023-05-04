@@ -2,4 +2,4 @@
 Type=Directory
 Name=Wine App
 Name[ru_RU]=Wine приложения
-Icon=/usr/share/lutris-wine/icons/default_icon.png
+Icon=/usr/share/lutris-wine/icons/lw_default_icon.png
