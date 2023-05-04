@@ -64,13 +64,14 @@ if [ ! -n "$LW_REGPATCH_DIR" ]
 fi
 [ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="$LW_GIF_DIR/default_loading.gif"
 [ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="lw_default_icon"
+export HICOLOR_SIZES=("512x512" "256x256" "192x192" "128x128" "96x96" "80x80" "72x72" "64x64" "48x48" "32x32" "24x24" "16x16")
 if [ -f "$LW_ICONS_DIR/$LW_DEF_ICO.png" ]
     then
         [ ! -f "$HOME_ICONS/$LW_DEF_ICO.png" ] && \
             ln -sfr "$LW_ICONS_DIR/$LW_DEF_ICO.png" "$HOME_ICONS/"
         if [ ! -f "$HOME_ICONS/hicolor/256x256/apps/$LW_DEF_ICO.png" ]
             then
-                for hi_icon_size in $(ls -A1 "$HOME_ICONS/hicolor"|grep -Po '\d+x\d+');
+                for hi_icon_size in ${HICOLOR_SIZES[@]}
                     do
                         mkdir -p "$HOME_ICONS/hicolor/$hi_icon_size/apps"
                         mkdir -p "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps"
@@ -3406,7 +3407,7 @@ lu_rmapp() {
                                 rm_icon="$(grep -m1 "^Icon=" "$LWAPPRM" 2>/dev/null|sed 's|^Icon=||g')"
                                 if [ -f "$HOME_ICONS/${rm_icon}.png" ]
                                     then
-                                        for hi_icon_size in $(ls -A1 "$HOME_ICONS/hicolor"|grep -Po '\d+x\d+')
+                                        for hi_icon_size in ${HICOLOR_SIZES[@]}
                                             do
                                                 hi_icon_path="$HOME_ICONS/hicolor/$hi_icon_size/apps"
                                                 rm_hi_icon="$hi_icon_path/${rm_icon}.png"
