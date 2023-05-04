@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.4"
+export LW_VERSION="0.77.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -63,9 +63,24 @@ if [ ! -n "$LW_REGPATCH_DIR" ]
     export LW_REGPATCH_DIR="$LW_SYS_DIR/registry_patch"
 fi
 [ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="$LW_GIF_DIR/default_loading.gif"
-[ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="default_icon"
-[[ ! -f "$HOME_ICONS/$LW_DEF_ICO.png" && -f "$LW_ICONS_DIR/$LW_DEF_ICO.png" ]] && \
-    ln -sfr "$LW_ICONS_DIR/$LW_DEF_ICO.png" "$HOME_ICONS/"
+[ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="lw_default_icon"
+if [ -f "$LW_ICONS_DIR/$LW_DEF_ICO.png" ]
+    then
+        [ ! -f "$HOME_ICONS/$LW_DEF_ICO.png" ] && \
+            ln -sfr "$LW_ICONS_DIR/$LW_DEF_ICO.png" "$HOME_ICONS/"
+        if [ ! -f "$HOME_ICONS/hicolor/256x256/apps/$LW_DEF_ICO.png" ]
+            then
+                for hi_icon_size in $(ls -A1 "$HOME_ICONS/hicolor"|grep -Po '\d+x\d+');
+                    do
+                        mkdir -p "$HOME_ICONS/hicolor/$hi_icon_size/apps"
+                        mkdir -p "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps"
+                        convert "$LW_ICONS_DIR/$LW_DEF_ICO.png" -resize "$hi_icon_size" \
+                            "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$LW_DEF_ICO.png" && \
+                        ln -sfr "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$LW_DEF_ICO.png" \
+                            "$HOME_ICONS/hicolor/$hi_icon_size/apps/$LW_DEF_ICO.png"
+                done
+        fi
+fi
 [ ! -n "$LW_APPS_ICONS_DIR" ] && export LW_APPS_ICONS_DIR="$LW_DIR/apps_icons"
 [ ! -n "$LU_DIR" ] && export LU_DIR="$HOME/.local/share/lutris"
 [ ! -n "$LU_CACHE_DIR" ] && export LU_CACHE_DIR="$HOME/.cache/lutris"
@@ -1378,6 +1393,19 @@ exe2png() {
                         try_ln "$SHRT_PNG" "$HOME_ICONS/" 2>/dev/null
                         break
                 done
+                (IFS=$'\n'
+                cd "$HICOLOR_SHR_DIR"
+                for hi_icon_size in $(ls -A1|grep -Po '\d+x\d+')
+                    do
+                        hi_icon_path="$HOME_ICONS/hicolor/$hi_icon_size/apps"
+                        lw_apps_hi_icon_path="$LW_APPS_ICONS_DIR/hicolor/$hi_icon_size/apps"
+                        try_mkdir "$hi_icon_path"
+                        try_mkdir "$lw_apps_hi_icon_path"
+                        try_cp "$hi_icon_size/apps/${SHRT_NAME}.png" \
+                            "$lw_apps_hi_icon_path/${SHRT_ICON}.png"
+                        try_ln "$lw_apps_hi_icon_path/${SHRT_ICON}.png" \
+                            "$hi_icon_path/${SHRT_ICON}.png"
+                done)
         fi
     }
     if is_exe_exist wrestool && is_exe_exist convert
@@ -1385,7 +1413,10 @@ exe2png() {
             export SHRT_NAME="$(basename "$1"|sed 's|.exe$||')"
             export SHRT_PATH="$(realpath "$(dirname "$1")")"
             export LUJPG="$SHRT_PATH/${SHRT_NAME}.jpg"
-            if [[ -f "$LUJPG" && -f "$SHRT_PATH/${SHRT_NAME}.png" ]]
+            export HICOLOR_SHR_DIR="$SHRT_PATH/hicolor_icons"
+            if [[ -f "$LUJPG" && -f "$SHRT_PATH/${SHRT_NAME}.png" && \
+                -f "$HICOLOR_SHR_DIR/"$(ls -A1 "$HICOLOR_SHR_DIR"|\
+                sort -nr|head -1)"/apps/${SHRT_NAME}.png" ]]
                 then
                     print_info notify "Converting ico already completed!"
                     add_exe_icon
@@ -1395,13 +1426,24 @@ exe2png() {
                     wrestool -x --output=./ -t14 "$1" 2>/dev/null
                     if [ -n "$(ls "${SHRT_NAME}"*.ico 2>/dev/null|head -1)" ]
                         then
-                            (IFS=$'\n' ; for ico in $(ls "${SHRT_NAME}"*.ico 2>/dev/null)
-                                do
-                                    echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
-                                    convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')"  2>/dev/null
-                            done)
+                            ico="$(ls -S -1 "${SHRT_NAME}"*.ico 2>/dev/null|head -1)"
+                            echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
+                            convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')"  2>/dev/null
                             try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png|head -1)" "${SHRT_NAME}".png 2>/dev/null
                             convert "${SHRT_NAME}".png "${SHRT_NAME}".jpg 2>/dev/null
+                            try_mkdir "$HICOLOR_SHR_DIR"
+                            convert "$ico" "$HICOLOR_SHR_DIR"/"$(echo "$ico"|sed 's|ico$|png|g')"  2>/dev/null
+                            if [ -n "$(ls -A "$HICOLOR_SHR_DIR")" ]
+                                then
+                                    (IFS=$'\n'
+                                    cd "$HICOLOR_SHR_DIR"
+                                    for png in $(ls -AS1r *.png)
+                                        do
+                                            png_size_dir="$(file "$png"|grep -Po '\d+ x \d+'|sed 's| ||g')"
+                                            try_mkdir "$png_size_dir/apps"
+                                            try_mv "$png" "$png_size_dir/apps/${SHRT_NAME}.png"
+                                    done)
+                            fi
                             add_exe_icon
                             echo -en "${RED}$(ls "${SHRT_NAME}".png 2>/dev/null)\n$RESETCOLOR"
                             echo -en "${RED}$(ls "${SHRT_NAME}".jpg 2>/dev/null)\n$RESETCOLOR"
@@ -1411,7 +1453,9 @@ exe2png() {
                         else
                             print_error yad "Failed to get ico from executable file!"
                             export SHRT_ICON="$LW_DEF_ICO"
-                            export LUJPG="$LW_DEF_ICO"
+                            export LUJPG="$LW_ICONS_DIR/$LW_DEF_ICO.jpg"
+                            [ ! -f "$LUJPG" ] && \
+                            convert "$LW_ICONS_DIR/$LW_DEF_ICO.png" "$LUJPG"
                     fi
             fi
         else
@@ -3351,12 +3395,6 @@ lu_rmapp() {
             print_error yad "Shortcuts Remover" "Lutris Wine Shortcuts Remover already runing!"
             exit 1
     fi
-    updmenuapp() {
-        update-desktop-database -q "$MENU_APPS_DIR"
-        try_rm_broken_link "$HOME_ICONS"
-        print_info notify "Lutris Wine applications deleted from menu!"
-        wait
-    }
     rm_srtcts() {
         (IFS=$'\n'
         if [ -n "$@" ]
@@ -3368,13 +3406,24 @@ lu_rmapp() {
                                 rm_icon="$(grep -m1 "^Icon=" "$LWAPPRM" 2>/dev/null|sed 's|^Icon=||g')"
                                 if [ -f "$HOME_ICONS/${rm_icon}.png" ]
                                     then
+                                        for hi_icon_size in $(ls -A1 "$HOME_ICONS/hicolor"|grep -Po '\d+x\d+')
+                                            do
+                                                hi_icon_path="$HOME_ICONS/hicolor/$hi_icon_size/apps"
+                                                rm_hi_icon="$hi_icon_path/${rm_icon}.png"
+                                                [ -f "$rm_hi_icon" ] && \
+                                                    try_rm "$(realpath "$rm_hi_icon" 2>/dev/null)" &>/dev/null
+                                                try_rm_broken_link "$hi_icon_path"
+                                        done
                                         rm_icon="$HOME_ICONS/${rm_icon}.png"
-                                        try_rm "$(realpath "$rm_icon" 2>/dev/null)" &>/dev/null
+                                        try_rm "$(realpath "$rm_icon" 2>/dev/null)"
                                 fi
                                 try_rm "$LWAPPRM"
                         fi
                 done
-                updmenuapp
+                update-desktop-database -q "$MENU_APPS_DIR"
+                try_rm_broken_link "$HOME_ICONS"
+                print_info notify "Lutris Wine applications deleted from menu!"
+                wait
         fi)
     }
     LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$MENU_APPS_DIR" 2>/dev/null)"

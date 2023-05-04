@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lutris Wine
 Exec="/usr/bin/lutris-wine" -backupunmnt %f
-Icon=/usr/share/lutris-wine/icons/default_icon.png
+Icon=/usr/share/lutris-wine/icons/lw_default_icon.png
 MimeType=application/vnd.squashfs
 Name=Unmount prefix backup
 Name[ru_RU]=Отмонтировать бекап префикса
