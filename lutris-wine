@@ -1430,21 +1430,17 @@ exe2png() {
                             ico="$(ls -S -1 "${SHRT_NAME}"*.ico 2>/dev/null|head -1)"
                             echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
                             convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')"  2>/dev/null
-                            try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png|head -1)" "${SHRT_NAME}".png 2>/dev/null
+                            try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|head -1)" "${SHRT_NAME}".png 2>/dev/null
                             convert "${SHRT_NAME}".png "${SHRT_NAME}".jpg 2>/dev/null
                             try_mkdir "$HICOLOR_SHR_DIR"
-                            convert "$ico" "$HICOLOR_SHR_DIR"/"$(echo "$ico"|sed 's|ico$|png|g')"  2>/dev/null
-                            if [ -n "$(ls -A "$HICOLOR_SHR_DIR")" ]
-                                then
-                                    (IFS=$'\n'
-                                    cd "$HICOLOR_SHR_DIR"
-                                    for png in $(ls -AS1r *.png)
-                                        do
-                                            png_size_dir="$(file "$png"|grep -Po '\d+ x \d+'|sed 's| ||g')"
-                                            try_mkdir "$png_size_dir/apps"
-                                            try_mv "$png" "$png_size_dir/apps/${SHRT_NAME}.png"
-                                    done)
-                            fi
+                            (IFS=$'\n'
+                            cd "$HICOLOR_SHR_DIR"
+                            for hi_icon_size in ${HICOLOR_SIZES[@]}
+                                do
+                                    try_mkdir "$hi_icon_size/apps"
+                                    convert "../${SHRT_NAME}.png" -resize "$hi_icon_size" \
+                                        "$hi_icon_size/apps/${SHRT_NAME}.png"
+                            done)
                             add_exe_icon
                             echo -en "${RED}$(ls "${SHRT_NAME}".png 2>/dev/null)\n$RESETCOLOR"
                             echo -en "${RED}$(ls "${SHRT_NAME}".jpg 2>/dev/null)\n$RESETCOLOR"
