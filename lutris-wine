@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.3"
+export LW_VERSION="0.77.4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -30,6 +30,8 @@ which_exe() { command -v "$@" ; }
 [ ! -n "$LWRAP_PFX_DIR" ] && export LWRAP_PFX_DIR="$LWRAP_DIR/prefix_backups"
 [ ! -n "$LWRAP_DEFPFX" ] && export LWRAP_DEFPFX="$LWRAP_PFX_DIR/defprefix.xz.lwpfx"
 [ ! -n "$LW_SOURCE" ] && export LW_SOURCE="$0"
+[ ! -n "$HOME_ICONS" ] && export HOME_ICONS="$HOME/.local/share/icons"
+[ ! -d "$HOME_ICONS" ] && mkdir -p "$HOME_ICONS"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LutrisWine"
 [ ! -n "$LW_BIN_DIR" ] && export LW_BIN_DIR="$LW_DIR/bin"
@@ -45,9 +47,10 @@ if [ ! -n "$LW_DB_DIR" ]
     export LW_DB_DIR="$LW_SYS_DIR/db"
 fi
 if [ ! -n "$LW_ICONS_DIR" ]
-    then [ -d "$LW_DIR/icons" ] && \
-    export LW_ICONS_DIR="$LW_DIR/icons"||\
-    export LW_ICONS_DIR="$LW_SYS_DIR/icons"
+    then
+        [[ ! -d "$LW_DIR/icons" && -d "$LW_SYS_DIR/icons" ]] && \
+            cp -rf "$LW_SYS_DIR/icons" "$LW_DIR/"
+        export LW_ICONS_DIR="$LW_DIR/icons"
 fi
 if [ ! -n "$LW_GIF_DIR" ]
     then [ -d "$LW_DIR/gif" ] && \
@@ -60,7 +63,10 @@ if [ ! -n "$LW_REGPATCH_DIR" ]
     export LW_REGPATCH_DIR="$LW_SYS_DIR/registry_patch"
 fi
 [ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="$LW_GIF_DIR/default_loading.gif"
-[ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="$LW_ICONS_DIR/default_icon.png"
+[ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="default_icon"
+[[ ! -f "$HOME_ICONS/$LW_DEF_ICO.png" && -f "$LW_ICONS_DIR/$LW_DEF_ICO.png" ]] && \
+    ln -sfr "$LW_ICONS_DIR/$LW_DEF_ICO.png" "$HOME_ICONS/"
+[ ! -n "$LW_APPS_ICONS_DIR" ] && export LW_APPS_ICONS_DIR="$LW_DIR/apps_icons"
 [ ! -n "$LU_DIR" ] && export LU_DIR="$HOME/.local/share/lutris"
 [ ! -n "$LU_CACHE_DIR" ] && export LU_CACHE_DIR="$HOME/.cache/lutris"
 [ ! -n "$LU_CONFIG_DIR" ] && export LU_CONFIG_DIR="$HOME/.config/lutris"
@@ -1346,15 +1352,43 @@ reg_edit() {
 }
 
 exe2png() {
+    add_exe_icon() {
+        cd "$SHRT_PATH"
+        if [ -f "${SHRT_NAME}.png" ]
+            then
+                unset shrt_num
+                try_mkdir "$HOME_ICONS"
+                try_mkdir "$LW_APPS_ICONS_DIR"
+                while true
+                    do
+                        export SHRT_ICON="${SHRT_NAME}${shrt_num}"
+                        export SHRT_PNG="$LW_APPS_ICONS_DIR/$SHRT_ICON.png"
+                        if [ -f "$SHRT_PNG" ]
+                            then
+                                chksum_shrt_png_new=($(md5sum "${SHRT_NAME}.png"))
+                                chksum_shrt_png=($(md5sum "$SHRT_PNG"))
+                                if [ "$chksum_shrt_png_new" != "$chksum_shrt_png" ]
+                                    then
+                                        shrt_num=$(( $shrt_num + 1 ))
+                                        continue
+                                    else break
+                                fi
+                        fi
+                        try_cp "${SHRT_NAME}.png" "$SHRT_PNG" 2>/dev/null
+                        try_ln "$SHRT_PNG" "$HOME_ICONS/" 2>/dev/null
+                        break
+                done
+        fi
+    }
     if is_exe_exist wrestool && is_exe_exist convert
         then
-            export SHRT_NAME="$(basename "$1"|sed 's/.exe//')"
-            export SHRT_PATH="$(cd "$(dirname "$1")" >/dev/null 2>&1 && pwd)"
+            export SHRT_NAME="$(basename "$1"|sed 's|.exe$||')"
+            export SHRT_PATH="$(realpath "$(dirname "$1")")"
             export LUJPG="$SHRT_PATH/${SHRT_NAME}.jpg"
-            export LUPNG="$SHRT_PATH/${SHRT_NAME}.png"
-            if [[ -f "$LUJPG" && -f "$LUPNG" ]]
+            if [[ -f "$LUJPG" && -f "$SHRT_PATH/${SHRT_NAME}.png" ]]
                 then
                     print_info notify "Converting ico already completed!"
+                    add_exe_icon
                 else
                     print_info notify "Converting ico from executable file..."
                     cd "$SHRT_PATH"
@@ -1364,10 +1398,11 @@ exe2png() {
                             (IFS=$'\n' ; for ico in $(ls "${SHRT_NAME}"*.ico 2>/dev/null)
                                 do
                                     echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
-                                    convert "$ico" "$(echo "$ico"|sed 's/ico$/png/g')"  2>/dev/null
+                                    convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')"  2>/dev/null
                             done)
                             try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png|head -1)" "${SHRT_NAME}".png 2>/dev/null
                             convert "${SHRT_NAME}".png "${SHRT_NAME}".jpg 2>/dev/null
+                            add_exe_icon
                             echo -en "${RED}$(ls "${SHRT_NAME}".png 2>/dev/null)\n$RESETCOLOR"
                             echo -en "${RED}$(ls "${SHRT_NAME}".jpg 2>/dev/null)\n$RESETCOLOR"
                             print_info "CLEANUP..."
@@ -1375,7 +1410,7 @@ exe2png() {
                             print_info notify "Converting ico from executable file completed!"
                         else
                             print_error yad "Failed to get ico from executable file!"
-                            export LUPNG="$LW_DEF_ICO"
+                            export SHRT_ICON="$LW_DEF_ICO"
                             export LUJPG="$LW_DEF_ICO"
                     fi
             fi
@@ -1487,7 +1522,7 @@ create_shortcut() {
                     [ -n "$ADD_APP_NAME" ] && \
                         SHRT_NAME="$ADD_APP_NAME"
             fi
-            try_mkdir "$LW_DEF_TM"
+            try_mkdir "$LW_DEF_TMP"
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
             ([[ "$RUNSRC" =~ "lwrun" ]] && \
@@ -1498,101 +1533,101 @@ create_shortcut() {
             echo "Categories=Lutris Wine App" >> "$DESKF"
             echo "StartupNotify=true" >> "$DESKF"
             echo "Path="$SHRT_PATH"" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Actions=rmapp;config;openpfx;debug;cmd;explorer;control;regedit;winecfg;taskmgr;uninstaller;winetricks;clearpfx;pfxbackup;pfxrestore;killwine;version;init;addtolu" >> "$DESKF"
             echo -e "\n[Desktop Action rmapp]" >> "$DESKF"
             echo "Name=Remove from menu" >> "$DESKF"
             echo "Name[ru_RU]=Удалить из меню" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -rmapp '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action config]" >> "$DESKF"
             echo "Name=Settings" >> "$DESKF"
             echo "Name[ru_RU]=Настройки" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -config '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action openpfx]" >> "$DESKF"
             echo "Name=Open drive C:\\\\\\" >> "$DESKF"
             echo "Name[ru_RU]=Открыть диск C:\\\\\\" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -openpfx '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action debug]" >> "$DESKF"
             echo "Name=DEBUG" >> "$DESKF"
             echo "Name[ru_RU]=ДЕБАГ" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -debug '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action cmd]" >> "$DESKF"
             echo "Name=Open in CMD" >> "$DESKF"
             echo "Name[ru_RU]=Открыть в CMD" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -cmd '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action explorer]" >> "$DESKF"
             echo "Name=Explorer" >> "$DESKF"
             echo "Name[ru_RU]=Рабочий стол" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -explorer '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action control]" >> "$DESKF"
             echo "Name=Control panel" >> "$DESKF"
             echo "Name[ru_RU]=Панель управления" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -control '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action regedit]" >> "$DESKF"
             echo "Name=Registry editor" >> "$DESKF"
             echo "Name[ru_RU]=Редактор реестра" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -regedit '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action winecfg]" >> "$DESKF"
             echo "Name=Wine settings" >> "$DESKF"
             echo "Name[ru_RU]=Настройки Wine" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -winecfg '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action taskmgr]" >> "$DESKF"
             echo "Name=Task manager" >> "$DESKF"
             echo "Name[ru_RU]=Диспетчер задач" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -taskmgr '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action uninstaller]" >> "$DESKF"
             echo "Name=Wine uninstaller" >> "$DESKF"
             echo "Name[ru_RU]=Устан/удал программ" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -uninstaller '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action winetricks]" >> "$DESKF"
             echo "Name=Winetricks" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -winetricks '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action clearpfx]" >> "$DESKF"
             echo "Name=Clear prefix" >> "$DESKF"
             echo "Name[ru_RU]=Очистить префикс" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -clearpfx '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action pfxbackup]" >> "$DESKF"
             echo "Name=Create prefix backup" >> "$DESKF"
             echo "Name[ru_RU]=Создать бекап префикса" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -pfxbackup '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action pfxrestore]" >> "$DESKF"
             echo "Name=Restore prefix from backup" >> "$DESKF"
             echo "Name[ru_RU]=Восстановить префикс" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -pfxrestore '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action killwine]" >> "$DESKF"
             echo "Name=Kill Wine processes" >> "$DESKF"
             echo "Name[ru_RU]=Убить процессы Wine" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -killwine '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action version]" >> "$DESKF"
             echo "Name=Version info" >> "$DESKF"
             echo "Name[ru_RU]=Версия" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -version '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action init]" >> "$DESKF"
             echo "Name=Forced initialization" >> "$DESKF"
             echo "Name[ru_RU]=Принудительная инициализация" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -init '$1'" >> "$DESKF"
             echo -e "\n[Desktop Action addtolu]" >> "$DESKF"
             echo "Name=Add to Lutris" >> "$DESKF"
             echo "Name[ru_RU]=Добавить в Lutris" >> "$DESKF"
-            echo "Icon="$LUPNG"" >> "$DESKF"
+            echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Exec='$LW_SOURCE' -addtolu '$1'" >> "$DESKF")
             chmod u+x "$DESKF"
             echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}completed!\n$RESETCOLOR"
@@ -3318,8 +3353,29 @@ lu_rmapp() {
     fi
     updmenuapp() {
         update-desktop-database -q "$MENU_APPS_DIR"
+        try_rm_broken_link "$HOME_ICONS"
         print_info notify "Lutris Wine applications deleted from menu!"
         wait
+    }
+    rm_srtcts() {
+        (IFS=$'\n'
+        if [ -n "$@" ]
+            then
+                for LWAPPRM in $@
+                    do
+                        if [ -n "$(grep -wo "Lutris Wine App" "$LWAPPRM" 2>/dev/null)"  ]
+                            then
+                                rm_icon="$(grep -m1 "^Icon=" "$LWAPPRM" 2>/dev/null|sed 's|^Icon=||g')"
+                                if [ -f "$HOME_ICONS/${rm_icon}.png" ]
+                                    then
+                                        rm_icon="$HOME_ICONS/${rm_icon}.png"
+                                        try_rm "$(realpath "$rm_icon" 2>/dev/null)" &>/dev/null
+                                fi
+                                try_rm "$LWAPPRM"
+                        fi
+                done
+                updmenuapp
+        fi)
     }
     LWAPPSHRT="$(grep "Categories=Lutris Wine App" -lr "$MENU_APPS_DIR" 2>/dev/null)"
     if [[ -n "$(echo "$LWAPPSHRT"|head -1)" ]]
@@ -3329,19 +3385,8 @@ lu_rmapp() {
                 then
                     (IFS=$'\n' ; LWAPPSRM=($(grep "$LU_EXE" -lr "$MENU_APPS_DIR" 2>/dev/null))
                     if [ -n "${LWAPPSRM[*]}" ]
-                        then
-                            for LWAPPRM in ${LWAPPSRM[*]}
-                                do
-                                    if [ -n "$(grep -wo "Lutris Wine App" "$LWAPPRM")"  ]
-                                        then
-                                            try_rm "$LWAPPRM"
-                                        else
-                                            print_error yad "Shortcuts Remover" "$LWAPPRM is not a Lutris Wine app!"
-                                    fi
-                            done
-                            updmenuapp
-                        else
-                            print_error yad "Shortcuts Remover" "$EXE_FULL_NAME not found in the menu!"
+                        then rm_srtcts "${LWAPPSRM[*]}"
+                        else print_error yad "Shortcuts Remover" "$EXE_FULL_NAME not found in the menu!"
                     fi)
                 else
                     LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -m1 "^Name=" {}|sed 's|^Name=||g'|sort -u|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
@@ -3352,9 +3397,8 @@ lu_rmapp() {
                         then
                             if print_question "Lutris Wine Shortcuts Remover" "Are you sure you want to remove all Lutris Wine applications from menu?"
                                 then
-                                    echo "$LWAPPSHRT"|xargs -I {} rm -rfv {}
+                                    rm_srtcts "$LWAPPSHRT"
                                     try_rm "$LW_APPS_DIR"
-                                    updmenuapp
                             fi
                     elif [ -n "$(echo "$LW_APP_RM"|head -1)" ]
                         then
@@ -3362,9 +3406,8 @@ lu_rmapp() {
                             (IFS=$'\n' ; for LWAPPRM in $LW_APP_RM
                                 do
                                     LWSHRTRM="$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -lo "Name=$LWAPPRM" {} 2>/dev/null)"
-                                    [ -n "$LWSHRTRM" ] && echo "$LWSHRTRM"|xargs -I {} rm -rfv {}
+                                    rm_srtcts "$LWSHRTRM"
                             done)
-                            updmenuapp
                     fi
             fi
         else
@@ -3473,7 +3516,7 @@ lu_help() {
                 echo_help
             else
                 export -f echo_help
-                xterm -hold -fa 'Monospace' -fs 10 -geometry 100x43 -bg black -fg white \
+                xterm -hold -fa 'Monospace' -fs 10 -geometry 100x45 -bg black -fg white \
                     -T "Lutris Wine usage info" -e bash -c 'echo_help' 2>/dev/null
         fi
 }
