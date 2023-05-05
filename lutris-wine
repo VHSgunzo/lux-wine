@@ -1427,11 +1427,18 @@ exe2png() {
                     wrestool -x --output=./ -t14 "$1" 2>/dev/null
                     if [ -n "$(ls "${SHRT_NAME}"*.ico 2>/dev/null|head -1)" ]
                         then
-                            ico="$(ls -S -1 "${SHRT_NAME}"*.ico 2>/dev/null|head -1)"
+                            if [[ -f "$(ls "${SHRT_NAME}"*_*_101.ico 2>/dev/null)" && \
+                                -f "$(ls "${SHRT_NAME}"*_*_123.ico 2>/dev/null)"  ]]
+                                then ico="$(ls -S -1 "${SHRT_NAME}"*_*_101.ico)"
+                            elif [[ ! -f "$(ls "${SHRT_NAME}"*_*_101.ico 2>/dev/null)" && \
+                                -f "$(ls "${SHRT_NAME}"*_*_123.ico 2>/dev/null)"  ]]
+                                then ico="$(ls -S -1 "${SHRT_NAME}"*_*_123.ico)"
+                            else ico="$(ls -S -1 "${SHRT_NAME}"*.ico 2>/dev/null|head -1)"
+                            fi
                             echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
-                            convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')"  2>/dev/null
-                            try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|head -1)" "${SHRT_NAME}".png 2>/dev/null
-                            convert "${SHRT_NAME}".png "${SHRT_NAME}".jpg 2>/dev/null
+                            convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')" 2>/dev/null
+                            try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|head -1)" "${SHRT_NAME}.png" 2>/dev/null
+                            convert "${SHRT_NAME}.png" "${SHRT_NAME}.jpg" 2>/dev/null
                             try_mkdir "$HICOLOR_SHR_DIR"
                             (IFS=$'\n'
                             cd "$HICOLOR_SHR_DIR"
