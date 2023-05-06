@@ -1437,7 +1437,10 @@ exe2png() {
                             fi
                             echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
                             convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')" 2>/dev/null
-                            try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|head -1)" "${SHRT_NAME}.png" 2>/dev/null
+                            if [ "${SHRT_NAME}" == "osu!" ]
+                                then try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|awk 'NR==2')" "${SHRT_NAME}.png" 2>/dev/null
+                                else try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|head -1)" "${SHRT_NAME}.png" 2>/dev/null
+                            fi
                             convert "${SHRT_NAME}.png" "${SHRT_NAME}.jpg" 2>/dev/null
                             try_mkdir "$HICOLOR_SHR_DIR"
                             (IFS=$'\n'
