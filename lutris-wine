@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.5"
+export LW_VERSION="0.77.6"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -1709,7 +1709,7 @@ lu_debug() {
             export VKBASALT_LOG_LEVEL="debug"
             export TMP_DBG="/tmp/${WINE_IN_USE}_$(date +'%Y-%m-%d_%H%M%S').debug"
             check_ld_library
-            export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "PRIME" \
+            export PRINT_VARS="$(print_var "WINE_IN_USE" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "NVPRIME" \
                 "VKBASALT_EFFECTS" "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "CPU_LIMIT" "VSYNC" \
                 "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" "VIRTUAL_DESKTOP" "FPS_LIMIT" "LW_CENV" \
                 "LW_DIR" "LW_CFG" "GSTREAMER" "HIDE_NVIDIA_GPU" "EXE_LWDB" "EXE_LWDBFL" "GST_PLUGIN_SYSTEM_PATH_1_0" "WINE_GST_REGISTRY_DIR" "RUNSRC" "RUNROOTFS_VERSION" \
@@ -2549,7 +2549,8 @@ full_init() {
             check_battleye
             check_eac
             check_winetricks
-            check_prime
+            check_nvprime
+            check_driprime
             check_vsync
             check_fsr
             check_pulse_latency
@@ -2665,7 +2666,7 @@ lu_config() {
             LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
-            VSYNC PRIME"
+            VSYNC NVPRIME DRIPRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ -n "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2818,7 +2819,8 @@ lu_config() {
             --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" "$DEF_MANGOHUDCFG")" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
             --field="Vsync::CB" "$(cfg_items "$VSYNC" "$VSYNCLST")" \
-            --field="NVIDIA Prime Render Offload:CHK" "$PRIME" \
+            --field="NVIDIA Prime Render Offload:CHK" "$NVPRIME" \
+            --field="DRI_PRIME:CHK" "$DRIPRIME" \
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
@@ -4773,15 +4775,25 @@ check_vulkan_icd() {
     fi
 }
 
-check_prime() {
-    [ -n "$1" ] && export PRIME="$1"
-    if [ "$PRIME" == 1 ]
+check_nvprime() {
+    [ -n "$1" ] && export NVPRIME="$1"
+    if [ "$NVPRIME" == 1 ]
         then
             export __GLX_VENDOR_LIBRARY_NAME="nvidia"
             export __NV_PRIME_RENDER_OFFLOAD=1
             export __VK_LAYER_NV_optimus="NVIDIA_only"
         else
             unset __GLX_VENDOR_LIBRARY_NAME __NV_PRIME_RENDER_OFFLOAD __VK_LAYER_NV_optimus
+    fi
+}
+
+check_driprime() {
+    [ -n "$1" ] && export DRIPRIME="$1"
+    if [ "$DRIPRIME" == 1 ]
+        then
+            export DRI_PRIME=1
+        else
+            unset DRI_PRIME
     fi
 }
 
@@ -5414,9 +5426,9 @@ export_all_functions() {
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr updcfgchksum lite_init \
         us_layout_sw check_mangohud check_wd3dmode check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
         check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell unpack_squash \
-        check_prime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
+        check_nvprime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
-        runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd btntls_run get_app_exe \
+        runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd btntls_run get_app_exe check_driprime \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all is_loadbar lu_runapp lu_lsapp try_get_tray \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config \
         settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \

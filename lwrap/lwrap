@@ -10,10 +10,16 @@ LW_DIR="$HOME/.local/share/LutrisWine"
 LW_CFG="$LW_DIR/luwine.wcfg"
 LWBIN_DIR="$LW_DIR/bin"
 LWSRC="$LWBIN_DIR/lutris-wine"
-GIT_LWSRC="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main/lutris-wine"
+GIT_SRC_RAW="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main"
+GIT_LWSRC="$GIT_SRC_RAW/lutris-wine"
+GIT_LWRAP="$GIT_SRC_RAW/lwrap/lwrap"
 GIT_LWRUN="https://github.com/VHSgunzo/runimage/releases"
-HOME_DESK_APP="$HOME/.local/share/applications"
-HOME_DESK_DIR="$HOME/.local/share/desktop-directories"
+HICOLOR_SIZES=("512x512" "256x256" "192x192" "128x128" "96x96" "80x80" "72x72" "64x64" "48x48" "32x32" "24x24" "16x16")
+HOME_ICONS="$HOME/.local/share/icons"
+HOME_DESK_APPS="$HOME/.local/share/applications"
+HOME_DESK_DIRS="$HOME/.local/share/desktop-directories"
+HSTEAM_DESKF="$HOME_DESK_APPS/steam-lw.desktop"
+RSTEAM_DESKF="$RUNROOTFS/usr/share/applications/steam.desktop"
 F_RC="$HOME/.config/fish/config.fish"
 B_RC="$HOME/.bashrc"
 Z_RC="$HOME/.zshrc"
@@ -95,16 +101,33 @@ make_install() {
             install -Dm644 LutrisWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LutrisWineService.desktop"
             [ ! -f "$LW_DIR/.firstrun" ] && \
             install -Dm755 applications/LutrisWine.desktop "$HOME/Desktop/LutrisWine.desktop"
-            mkdir -p "$HOME_DESK_APP"
-            mkdir -p "$HOME_DESK_DIR"
+            mkdir -p "$HOME_DESK_APPS"
+            mkdir -p "$HOME_DESK_DIRS"
             cp -rf mime "$HOME/.local/share/mime"
-            cp -rf applications "$HOME_DESK_APP/LutrisWine"
-            cp -rf directories/* "$HOME_DESK_DIR/"
+            cp -rf applications "$HOME_DESK_APPS/LutrisWine"
+            cp -rf directories/* "$HOME_DESK_DIRS/"
+            if [[ -d "$RUNROOTFS" && -f "$RSTEAM_DESKF" ]]
+                then
+                    cp -rf "$RSTEAM_DESKF" "$HSTEAM_DESKF"
+                    sed -i "s|^Exec.*steam-runtime|Exec='$RUNIMAGE_LW' steam-runtime|g" "$HSTEAM_DESKF"
+                    sed -i "s|^Name=Steam (Runtime)|Name=Steam (RunImage LW)|g" "$HSTEAM_DESKF"
+                    for hi_icon_size in ${HICOLOR_SIZES[@]}
+                        do
+                            HICONS_DIR="$HOME_ICONS/hicolor/$hi_icon_size/apps"
+                            RSTEAM_ICON="$RUNROOTFS/usr/share/icons/hicolor/$hi_icon_size/apps/steam.png"
+                            HSTEAM_ICON="$HICONS_DIR/steam.png"
+                            if [[ -f "$RSTEAM_ICON" && ! -f "$HSTEAM_ICON" ]]
+                                then
+                                    mkdir -p "$HICONS_DIR"
+                                    cp -rf "$RSTEAM_ICON" "$HSTEAM_ICON"
+                            fi
+                    done
+            fi
             add_path "$B_RC"
             add_path "$Z_RC"
             check_path "$F_RC" && echo -e \
                 '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$F_RC"
-            update-desktop-database -q "$HOME_DESK_APP" &>/dev/null
+            update-desktop-database -q "$HOME_DESK_APPS" &>/dev/null
             update-mime-database "$HOME/.local/share/mime" &>/dev/null
     fi
     cp -rf registry_patch "$LW_DIR/"
@@ -180,9 +203,9 @@ uninstall_lw() {
     if [ "$1" == "force" ] || is_lw || is_lwrun
         then
             info_msg "Removing Lutris Wine..."
-            rm -rf "$HOME_DESK_APP/LutrisWine"
-            rm -rf "$HOME_DESK_DIR/LutrisWine"*
-            rm -rf "$HOME/Desktop/LutrisWine.desktop"
+            rm -rf "$HSTEAM_DESKF"
+            rm -rf "$HOME_DESK_APPS/LutrisWine"
+            rm -rf "$HOME_DESK_DIRS/LutrisWine"*
             rm -rf "$HOME/.config/menus/applications-merged/LutrisWine.menu"
             rm -rf "$HOME/.local/share/kservices5/ServiceMenus/LutrisWine"*
             if [ "$1" == "update" ]
@@ -202,7 +225,8 @@ uninstall_lw() {
                     rm -rf "$LWRUN_LN"
                     rm -rf "$HOME/LutrisWine"
                     rm -rf "$HBIN_DIR/runimage-lw"
-                    rm -rf "$HOME_DESK_APP/LutrisWine"*
+                    rm -rf "$HOME_DESK_APPS/LutrisWine"*
+                    rm -rf "$HOME/Desktop/LutrisWine.desktop"
             fi
     fi
     info_msg "Lutris Wine removed!"
@@ -293,7 +317,17 @@ update_lw() {
                             if is_update "Lutris Wine"
                                 then
                                     info_msg "Lutris Wine update..."
-                                    install_lw
+                                    TMP_LWRAP="${LWRAP}.new$BASHPID"
+                                    if try_dl "$GIT_LWRAP" "$TMP_LWRAP"
+                                        then
+                                            mv -f "$TMP_LWRAP" "$LWRAP"
+                                            chmod +x "$LWRAP"
+                                            "$LWRAP" --install||\
+                                            exit 1
+                                        else
+                                            error_msg "Failed to get lwrap!"
+                                            exit 1
+                                    fi
                             fi
                         else
                             info_msg "The latest version is already installed!"
@@ -392,9 +426,14 @@ is_update() {
 no_color() { sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" ; }
 
 update_runimage() {
-    is_update "RunImage" "Do you want to check updates for RunImage packages?" && \
-        HOSTEXEC_IN_TERM=1 runimage_lw --rU
+    if is_update "RunImage" "Do you want to check updates for RunImage packages?"
+        then
+            HOSTEXEC_IN_TERM=1 runimage_lw --rU && \
+            restart_msg
+    fi
 }
+
+restart_msg() { info_msg "You need to restart Lutris Wine!" ; }
 
 update_lwrun() {
     if is_lwrun
@@ -413,7 +452,8 @@ update_lwrun() {
                             if is_update "lwrun"
                                 then
                                     info_msg "lwrun update..."
-                                    try_dl_lwrun
+                                    try_dl_lwrun && \
+                                    restart_msg
                             fi
                         else
                             info_msg "The latest version is already installed!"
@@ -622,8 +662,8 @@ case $1 in
                install_lw "$2"
                exit $? ;;
     --update) FORCE_UPDATE=1
-              update_lwrun
               update_lw
+              update_lwrun
               exit $? ;;
 esac
 
