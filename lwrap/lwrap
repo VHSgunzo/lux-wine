@@ -308,7 +308,7 @@ update_lw() {
         then
             info_msg "Checking the Lutris Wine update..."
             GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 \
-                try_dl "$GIT_LWSRC" /dev/stdout|& get_lw_version)"
+                try_dl "$GIT_LWSRC" /dev/stdout 2>/dev/null|get_lw_version)"
             LW_VERSION="$(get_lw_version "$LWSRC")"
             if [[ -n "$GIT_LW_VERSION" && -n "$LW_VERSION" ]]
                 then
@@ -345,13 +345,13 @@ update_lw() {
 
 get_lwrun_git_ver() {
     NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl "$GIT_LWRUN/latest" \
-        /dev/stdout|& grep -m1 "Release v.*"|awk '{print$2}'
+        /dev/stdout 2>/dev/null|grep -m1 "Release v.*"|awk '{print$2}'
 }
 
 get_lwrun_gdurl() {
     local GAPI_KEY='AIzaSyCI5Z4CtXHD24LeoxL8paaPwY9JjieEEKM'
     echo "$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl "$GIT_LWRUN/tag/$1" \
-        /dev/stdout|& grep -w 'runimage.superlite'|\
+        /dev/stdout 2>/dev/null|grep -w 'runimage.superlite'|\
         grep -o 'https.*media')&key=$GAPI_KEY"
 }
 
