@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# Logging servers
+logging_servers_os="\n\
+# Honkai Star Rail logging servers (oversea)\n\
+0.0.0.0 log-upload-os.hoyoverse.com\n\
+0.0.0.0 sg-public-data-api.hoyoverse.com\n"
+
+check_win_version 10
+
+check_deps() {
+    if [ ! -n "$(which xdelta3 2>/dev/null)" ]
+        then
+            print_error yad "xdelta3 not found in your system! Install xdelta3 in your system! \nArch-based: sudo pacman -S xdelta3"
+            return 1
+    fi
+}
+
+check_sr_patch() {
+    DIR="$WINEPREFIX/drive_c/Program Files/sr_patch105"
+    if [ ! -d "$DIR" ]
+        then
+            if try_download "https://github.com/VHSgunzo/sr_patch/releases/download/v1.0.5/sr_patch105.tar.gz" "$WINEPREFIX/drive_c/Program Files"
+                then
+                    if unpack_tar_gz "$DIR.tar.gz" "$WINEPREFIX/drive_c/Program Files"
+                        then
+                            try_rm "$DIR.tar.gz" &>/dev/null
+                            return 0
+                        else
+                            try_rm "$DIR"* &>/dev/null
+                            return 1
+                    fi
+                else
+                    return 1
+            fi
+    fi
+}
+
+helper_pkexec() {
+    if [ "$ENABLE_HOSTEXEC" == 1 ]
+        then
+            hostexec -su sh -c "$1"||return 1
+        else
+            pkexec sh -c "$1"||return 1
+    fi
+}
+
+launch_helper() {
+    DATADIR=$(find -type d -name "*_Data")
+    FILE1="UnityPlayer.dll"
+    FILE2="StarRailBase.dll"
+    CEXE1="UnityCrashHandler64.exe"
+    sum1=($(md5sum $FILE1))
+    sum2=($(md5sum $FILE2))
+    sum="${sum2}-${sum1}"
+    if [ "$sum" == "86e7577a3de6b4372ca3afe4d6f75f62-58be38abd856afbb4f89ed24f1e3f6c1" ]
+        then
+            print_info notify "Patch is already applied!"
+        else
+            if [ "$sum" == "8aa3790aafa3dd176678392f3f93f435-f17b9b7f9b8c9cbd211bdff7771a80c2" ]
+                then
+                    game_region="os"
+                    logging_servers="${logging_servers_os}"
+                    print_info notify "Applying patch for: International (OS) version"
+                else
+                    print_error yad "Wrong file version\nmd5sum: $sum"
+                    return 1
+            fi
+            if print_question "Hereby you are violating the game's Terms of Service! \nDo you accept the risk and possible consequences?"
+                then
+                    print_info notify "Setting up blocked servers"
+                    if [ ! -n "$(grep "Honkai Star Rail logging servers" /etc/hosts)" ]
+                        then
+                            print_info yad "Blocking logging servers in /etc/hosts\n$logging_servers"
+                            helper_pkexec "echo -e '$logging_servers' >> /etc/hosts"||return 1
+                        else
+                            print_info notify "Logging servers are already blocked. Skip."
+                    fi
+                    print_info notify "Renaming the crash reporter"
+                    try_mv "$CEXE1" "$CEXE1.bak"
+                    print_info notify "Copying additional files"
+                    try_cp "$DIR/files/"* ./
+                    print_info notify "Pathing game files"
+                    for game_file in "$FILE1" "$FILE2"
+                        do
+                            print_info "Patching ${game_file}"
+                            try_mv "${game_file}" "${game_file}.bak"
+                            if ! xdelta3 -d -s "${game_file}.bak" "$DIR/diffs/${game_file}.vcdiff" "${game_file}"
+                                then
+                                    try_mv "$FILE.bak" "$FILE"
+                                    print_error yad "Patch not applied!"
+                                    return 1
+                            fi
+                    done
+                    print_info notify "Patch applied! Enjoy the game."
+                else
+                    return 1
+            fi
+    fi
+}
+
+if check_deps
+    then
+        if check_sr_patch
+            then
+                if ! launch_helper
+                    then
+                        exit 1
+                fi
+            else
+                exit 1
+        fi
+    else
+        exit 1
+fi
