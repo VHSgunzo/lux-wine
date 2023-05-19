@@ -3413,7 +3413,7 @@ lu_rmapp() {
                         if [ -n "$(grep -wo "Lutris Wine App" "$LWAPPRM" 2>/dev/null)"  ]
                             then
                                 rm_icon="$(grep -m1 "^Icon=" "$LWAPPRM" 2>/dev/null|sed 's|^Icon=||g')"
-                                if [ -f "$HOME_ICONS/${rm_icon}.png" ]
+                                if [[ -f "$HOME_ICONS/${rm_icon}.png" && ! "$LW_DEF_ICO" =~ "$rm_icon" ]]
                                     then
                                         for hi_icon_size in ${HICOLOR_SIZES[@]}
                                             do
