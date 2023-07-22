@@ -18,9 +18,6 @@ curl -sL lwrap.github.io|bash
 wget -qO - lwrap.github.io|bash
 ```
 
-## Video of the installation process:
-[![Lutris Wine installation process](https://img.youtube.com/vi/3UM_01q4Rm0/0.jpg)](https://www.youtube.com/watch?v=3UM_01q4Rm0)
-
 ## **Usage:**
 * ### **The launch of your Windows games and applications is carried out from your file manager or from the built-in LW file manager or from the application menu when creating a shortcut for the EXE**
 
@@ -233,37 +230,3 @@ lwrun --uninstall
 ![wineapp](https://github.com/VHSgunzo/lutris-wine/assets/57139938/00bbcdde-cf8b-4233-920d-2128c5129ed4)
 ![winecfg](https://github.com/VHSgunzo/lutris-wine/assets/57139938/a426f266-79d9-467d-b450-69d4e07aeb99)
 ![winemgr](https://github.com/VHSgunzo/lutris-wine/assets/57139938/26897a52-c17d-4140-b011-eabf117bf693)
-
-
-## Classic installation on Arch Linux (without [RunImage](https://github.com/VHSgunzo/runimage) container):
-* **Enable multilib in the pacman config:**
-```
-sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-```
-* **Upgrade your system:**
-```
-sudo pacman -Syu
-```
-* **Install the latest video drivers for your video adapter:**
-```
-!!!Make sure your video adapter supports Vulkan API!!!
-
-## NVIDIA ##
-sudo pacman -S lib32-nvidia-utils lib32-opencl-nvidia libxnvctrl nvidia nvidia-dkms nvidia-settings nvidia-utils opencl-nvidia
-
-## AMD ##
-sudo pacman -S lib32-vulkan-radeon vulkan-radeon xf86-video-amdgpu
-
-## INTEL ##
-sudo pacman -S lib32-vulkan-intel vulkan-intel lib32-libva-intel-driver libva-intel-driver libva-utils xf86-video-intel
-```
-* **Reboot your system:**
-```
-sudo reboot
-```
-* **Install Lutris Wine using your favorite AUR package manager:**
-```
-yay --needed --noconfirm -S base-devel lutris-wine-git && lutris-wine -init
-```
-## Video of the classic installation process:
-[![Lutris Wine installation process](https://img.youtube.com/vi/rzmIOUjDpSU/0.jpg)](https://www.youtube.com/watch?v=rzmIOUjDpSU)
