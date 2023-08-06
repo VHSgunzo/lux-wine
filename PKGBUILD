@@ -25,9 +25,9 @@ depends=('aria2' 'qt5-tools' 'xterm' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'fir
          'lib32-vulkan-mesa-layers' 'libstrangle-git' 'openssl' 'libnotify' 'coreutils' 'xdotool'
          'libxrandr' 'lib32-libxrandr' 'xorg-xrandr' 'bc' 'xorg-xgamma' 'lsb-release' 'neofetch'
          'iputils' 'curl' 'xdelta3' 'xdg-utils' 'lsvkdev' 'wmctrl' 'importenv' 'xdg-desktop-portal-gtk'
-         'desktop-file-utils' 'squashfs-tools' 'squashfuse' 'fuse2' 'reshade-shaders-lw' 'glibc-eac'
+         'desktop-file-utils' 'squashfs-tools' 'squashfuse' 'fuse2' 'reshade-shaders-lw'
          'winetricks-git' 'innoextract' 'p7zip' 'gnu-netcat' 'xdg-user-dirs' 'GE-Proton' 'dbus-x11'
-         'libva-utils' 'libva-intel-driver' 'lib32-libva-intel-driver' 'vulkan-intel' 'lib32-glibc-eac'
+         'libva-utils' 'libva-intel-driver' 'lib32-libva-intel-driver' 'vulkan-intel'
          'lib32-vulkan-intel' 'vulkan-radeon' 'lib32-vulkan-radeon' 'lib32-libxnvctrl' 'libxnvctrl'
 )
 optdepends=('xf86-video-amdgpu' 'xf86-video-intel' 'llvm'
