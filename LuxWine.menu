@@ -4,17 +4,17 @@
 <Menu>
     <Name>Applications</Name>
     <Menu>
-        <Name>LutrisWine</Name>
-        <Directory>LutrisWine.directory</Directory>
+        <Name>LuxWine</Name>
+        <Directory>LuxWine.directory</Directory>
         <Include>
-            <Category>Lutris Wine</Category>
+            <Category>Lux Wine</Category>
         </Include>
     </Menu>
     <Menu>
-        <Name>LutrisWineApp</Name>
-        <Directory>LutrisWineApp.directory</Directory>
+        <Name>LuxWineApp</Name>
+        <Directory>LuxWineApp.directory</Directory>
         <Include>
-                <Category>Lutris Wine App</Category>
+                <Category>Lux Wine App</Category>
         </Include>
     </Menu>
 </Menu>

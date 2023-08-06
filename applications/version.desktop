@@ -1,8 +1,8 @@
 [Desktop Entry]
-Categories=Lutris Wine
-Exec="/usr/bin/lutris-wine" -version %f
+Categories=Lux Wine
+Exec="/usr/bin/lux-wine" -version %f
 MimeType=application/x-ms-dos-executable;application/x-msdos-program
-Icon=/usr/share/lutris-wine/icons/lw_default_icon.png
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
 Name=Version info
 Name[ru_RU]=Версия
 NoDisplay=false

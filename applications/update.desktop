@@ -1,7 +1,7 @@
 [Desktop Entry]
-Categories=Lutris Wine
-Exec="/usr/bin/lutris-wine" -update
-Icon=/usr/share/lutris-wine/icons/lw_default_icon.png
+Categories=Lux Wine
+Exec="/usr/bin/lux-wine" -update
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
 Name=Update runtime
 Name[ru_RU]=Обновление рантайм
 NoDisplay=false

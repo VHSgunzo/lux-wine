@@ -2,3 +2,5 @@
 lw-tray/target
 lw-tray/dist/*
 lw-tray/Cargo.lock
+lw-tray/lw-tray
+*.pkg.*
