@@ -27,12 +27,12 @@ depends=('aria2' 'qt5-tools' 'xterm' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'fir
          'iputils' 'curl' 'xdelta3' 'xdg-utils' 'lsvkdev' 'wmctrl' 'importenv' 'xdg-desktop-portal-gtk'
          'desktop-file-utils' 'squashfs-tools' 'squashfuse' 'fuse2' 'reshade-shaders-lw'
          'winetricks-git' 'innoextract' 'p7zip' 'gnu-netcat' 'xdg-user-dirs' 'GE-Proton' 'dbus-x11'
-         'libva-utils' 'libva-intel-driver' 'lib32-libva-intel-driver' 'vulkan-intel'
+         'libva-utils' 'libva-intel-driver' 'lib32-libva-intel-driver' 'vulkan-intel' 'wine-staging'
          'lib32-vulkan-intel' 'vulkan-radeon' 'lib32-vulkan-radeon' 'lib32-libxnvctrl' 'libxnvctrl'
 )
 optdepends=('xf86-video-amdgpu' 'xf86-video-intel' 'llvm'
             'lib32-opencl-icd-loader' 'opencl-icd-loader'
-            'lib32-llvm' 'wine' 'wine-prefix-dotnet')
+            'lib32-llvm' 'wine-prefix-dotnet')
 source=('lwrap' 'lux-wine')
 sha256sums=('SKIP' 'SKIP')
 
