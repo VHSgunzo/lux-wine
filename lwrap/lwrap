@@ -459,7 +459,7 @@ update_lwrun() {
                             info_msg "The latest version is already installed!"
                             touch "$LWRUN"
                     fi
-                    update_runimage
+#                     update_runimage
                 else
                     error_msg "Failed to check for updates!"
                     return 1
