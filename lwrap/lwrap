@@ -14,6 +14,7 @@ GIT_SRC_RAW="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main"
 GIT_LWSRC="$GIT_SRC_RAW/lutris-wine"
 GIT_LWRAP="$GIT_SRC_RAW/lwrap/lwrap"
 GIT_LWRUN="https://github.com/VHSgunzo/runimage/releases"
+GIT_LWRUN_VERSION="v0.38.9"
 HICOLOR_SIZES=("512x512" "256x256" "192x192" "128x128" "96x96" "80x80" "72x72" "64x64" "48x48" "32x32" "24x24" "16x16")
 HOME_ICONS="$HOME/.local/share/icons"
 HOME_DESK_APPS="$HOME/.local/share/applications"
@@ -380,12 +381,17 @@ try_dl_lwrun() {
 }
 
 runimage_lw() {
-    [ "$HOSTEXEC_IN_TERM" == 1 ] && \
-        HOSTEXEC_IN_TERM="-t"||\
-        unset HOSTEXEC_IN_TERM
+    [ "$NOT_TERM" != 1 ] && \
+        unset HOSTEXEC_IN_TERM||\
+        HOSTEXEC_IN_TERM=(
+            "xterm" "-fa" "Monospace"
+            "-fs" "11" "-geometry" "130x45"
+            "-bg" "black" "-fg" "white" \
+            "-T" "Updating RunImage packages..." "-e"
+        )
     if [ "$ENABLE_HOSTEXEC" == 1 ]
-        then hostexec $HOSTEXEC_IN_TERM importenv '$RUNPID' \
-                env DONT_NOTIFY=1 "$RUNIMAGE_LW" "$@"
+        then "${HOSTEXEC_IN_TERM[@]}" hostexec ptyspawn importenv '$RUNPID' \
+                env DONT_NOTIFY=1 NO_RPIDSMON=1 "$RUNIMAGE_LW" "$@"
         else "$RUNIMAGE_LW" "$@"
     fi
 }
@@ -428,7 +434,7 @@ no_color() { sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" ; }
 update_runimage() {
     if is_update "RunImage" "Do you want to check updates for RunImage packages?"
         then
-            HOSTEXEC_IN_TERM=1 runimage_lw --rU && \
+            runimage_lw --rU && \
             restart_msg
     fi
 }
@@ -439,7 +445,7 @@ update_lwrun() {
     if is_lwrun
         then
             info_msg "Checking the lwrun update..."
-            GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+            # GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
             GIT_LWRUN_VERSION_PARS="$(echo "$GIT_LWRUN_VERSION"|vers_parser)"
             [ -n "$RUNIMAGE_VERSION" ] && \
                 LWRUN_VERSION="$(echo "$RUNIMAGE_VERSION"|vers_parser)"||\
@@ -459,7 +465,7 @@ update_lwrun() {
                             info_msg "The latest version is already installed!"
                             touch "$LWRUN"
                     fi
-#                     update_runimage
+                    # update_runimage
                 else
                     error_msg "Failed to check for updates!"
                     return 1
