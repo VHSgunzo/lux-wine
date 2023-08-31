@@ -14,7 +14,7 @@ GIT_SRC_RAW="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main"
 GIT_LWSRC="$GIT_SRC_RAW/lutris-wine"
 GIT_LWRAP="$GIT_SRC_RAW/lwrap/lwrap"
 GIT_LWRUN="https://github.com/VHSgunzo/runimage/releases"
-GIT_LWRUN_VERSION="v0.38.9"
+export GIT_LWRUN_VERSION="v0.38.9"
 HICOLOR_SIZES=("512x512" "256x256" "192x192" "128x128" "96x96" "80x80" "72x72" "64x64" "48x48" "32x32" "24x24" "16x16")
 HOME_ICONS="$HOME/.local/share/icons"
 HOME_DESK_APPS="$HOME/.local/share/applications"
@@ -359,8 +359,8 @@ get_lwrun_gdurl() {
 try_dl_lwrun() {
     TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
-    [ ! -n "$GIT_LWRUN_VERSION" ] && \
-        GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+    #[ ! -n "$GIT_LWRUN_VERSION" ] && \
+    #    GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
     if [ -n "$GIT_LWRUN_VERSION" ]
         then
             LWRUN_URL="$(get_lwrun_gdurl "$GIT_LWRUN_VERSION")" && \
