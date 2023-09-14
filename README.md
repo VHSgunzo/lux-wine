@@ -6,7 +6,7 @@ This project allows you to easily run your favorite applications and games for W
 * Supported architectures `x86_64`
 * The minimum recommended `Linux kernel` version is `4.18+` with support for `user namespaces`, but `5.0+` would be better.
 * `FUSE` (but not necessarily, because it is possible to work in unpacked form without `FUSE` mounting)
-* Driver for your graphics card (In most cases, Mesa will be enough, but not for Nvidia xD)
+* Driver for your graphics card.
 * Some kind of desktop environment (but not necessarily, since if desired, you can install the desktop directly into the [RunImage](https://github.com/VHSgunzo/runimage) container)
 
 ## **Installation**:
@@ -87,7 +87,6 @@ lwrun --uninstall
 - [x] Easy installation without root rights and dependencies
 - [x] Quick initialization and launch
 - [x] Launch *.exe *.lnk *.bat *.msi *.reg files
-- [x] Sandboxed network
 - [x] Ability to specify EXE arguments and save them in settings
 - [x] Tray mode
 - [x] Automatic download of necessary Wine libraries
@@ -196,5 +195,4 @@ lwrun --uninstall
       * DXVK_ASYNC
       * WINE_LARGE_ADDRESS_AWARE
       * WINE_DISABLE_WRITE_WATCH
-      * __GL_THREADED_OPTIMIZATIONS
 ```

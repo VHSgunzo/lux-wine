@@ -21,12 +21,12 @@ jobs:
       - name: Build archlinux packages
         uses: countstarlight/arch-makepkg-action@master
         with:
-          scripts: makepkg -fsCc --noconfirm --nodeps
+          scripts: "cd lwrap && makepkg -fsCc --noconfirm --nodeps"
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: lwrap-*.pkg*
+          files: lwrap/lwrap-*.pkg*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,10 +11,10 @@
         </Include>
     </Menu>
     <Menu>
-        <Name>LuxWineApp</Name>
-        <Directory>LuxWineApp.directory</Directory>
+        <Name>LuxWineApps</Name>
+        <Directory>LuxWineApps.directory</Directory>
         <Include>
-                <Category>Lux Wine App</Category>
+                <Category>Lux Wine Apps</Category>
         </Include>
     </Menu>
 </Menu>

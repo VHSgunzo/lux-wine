@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.9"
+export LW_VERSION="0.77.9.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -25,8 +25,33 @@ is_exe_exist() { command -v "$@" &>/dev/null ; }
 
 which_exe() { command -v "$@" ; }
 
+ipath() {
+    if [[ "$1" == '-v' ]]
+        then local -n _res="$2" ; shift 2
+        else local _res
+    fi
+    local arg="$(echo "$1"|\
+    sed "s|[^[:alnum:]/$&+,:;=?@#|'<>.^%!-]|*|g")"
+    local _path _i _chr
+    _res=
+    for ((_i=0;_i<"${#arg}";_i++))
+        do _chr="${arg:_i:1}" _chr="${_chr,}"
+        [[ "$_chr" != ${_chr^} ]] && \
+            _path+="[$_chr${_chr^}]"||\
+            _path+="$_chr"
+    done
+    _path=($_path)
+    [[ -e "${_path[0]}" ]]||return 1
+    if [[ "${_res@A}" == _res=* ]] ;
+        then printf "%s\n" "${_path[@]}"
+        else _res=("${_path[@]}")
+    fi
+}
+
+[ -n "$(echo "$PATH"|grep -o '/usr/bin/vendor_perl')" ]||\
+    export PATH="$PATH:/usr/bin/vendor_perl"
 [ ! -n "$LW_SYS_DIR" ] && export LW_SYS_DIR="/usr/share/lux-wine"
-[ ! -n "$LWRAP_DIR" ] && export LWRAP_DIR="/opt/lwrap"
+[ ! -n "$LWRAP_DIR" ] && export LWRAP_DIR='/opt/lwrap'
 [ ! -n "$LWRAP_PFX_DIR" ] && export LWRAP_PFX_DIR="$LWRAP_DIR/prefix_backups"
 [ ! -n "$LWRAP_DEFPFX" ] && export LWRAP_DEFPFX="$LWRAP_PFX_DIR/defprefix.xz.lwpfx"
 [ ! -n "$LW_SOURCE" ] && export LW_SOURCE="$0"
@@ -65,29 +90,34 @@ fi
 [ ! -n "$LW_DEF_LOAD_GIF" ] && export LW_DEF_LOAD_GIF="$LW_GIF_DIR/default_loading.gif"
 [ ! -n "$LW_DEF_ICO" ] && export LW_DEF_ICO="lw_default_icon"
 [ ! -n "$LW_DEF_ICO_PTH" ] && export LW_DEF_ICO_PTH="$LW_ICONS_DIR/$LW_DEF_ICO.png"
-export HICOLOR_SIZES=("512x512" "256x256" "192x192" "128x128" "96x96" "80x80" "72x72" "64x64" "48x48" "32x32" "24x24" "16x16")
-if [ -f "$LW_DEF_ICO_PTH" ]
-    then
-        [ ! -f "$HOME_ICONS/$LW_DEF_ICO.png" ] && \
-            ln -sfr "$LW_DEF_ICO_PTH" "$HOME_ICONS/"
-        if [ ! -f "$HOME_ICONS/hicolor/256x256/apps/$LW_DEF_ICO.png" ]
+export HICOLOR_SIZES=(
+    "512x512" "256x256" "192x192" "128x128"
+    "96x96" "80x80" "72x72" "64x64" "48x48"
+    "32x32" "24x24" "16x16"
+)
+for icon in "$LW_ICONS_DIR"/*.png
+    do
+        icon_name="$(basename "$icon")"
+        [ ! -f "$HOME_ICONS/$icon_name" ] && \
+            ln -sfr "$icon" "$HOME_ICONS/"
+        if [ ! -f "$HOME_ICONS/hicolor/256x256/apps/$icon_name" ]
             then
                 for hi_icon_size in ${HICOLOR_SIZES[@]}
                     do
                         mkdir -p "$HOME_ICONS/hicolor/$hi_icon_size/apps"
                         mkdir -p "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps"
-                        convert "$LW_DEF_ICO_PTH" -resize "$hi_icon_size" \
-                            "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$LW_DEF_ICO.png" && \
-                        ln -sfr "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$LW_DEF_ICO.png" \
-                            "$HOME_ICONS/hicolor/$hi_icon_size/apps/$LW_DEF_ICO.png"
+                        convert "$icon" -resize "$hi_icon_size" \
+                            "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$icon_name" && \
+                        ln -sfr "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$icon_name" \
+                            "$HOME_ICONS/hicolor/$hi_icon_size/apps/$icon_name"
                 done
         fi
-fi
+done
 [ ! -n "$LW_APPS_ICONS_DIR" ] && export LW_APPS_ICONS_DIR="$LW_DIR/apps_icons"
 [ ! -n "$LW_WINE_DIR" ] && export LW_WINE_DIR="$LW_DIR/runners/wine"
 [ ! -n "$LW_RUNTIME_DIR" ] && export LW_RUNTIME_DIR="$LW_DIR/runtime"
 [ ! -n "$MENU_APPS_DIR" ] && export MENU_APPS_DIR="$HOME/.local/share/applications"
-[ ! -n "$LW_APPS_DIR" ] && export LW_APPS_DIR="$MENU_APPS_DIR/LuxWineApp"
+[ ! -n "$LW_APPS_DIR" ] && export LW_APPS_DIR="$MENU_APPS_DIR/LuxWineApps"
 [ ! -n "$LW_WTRX_DIR" ] && export LW_WTRX_DIR="$LW_RUNTIME_DIR/winetricks"
 [ ! -n "$LW_DEF_CFG" ] && export LW_DEF_CFG="$LW_DIR/luwine.wcfg"
 [ ! -n "$LW_CFG" ] && export LW_CFG="$LW_DEF_CFG"
@@ -134,7 +164,6 @@ check_def_config() {
     [ ! -n "$VKBASALT" ] && export VKBASALT=1
     [ ! -n "$WIN_VER" ] && export WIN_VER="10"
     [ ! -n "$VKD3DCFG" ] && export VKD3DCFG="Disabled"
-    [ ! -n "$DXR" ] && export DXR="1.1"
     [ ! -n "$DXVKASYNC" ] && export DXVKASYNC=1
     [ ! -n "$LARGE_ADDRESS" ] && export LARGE_ADDRESS=1
     [ ! -n "$SHARED_MEMORY" ] && export SHARED_MEMORY=1
@@ -143,7 +172,7 @@ check_def_config() {
     [ ! -n "$WMONOVER" ] && export WMONOVER="Microsoft.Xna.Framework.*,Gac=n"
     [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe='
     [ ! -n "$WINE_THEME" ] && export WINE_THEME='Breeze Dark'
-    [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD=1
+    [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='Enabled'
     [ ! -n "$FPS_LIMIT" ] && export FPS_LIMIT="75"
     [ ! -n "$GAMEMODE" ] && export GAMEMODE=1
     [ ! -n "$GSTREAMER" ] && export GSTREAMER=1
@@ -153,7 +182,6 @@ check_def_config() {
     [ ! -n "$BATTLEYE" ] && export BATTLEYE=1
     [ ! -n "$EAC" ] && export EAC=1
     [ ! -n "$EXE_LWDB" ] && export EXE_LWDB=1
-    [ ! -n "$GL_THRD_OPTI" ] && export GL_THRD_OPTI=1
     [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='vcrun2022 mfc42'
     [ ! -n "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
     export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
@@ -182,7 +210,7 @@ check_def_config() {
 }
 
 print_var() {
-    for varp in $@
+    for varp in "$@"
         do
             echo -e "[VAR] $varp=\"${!varp}\""
     done
@@ -198,11 +226,11 @@ print_error() {
     else
         echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
     fi
-    if [[ "$1" == "yad" && -n "$2" && -n "$3" ]]
+    if [[ "$1" == "yad" && -n "$2" && -n "$3" && "$NO_YAD" != 1 ]]
         then
             yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0" --title="$2" --text="$3" \
                 --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
-    elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]]
+    elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" && "$NO_YAD" != 1 ]]
         then
             yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0" --title="Lux Wine Error" \
                 --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
@@ -227,11 +255,11 @@ print_info() {
             else
                 echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
             fi
-            if [[ "$1" == "yad" && -n "$2" && -n "$3" ]]
+            if [[ "$1" == "yad" && -n "$2" && -n "$3" && "$NO_YAD" != 1 ]]
                 then
                     yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="$2" --text="$3" \
                         --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
-            elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]]
+            elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" && "$NO_YAD" != 1 ]]
                 then
                     yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lux Wine Info" \
                         --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
@@ -370,7 +398,7 @@ check_netcore() {
         then
             export WMONOVER="Disabled"
             wdllover_upd "mscoree,mshtml="
-            print_info notify "MONO (.NET Core) is disabled!"
+            print_info "MONO (.NET Core) is disabled!"
     fi
 }
 
@@ -812,6 +840,7 @@ settingbar() {
         tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO_PTH" --progress --pulsate --auto-close \
             --width=650 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." "$SETTBARKEY" Lux Wine &
     fi
+    sleep 0.1
     tail --pid="$!" -q -f "$SETTOUTFILE"
     try_rm "$SETTOUTFILE"
 }
@@ -1213,6 +1242,28 @@ check_musthave_dll() {
 }
 
 try_shutdown_wine() {
+    wait_kill_wine() {
+        local time_out=60
+        while true
+            do
+                if [ "$time_out" -gt 0 ]
+                    then
+                        check_wine_pids
+                        if  [ -n "$WINE_PIDS" ]
+                            then
+                                sleep 1
+                                time_out="$(( $time_out - 1 ))"
+                                continue
+                            else
+                                break
+                        fi
+                    else
+                        check_wine_pids
+                        kill -9 $WINE_PIDS 2>/dev/null
+                        break
+                fi
+        done
+    }
     check_wine_pids
     check_exes
     [[ ! -n "$WINE_PIDS" && -n "$OLD_WINE" ]] && unset OLD_WINE
@@ -1225,22 +1276,19 @@ try_shutdown_wine() {
                     check_ld_library
                     if [[ -n "$OLD_WINE" && -f "$OLD_WINE" ]]
                         then
-                            if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -e &>/dev/null
-                                then
-                                    kill -9 $WINE_PIDS 2>/dev/null
+                            if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -s &>/dev/null
+                                then kill -9 $WINE_PIDS 2>/dev/null
                             fi
                             unset OLD_WINE
                     elif [ -f "$WINE" ]
                         then
-                            if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -e &>/dev/null
-                                then
-                                    kill -9 $WINE_PIDS 2>/dev/null
+                            if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -s &>/dev/null
+                                then kill -9 $WINE_PIDS 2>/dev/null
                             fi
-                    else
-                        kill -9 $WINE_PIDS 2>/dev/null
+                    else kill -9 $WINE_PIDS 2>/dev/null
                     fi
                     export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
-                    wine_is_death
+                    wait_kill_wine
                 else
                     return 1
             fi
@@ -1250,22 +1298,19 @@ try_shutdown_wine() {
             check_ld_library
             if [[ -n "$OLD_WINE" && -f "$OLD_WINE" ]]
                 then
-                    if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -e &>/dev/null
-                        then
-                            kill -9 $WINE_PIDS 2>/dev/null
+                    if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" wineboot -s &>/dev/null
+                        then kill -9 $WINE_PIDS 2>/dev/null
                     fi
                     unset OLD_WINE
             elif [ -f "$WINE" ]
                 then
-                    if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -e &>/dev/null
-                        then
-                            kill -9 $WINE_PIDS 2>/dev/null
+                    if ! DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" wineboot -s &>/dev/null
+                        then kill -9 $WINE_PIDS 2>/dev/null
                     fi
-            else
-                kill -9 $WINE_PIDS 2>/dev/null
+            else kill -9 $WINE_PIDS 2>/dev/null
             fi
             export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
-            wine_is_death
+            wait_kill_wine
     fi
 }
 
@@ -1360,6 +1405,13 @@ reg_edit() {
 }
 
 exe2png() {
+    unset rm_ico
+    if [ -f "$exe_ico" ]
+        then
+            local SHRT_NAME="$(basename "$exe_ico"|sed 's|\.ico$||gi')"
+            local SHRT_PATH="$(dirname "$exe_ico")"
+        else [ -n "$1" ] && local SHRT_NAME="$1"
+    fi
     add_exe_icon() {
         cd "$SHRT_PATH"
         if [ -f "${SHRT_NAME}.png" ]
@@ -1370,7 +1422,7 @@ exe2png() {
                 while true
                     do
                         export SHRT_ICON="${SHRT_NAME}${shrt_num}"
-                        export SHRT_PNG="$LW_APPS_ICONS_DIR/$SHRT_ICON.png"
+                        SHRT_PNG="$LW_APPS_ICONS_DIR/$SHRT_ICON.png"
                         if [ -f "$SHRT_PNG" ]
                             then
                                 chksum_shrt_png_new=($(md5sum "${SHRT_NAME}.png"))
@@ -1401,37 +1453,39 @@ exe2png() {
                 done)
         fi
     }
-    if is_exe_exist wrestool && is_exe_exist convert
+    if is_exe_exist icoextract && is_exe_exist convert
         then
-            export LUJPG="$SHRT_PATH/${SHRT_NAME}.jpg"
-            export HICOLOR_SHR_DIR="$SHRT_PATH/hicolor_icons"
-            if [[ -f "$LUJPG" && -f "$SHRT_PATH/${SHRT_NAME}.png" && \
+            HICOLOR_SHR_DIR="$SHRT_PATH/hicolor_icons"
+            if [[ -f "$SHRT_PATH/${SHRT_NAME}.png" && \
                 -f "$HICOLOR_SHR_DIR/"$(ls -A1 "$HICOLOR_SHR_DIR" 2>/dev/null|\
                 sort -nr|head -1)"/apps/${SHRT_NAME}.png" ]]
                 then
-                    print_info notify "Converting ico already completed!"
+                    print_info "Converting ico already completed!"
                     add_exe_icon
                 else
-                    print_info notify "Converting ico from executable file..."
+                    print_info "Converting ico from exe file..."
                     cd "$SHRT_PATH"
-                    wrestool -x --output=./ -t14 "$LU_EXE" 2>/dev/null
+                    [ ! -f "$exe_ico" ] && \
+                        icoextract "$LU_EXE" "${SHRT_NAME}.ico" 2>/dev/null && \
+                        rm_ico=1
                     if [ -n "$(ls "${SHRT_NAME}"*.ico 2>/dev/null|head -1)" ]
                         then
                             if [[ -f "$(ls "${SHRT_NAME}"*_*_101.ico 2>/dev/null)" && \
                                 -f "$(ls "${SHRT_NAME}"*_*_123.ico 2>/dev/null)"  ]]
-                                then ico="$(ls -S -1 "${SHRT_NAME}"*_*_101.ico)"
+                                then exe_ico="$(ls -S -1 "${SHRT_NAME}"*_*_101.ico)"
                             elif [[ ! -f "$(ls "${SHRT_NAME}"*_*_101.ico 2>/dev/null)" && \
                                 -f "$(ls "${SHRT_NAME}"*_*_123.ico 2>/dev/null)"  ]]
-                                then ico="$(ls -S -1 "${SHRT_NAME}"*_*_123.ico)"
-                            else ico="$(ls -S -1 "${SHRT_NAME}"*.ico 2>/dev/null|head -1)"
+                                then exe_ico="$(ls -S -1 "${SHRT_NAME}"*_*_123.ico)"
+                            else exe_ico="$(ls -S -1 "${SHRT_NAME}"*.ico 2>/dev/null|head -1)"
                             fi
-                            echo -en "${GREEN}Found ${RED}"$ico" ${GREEN}and converting to PNG and JPG...\n$RESETCOLOR"
-                            convert "$ico" "$(echo "$ico"|sed 's|ico$|png|g')" 2>/dev/null
-                            if [ "${SHRT_NAME}" == "osu!" ]
-                                then try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|awk 'NR==2')" "${SHRT_NAME}.png" 2>/dev/null
-                                else try_cp "$(ls -S -1 "${SHRT_NAME}"*_*.png 2>/dev/null|head -1)" "${SHRT_NAME}.png" 2>/dev/null
+                            convert "$exe_ico" "$(echo "$exe_ico"|sed 's|.ico$|.png|gi')"
+                            if [ ! -f "${SHRT_NAME}.png" ]
+                                then
+                                    if [ "${SHRT_NAME}" == "osu!" ]
+                                        then try_cp "$(ls -S -1 "${SHRT_NAME}"*[_-]*.png 2>/dev/null|awk 'NR==2')" "${SHRT_NAME}.png" 2>/dev/null
+                                        else try_cp "$(ls -S -1 "${SHRT_NAME}"*[_-]*.png 2>/dev/null|head -1)" "${SHRT_NAME}.png" 2>/dev/null
+                                    fi
                             fi
-                            convert "${SHRT_NAME}.png" "${SHRT_NAME}.jpg" 2>/dev/null
                             try_mkdir "$HICOLOR_SHR_DIR"
                             (IFS=$'\n'
                             cd "$HICOLOR_SHR_DIR"
@@ -1442,21 +1496,18 @@ exe2png() {
                                         "$hi_icon_size/apps/${SHRT_NAME}.png"
                             done)
                             add_exe_icon
-                            echo -en "${RED}$(ls "${SHRT_NAME}".png 2>/dev/null)\n$RESETCOLOR"
-                            echo -en "${RED}$(ls "${SHRT_NAME}".jpg 2>/dev/null)\n$RESETCOLOR"
-                            print_info "CLEANUP..."
-                            try_rm "${SHRT_NAME}"*.ico *_*_*.png
-                            print_info notify "Converting ico from executable file completed!"
+                            [ "$rm_ico" == 1 ] && \
+                            rm -f "${SHRT_NAME}"*.ico
+                            ls -1|grep -E "${SHRT_NAME}*-[0-9]+.png"|xargs -d"\n" rm -f
+                            rm -f *_*_*.png
+                            print_info "Converting ico from exe file completed!"
                         else
-                            print_error yad "Failed to get ico from executable file!"
+                            print_error notify "Failed to get ico from exe file!"
                             export SHRT_ICON="$LW_DEF_ICO"
-                            export LUJPG="$LW_ICONS_DIR/$LW_DEF_ICO.jpg"
-                            [ ! -f "$LUJPG" ] && \
-                            convert "$LW_DEF_ICO_PTH" "$LUJPG"
                     fi
             fi
         else
-            print_error yad "You must install icoutils and imagemagick!"
+            print_error yad "You must install icoextract and imagemagick!"
             exit 1
     fi
 }
@@ -1464,116 +1515,124 @@ exe2png() {
 create_shortcut() {
     if [ -n "$1" ]
         then
-            SHRT_NAME="$ADD_APP_NAME"
+            SHRT_NAME="${ADD_APP_NAME//[^[:alnum:] ._-]/}"
             try_mkdir "$LW_DEF_TMP"
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
             ([[ "$RUNSRC" =~ "lwrun" ]] && \
-                LW_SOURCE="$RUNSRC"
+                LW_SOURCE="$HOME/.local/bin/lwrun"
+            [[ "$1" =~ "'" ]] && \
+                SHRTEXEPATH="\"$1\""||\
+                SHRTEXEPATH="'$1'"
+            shift
+            [ -n "$EXE_ARG" ] && \
+            SHRTEXEARGS="$(echo "$EXE_ARG"|sed 's|"|\"|g')"||\
+            SHRTEXEARGS="$(echo "$@"|sed 's|"|\"|g')"
             echo "Name=$SHRT_NAME" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' '$1'" >> "$DESKF"
+            [ -n "$SHRTEXEARGS" ] && \
+            echo "Exec='$LW_SOURCE' $SHRTEXEPATH $SHRTEXEARGS" >> "$DESKF"||\
+            echo "Exec='$LW_SOURCE' $SHRTEXEPATH" >> "$DESKF"
             echo "Type=Application" >> "$DESKF"
-            echo "Categories=Lux Wine App" >> "$DESKF"
+            echo "Categories=Lux Wine Apps" >> "$DESKF"
             echo "StartupNotify=true" >> "$DESKF"
-            echo "Path="$SHRT_PATH"" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
             echo "Actions=rmapp;config;openpfx;debug;cmd;explorer;control;regedit;winecfg;taskmgr;uninstaller;winetricks;clearpfx;pfxbackup;pfxrestore;killwine;version;init" >> "$DESKF"
             echo -e "\n[Desktop Action rmapp]" >> "$DESKF"
             echo "Name=Remove from menu" >> "$DESKF"
             echo "Name[ru_RU]=Удалить из меню" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -rmapp '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -rmapp '$SHRT_NAME'" >> "$DESKF"
             echo -e "\n[Desktop Action config]" >> "$DESKF"
             echo "Name=Settings" >> "$DESKF"
             echo "Name[ru_RU]=Настройки" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -config '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -config $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action openpfx]" >> "$DESKF"
             echo "Name=Open drive C:\\\\\\" >> "$DESKF"
             echo "Name[ru_RU]=Открыть диск C:\\\\\\" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -openpfx '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -openpfx $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action debug]" >> "$DESKF"
             echo "Name=DEBUG" >> "$DESKF"
             echo "Name[ru_RU]=ДЕБАГ" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -debug '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -debug $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action cmd]" >> "$DESKF"
             echo "Name=Open in CMD" >> "$DESKF"
             echo "Name[ru_RU]=Открыть в CMD" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -cmd '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -cmd $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action explorer]" >> "$DESKF"
             echo "Name=Explorer" >> "$DESKF"
             echo "Name[ru_RU]=Рабочий стол" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -explorer '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -explorer $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action control]" >> "$DESKF"
             echo "Name=Control panel" >> "$DESKF"
             echo "Name[ru_RU]=Панель управления" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -control '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -control $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action regedit]" >> "$DESKF"
             echo "Name=Registry editor" >> "$DESKF"
             echo "Name[ru_RU]=Редактор реестра" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -regedit '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -regedit $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action winecfg]" >> "$DESKF"
             echo "Name=Wine settings" >> "$DESKF"
             echo "Name[ru_RU]=Настройки Wine" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -winecfg '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -winecfg $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action taskmgr]" >> "$DESKF"
             echo "Name=Task manager" >> "$DESKF"
             echo "Name[ru_RU]=Диспетчер задач" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -taskmgr '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -taskmgr $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action uninstaller]" >> "$DESKF"
             echo "Name=Wine uninstaller" >> "$DESKF"
             echo "Name[ru_RU]=Устан/удал программ" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -uninstaller '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -uninstaller $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action winetricks]" >> "$DESKF"
             echo "Name=Winetricks" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -winetricks '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -winetricks $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action clearpfx]" >> "$DESKF"
             echo "Name=Clear prefix" >> "$DESKF"
             echo "Name[ru_RU]=Очистить префикс" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -clearpfx '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -clearpfx $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action pfxbackup]" >> "$DESKF"
             echo "Name=Create prefix backup" >> "$DESKF"
             echo "Name[ru_RU]=Создать бекап префикса" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -pfxbackup '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -pfxbackup $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action pfxrestore]" >> "$DESKF"
             echo "Name=Restore prefix from backup" >> "$DESKF"
             echo "Name[ru_RU]=Восстановить префикс" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -pfxrestore '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -pfxrestore $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action killwine]" >> "$DESKF"
             echo "Name=Kill Wine processes" >> "$DESKF"
             echo "Name[ru_RU]=Убить процессы Wine" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -killwine '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -killwine $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action version]" >> "$DESKF"
             echo "Name=Version info" >> "$DESKF"
             echo "Name[ru_RU]=Версия" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -version '$1'" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -version $SHRTEXEPATH" >> "$DESKF"
             echo -e "\n[Desktop Action init]" >> "$DESKF"
             echo "Name=Forced initialization" >> "$DESKF"
             echo "Name[ru_RU]=Принудительная инициализация" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -init '$1'" >> "$DESKF")
+            echo "Exec='$LW_SOURCE' -init $SHRTEXEPATH" >> "$DESKF")
             chmod u+x "$DESKF"
-            echo -en "${GREEN}Creating ${RED}$(basename "$DESKF") ${GREEN}completed!\n$RESETCOLOR"
             try_mkdir "$LW_APPS_DIR"
             try_ln "$LW_APPS_DIR" "${LW_DIR}/"
             try_mv "$DESKF" "${LW_APPS_DIR}/"
             update-desktop-database -q "$MENU_APPS_DIR"
-            print_info notify "Shortcut successfully created!"
+            [ -f "${LW_APPS_DIR}/${SHRT_NAME}.desktop" ] && \
+            print_info notify "Shortcut for '$SHRT_NAME' successfully created!"
             wait
     fi
 }
@@ -1867,6 +1926,7 @@ updcfgchksum() {
 }
 
 check_def_wine() {
+    setpfxdefwine() { echo "$1" > "$WINEPREFIX/.defwine" ; }
     def_wine_selector() {
         unset SETWINE
         export SETWINE="$(echo -e "\n$(echo "${LOCWINELST}$([ -n "$SYS_WINE" ] && echo -e '\nSystem')$([[ -n "$LU_EXE" \
@@ -1887,6 +1947,22 @@ check_def_wine() {
                 then
                     print_error notify "No Wine binary file found [ $BINWINE ], it will be deleted!"
                     try_rm "$LW_WINE_DIR/$BINWINE" &>/dev/null
+                else
+                    if [ -w "$LW_WINE_DIR/$BINWINE" ]
+                        then
+                            WFILESDIR="$LW_WINE_DIR/$BINWINE/files"
+                            WVERSFL="$LW_WINE_DIR/$BINWINE/version"
+                            if [[ ! -f "$WVERSFL" || ! -d "$WFILESDIR" ]]
+                                then
+                                    try_mkdir "$WFILESDIR"
+                                    mv -f "$LW_WINE_DIR/$BINWINE/"* "$WFILESDIR/" 2>/dev/null
+                                    try_ln "$WFILESDIR/"* "$LW_WINE_DIR/$BINWINE/"
+                                    [ -f "$WVERSFL" ]||\
+                                    (BINWINE="${BINWINE,,}"
+                                    echo "$(date +%s) ${BINWINE//[^[:alnum:]._-]/}" > "$WVERSFL")
+
+                            fi
+                    fi
             fi
     done)
     LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
@@ -1965,17 +2041,14 @@ check_def_wine() {
     try_mkdir "$WINEPREFIX"
     PFXDEFWINE="$(cat "$WINEPREFIX/.defwine" 2>/dev/null)"
     if [ ! -f "$WINEPREFIX/.defwine" ]
-        then
-            echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
+        then setpfxdefwine "$WINE_VERSION"
     elif [[ -n "$NEW_WINE_VERSION" && "$NEW_WINE_VERSION" != "$OLD_WINE_VERSION" ]]
         then
             if try_shutdown_wine
                 then
                     if [[ "$NEW_WINE_VERSION" == "Default" ]]
-                        then
-                            echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
-                        else
-                            echo "$NEW_WINE_VERSION" > "$WINEPREFIX/.defwine"
+                        then setpfxdefwine "$WINE_VERSION"
+                        else setpfxdefwine "$NEW_WINE_VERSION"
                     fi
             fi
     elif [[ -n "$PFXDEFWINE" && "$WINE_VERSION" != "$PFXDEFWINE" ]]
@@ -1988,14 +2061,12 @@ check_def_wine() {
                     print_error yad "Wine version mismatch [ $WINE_VERSION ] -> [ $PFXDEFWINE ]" \
                     "Wine version in config file [ $WINE_VERSION ] mismatch with prefix version [ $PFXDEFWINE ]"
                     if try_shutdown_wine
-                        then
-                            echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
+                        then setpfxdefwine "$WINE_VERSION"
                         else
                             try_rm "$INIPRGRS" &>/dev/null
                             exit 1
                     fi
-                else
-                    echo "$WINE_VERSION" > "$WINEPREFIX/.defwine"
+                else setpfxdefwine "$WINE_VERSION"
             fi
             unset OLD_WINE_VERSION OLD_WINE
     fi
@@ -2004,46 +2075,94 @@ check_def_wine() {
 lu_prerun() {
     if [ -n "$LU_EXE" ]
         then
-            export EXE_NAME="$(basename "$LU_EXE"|sed 's/.exe//')"
+            export EXE_NAME="$(basename "$LU_EXE"|sed 's|.exe||i')"
             export EXE_FULL_NAME="$(basename "$LU_EXE")"
-            if [ ! -n "$EXE_PATH" ]
-                then
-                    export EXE_PATH="$(realpath "$(dirname "$LU_EXE")")"
-            fi
+            [ ! -n "$EXE_PATH" ] && \
+            export EXE_PATH="$(realpath "$(dirname "$LU_EXE")")"
             cd "$EXE_PATH"
             export EXE_CFG="$EXE_PATH/$EXE_NAME.wcfg"
             export EXE_CENV="$EXE_PATH/$EXE_NAME.cenv"
-            [ -f "$EXE_PATH/$EXE_NAME.png" ] && \
-                export LW_EXE_ICON="$EXE_PATH/$EXE_NAME.png"
+            if [ -f "$EXE_PATH/$EXE_NAME.png" ]
+                then export LW_EXE_ICON="$EXE_PATH/$EXE_NAME.png"
+            elif [ -f "$HOME_ICONS/$EXE_NAME.png" ]
+                then export LW_EXE_ICON="$EXE_NAME"
+            fi
             export LW_APPCFG="$LW_APPCFG_DIR/$EXE_NAME.wcfg"
             export EXE_DIR="$(grep -o '[^/]*$' <<< "$EXE_PATH")"
-            if [ "$LOG" == 1 ]
-                then
-                    export LOG_FILE="$EXE_PATH/${EXE_NAME}_$(date +'%Y-%m-%d_%H%M%S').log"
-            fi
+            [ "$LOG" == 1 ] && \
+            export LOG_FILE="$EXE_PATH/${EXE_NAME}_$(date +'%Y-%m-%d_%H%M%S').log"
     elif [ -n "$LU_SHELL_EXE" ]
         then
-            if [ ! -n "$LU_SHELL_EXE_PTH" ]
-                then
-                    export LU_SHELL_EXE_PTH="$(realpath "$(dirname "$LU_SHELL_EXE")")"
-            fi
+            [ ! -n "$LU_SHELL_EXE_PTH" ] && \
+                export LU_SHELL_EXE_PTH="$(realpath "$(dirname "$LU_SHELL_EXE")")"
             cd "$LU_SHELL_EXE_PTH"
-            if [ "$LOG" == 1 ]
-                then
-                    export LOG_FILE="$LU_SHELL_EXE_PTH/$(basename "$LU_SHELL_EXE")_$(date +'%Y-%m-%d_%H%M%S').log"
-            fi
+            [ "$LOG" == 1 ] && \
+            export LOG_FILE="$LU_SHELL_EXE_PTH/$(basename "$LU_SHELL_EXE")_$(date +'%Y-%m-%d_%H%M%S').log"
     elif [ -n "$LU_PTH" ]
-        then
-            cd "$LU_PTH"
+        then cd "$LU_PTH"
     elif [ -n "$LU_SHELL_PTH" ]
+        then cd "$LU_SHELL_PTH"
+    else cd "$WINEPREFIX/drive_c"
+    fi
+}
+
+check_shrt() (
+    IFS=$'\n'
+    LW_APPS_EXES=($(grep -Eiom1 " [\"']/.*\.exe| [\"']/.*\.bat" -r \
+        "$LW_APPS_DIR" 2>/dev/null|sed "s|.*\.desktop: ['\"]||g"))
+    if [ -n "${LW_APPS_EXES[*]}" ]
         then
-            cd "$LU_SHELL_PTH"
-    else
-        cd "$WINEPREFIX/drive_c"
+            for exe in "${LW_APPS_EXES[@]}"
+                do [ ! -f "$(ipath "$exe"|head -1)" ] && \
+                    lu_rmapp "$exe"
+            done
+    fi
+)
+
+shrt_loop() {
+    WPREFIXLNKDIRS=(
+        "$WINEPREFIX/drive_c/users/steamuser/Desktop"
+        "$WINEPREFIX/drive_c/users/Public/Desktop"
+        "$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming/Microsoft/Windows/Start Menu"
+        "$WINEPREFIX/drive_c/ProgramData/Microsoft/Windows/Start Menu"
+    )
+    find_wpfxlnk() { find "${WPREFIXLNKDIRS[@]}" -type f -iname "*.lnk" 2>/dev/null ; }
+    find_wpfxurl() { find "${WPREFIXLNKDIRS[@]}" -type f -iname "*.url" 2>/dev/null ; }
+    [ -f '/tmp/.lwshrtloop' ] && \
+    ! pidof wineserver &>/dev/null && \
+        rm -f '/tmp/.lwshrtloop'
+    if [ ! -f '/tmp/.lwshrtloop' ]
+        then
+            (IFS=$'\n'
+            touch '/tmp/.lwshrtloop'
+            wait_wpids=100
+            while [ "$wait_wpids" -gt 0 ] && \
+                ! pidof wineserver &>/dev/null
+                do
+                    wait_wpids="$(( $wait_wpids - 1 ))"
+                    sleep 0.01 2>/dev/null
+            done
+            NO_YAD=1
+            CSHRT_WITH_RM=1
+            NO_ADD_APP_NAME=1
+            while pidof wineserver &>/dev/null
+                do
+                    sleep 1 2>/dev/null
+                    WPREFIXLNK=($(find_wpfxlnk))
+                    unset LU_EXE EXE_ARG
+                    shrt_from_lnk "${WPREFIXLNK[@]}"
+                    WPREFIXURL=($(find_wpfxurl))
+                    unset LU_EXE EXE_ARG
+                    shrt_from_url "${WPREFIXURL[@]}"
+                    check_tray
+                    [ "$FORCE_TRAY" != 1 ] && \
+                        check_shrt
+            done; rm -f '/tmp/.lwshrtloop')
     fi
 }
 
 lu_run() {
+    shrt_loop &
     pre_launch 2>/dev/null
     dis_displ_sw 2>/dev/null
     lu_tray
@@ -2129,7 +2248,7 @@ lu_run() {
 }
 
 lu_prestart() {
-    export LU_EXE="$(readlink -f "$LU_START")"
+    export LU_EXE="$LU_START"
     export LU_MSI="$(basename "$LU_EXE"|grep -io "\.msi$")"
     export LU_BAT="$(basename "$LU_EXE"|grep -io "\.bat$")"
     export LU_REG="$(basename "$LU_EXE"|grep -io "\.reg$")"
@@ -2162,49 +2281,52 @@ lu_prestart() {
 }
 
 check_startfile() {
-    if [ -f "$1" ]
+    if [ -f "$(ipath "$1"|head -1)" ]
         then
-            [ ! -n "$LU_START" ] && export LU_START="$1"
+            ipath_pth="$(ipath "$1"|head -1)"
             [[ -n "$(basename "$1"|grep -io "\.lwpfx$")" \
-            && ! -n "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$1")"
+            && ! -n "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$ipath_pth")"
             [ ! -n "$EXE_ARG" ] && export EXE_ARG="${*:2}"
             [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE="$0 '${*:1}'"
-    elif [ -f "$2" ]
+    elif [ -f "$(ipath "$2"|head -1)" ]
         then
-            [ ! -n "$LU_START" ] && export LU_START="$2"
+            ipath_pth="$(ipath "$2"|head -1)"
             [[ -n "$(basename "$2"|grep -io "\.lwpfx$")" \
-            && ! -n "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$2")"
+            && ! -n "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$ipath_pth")"
             [ ! -n "$EXE_ARG" ] && export EXE_ARG="${*:3}"
             [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE="$0 $1 '${*:2}'"
     else
         [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE="$0 $1"
     fi
+    [ ! -n "$LU_START" ] && export LU_START="$ipath_pth"
 }
 
 check_exe_wcfg_cenv() {
     check_startfile "$@"
-    if [[ -n "$(file "$(readlink -f "$LU_START")"|grep "for MS Windows"|grep -o "executable")" && -n "$(readlink -f "$LU_START"|grep -o ".exe$")" ]]
+    if [[ -n "$(file "$(readlink -f "$LU_START")"|grep "for MS Windows"|grep -o "executable")" && -n "$(echo "$LU_START"|grep -io ".exe$")" ]]
         then
-            export LU_EXE="$(readlink -f "$LU_START")"
+            export LU_EXE="$LU_START"
             lu_prerun
-            if [[ -f "$EXE_CFG" && -f "$LW_DEF_CFG" ]]
+            if [ -f "$EXE_CFG" ]
                 then
-                    print_info notify "EXE config: '$EXE_CFG'"
-                    export LW_CFG="$EXE_CFG"
-                    check_symlink "$LW_APPCFG"
-                    if [ ! -L "$LW_APPCFG" ]
+                    print_info notify "Found EXE config!"
+                    print_info "Path: '$EXE_CFG'"
+                    if [ -f "$LW_DEF_CFG" ]
                         then
-                            try_mkdir "$LW_APPCFG_DIR"
-                            try_ln "$EXE_CFG" "$LW_APPCFG_DIR"
+                            export LW_CFG="$EXE_CFG"
+                            check_symlink "$LW_APPCFG"
+                            if [ ! -L "$LW_APPCFG" ]
+                                then
+                                    try_mkdir "$LW_APPCFG_DIR"
+                                    try_ln "$EXE_CFG" "$LW_APPCFG_DIR"
+                            fi
+                        else print_error yad "EXE config not imported! First you need to set up Lux Wine!"
                     fi
-            elif [[ -f "$EXE_CFG" && ! -f "$LW_DEF_CFG" ]]
-                then
-                    print_info notify "EXE config: '$EXE_CFG'"
-                    print_error yad "EXE config not imported! First you need to set up Lux Wine!"
             fi
             if [[ -f "$EXE_CENV" && -n "$(cat "$EXE_CENV" 2>/dev/null)" ]]
                 then
-                    print_info notify "EXE env file: '$EXE_CENV'"
+                    print_info notify "Found EXE env file!"
+                    print_info "Path: '$EXE_CENV'"
                     export LW_CENV="$EXE_CENV"
             elif [[ -f "$EXE_CENV" && ! -n "$(cat "$EXE_CENV" 2>/dev/null)" ]]
                 then
@@ -2218,23 +2340,15 @@ check_db_script() {
     if [ ! -f "$EXE_LWDBFL" ]
         then
             if [ -f "$EXE_PATH/$EXE_NAME.lwdb" ]
-                then
-                    export EXE_LWDBFL="$EXE_PATH/$EXE_NAME.lwdb"
+                then export EXE_LWDBFL="$EXE_PATH/$EXE_NAME.lwdb"
             elif [ -f "$LW_DB_DIR/$EXE_NAME.lwdb" ]
-                then
-                    export EXE_LWDBFL="$LW_DB_DIR/$EXE_NAME.lwdb"
+                then export EXE_LWDBFL="$LW_DB_DIR/$EXE_NAME.lwdb"
             fi
     fi
     if [ -f "$EXE_LWDBFL" ]
         then
-            if [ -n "$(file "$EXE_LWDBFL"|grep -wo "shell script")" ]
-                then
-                    print_info notify "EXE DB: '$EXE_LWDBFL'"
-                else
-                    unset EXE_LWDBFL
-                    sed -i '/EXE_LWDBFL.*/d' "$LW_CFG" 2>/dev/null
-                    print_error yad "EXE DB file not a shell script!"
-            fi
+            print_info notify "Found EXE DB script!"
+            print_info "Path: '$EXE_LWDBFL'"
         else
             unset EXE_LWDBFL
     fi
@@ -2243,12 +2357,8 @@ check_db_script() {
 run_db_script() {
     if [[ -f "$EXE_LWDBFL" && "$EXE_LWDB" == 1 ]]
         then
-            if source "$EXE_LWDBFL"
-                then
-                    print_info notify "EXE DB script successfully launched!"
-                else
-                    print_error yad "EXE DB script was launched unsuccessfully!"
-            fi
+            source "$EXE_LWDBFL"
+            print_info notify "EXE DB script launched!"
     fi
 }
 
@@ -2312,6 +2422,8 @@ check_steamapps() {
                     if [[ -f "$STMverPRTN/bin/wine" && ! -d "$LW_WINE_DIR/Proton ${ver}" ]]
                         then
                             try_ln "$STMverPRTN" "$LW_WINE_DIR/Proton ${ver}"
+                            [[ ! -f "$STMverPRTN/version" && -f "$STMverPRTN/../version" ]] && \
+                                try_ln "$STMverPRTN/../version" "$STMverPRTN/version"
                             print_info notify "Found Proton ${ver} in Steam and linked to Lux Wine"
                     fi
             done
@@ -2392,6 +2504,8 @@ lite_init() {
             check_display
             check_shell
             check_steamapps
+            check_nvprime
+            check_driprime
             check_videodrv
             check_def_wine
             check_proton_d3dlib
@@ -2402,6 +2516,7 @@ lite_init() {
             check_first_run "$@"
             check_esync
             check_fsync
+            check_shrt
     fi
 }
 
@@ -2436,8 +2551,6 @@ full_init() {
             check_battleye
             check_eac
             check_winetricks
-            check_nvprime
-            check_driprime
             check_vsync
             check_fsr
             check_pulse_latency
@@ -2470,7 +2583,7 @@ lu_start() {
             if [[ -n "$DEBUG" && "$DEBUG" != 0 ]]
                 then
                     export DEBUG_EXE="$(yad --window-icon="$LW_DEF_ICO" --title "Specify the executable file to start Lux Wine DEBUG:" \
-                        --file --file-filter="*.exe" --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
+                        --file --file-filter="*.[Ee][Xx][Ee]" --center --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
                     if [ -f "$DEBUG_EXE" ]
                         then
                             export DEBUG_FL="$(readlink -f "$DEBUG_EXE")"
@@ -2491,7 +2604,7 @@ lu_start() {
                     fi
                 else
                     export LU_START="$(yad --window-icon="$LW_DEF_ICO" --title "Specify file to run in Lux Wine:" --file --center --on-top \
-                        --file-filter="*.exe *.lnk *.bat *.msi *.reg" --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
+                        --file-filter="*.[Ee][Xx][Ee] *.[Ll][Nn][Kk] *.[Bb][Aa][Tt] *.[Mm][Ss][Ii] *.[Rr][Ee][Gg]" --width=900 --height=600 --button="EXIT:1" --button="OK:0")"
                     if [ -f "$LU_START" ]
                         then
                             lite_init "$LU_START"
@@ -2506,8 +2619,6 @@ lu_start() {
             fi
     fi
 }
-
-find_vk_icd() { find "$VLK_ICD_DIR"/${1}* -type f 2>/dev/null ; }
 
 lu_config() {
     if [ ! -n "$(pgrep -fa yad|grep -v "\--notification"|grep -v grep|grep -wo "Lux Wine settings"|awk '{print$1}')" ]; then :
@@ -2528,15 +2639,13 @@ lu_config() {
     TERMAPPLST="$(for whichterm in {konsole,gnome-terminal,kitty,deepin-terminal,xfce4-terminal,xterm} ; do which_exe "$whichterm" ; done)"
     DOWNLOADERLST="$(for whichdwnl in {aria2c,wget} ; do is_exe_exist "$whichdwnl" && echo "$whichdwnl" ; done)"
     VSYNCLST="Enabled \n Disabled \n Default"
-    MANGOHUDLST="OpenGL \n Vulkan \n Disabled"
-    DXRLST="1.0 \n 1.1 \n Disabled"
     WD3DMODELST="DXVK+NVAPI \n VKD3D \n WineD3D \n DXVK+NVAPI+VKD3D"
     VKICDFILESLST="AUTO $([ -n "$(find_vk_icd nvidia)" ] && echo '\n Nvidia') \
                         $([ -n "$(find_vk_icd intel)" ] && echo '\n Intel') \
                         $([ -n "$(find_vk_icd radeon)" ] && echo '\n AMD') \
                         $([ -n "$(find_vk_icd lvp)" ] && echo '\n Lvp')"
     DXVKLST="$(ls_dlls dxvk) \n v1.9.4 \n v1.10 \n v1.10.3 \n latest $(is_exe_nofirstrun && echo '\n Default')"
-    VKD3DLST="$(ls_dlls vkd3d) \n v2.1 \n v2.5 \n v2.6 \n v2.7 \n v2.8 \n latest $(is_exe_nofirstrun && echo '\n Default')"
+    VKD3DLST="$(ls_dlls vkd3d) \n v2.1 \n 2.2 \n v2.5 \n v2.6 \n v2.7 \n v2.8 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     VKD3DCFGLST="force_bindless_texel_buffer,multi_queue \n Disabled"
     D3DXTRLST="$(ls_dlls d3d_extras) \n v2 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     DXNVALST="$(ls_dlls dxvk-nvapi) \n v0.4 \n v0.5.3 \n v0.5.4 \n latest $(is_exe_nofirstrun && echo '\n Default')"
@@ -2544,12 +2653,13 @@ lu_config() {
     NVMLLST="$(ls_dlls wine_nvml) \n v0.1 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     CMPRSSLST="xz \n zstd"
     FSRMODELST="ultra \n quality \n balanced \n performance \n Disabled"
+    MANGOHUDLST="Enabled \n DLSYM \n Disabled"
     lwconfig_save() {
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE DISABLE_NVAPI WINE_DXGI D3D_EXTRAS DGVOODOO2 \
-            DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION DXR VKD3DCFG MUST_HAVE_DLL \
-            FSR_MODE WINE_SANDBOX ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING GL_THRD_OPTI \
+            DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION VKD3DCFG MUST_HAVE_DLL \
+            FSR_MODE WINE_SANDBOX ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             NO_WRITE_WATCH HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD DIS_NETCORE \
-            VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX EXEARGS CHK_UPDATE EXE_LWDB EXE_LWDBFL \
+            VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX DXR EXEARGS CHK_UPDATE EXE_LWDB EXE_LWDBFL \
             LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
@@ -2641,7 +2751,6 @@ lu_config() {
             --field="D3D EXTRAS version::CBE" "$(cfg_items "$D3D_EXTRAS_VERSION" "$D3DXTRLST")" \
             --field="DGVOODOO2 version::CBE" "$(cfg_items "$DGVOODOO2_VERSION" "$DGVOOLST")" \
             --field="WINE-NVML version::CBE" "$(cfg_items "$WINE_NVML_VERSION" "$NVMLLST")" \
-            --field="DXR/RTX version::CB" "$(cfg_items "$DXR" "$DXRLST")" \
             --field="VKD3D config::CBE" "$(cfg_items "$VKD3DCFG" "$VKD3DCFGLST")" \
             --field="MUST HAVE DLL::CBE" "$(cfg_items "$MUST_HAVE_DLL" "$MHAVEDLLST")" \
             --field="AMD FidelityFX Super Resolution 1.0::CB" "$(cfg_items "$FSR_MODE" "$FSRMODELST")" \
@@ -2652,7 +2761,6 @@ lu_config() {
             --field="Show crash dialog (WINEDBG):CHK" "$SHOW_WINEDBG" \
             --field="WINE_LARGE_ADDRESS_AWARE:CHK" "$LARGE_ADDRESS" \
             --field="Old OpenGL String:CHK" "$OLD_GL_STRING" \
-            --field="__GL_THREADED_OPTIMIZATIONS:CHK" "$GL_THRD_OPTI" \
             --field="WINE_DISABLE_WRITE_WATCH:CHK" "$NO_WRITE_WATCH" \
             --field="WINE_HIDE_NVIDIA_GPU:CHK" "$HIDE_NVIDIA_GPU" \
             --field="WINE_HEAP_DELAY_FREE:CHK" "$HEAP_DELAY_FREE" \
@@ -2666,6 +2774,7 @@ lu_config() {
             --field="DXVK_ASYNC:CHK" "$DXVKASYNC" \
             --field="NVIDIA Resizable BAR:CHK" "$RESIZABLE_BAR" \
             --field="LatencyFleX (NVIDIA Reflex):CHK" "$LATENCYFLEX" \
+            --field="DXR/RTX (Ray Tracing):CHK" "$DXR" \
         1> /tmp/winesett$LWCFGKEY &
 
         yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 "${YADSCROLL[@]}" \
@@ -2701,7 +2810,7 @@ lu_config() {
             --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(cfg_items "$VKBASALT_FFX_CAS" "$(seq 0.1 0.1 1|tr ',' '.')\n Disabled")" \
             --field="Vulkan ICD loader::CB" "$(cfg_items "$VKICDFILES" "$VKICDFILESLST")" \
             --field="GameMode:CHK" "$GAMEMODE" \
-            --field="MangoHud:CHK" "$LWMANGOHUD" \
+            --field="MangoHud::CB" "$(cfg_items "$LWMANGOHUD" "$MANGOHUDLST")" \
             --field="MangoHud User config:CHK" "$MANGOHUD_USER_CONF" \
             --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" "$DEF_MANGOHUDCFG")" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
@@ -3120,7 +3229,8 @@ lu_exit() {
             kill $(pgrep -fa 'aria2c'|grep 'LuxWine'|awk '{print$1}') 2>/dev/null
             print_info notify "Lux Wine successfully killed!"
             sleep 2
-            rm -rf /tmp/FORCE_EXIT /tmp/syssett* /tmp/winesett* /tmp/ressett* /tmp/settbtn*
+            rm -rf /tmp/FORCE_EXIT /tmp/syssett* /tmp/winesett* \
+                /tmp/ressett* /tmp/settbtn* rm -f /tmp/.lwshrtloop
             kill $(pgrep -fa "$LW_NAME"|awk '{print$1}')
             lu_killtray
         else
@@ -3290,16 +3400,29 @@ lu_rmapp() {
             print_error yad "Shortcuts Remover" "Lux Wine Shortcuts Remover already runing!"
             exit 1
     fi
+    rm_allsrtcts() {
+        if print_question "Lux Wine Shortcuts Remover" "Are you sure you want to remove all Lux Wine applications from menu?"
+            then
+                rm_srtcts "$LWAPPSHRT"
+                try_rm "$LW_APPS_DIR"
+        fi
+    }
+    find_app_exe_with_arg() {
+        grep -F "'$LU_EXE' $EXE_ARG" -lr "$LW_APPS_DIR" 2>/dev/null||\
+        grep -F "\"$LU_EXE\" $EXE_ARG" -lr "$LW_APPS_DIR" 2>/dev/null
+    }
     rm_srtcts() {
         (IFS=$'\n'
         if [ -n "$@" ]
             then
                 for LWAPPRM in $@
                     do
-                        if [ -n "$(grep -wo "Lux Wine App" "$LWAPPRM" 2>/dev/null)"  ]
+                        if [ -n "$(grep -wo "Lux Wine Apps" "$LWAPPRM" 2>/dev/null)"  ]
                             then
                                 rm_icon="$(grep -m1 "^Icon=" "$LWAPPRM" 2>/dev/null|sed 's|^Icon=||g')"
-                                if [[ -f "$HOME_ICONS/${rm_icon}.png" && ! "$LW_DEF_ICO" =~ "$rm_icon" ]]
+                                rm_icon_pth="$HOME_ICONS/${rm_icon}.png"
+                                real_rm_icon_pth="$(realpath "$rm_icon_pth" 2>/dev/null)"
+                                if [[ -f "$rm_icon_pth" && ! "$real_rm_icon_pth" =~ "$LW_ICONS_DIR" ]]
                                     then
                                         for hi_icon_size in ${HICOLOR_SIZES[@]}
                                             do
@@ -3309,8 +3432,7 @@ lu_rmapp() {
                                                     try_rm "$(realpath "$rm_hi_icon" 2>/dev/null)" &>/dev/null
                                                 try_rm_broken_link "$hi_icon_path"
                                         done
-                                        rm_icon="$HOME_ICONS/${rm_icon}.png"
-                                        try_rm "$(realpath "$rm_icon" 2>/dev/null)"
+                                        try_rm "$(realpath "$rm_icon_pth" 2>/dev/null)"
                                 fi
                                 try_rm "$LWAPPRM"
                         fi
@@ -3321,16 +3443,34 @@ lu_rmapp() {
                 wait
         fi)
     }
-    LWAPPSHRT="$(grep "Categories=Lux Wine App" -lr "$MENU_APPS_DIR" 2>/dev/null)"
+    LWAPPSHRT="$(grep "Categories=Lux Wine Apps" -lr "$MENU_APPS_DIR" 2>/dev/null)"
     if [[ -n "$(echo "$LWAPPSHRT"|head -1)" ]]
         then
-            [ -n "$(echo "$2"|grep -o '\.exe$')" ] && LU_EXE="$2"
-            if [ -f "$LU_EXE" ]
+            if [[ "$1" =~ ^[0-9]+$ ]]
                 then
-                    (IFS=$'\n' ; LWAPPSRM=($(grep "$LU_EXE" -lr "$MENU_APPS_DIR" 2>/dev/null))
+                    APP_NAME="$(lsapps|awk '($1 == "'$1'")'|awk '{$1=""}1'|\
+                                sed 's|"||g'|sed 's|^ ||g')"
+                    if [ -n "$APP_NAME" ]
+                        then get_app_exe "$APP_NAME"
+                        else print_error yad "No app found with this number!"
+                    fi
+                else
+                    if [ "${1,,}" == "all" ]
+                        then rm_allsrtcts ; exit $?
+                        else [ -n "$1" ] && LU_EXE="$1"
+                    fi
+            fi
+            if [[ -n "$(echo "$LU_EXE"|grep -Eiom1 '\.exe$|\.bat$'||\
+                grep -iom1 "^Name=$LU_EXE$" -lr "$MENU_APPS_DIR" 2>/dev/null)" ]]
+                then
+                    (IFS=$'\n'
+                    if [ -n "$EXE_ARG" ]
+                        then LWAPPSRM=($(find_app_exe_with_arg))
+                        else LWAPPSRM=($(grep -F "$LU_EXE" -lr "$MENU_APPS_DIR" 2>/dev/null))
+                    fi
                     if [ -n "${LWAPPSRM[*]}" ]
                         then rm_srtcts "${LWAPPSRM[*]}"
-                        else print_error yad "Shortcuts Remover" "$EXE_FULL_NAME not found in the menu!"
+                        else print_error yad "Shortcuts Remover" "'$LU_EXE' not found in the menu!"
                     fi)
                 else
                     LW_APP_RM="$(echo -e "\n$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -m1 "^Name=" {}|sed 's|^Name=||g'|sort -u|sed ':a;N;$!ba;s/\n/\n\n/g')"| \
@@ -3338,12 +3478,7 @@ lu_rmapp() {
                         --text-align=center --center --window-icon="$LW_DEF_ICO" \
                         --width=400 --height=500 --button="REMOVE ALL:2" --button="EXIT:1" --button="OK:0" 2>/dev/null)"
                     if [ "$?" == "2" ]
-                        then
-                            if print_question "Lux Wine Shortcuts Remover" "Are you sure you want to remove all Lux Wine applications from menu?"
-                                then
-                                    rm_srtcts "$LWAPPSHRT"
-                                    try_rm "$LW_APPS_DIR"
-                            fi
+                        then rm_allsrtcts
                     elif [ -n "$(echo "$LW_APP_RM"|head -1)" ]
                         then
                             LW_APP_RM="$(echo "$LW_APP_RM"|sed '/^TRUE$/d'|sed '/^$/d')"
@@ -3359,14 +3494,172 @@ lu_rmapp() {
     fi
 }
 
-lu_shortcut() {
-    get_sht_data() {
-        export SHRT_NAME="$(basename "$1"|sed 's|.exe$||')"
-        export SHRT_PATH="$(realpath "$(dirname "$1")")"
-        ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lux Wine application" "$SHRT_NAME")"
-        [ ! -n "$ADD_APP_NAME" ] && exit 1
-        exe2png
+drive_tolower() { cut -d: -f1|awk '{print tolower($0)}' ; }
+
+shrt_from_lnk() {
+    try_mv_lnk() { [ "$CSHRT_WITH_RM" == 1 ] && mv -f "$lnk_file" "$LW_DEF_TMP" ; }
+    lnk_data_get() { echo "$lnk_data"|grep "$1"|cut -d: -f2-|sed 's|^ ||g' ; }
+    fix_winstd_path() { sed 's|%ProgramFiles(x86)%|C:\\Program Files (x86)|gi;s|%ProgramFiles%|C:\\Program Files|gi' ; }
+    fix_path() {
+        fix_winstd_path|sed "s|^.|$WINEPREFIX/dosdevices/$lnk_exe_drive|g"|sed 's|\\$||g;s|\\\\|/|g;s|\\|/|g;s| $||g'
     }
+    if ! is_exe_exist exiftool
+        then
+            print_error yad "You must install exiftool!"
+            exit 1
+    fi
+    for lnk_file in "$@"
+        do
+            unset exe_ico lnk_exe_ico lnk_args
+            lnk_data="$(exiftool "$lnk_file")"
+            lnk_name="$(basename "$lnk_file")"
+            lnk_name_alnum="${lnk_name//[^[:alnum:] ._-]/}"
+            SHRT_NAME="$(echo "$lnk_name"|sed 's|\.lnk$||i')"
+            lnk_exe_drive="$(lnk_data_get 'Local Base Path'|drive_tolower)"
+            lnk_exe="$(lnk_data_get 'Local Base Path'|fix_path)"
+            lnk_exe_ico="$(lnk_data_get 'Icon File Name')"
+            lnk_exe_ico_drive="$(echo "$lnk_exe_ico"|fix_winstd_path|drive_tolower)"
+            lnk_exe_ico="$(lnk_exe_drive=$lnk_exe_ico_drive ; echo "$lnk_exe_ico"|fix_path)"
+            SHRT_PATH="$(dirname "$lnk_exe")"
+            lnk_exe_name="$(basename "$lnk_exe")"
+            lnk_args="$(lnk_data_get 'Command Line Arguments')"
+            IGNEXES=(
+                'unins000.exe' 'uninstall.exe' 'unwise.exe'
+                'openuserfolder.bat' 'language.changer.exe'
+                'uninst.exe' 'q2rtxded-x86.exe' 'q2rtxded.exe'
+                'ErrorReporter.exe' 'EAUpdater.exe'
+            )
+            IGNLNK=('VKPlay.ru.lnk' 'App Recovery.lnk')
+            BROKEICONEXES=('Warframe.*/Launcher.exe')
+            if [[ -n "$(echo "$lnk_exe_name"|grep -Eio '\.exe$|\.bat$')" && \
+                ! "${IGNEXES[@],,}" =~ "${lnk_exe_name,,}" && \
+                ! "${IGNLNK[@],,}" =~ "${lnk_name,,}" && \
+                "$lnk_args" != "--uninstall" ]]
+                then
+                    if [ -f "$(ipath "$lnk_exe"|head -1)" ]
+                        then
+                            if [[ -n "$lnk_args" && ! -n "$(grep -F "'$lnk_exe' $lnk_args" -lr "$LW_APPS_DIR" 2>/dev/null||\
+                                         grep -F "\"$lnk_exe\" $lnk_args" -lr "$LW_APPS_DIR" 2>/dev/null)" ]]|| \
+                               [[ ! -n "$lnk_args" && ! -n "$(grep "['\"] ['\"]$lnk_exe['\"]$" -lr "$LW_APPS_DIR" 2>/dev/null)" ]]
+                                then
+                                    LU_EXE="$lnk_exe"
+                                    for broken in "${BROKEICONEXES[@]}"
+                                        do [ -n "$(echo "$lnk_exe"|grep -io "$broken")" ] && \
+                                                unset lnk_exe_ico
+                                    done
+                                    if [ -f "$lnk_exe_ico" ]
+                                        then
+                                            case "$lnk_exe_ico" in
+                                                *.[Ii][Cc][Oo]) SHRT_PATH="$(dirname "$lnk_exe_ico")"
+                                                                exe_ico="$lnk_exe_ico"
+                                                                get_shrt_data ;;
+                                                *.[Ee][Xx][Ee]) LU_EXE="$lnk_exe_ico" get_shrt_data "$lnk_exe_ico" ;;
+                                            esac
+                                        else get_shrt_data "$LU_EXE"
+                                    fi
+                                    create_shortcut "$lnk_exe" "$lnk_args"
+                                else print_info yad "Shortcut for '$lnk_name_alnum' already created!"
+                            fi
+                            try_mv_lnk
+                        else
+                            print_error yad "EXE from '$lnk_name_alnum' not found!"
+                            try_mv_lnk
+                    fi
+                else
+                    print_error yad "Bad lnk file: '$lnk_name_alnum'"
+                    try_mv_lnk
+            fi
+    done
+}
+
+shrt_from_url() {
+    try_mv_url() { [ "$CSHRT_WITH_RM" == 1 ] && mv -f "$url_file" "$LW_DEF_TMP" ; }
+    url_data_get() { grep -i "^$1=" "$url_file" 2>/dev/null|sed "s|^$1=||gi" ; }
+    fix_path() { sed "s|^.|$WINEPREFIX/dosdevices/$url_exe_drive|g"|sed 's|\\$||g;s|\\\\|/|g;s|\\|/|g;s| $||g' ; }
+    get_protoclient() {
+        grep -Fi -m1 "Software\\\\Classes\\\\$1\\\\shell\\\\open\\\\command" -A2 "$WINEPREFIX"/{system,user}.reg|\
+        grep -io "@=.*\.exe"|sed "s|@=['\"]||g;s|\\\\\"||g"|head -1
+    }
+    if ! is_exe_exist dos2unix
+        then
+            print_error yad "You must install dos2unix!"
+            exit 1
+    fi
+    IGNPROTO=('http' 'https')
+    for url_file in "$@"
+        do
+            dos2unix "$url_file" &>/dev/null
+            unset LU_EXE exe_ico url_exe_ico url_name url_exe_ico_drive
+            url_file_name="$(basename "$url_file")"
+            url_file_name_alnum="${url_file_name//[^[:alnum:] ._-]/}"
+            SHRT_NAME="$(echo "$url_file_name"|sed 's|\.url$||i')"
+            url_name="$(url_data_get 'URL')"
+            url_proto="$(echo "$url_name"|sed 's|://.*||g')"
+            if [[ ! "${IGNPROTO[@]}" =~ "$url_proto" ]]
+                then
+                    url_protoclient="$(get_protoclient "$url_proto")"
+                    url_protoclient_drive="$(echo "$url_protoclient"|drive_tolower)"
+                    url_protoclient="$(url_exe_drive="$url_protoclient_drive" ; echo "$url_protoclient"|fix_path)"
+                    [ -f "$(ipath "$url_protoclient"|head -1)" ] && \
+                        LU_EXE="$(ipath "$url_protoclient"|head -1)"
+            fi
+            if [[ -n "$url_name" && -f "$LU_EXE" ]]
+                then
+                    url_exe_ico="$(url_data_get 'IconFile')"
+                    url_exe_ico_drive="$(echo "$url_exe_ico"|drive_tolower)"
+                    url_exe_ico="$(url_exe_drive="$url_exe_ico_drive" ; echo "$url_exe_ico"|fix_path)"
+                    if [ -f "$(ipath "$LU_EXE"|head -1)" ]
+                        then
+                            if [[ ! -n "$(grep -F "'$LU_EXE' $url_name" -lr "$LW_APPS_DIR" 2>/dev/null||\
+                                          grep -F "\"$LU_EXE\" $url_name" -lr "$LW_APPS_DIR" 2>/dev/null)" ]]
+                                then
+                                    if [ -f "$url_exe_ico" ]
+                                        then
+                                            case "$url_exe_ico" in
+                                                *.[Ii][Cc][Oo]) SHRT_PATH="$(dirname "$url_exe_ico")"
+                                                                exe_ico="$url_exe_ico"
+                                                                get_shrt_data ;;
+                                                *.[Ee][Xx][Ee]) LU_EXE="$url_exe_ico" get_shrt_data "$url_exe_ico" ;;
+                                            esac
+                                        else get_shrt_data "$LU_EXE"
+                                    fi
+                                    create_shortcut "$LU_EXE" "$url_name"
+                                else print_info yad "Shortcut for '$url_file_name_alnum' already created!"
+                            fi
+                            try_mv_url
+                        else
+                            print_error yad "EXE for run '$url_file_name_alnum' not found!"
+                            try_mv_url
+                    fi
+                else
+                    print_error yad "Bad url file: '$url_file_name_alnum'"
+                    try_mv_url
+            fi
+    done
+}
+
+get_shrt_data() {
+    [ -n "$SHRT_NAME" ]||\
+    SHRT_NAME="$(basename "$1"|sed 's|.exe$||i')"
+    [ -n "$SHRT_PATH" ]||\
+    SHRT_PATH="$(realpath "$(dirname "$1")")"
+    if [ "$NO_ADD_APP_NAME" != 1 ]
+        then ADD_APP_NAME="$(print_input "Enter name" "Enter name for Lux Wine application" "${SHRT_NAME//[^[:alnum:] ._-]/}")"
+        else ADD_APP_NAME="${SHRT_NAME//[^[:alnum:] ._-]/}"
+    fi
+    [ ! -n "$ADD_APP_NAME" ] && exit 1
+    if [ -n "$LW_APP_SHRT_ICON" ]
+        then SHRT_ICON="$LW_APP_SHRT_ICON"
+        else
+            case "$SHRT_NAME" in
+                Steam) SHRT_ICON=steam ;;
+                *) exe2png "$(basename "$1"|sed 's|.exe$||i')" ;;
+            esac
+    fi
+}
+
+lu_shortcut() {
+    unset SHRT_NAME SHRT_PATH exe_ico
     if [ ! -n "$(pgrep -fa yad|grep "Shortcuts Creator"|awk '{print$1}')" ]; then :
         else
             print_error yad "Shortcuts Creator" "Lux Wine Shortcuts Creator already runing!"
@@ -3374,11 +3667,15 @@ lu_shortcut() {
     fi
     if [ -f "$LU_EXE" ]
         then
-            get_sht_data "$LU_EXE"
+            get_shrt_data "$LU_EXE"
             create_shortcut "$LU_EXE"
+    elif [ -n "$(basename "$LU_START"|grep -io "\.lnk$")" ]
+        then shrt_from_lnk "$(realpath "$LU_START")"
+    elif [ -n "$(basename "$LU_START"|grep -io "\.url$")" ]
+        then shrt_from_url "$(realpath "$LU_START")"
         else
             SHRT_EXE="$(yad --window-icon="$LW_DEF_ICO" --title "Lux Wine Shortcuts Creator" --file --center \
-                --file-filter="*.exe" --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0" 2>/dev/null)"
+                --file-filter="*.[Ee][Xx][Ee] *.[Ll][Nn][Kk]" --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ -f "$SHRT_EXE" ]
                 then
                     export SHRT_FL="$(readlink -f "$SHRT_EXE")"
@@ -3386,7 +3683,7 @@ lu_shortcut() {
                         then
                             export LU_EXE="$SHRT_FL"
                             lite_init "$LU_EXE"
-                            get_sht_data "$LU_EXE"
+                            get_shrt_data "$LU_EXE"
                             create_shortcut "$LU_EXE"
                         else
                             print_error yad "Shortcuts Creator" "Unable to create Lux Wine shortcut for this file!"
@@ -3518,18 +3815,6 @@ check_tray() {
     export TRAY_PID="$(pgrep lw-tray)"
     [ -n "$(pgrep -fa "$LW_NAME"|grep -o "noclose")" ] && \
         export FORCE_TRAY='1'
-}
-
-lu_tray() {
-    check_shell
-    check_tray
-    if [[ ! -n "$TRAY_PID" && "$NO_TRAY" != 1 ]]
-        then
-            if [ -n "$FORCE_TRAY" ]
-                then "$LW_TRAY"
-                else "$LW_TRAY" &
-            fi
-    fi
 }
 
 lu_winemgr() {
@@ -3822,6 +4107,7 @@ lu_winemgr() {
 }
 
 check_themes() {
+    unset THEMEOK
     [ -n "$1" ] && export WINE_THEME="$1"
     if [[ -d "$LW_THEMES_DIR" && -n "$(ls -1 "$LW_THEMES_DIR"|head -1)" ]]
         then
@@ -3864,10 +4150,8 @@ us_layout_sw() {
     if [ "$US_LAYOUT" == 1 ]
         then
             if is_exe_exist xkb-switch
-                then
-                    xkb-switch -s us 2>/dev/null
-                else
-                    print_error "xkb-switch not found!"
+                then xkb-switch -s us 2>/dev/null
+                else print_error "xkb-switch not found!"
             fi
     fi
 }
@@ -3878,20 +4162,18 @@ check_mangohud() {
         then
             if is_exe_exist mangohud
                 then
-                    if [ "$WINED3D" == 1 ]
+                    if [[ "$LWMANGOHUD" == "DLSYM" || "$WINED3D" == 1 ]]
                         then
-                            print_info "MANGOHUD in OpenGL mode!"
+                            print_info "MANGOHUD in DLSYM mode!"
                             export RUN_MANGOHUD="mangohud --dlsym"
                         else
                             export MANGOHUD=1
                             unset RUN_MANGOHUD
                     fi
                     if [[ ! -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
-                        then
-                            export MANGOHUD_CONFIG="$DEF_MANGOHUDCFG"
+                        then export MANGOHUD_CONFIG="$DEF_MANGOHUDCFG"
                     elif [[ -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
-                        then
-                            export MANGOHUD_CONFIG="$MANGOHUDCFG"
+                        then export MANGOHUD_CONFIG="$MANGOHUDCFG"
                     fi
                 else
                     print_error yad "MANGOHUD not found in your system!"
@@ -3899,7 +4181,7 @@ check_mangohud() {
                     unset MANGOHUD RUN_MANGOHUD
             fi
         else
-            print_info notify "MANGOHUD is disabled!"
+            print_info "MANGOHUD is disabled!"
             export DISABLE_MANGOHUD=1
             unset MANGOHUD RUN_MANGOHUD
     fi
@@ -3945,7 +4227,7 @@ check_gamemode() {
                     unset RUN_GAMEMODE
             fi
         else
-            print_info notify "GAMEMODE is disabled!"
+            print_info "GAMEMODE is disabled!"
             unset RUN_GAMEMODE
     fi
 }
@@ -3965,7 +4247,7 @@ check_gstreamer() {
             [ ! -d "$WINEDIR/lib64/gstreamer-1.0" ] && print_error notify "Wine GSTREAMER not found!"
             unset GSTREAMER
             wdllover_upd "winegstreamer="
-            [ "$GSTREAMER" != 1 ] && print_info notify "GSTREAMER is disabled!"
+            [ "$GSTREAMER" != 1 ] && print_info "GSTREAMER is disabled!"
     fi
 }
 
@@ -4506,6 +4788,7 @@ winepfx_init() {
 }
 
 check_winepfx() {
+    is_wine_drive() { ls -l "$WINEPREFIX/dosdevices"/[a-z]: 2>/dev/null|grep -w "${1}$"|grep -o '[a-z]:' &>/dev/null ; }
     [ -n "$1" ] && export WINEPREFIX="$1"
     [ -n "$2" ] && export WINEARCH="$2"
     WPFX_STEAMUSER_DIR="$WINEPREFIX/drive_c/users/steamuser"
@@ -4538,10 +4821,42 @@ check_winepfx() {
     try_mkdir "$WINEPREFIX/drive_c"
     try_mkdir "$WINEPREFIX/dosdevices"
     try_mkdir "$WPFX_STEAMUSER_DIR"
-    [ ! -d "$WINEPREFIX/dosdevices/c:" ] && \
-        try_ln "$WINEPREFIX/drive_c" "$WINEPREFIX/dosdevices/c:"
-    [ ! -d "$WINEPREFIX/dosdevices/z:" ] && \
-        try_ln "/" "$WINEPREFIX/dosdevices/z:"
+    drive_c="$WINEPREFIX/dosdevices/c:"
+    is_wine_drive 'drive_c'||(rm -f "$drive_c" && \
+        try_ln "$WINEPREFIX/drive_c" "$drive_c")
+    drive_z="$WINEPREFIX/dosdevices/z:"
+    is_wine_drive '/'||(rm -f "$drive_z" && \
+        ln -sf '/' "$drive_z")
+    drive_h="$WINEPREFIX/dosdevices/h:"
+    is_wine_drive "$HOME"||(rm -f "$drive_h" && \
+        ln -sf "$HOME" "$drive_h")
+    (DRIVES=(a b d e f g i j k l m n o p q r s t u v w x y)
+    DEF_MP_DIRS=('/media' "/media/$USER" '/mnt' '/run/media' "/run/media/$USER")
+    IFS=$'\n' MP_DIRS=($(find "${DEF_MP_DIRS[@]}" -maxdepth 1 -type d 2>/dev/null|sort -u))
+    try_rm_broken_link "$WINEPREFIX/dosdevices" &>/dev/null
+    for mp in "${MP_DIRS[@]}"
+        do
+            if [[ ! "${DEF_MP_DIRS[@]}" =~ "$mp" ]] && mountpoint -q "$mp"
+                then
+                    if ! is_wine_drive "$mp"
+                        then drive_num=0
+                            while true
+                                do
+                                    if [[ "$drive_num" -le "${#DRIVES[@]}" ]]
+                                        then
+                                            drive_path="$WINEPREFIX/dosdevices/${DRIVES[$drive_num]}:"
+                                            if [ ! -d "$drive_path" ]
+                                                then ln -sf "$mp" "$drive_path"
+                                                    break
+                                                else drive_num="$(( $drive_num + 1 ))"
+                                                    continue
+                                            fi
+                                        else break
+                                    fi
+                            done
+                    fi
+            fi
+    done)
     if [[ -d "$WINEPREFIX/drive_c/users/$USER" && ! -L "$WINEPREFIX/drive_c/users/$USER" ]]
         then
             if try_cp "$WINEPREFIX/drive_c/users/$USER/"* "$WPFX_STEAMUSER_DIR/"
@@ -4599,7 +4914,6 @@ check_winepfx() {
     local test_mydocu="$WPFX_STEAMUSER_DIR/My Documents"
     if [[ ! -L "$test_mydocu" && ! -d "$test_mydocu" ]]
         then
-            echo pizdes
             DEF_WDESK_MYDIR=("Desktop" "My Documents" "My Music" "My Videos" "My Pictures" "My Downloads" "My Templates")
             (IFS=$'\n' ; for winedir_ln in ${DEF_WDESK_MYDIR[@]/Desktop}
                 do
@@ -4628,51 +4942,68 @@ check_winepfx() {
             try_rm "$DESKLOCSETT" &>/dev/null
             try_ln "$WPFX_STEAMUSER_DIR/AppData/Local" "$DESKLOCSETT"
     fi
-    WPFX_FONTS="$WINEPREFIX/drive_c/windows/Fonts"
-    WINE_FONTS="$WINEDIR/share/fonts"
-    try_mkdir "$WPFX_FONTS"
+    WPFX_FONTS_DIR="$WINEPREFIX/drive_c/windows/Fonts"
+    SHARE_FONTS_DIR="$WINEDIR/share/fonts"
+    WINE_FONTS_DIR="$WINEDIR/share/wine/fonts"
+    try_mkdir "$WPFX_FONTS_DIR"
+    SHARE_FONTS_LST=(
+        arialbd.ttf courbd.ttf georgia.ttf malgun.ttf
+        micross.ttf msgothic.ttc nirmala.ttf simsun.ttc
+    )
+    WINE_FONTS_LST=(
+        arial.ttf cour.ttf marlett.ttf msyh.ttf
+        symbol.ttf tahomabd.ttf tahoma.ttf times.ttf
+        webdings.ttf wingding.ttf
+    )
     if [ "$WINE_VERSION" == "System" ]
         then
-            [[ -f  "/usr/share/wine/fonts/tahoma.ttf" && ! -f "$WPFX_FONTS/tahoma.ttf" ]] && \
-                try_ln "/usr/share/wine/fonts/tahoma.ttf" "$WPFX_FONTS/tahoma.ttf"
+            for font in "${WINE_FONTS_LST[@]}"
+                do [[ -f  "/usr/share/wine/fonts/$font" && ! -f "$WPFX_FONTS_DIR/$font" ]] && \
+                        try_ln "/usr/share/wine/fonts/$font" "$WPFX_FONTS_DIR/$font"
+            done
         else
-            [[ -f "$WINE_FONTS/LiberationSans-Regular.ttf" && ! -f "$WPFX_FONTS/arial.ttf" ]] && \
-                try_ln "$WINE_FONTS/LiberationSans-Regular.ttf" "$WPFX_FONTS/arial.ttf"
-            [[ -f "$WINE_FONTS/LiberationSans-Bold.ttf" && ! -f "$WPFX_FONTS/arialbd.ttf" ]] && \
-                try_ln "$WINE_FONTS/LiberationSans-Bold.ttf" "$WPFX_FONTS/arialbd.ttf"
-            [[ -f "$WINE_FONTS/LiberationSerif-Regular.ttf" && ! -f "$WPFX_FONTS/times.ttf" ]] && \
-                try_ln "$WINE_FONTS/LiberationSerif-Regular.ttf" "$WPFX_FONTS/times.ttf"
-            [[ -f "$WINE_FONTS/LiberationMono-Regular.ttf" && ! -f "$WPFX_FONTS/cour.ttf" ]] && \
-                try_ln "$WINE_FONTS/LiberationMono-Regular.ttf" "$WPFX_FONTS/cour.ttf"
-            [[ -f "$WINE_FONTS/LiberationMono-Bold.ttf" && ! -f "$WPFX_FONTS/courbd.ttf" ]] && \
-                try_ln "$WINE_FONTS/LiberationMono-Bold.ttf" "$WPFX_FONTS/courbd.ttf"
-            [[ -f "$WINEDIR/share/wine/fonts/tahoma.ttf" && ! -f "$WPFX_FONTS/tahoma.ttf" ]] && \
-                try_ln "$WINEDIR/share/wine/fonts/tahoma.ttf" "$WPFX_FONTS/tahoma.ttf"
-            for font in {msyh.ttf,malgun.ttf,micross.ttf,nirmala.ttf,simsun.ttc,msgothic.ttc}
-                do
-                    [[ -f "$WINE_FONTS/$font" && ! -f "$WPFX_FONTS/$font" ]] && \
-                        try_ln "$WINE_FONTS/$font" "$WPFX_FONTS/$font"
+            for font in "${SHARE_FONTS_LST[@]}"
+                do [[ -f "$SHARE_FONTS_DIR/$font" && ! -f "$WPFX_FONTS_DIR/$font" ]] && \
+                        try_ln "$SHARE_FONTS_DIR/$font" "$WPFX_FONTS_DIR/$font"
+            done
+            for font in "${WINE_FONTS_LST[@]}"
+                do [[ -f "$WINE_FONTS_DIR/$font" && ! -f "$WPFX_FONTS_DIR/$font" ]] && \
+                        try_ln "$WINE_FONTS_DIR/$font" "$WPFX_FONTS_DIR/$font"
+            done
+            [[ -f "$SHARE_FONTS_DIR/LiberationSans-Bold.ttf" && ! -f "$WPFX_FONTS_DIR/arialbd.ttf" ]] && \
+                try_ln "$SHARE_FONTS_DIR/LiberationSans-Bold.ttf" "$WPFX_FONTS_DIR/arialbd.ttf"
+            [[ -f "$SHARE_FONTS_DIR/LiberationMono-Bold.ttf" && ! -f "$WPFX_FONTS_DIR/courbd.ttf" ]] && \
+                try_ln "$SHARE_FONTS_DIR/LiberationMono-Bold.ttf" "$WPFX_FONTS_DIR/courbd.ttf"
+            for font in "${WINE_FONTS_LST[@]}"
+                do [[ -f "$SHARE_FONTS_DIR/$font" && ! -f "$WPFX_FONTS_DIR/$font" ]] && \
+                        try_ln "$SHARE_FONTS_DIR/$font" "$WPFX_FONTS_DIR/$font"
             done
     fi
 }
 
+find_vk_icd() { find "$VLK_ICD_DIR"/${1}* -type f 2>/dev/null ; }
+
 check_vulkan_icd() {
-    [ -n "$1" ] && export VKICDFILES="$1"
-    if [ "$VKICDFILES" == "AUTO" ]
+    exportvkicd() { export VK_ICD_FILENAMES="$(find_vk_icd "$1"|tr '\n' ':'|sed 's/.$//')"  ; }
+    setvkicd() {
+            case "${1,,}" in
+                nvidia) exportvkicd nvidia ;;
+                intel*|anv) exportvkicd intel ;;
+                amd|radv) exportvkicd radeon ;;
+                llvmpipe|lvp) exportvkicd lvp ;;
+            esac
+    }
+    if [ -n "$1" ]
         then
             unset VK_ICD_FILENAMES
-    elif [ "$VKICDFILES" == "Nvidia" ]
+            VKICDFILES="$1"
+    fi
+    if [ ! -n "$VK_ICD_FILENAMES" ]
         then
-            export VK_ICD_FILENAMES="$(find_vk_icd nvidia|tr '\n' ':'|sed 's/.$//')"
-    elif [ "$VKICDFILES" == "Intel" ]
-        then
-            export VK_ICD_FILENAMES="$(find_vk_icd intel|tr '\n' ':'|sed 's/.$//')"
-    elif [ "$VKICDFILES" == "AMD" ]
-        then
-            export VK_ICD_FILENAMES="$(find_vk_icd radeon|tr '\n' ':'|sed 's/.$//')"
-    elif [ "$VKICDFILES" == "Lvp" ]
-        then
-            export VK_ICD_FILENAMES="$(find_vk_icd lvp|tr '\n' ':'|sed 's/.$//')"
+            if [ "$VKICDFILES" == "AUTO" ]
+                then setvkicd "$SYS_VK_DRV"
+                else setvkicd "$VKICDFILES"
+            fi
     fi
 }
 
@@ -4908,7 +5239,7 @@ check_vkbasalt_eff() {
         else
             unset VKBASALT ENABLE_VKBASALT
             export DISABLE_VKBASALT=1
-            print_info notify "VkBasalt is disabled!"
+            print_info "VkBasalt is disabled!"
     fi
 }
 
@@ -5002,33 +5333,25 @@ check_cpu_limit() {
 check_vkd3dconfig() {
     [ -n "$1" ] && export VKD3DCFG="$1"
     if [[ -n "$VKD3DCFG" && "$VKD3DCFG" != "Disabled" ]]
-        then
-            vkd3dcfg_upd "$VKD3DCFG"
+        then vkd3dcfg_upd "$VKD3DCFG"
     fi
 }
 
 check_dxr() {
     [ -n "$1" ] && export DXR="$1"
-    if [ "$DXR" == "1.1" ]
-        then
-            vkd3dcfg_upd "dxr11"
-    elif [ "$DXR" == "1.0" ]
-        then
-            vkd3dcfg_upd "dxr"
-    elif [[ "$DXR" == "Disabled" && -n "$(echo "$VKD3D_CONFIG"|grep -o "dxr")" ]]
-        then
-            export VKD3D_CONFIG="$(echo "$VKD3D_CONFIG"|sed 's/dxr11//'|sed 's/dxr//'|sed 's/,,/,/'|sed 's/^,//'|sed 's/,$//')"
+    if [ "$DXR" == '1' ]
+        then vkd3dcfg_upd "dxr,dxr11"
+        else export VKD3D_CONFIG="$(echo "$VKD3D_CONFIG"|sed 's/dxr11//'|\
+                sed 's/dxr//'|sed 's/,,/,/'|sed 's/^,//'|sed 's/,$//')"
     fi
 }
 
 check_resizable_bar() {
     [ -n "$1" ] && export RESIZABLE_BAR="$1"
     if [ "$RESIZABLE_BAR" == "1" ]
-        then
-            vkd3dcfg_upd "upload_hvv"
+        then vkd3dcfg_upd "upload_hvv"
     elif [[ "$RESIZABLE_BAR" != "1" && -n "$(echo "$VKD3D_CONFIG"|grep -o "upload_hvv")" ]]
-        then
-            export VKD3D_CONFIG="$(echo "$VKD3D_CONFIG"|sed 's/upload_hvv//'|sed 's/,,/,/'|sed 's/^,//'|sed 's/,$//')"
+        then export VKD3D_CONFIG="$(echo "$VKD3D_CONFIG"|sed 's/upload_hvv//'|sed 's/,,/,/'|sed 's/^,//'|sed 's/,$//')"
     fi
 }
 
@@ -5234,6 +5557,7 @@ check_other_fixes() {
             fi
     done
     sed -i '/steam.exe\\" -silent"/d' "$WINEPREFIX/user.reg" 2>/dev/null
+    sed -i 's|"ThemeActive"="1"|"ThemeActive"="0"|gi' "$WINEPREFIX/user.reg" 2>/dev/null
     [ "$LARGE_ADDRESS" == 1 ] && export WINE_LARGE_ADDRESS_AWARE=1
     if [ "$OLD_GL_STRING" == 1 ]
         then
@@ -5246,7 +5570,6 @@ check_other_fixes() {
     [ "$ALLOW_XIM" == 1 ] && export WINE_ALLOW_XIM=1
     [ "$SHARED_MEMORY" == 1 ] && export STAGING_SHARED_MEMORY=1
     [ "$DIS_LAYER_AMD" == 1 ] && export DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1=1
-    [ "$GL_THRD_OPTI" == 1 ] && export __GL_THREADED_OPTIMIZATIONS=1
     try_mkdir "$LW_DEF_CACHE/gl_shader_cache"
     try_mkdir "$LW_DEF_CACHE/mesa_shader_cache"
     export MESA_GLSL_CACHE_DIR="$LW_DEF_CACHE"
@@ -5265,11 +5588,9 @@ check_videodrv() {
         print_info notify "Vulkan API is unavailable in your system!"
     }
     if is_exe_exist lsvkdev
-        then
-            SYS_VK_DRV="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 lsvkdev -d 2>/dev/null)"
-    else
-        SYS_VK_DRV="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 vulkaninfo --summary \
-                    2>/dev/null|grep driverName|awk '{print$3}'|head -1)"
+        then SYS_VK_DRV="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 lsvkdev -d 2>/dev/null)"
+        else SYS_VK_DRV="$(DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 vulkaninfo --summary \
+                2>/dev/null|grep driverName|awk '{print$3}'|head -1)"
     fi
     VK_DRV_BLKLST=("llvmpipe" "virgl")
     if [ ! -n "$SYS_VK_DRV" ] || [[ "${VK_DRV_BLKLST[@]}" =~ "$SYS_VK_DRV" ]]
@@ -5423,7 +5744,7 @@ lu_appcfg() {
             elif [ -n "$(echo "$LW_APP_SETT"|head -1)" ]
                 then
                     LW_APP_SETT="$(echo "$LW_APP_SETT"|sed '/^TRUE$/d'|sed '/^$/d')"
-                    LW_APP_SETT_EXE="$(readlink -f "$LW_APPCFG_DIR/$LW_APP_SETT"|sed 's/.wcfg$/.exe/')"
+                    LW_APP_SETT_EXE="$(readlink -f "$LW_APPCFG_DIR/$LW_APP_SETT"|sed 's|.wcfg$|.exe|')"
                     cleanrun "$LW_SOURCE" -config "$LW_APP_SETT_EXE"
             else
                 return 1
@@ -5776,7 +6097,7 @@ lu_backupunmnt() {
 }
 
 lsapps() {
-    grep '^Categories=Lux Wine App' -lr "$LW_APPS_DIR" 2>/dev/null|\
+    grep '^Categories=Lux Wine Apps' -lr "$LW_APPS_DIR" 2>/dev/null|\
     xargs -I {} grep -m1 '^Name=' {} 2>/dev/null|sed 's|^Name=||g'|\
     sed 's|.*|"&"|g'|sort -u|cat -n
 }
@@ -5793,12 +6114,16 @@ lu_lsapp() {
 }
 
 get_app_exe() {
-    grep -om1 " [\"']/.*\.exe" "$(grep -m1 "^Name=$1" -lr "$LW_APPS_DIR" \
-    2>/dev/null|head -1)" 2>/dev/null|cut -d':' -f2|sed "s|^ '||g;s|^ \"||g"
+    LU_EXE="$(grep -Eiom1 " [\"']/.*\.exe| [\"']/.*\.bat" "$(grep -wm1 "^Name=$1$" -lr "$LW_APPS_DIR" \
+                2>/dev/null|head -1)" 2>/dev/null|sed "s|^ ['\"]||g" 2>/dev/null)"
+    EXE_ARG="$(grep -Eiom1 " [\"']/.*\.exe.*| [\"']/.*\.bat.*" "$(grep -wm1 "^Name=$1$" -lr "$LW_APPS_DIR" \
+                2>/dev/null|head -1)" 2>/dev/null|sed "s| ['\"]$LU_EXE['\"]||gi;s|^ ||g;s| $||g" 2>/dev/null)"
+    [ ! -n "$LU_EXE" ] && \
+    return 1||return 0
 }
 
 lu_runapp() {
-    unset LU_EXE
+    unset LU_EXE EXE_ARG
     shift
     if [ -n "$1" ]
         then
@@ -5807,24 +6132,41 @@ lu_runapp() {
                     APP_NAME="$(lsapps|awk '($1 == "'$1'")'|awk '{$1=""}1'|\
                                 sed 's|"||g'|sed 's|^ ||g')"
                     if [ -n "$APP_NAME" ]
-                        then
-                            LU_EXE="$(get_app_exe "$APP_NAME")"
-                        else
-                            print_error "No app found with this number!"
+                        then get_app_exe "$APP_NAME"
+                        else print_error yad "No app found with this number!"
                     fi
-                else
-                    LU_EXE="$(get_app_exe "$1")"
+                else get_app_exe "$1"
             fi
             if [ ! -n "$LU_EXE" ]
                 then
-                    print_error "No launch application found!"
+                    print_error yad "No launch application found!"
                     exit 1
             fi
             shift
-            cleanrun env LWPPID="$LWPPID" "$LW_SOURCE" "$LU_EXE" "$@"
+            cleanrun env LWPPID="$LWPPID" "$LW_SOURCE" "$LU_EXE" $EXE_ARG "$@"
         else
-            print_error "Specify App for launch!"
+            print_error yad "Specify App for launch!"
             exit 1
+    fi
+}
+
+lu_tray() {
+    check_shell
+    check_tray
+    if [[ ! -n "$TRAY_PID" && "$NO_TRAY" != 1 ]]
+        then
+            if [ -n "$FORCE_TRAY" ]
+                then
+                    (sleep 1 2>/dev/null
+                    check_tray
+                    while [ -n "$TRAY_PID" ]
+                        do NO_YAD=1 check_shrt
+                            check_tray
+                            sleep 2 2>/dev/null
+                    done) &
+                    "$LW_TRAY"
+                else "$LW_TRAY" &
+            fi
     fi
 }
 
@@ -5854,7 +6196,7 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
             -killshell) lu_killshell "$@" ;;
             -exit) lu_exit "$@" ;;
             -clearpfx) lu_clearpfx "$@" ;;
-            -rmapp) lu_rmapp "$@" ;;
+            -rmapp) shift ; lu_rmapp "$@" ;;
             -shortcut) lu_shortcut ;;
             -help) lu_help ;;
             -version) lu_version ;;

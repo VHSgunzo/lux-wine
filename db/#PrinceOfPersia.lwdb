@@ -1,4 +1,3 @@
-#!/usr/bin/bash
 POP_EXE="$(ls "$EXE_PATH"/pop*.exe|head -1)"
 POP_EXE_NAME="$(basename "$POP_EXE")"
 if [ -f "$POP_EXE" ]
