@@ -1,7 +1,7 @@
 [Desktop Entry]
-Categories=Lutris Wine
-Exec="/usr/bin/lutris-wine" -winecfg %f
-Icon=/usr/share/lutris-wine/icons/lw_default_icon.png
+Categories=Lux Wine
+Exec="/usr/bin/lux-wine" -winecfg %f
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
 MimeType=application/x-ms-dos-executable;application/x-msdos-program
 Name=Wine settings
 Name[ru_RU]=Настройки Wine

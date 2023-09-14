@@ -1,4 +1,3 @@
-#!/bin/bash
 export HOLD_TERMINAL=1
 export TERMINAL=1
 check_win_version 10

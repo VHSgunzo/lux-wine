@@ -1,0 +1,4 @@
+[[ ! -f "$EXE_PATH/fsgame.ltx" && \
+     -f "$EXE_PATH/../fsgame.ltx" ]] && \
+ln -sfr "$EXE_PATH/../"* "$EXE_PATH/"
+return 0

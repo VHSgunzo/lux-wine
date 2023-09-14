@@ -1,25 +1,37 @@
 #!/usr/bin/env bash
-# Lutris Wine wrapper for Runimage container
+# Lux Wine wrapper for RunImage container
+
+CHK_UPDATE='3'
+
+shopt -s extglob
 
 RED='\033[1;91m'
 BLUE='\033[1;94m'
 GREEN='\033[1;92m'
 YELLOW='\033[1;33m'
 RESETCOLOR='\033[1;00m'
-LW_DIR="$HOME/.local/share/LutrisWine"
+
+GIT_REPO='https://github.com/VHSgunzo'
+LW_DIR="$HOME/.local/share/LuxWine"
+OLD_LW_DIR="$HOME/.local/share/LutrisWine"
+MENU_APPS_DIR="$HOME/.local/share/applications"
+LW_APPS_DIR="$MENU_APPS_DIR/LuxWineApps"
+OLD_LW_APPS_DIR="$MENU_APPS_DIR/LutrisWineApp"
 LW_CFG="$LW_DIR/luwine.wcfg"
+TMP_LW_CFG="$LW_DIR/tmp/luwine.wcfg"
 LWBIN_DIR="$LW_DIR/bin"
-LWSRC="$LWBIN_DIR/lutris-wine"
-GIT_SRC_RAW="https://raw.githubusercontent.com/VHSgunzo/lutris-wine/main"
-GIT_LWSRC="$GIT_SRC_RAW/lutris-wine"
+OLD_LWBIN_DIR="$OLD_LW_DIR/bin"
+LWSRC="$LWBIN_DIR/lux-wine"
+OLD_LWSRC="$LWBIN_DIR/lutris-wine"
+GIT_SRC_RAW='https://raw.githubusercontent.com/VHSgunzo/lux-wine/main'
+GIT_LWSRC="$GIT_SRC_RAW/lux-wine"
+GIT_LWZIP="$GIT_REPO/lux-wine/archive/refs/heads/main.zip"
 GIT_LWRAP="$GIT_SRC_RAW/lwrap/lwrap"
-GIT_LWRUN="https://github.com/VHSgunzo/runimage/releases"
-export GIT_LWRUN_VERSION="v0.38.9"
-HICOLOR_SIZES=("512x512" "256x256" "192x192" "128x128" "96x96" "80x80" "72x72" "64x64" "48x48" "32x32" "24x24" "16x16")
+GIT_LWRUN="$GIT_REPO/lwrun/releases"
+GIT_HF_LWRUN='https://huggingface.co/lux-wine/lwrun/resolve/main/releases'
 HOME_ICONS="$HOME/.local/share/icons"
-HOME_DESK_APPS="$HOME/.local/share/applications"
 HOME_DESK_DIRS="$HOME/.local/share/desktop-directories"
-HSTEAM_DESKF="$HOME_DESK_APPS/steam-lw.desktop"
+HSTEAM_DESKF="$MENU_APPS_DIR/steam-lw.desktop"
 RSTEAM_DESKF="$RUNROOTFS/usr/share/applications/steam.desktop"
 F_RC="$HOME/.config/fish/config.fish"
 B_RC="$HOME/.bashrc"
@@ -29,8 +41,22 @@ LWRUN_LN="$HBIN_DIR/lwrun"
 LWRAP="$LWBIN_DIR/lwrap"
 LWBASH="$LWBIN_DIR/bash"
 LWRUN="$LWBIN_DIR/lwrun"
+OLD_LWRUN="$OLD_LWBIN_DIR/lwrun"
 RUNIMAGE_LW="$LWBIN_DIR/runimage-lw"
-CHK_UPDATE='3'
+LWRAP_DIR='/opt/lwrap'
+LWRUNTIME="$LWRAP_DIR/runtime.tar.zst"
+HLWDIRLN="$HOME/LuxWine"
+OLD_HLWDIRLN="$HOME/LutrisWine"
+HICOLOR_SIZES=(
+    "512x512" "256x256" "192x192" "128x128"
+    "96x96" "80x80" "72x72" "64x64" "48x48"
+    "32x32" "24x24" "16x16"
+)
+LW_MIMETYPES=(
+    'application/x-ms-dos-executable' 'application/x-wine-extension-msp'
+    'application/x-msi' 'application/x-msdos-program' 'text/win-bat'
+    'application/x-ms-shortcut' 'text/x-ms-regedit'
+)
 
 if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]] && \
    [[ -x "$LWRAP" && "$NO_EXT_LWRAP" != 1 ]]
@@ -46,8 +72,7 @@ unset NO_EXT_LWRAP
 error_msg() {
     echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR"
     if [ "$NOT_TERM" == 1 ]
-        then
-            notify-send -a 'Lutris Wine Error' "$@" 2>/dev/null &
+        then notify-send -a 'Lux Wine Error' "$@" 2>/dev/null &
     fi
 }
 
@@ -56,8 +81,7 @@ info_msg() {
         then
             echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR"
             if [[ "$NOT_TERM" == 1 && "$NO_NOTIFY" != 1 ]]
-                then
-                    notify-send -a 'Lutris Wine Info' "$@" 2>/dev/null &
+                then notify-send -a 'Lux Wine Info' "$@" 2>/dev/null &
             fi
     fi
 }
@@ -67,51 +91,68 @@ warn_msg() {
         then
             echo -e "${YELLOW}[ WARNING ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR"
             if [[ "$NOT_TERM" == 1 && "$NO_NOTIFY" != 1 ]]
-                then
-                    notify-send -a 'Lutris Wine Warning' "$@" 2>/dev/null &
+                then notify-send -a 'Lux Wine Warning' "$@" 2>/dev/null &
             fi
     fi
 }
 
-check_path() { [ -f "$1" ] && ! grep -om1 '^export PATH=.*/.local/bin' "$1" &>/dev/null ; }
+check_path() {
+    if [ "$1" == "$F_RC" ]
+        then grep -om1 '^set -U fish_user_paths "$HOME/.local/bin"' "$1" &>/dev/null
+        else grep -om1 '^export PATH=.*/.local/bin' "$1" &>/dev/null
+    fi
+}
 
-add_path() { check_path "$1" && echo -e '\nexport PATH="$HOME/.local/bin:$PATH"' >> "$1" ; }
+add_path() {
+    if [ "$1" == "$F_RC" ]
+        then check_path "$1"||echo -e '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$1"
+        else check_path "$1"||echo -e '\nexport PATH="$HOME/.local/bin:$PATH"' >> "$1"
+    fi
+}
 
 make_install() {
     if [ "$1" == "force" ]
         then QUIET_MODE=1 uninstall_lw force
         else QUIET_MODE=1 uninstall_lw update
     fi
-    install -Dm755 lutris-wine "$LWSRC"
+    [ -f 'lux-wine' ] && \
+        local lwf='lux-wine'||\
+        local lwf='bin/lux-wine'
+    install -Dm755 "$lwf" "$LWSRC"
     if is_not_pts_home
         then
             (IFS=$'\n'
             for DESKFL in $(grep -rm1 '^Exec=".*"' ./*|cut -d ':' -f1)
                 do sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g" "$DESKFL"
             done
-            for DESKFL in $(grep -rm1 'Icon=/.*/lutris-wine/icons/.*.png$' ./*|cut -d ':' -f1)
-                do sed -i "s|Icon=/.*/lutris-wine/icons/|Icon=$LW_DIR/icons/|g" "$DESKFL"
+            for DESKFL in $(grep -rm1 'Icon=/.*/lux-wine/icons/.*.png$' ./*|cut -d ':' -f1)
+                do sed -i "s|Icon=/.*/lux-wine/icons/|Icon=$LW_DIR/icons/|g" "$DESKFL"
             done)
+            if [ -f 'lwrap' ]
+                then local lwrapf='lwrap'
+            elif [ -f 'bin/lwrap' ]
+                then local lwrapf='bin/lwrap'
+            else local lwrapf='lwrap/lwrap'
+            fi
             if [ -x "$RUNSTATIC/bash" ]
                 then
-                    sed -i "1 s|^.*$|#!$LWBASH|" lwrap/lwrap
+                    sed -i "1 s|^.*$|#!$LWBASH|" "$lwrapf"
                     install -Dm755 "$RUNSTATIC/bash" "$LWBASH"
             fi
-            install -Dm755 lwrap/lwrap "$LWRAP"
-            install -Dm644 LutrisWine.menu "$HOME/.config/menus/applications-merged/LutrisWine.menu"
-            install -Dm644 LutrisWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LutrisWineService.desktop"
-            [ ! -f "$LW_DIR/.firstrun" ] && \
-            install -Dm755 applications/LutrisWine.desktop "$HOME/Desktop/LutrisWine.desktop"
-            mkdir -p "$HOME_DESK_APPS"
+            install -Dm755 "$lwrapf" "$LWRAP"
+            install -Dm644 LuxWine.menu "$HOME/.config/menus/applications-merged/LuxWine.menu"
+            install -Dm644 LuxWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LuxWineService.desktop"
+            mkdir -p "$MENU_APPS_DIR"
             mkdir -p "$HOME_DESK_DIRS"
             cp -rf mime "$HOME/.local/share/mime"
-            cp -rf applications "$HOME_DESK_APPS/LutrisWine"
+            cp -rf applications "$MENU_APPS_DIR/LuxWine"
             cp -rf directories/* "$HOME_DESK_DIRS/"
             if [[ -d "$RUNROOTFS" && -f "$RSTEAM_DESKF" ]]
                 then
                     cp -rf "$RSTEAM_DESKF" "$HSTEAM_DESKF"
-                    sed -i "s|^Exec.*steam-runtime|Exec='$RUNIMAGE_LW' steam-runtime|g" "$HSTEAM_DESKF"
+                    sed -i "s|^Exec.*steam-runtime|Exec='$HBIN_DIR/steam-runtime'|g" "$HSTEAM_DESKF"
                     sed -i "s|^Name=Steam (Runtime)|Name=Steam (RunImage LW)|g" "$HSTEAM_DESKF"
+                    HICNSTM="$HOME_ICONS/steam.png"
                     for hi_icon_size in ${HICOLOR_SIZES[@]}
                         do
                             HICONS_DIR="$HOME_ICONS/hicolor/$hi_icon_size/apps"
@@ -120,16 +161,29 @@ make_install() {
                             if [[ -f "$RSTEAM_ICON" && ! -f "$HSTEAM_ICON" ]]
                                 then
                                     mkdir -p "$HICONS_DIR"
+                                    [ -L "$HSTEAM_ICON" ] && \
+                                        rm -f "$HSTEAM_ICON"
                                     cp -rf "$RSTEAM_ICON" "$HSTEAM_ICON"
+                            fi
+                            if [[ -f "$RSTEAM_ICON" && ! -f "$HICNSTM" ]]
+                                then
+                                    mkdir -p "$HOME_ICONS"
+                                    [ -L "$HICNSTM" ] && \
+                                        rm -f "$HICNSTM"
+                                    cp -rf "$RSTEAM_ICON" "$HICNSTM"
                             fi
                     done
             fi
-            add_path "$B_RC"
-            add_path "$Z_RC"
-            check_path "$F_RC" && echo -e \
-                '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$F_RC"
-            update-desktop-database -q "$HOME_DESK_APPS" &>/dev/null
+            case "$(basename "$SHELL")" in
+                zsh) add_path "$Z_RC" ;;
+                bash) add_path "$B_RC" ;;
+                fish) add_path "$F_RC" ;;
+            esac
+            update-desktop-database -q "$MENU_APPS_DIR" &>/dev/null
             update-mime-database "$HOME/.local/share/mime" &>/dev/null
+            for mimetype in "${LW_MIMETYPES[@]}"
+                do xdg-mime default LuxWine.desktop "$mimetype" &>/dev/null
+            done
     fi
     cp -rf registry_patch "$LW_DIR/"
     cp -rf LICENSE "$LW_DIR/"
@@ -137,6 +191,12 @@ make_install() {
     cp -rf icons "$LW_DIR/"
     cp -rf gif "$LW_DIR/"
     cp -rf db "$LW_DIR/"
+    if [ -f "$LWRUNTIME" ]
+        then
+            tar -xf "$LWRUNTIME" -C "$LW_DIR" && \
+            [[ ! -f "$LW_CFG" && -f "$TMP_LW_CFG" ]] && \
+                cp -f "$TMP_LW_CFG" "$LW_CFG"
+    fi
 }
 
 mv_lwrun() {
@@ -157,7 +217,8 @@ try_install_lwrun() {
         then
             REALP_LWRUN="$(readrealpath "$LWRUN")"
             if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
-                "$RUNSRCRPTH" != "$LWRUN" && ! "$RUNSRCRPTH" =~ "Run" ]]
+                "$RUNSRCRPTH" != "$LWRUN" && ! "$RUNSRCRPTH" =~ "Run" && \
+                "$RUNSRCRPTH" != "$OLD_LWRUN" ]]
                 then
                     info_msg "Installing lwrun..."
                     mkdir -p "$LWBIN_DIR"
@@ -165,6 +226,7 @@ try_install_lwrun() {
                         then
                             chmod u+x "$LWRUN"
                             ln_lwrun
+                            restart_lw
                             info_msg "lwrun installed!"
                         else
                             error_msg "Failed to install lwrun!"
@@ -183,13 +245,21 @@ try_install_lwrun() {
 ln_lwrun() {
     if is_lwrun
         then
+            mkdir -p "$HBIN_DIR"
             REALP_LWRUN="$(readrealpath "$LWRUN")"
             if [ "$(readrealpath "$LWRUN_LN")" != "$REALP_LWRUN" ]
                 then
                     info_msg "Update lwrun link..."
-                    mkdir -p "$HBIN_DIR"
                     ln -sfr "$LWRUN" "$LWRUN_LN"
             fi
+            for steam in {steam,steam-runtime,steam-native}
+                do
+                    if [ ! -f "$HBIN_DIR/$steam" ]
+                        then
+                            info_msg "Update $steam link..."
+                            ln -sfr "$LWRUN" "$HBIN_DIR/$steam"
+                    fi
+            done
             if [ "$(readrealpath "$RUNIMAGE_LW")" != "$REALP_LWRUN" ]
                 then
                     info_msg "Update runimage link..."
@@ -203,34 +273,45 @@ ln_lwrun() {
 uninstall_lw() {
     if [ "$1" == "force" ] || is_lw || is_lwrun
         then
-            info_msg "Removing Lutris Wine..."
+            info_msg "Removing Lux Wine..."
             rm -rf "$HSTEAM_DESKF"
-            rm -rf "$HOME_DESK_APPS/LutrisWine"
+            rm -rf "$MENU_APPS_DIR/LuxWine"
+            rm -rf "$HOME_DESK_DIRS/LuxWine"*
+            rm -rf "$HOME/.config/menus/applications-merged/LuxWine.menu"
+            rm -rf "$HOME/.local/share/kservices5/ServiceMenus/LuxWine"*
+            rm -rf "$MENU_APPS_DIR/LutrisWine"
             rm -rf "$HOME_DESK_DIRS/LutrisWine"*
             rm -rf "$HOME/.config/menus/applications-merged/LutrisWine.menu"
             rm -rf "$HOME/.local/share/kservices5/ServiceMenus/LutrisWine"*
+            rm -rf "$HOME/Desktop/LutrisWine.desktop"
             if [ "$1" == "update" ]
                 then
                     rm -rf "$LWSRC"
                     rm -rf "$LWRAP"
                     rm -rf "$LWBASH"
-                    rm -rf "$LW_DIR/icons"
-                    rm -rf "$LW_DIR/gif"
-                    rm -rf "$LW_DIR/themes"
+                    rm -rf "$OLD_LWSRC"
                     rm -rf "$LW_DIR/db"
+                    rm -rf "$LW_DIR/gif"
+                    rm -rf "$LW_DIR/icons"
+                    rm -rf "$LW_DIR/themes"
                     rm -rf "$LW_DIR/LICENSE"
                     rm -rf "$LW_DIR/.lwcfgchksum"
                     rm -rf "$LW_DIR/registry_patch"
                 else
                     rm -rf "$LW_DIR"
+                    rm -rf "$HLWDIRLN"
                     rm -rf "$LWRUN_LN"
-                    rm -rf "$HOME/LutrisWine"
+                    rm -rf "$OLD_LW_DIR"
+                    rm -rf "$OLD_HLWDIRLN"
                     rm -rf "$HBIN_DIR/runimage-lw"
-                    rm -rf "$HOME_DESK_APPS/LutrisWine"*
-                    rm -rf "$HOME/Desktop/LutrisWine.desktop"
+                    rm -rf "$MENU_APPS_DIR/LuxWine"*
+                    rm -rf "$MENU_APPS_DIR/LutrisWine"*
+                    rm -rf "$HOME/Desktop/LuxWine.desktop"
+                    rm_broken_link "$HBIN_DIR"
+                    rm_broken_link "$HOME_ICONS"
             fi
     fi
-    info_msg "Lutris Wine removed!"
+    info_msg "Lux Wine removed!"
 }
 
 is_net_conn() {
@@ -269,28 +350,27 @@ is_lwrun() { [ -x "$LWRUN" ] ; }
 
 install_lw() {
     rm_tmplw() { [[ -d "$TMP_LW" || -f "$TMP_LW.zip" ]] && rm -rf "$TMP_LW"* ; }
-    TMP_LW="/tmp/lutris-wine.$RANDOM"
-    info_msg "Installing Lutris Wine..."
-    if [ "$1" != "local" ] && try_dl \
-        "https://github.com/VHSgunzo/lutris-wine/archive/refs/heads/main.zip" \
-            "$TMP_LW.zip"
+    TMP_LW="/tmp/lux-wine.$RANDOM"
+    info_msg "Installing Lux Wine..."
+    if [ "$1" != "local" ] && \
+        try_dl "$GIT_LWZIP" "$TMP_LW.zip"
         then
             (exzip "$TMP_LW.zip" "$TMP_LW" && \
-            cd "$TMP_LW/lutris-wine-main" && \
+            cd "$TMP_LW/lux-wine-main" && \
             make_install "$1"
             rm_tmplw)
     elif [ -d "/opt/lwrap" ]
         then
-            (cp -rf "/opt/lwrap" "$TMP_LW" && \
+            (mkdir -p "$TMP_LW" && \
+            cp -rf "/opt/lwrap"/!(runtime.tar.zst|prefix_backups) "$TMP_LW" && \
             cd "$TMP_LW" && \
             make_install "$1"
             rm_tmplw)
     fi
     if is_lw
-        then
-            info_msg "Lutris Wine installed!"
+        then info_msg "Lux Wine installed!"
         else
-            error_msg "Failed to install Lutris Wine!"
+            error_msg "Failed to install Lux Wine!"
             exit 1
     fi
 }
@@ -304,30 +384,37 @@ get_lw_version() {
     fi
 }
 
+update_lwrap() {
+    info_msg "Update lwrap..."
+    TMP_LWRAP="${LWRAP}.new$BASHPID"
+    if try_dl "$GIT_LWRAP" "$TMP_LWRAP"
+        then
+            mv -f "$TMP_LWRAP" "$LWRAP"
+            chmod +x "$LWRAP"
+        else
+            error_msg "Failed to get lwrap!"
+            return 1
+    fi
+}
+
 update_lw() {
     if is_lw
         then
-            info_msg "Checking the Lutris Wine update..."
+            info_msg "Checking the Lux Wine update..."
             GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 \
                 try_dl "$GIT_LWSRC" /dev/stdout 2>/dev/null|get_lw_version)"
             LW_VERSION="$(get_lw_version "$LWSRC")"
             if [[ -n "$GIT_LW_VERSION" && -n "$LW_VERSION" ]]
                 then
-                    if [ "$LW_VERSION" -lt "$GIT_LW_VERSION" ]
+                    if [ "$LW_VERSION" != "$GIT_LW_VERSION" ]
                         then
-                            if is_update "Lutris Wine"
+                            if is_update "Lux Wine"
                                 then
-                                    info_msg "Lutris Wine update..."
-                                    TMP_LWRAP="${LWRAP}.new$BASHPID"
-                                    if try_dl "$GIT_LWRAP" "$TMP_LWRAP"
-                                        then
-                                            mv -f "$TMP_LWRAP" "$LWRAP"
-                                            chmod +x "$LWRAP"
-                                            "$LWRAP" --install||\
-                                            exit 1
-                                        else
-                                            error_msg "Failed to get lwrap!"
-                                            exit 1
+                                    info_msg "Lux Wine update..."
+                                    if update_lwrap
+                                        then "$LWRAP" --install||\
+                                                exit 1
+                                        else exit 1
                                     fi
                             fi
                         else
@@ -339,7 +426,7 @@ update_lw() {
                     return 1
             fi
         else
-            error_msg "Lutris Wine is not installed!"
+            error_msg "Lux Wine is not installed!"
             exit 1
     fi
 }
@@ -349,23 +436,25 @@ get_lwrun_git_ver() {
         /dev/stdout 2>/dev/null|grep -m1 "Release v.*"|awk '{print$2}'
 }
 
-get_lwrun_gdurl() {
-    local GAPI_KEY='AIzaSyCI5Z4CtXHD24LeoxL8paaPwY9JjieEEKM'
-    echo "$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl "$GIT_LWRUN/tag/$1" \
-        /dev/stdout 2>/dev/null|grep -w 'runimage.superlite'|\
-        grep -o 'https.*media')&key=$GAPI_KEY"
+get_lwrun_hf_ver() {
+    local main='/lux-wine/lwrun/tree/main/releases'
+    NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl \
+        "https://huggingface.co$main" /dev/stdout 2>/dev/null|\
+        grep -Po "$main/v\d+\.\d+\.\d+"|tail -1|awk -F/ '{print $NF}'
 }
 
 try_dl_lwrun() {
     TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
-    #[ ! -n "$GIT_LWRUN_VERSION" ] && \
-    #    GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+    [ ! -n "$GIT_LWRUN_VERSION" ] && \
+        GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+    [ ! -n "$GIT_LWRUN_VERSION" ] && \
+        GIT_LWRUN_VERSION="$(get_lwrun_hf_ver)"
     if [ -n "$GIT_LWRUN_VERSION" ]
         then
-            LWRUN_URL="$(get_lwrun_gdurl "$GIT_LWRUN_VERSION")" && \
+            LWRUN_URL="$GIT_HF_LWRUN/$GIT_LWRUN_VERSION/lwrun" && \
             is_url "$LWRUN_URL"||\
-            LWRUN_URL="$GIT_LWRUN/download/$GIT_LWRUN_VERSION/runimage.superlite"
+            LWRUN_URL="$GIT_LWRUN/download/$GIT_LWRUN_VERSION/lwrun"
     fi
     if [ -n "$LWRUN_URL" ] && try_dl "$LWRUN_URL" "$TMP_LWRUN"
        then
@@ -407,25 +496,55 @@ yn_case() {
     done
 }
 
+gui_question() {
+    if is_exe_exist yad
+        then yad --image="dialog-question" --button="NO:1" --button="YES:0" --title="$1" \
+                --text="$2" --center --on-top --fixed --selectable-labels
+    elif is_exe_exist zenity
+        then zenity --question --title="$1" --no-wrap --text="$2"
+    else return 1
+    fi
+    return $?
+}
+
 is_update() {
     [ "$FORCE_UPDATE" == 1 ] && \
         return 0
-    IS_UPD_TITLE="Update ${1}..."
+    local IS_UPD_TITLE="Update ${1}..."
     [ -n "$2" ] && \
-        IS_UPD_TEXT="$2"||\
-        IS_UPD_TEXT="$1 update is available!\nDo you want to update now?"
+        local IS_UPD_TEXT="$2"||\
+        local IS_UPD_TEXT="$1 update is available!\nDo you want to update now?"
     if [ "$NOT_TERM" != 1 ]
+        then yn_case "$IS_UPD_TEXT"||return 1
+        else gui_question "$IS_UPD_TITLE" "$IS_UPD_TEXT"||return 1
+    fi
+    return $?
+}
+
+restart_lw() {
+    if [[ -n "$((pgrep -fa lutris-wine||pgrep -fa lux-wine)|\
+        grep -Eom1 "LutrisWine/bin|LuxWine/bin")" ]]
         then
-            yn_case "$IS_UPD_TEXT"||return 1
-    elif is_exe_exist yad
-        then
-            yad --image="dialog-question" --button="NO:1" --button="YES:0" --title="$IS_UPD_TITLE" \
-                --text="$IS_UPD_TEXT" --center --on-top --fixed --selectable-labels
-    elif is_exe_exist zenity
-        then
-            zenity --question --title="$DL_REP_TITLE" --no-wrap \
-                --text="$IS_UPD_TEXT"
-    else return 1
+            local IS_RES_TITLE="Restart Lux Wine..."
+            local IS_RES_TEXT="You need to restart Lux Wine!\nDo you want to turn it off now?"
+            if [ "$FORCE_UPDATE" != 1 ]
+                then
+                    if [ "$NOT_TERM" != 1 ]
+                        then yn_case "$IS_RES_TEXT"||return 1
+                        else gui_question "$IS_RES_TITLE" "$IS_RES_TEXT"||return 1
+                    fi
+            fi
+            if [ "$?" == 0 ]
+                then
+                    if [ -x "$LWSRC" ]
+                        then "$LWSRC" -exit
+                    elif [ -x "$OLD_LWSRC" ]
+                        then "$OLD_LWSRC" -exit
+                    else return 1
+                    fi
+            fi
+            return $?
+        else return 1
     fi
 }
 
@@ -433,19 +552,17 @@ no_color() { sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" ; }
 
 update_runimage() {
     if is_update "RunImage" "Do you want to check updates for RunImage packages?"
-        then
-            runimage_lw --rU && \
-            restart_msg
+        then runimage_lw --rU && restart_lw
     fi
 }
-
-restart_msg() { info_msg "You need to restart Lutris Wine!" ; }
 
 update_lwrun() {
     if is_lwrun
         then
             info_msg "Checking the lwrun update..."
-            # GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+            GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+            [ ! -n "$GIT_LWRUN_VERSION" ] && \
+                GIT_LWRUN_VERSION="$(get_lwrun_hf_ver)"
             GIT_LWRUN_VERSION_PARS="$(echo "$GIT_LWRUN_VERSION"|vers_parser)"
             [ -n "$RUNIMAGE_VERSION" ] && \
                 LWRUN_VERSION="$(echo "$RUNIMAGE_VERSION"|vers_parser)"||\
@@ -453,19 +570,19 @@ update_lwrun() {
                     grep 'RunImage version:'|awk '{print$7}'|vers_parser)"
             if [[ -n "$GIT_LWRUN_VERSION_PARS" && -n "$LWRUN_VERSION" ]]
                 then
-                    if [ "$LWRUN_VERSION" -lt "$GIT_LWRUN_VERSION_PARS" ]
+                    if [ "$LWRUN_VERSION" != "$GIT_LWRUN_VERSION_PARS" ]
                         then
                             if is_update "lwrun"
                                 then
                                     info_msg "lwrun update..."
-                                    try_dl_lwrun && \
-                                    restart_msg
+                                    try_dl_lwrun && restart_lw
                             fi
                         else
                             info_msg "The latest version is already installed!"
                             touch "$LWRUN"
                     fi
-                    # update_runimage
+                    [ "$NO_RUNPKG_UPDATE" != 1 ] && \
+                        update_runimage
                 else
                     error_msg "Failed to check for updates!"
                     return 1
@@ -523,7 +640,7 @@ try_dl() {
         [ "$NO_DL_REPEAT" == 1 ] && \
             return 1
         DL_REP_TITLE="Download interrupted!"
-        DL_REP_TEXT="Failed to download: $FILENAME \nWould you like to repeat it?"
+        DL_REP_TEXT="Failed to download: $FILENAME from $(echo "$URL"|awk -F/ '{print$3"/"$4}') \nWould you like to repeat it?"
         if [[ "$NOT_TERM" != 1 || "$NO_DL_GUI" == 1 ]]
             then
                 yn_case "$DL_REP_TEXT"||return 1
@@ -581,24 +698,25 @@ try_dl() {
                                 else return 1
                                 fi
                             }
-                            if [ "$NO_ARIA2C" != 1 ] && is_exe_exist aria2c
+                            if [ "$NO_ARIA2C" != 1 ] && \
+                                is_exe_exist aria2c
                                 then
                                     aria2c -R -x 13 -s 13 --allow-overwrite --summary-interval=1 -o \
-                                        "$FILENAME" -d "$FILEDIR" "$URL"|stdbuf -o0 grep 'ETA'|\
-                                        sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|\
-                                        stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'|\
+                                        "$FILENAME" -d "$FILEDIR" "$URL"|grep --line-buffered 'ETA'|\
+                                        sed -u 's|(.*)| &|g;s|(||g;s|)||g;s|\[||g;s|\]||g'|\
+                                        awk '{print$3"\n#Downloading at "$3,$2,$5,$6;system("")}'|\
                                     dl_progress
                             elif is_exe_exist wget
                                 then
                                     wget --no-check-certificate --content-disposition -t 3 -T 5 \
                                         -w 0.5 "$URL" -O "$FILEDIR/$FILENAME"|& tr '\r' '\n'|\
-                                        sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./'|\
+                                        sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\ ETA: \3/; s/^20[0-9][0-9].*/#Done./'|\
                                     dl_progress
                             elif is_exe_exist curl
                                 then
                                     curl -R --progress-bar --insecure --fail -L "$URL" -o \
-                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|sed -ur 's|[# ]+|&|g'|\
-                                        stdbuf -o0 awk '{print"#Downloading at "$2,"\n"$2}'|\
+                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|\
+                                        sed -ur 's|[# ]+||g;s|.*=.*||g;s|.*|#Downloading at &\n&|g'|\
                                     dl_progress
                             else
                                 err_no_downloader
@@ -621,7 +739,7 @@ try_dl() {
                             dl_ret "$?"||return 1
                     fi
                 else
-                    error_msg "No download file found: $FILENAME"
+                    error_msg "$FILENAME not found in $(echo "$URL"|awk -F/ '{print$3"/"$4}')"
                     return 1
             fi
         else
@@ -629,6 +747,8 @@ try_dl() {
             return 1
     fi
 }
+
+rm_broken_link() { find -L "$1" -type l -exec rm -rf {} \; 2>/dev/null ; }
 
 readrealpath() {
     if is_exe_exist readlink
@@ -650,15 +770,51 @@ print_help() {
         $RED└──╼ \$$GREEN $HLPEXENAME ${BLUE}{args}
 
         ${BLUE}--lwrap-help $GREEN                   Show this usage info
-        ${BLUE}--install    $YELLOW{force|local}$GREEN      Re/Install Lutris Wine and lwrun
-        ${BLUE}--update     $GREEN                   Update Lutris Wine, lwrun and container packages
-        ${BLUE}--uninstall  $YELLOW{force|update}$GREEN     Install Lutris Wine and lwrun
+        ${BLUE}--install    $YELLOW{force|local}$GREEN      Re/Install Lux Wine and lwrun
+        ${BLUE}--update     $GREEN                   Update Lux Wine, lwrun and container packages
+        ${BLUE}--uninstall  $YELLOW{force|update}$GREEN     Install Lux Wine and lwrun
         "
 }
 
+if [[ -d "$OLD_LW_DIR" && ! -d "$LW_DIR" ]]
+    then
+        LW_MIGRATION=1
+        NO_RUNPKG_UPDATE=1
+        grep "$OLD_LW_DIR" -lr "$OLD_LW_DIR"/*.*|\
+        xargs -d'\n' sed -i "s|$OLD_LW_DIR|$LW_DIR|g"
+        if [ -d "$OLD_LW_DIR/appcfg" ]
+            then
+                for wcfg in "$OLD_LW_DIR/appcfg"/*
+                    do [ -f "$wcfg" ] && \
+                    sed -i "s|$OLD_LW_DIR|$LW_DIR|g" "$(readrealpath "$wcfg")"
+                done
+        fi
+        mv -f "$OLD_LW_DIR" "$LW_DIR"
+        ln -sfr "$LW_DIR" "$OLD_LW_DIR"
+        rm -f "$LWRUN_LN"
+        rm -f "$RUNIMAGE_LW"
+        rm -f "$LWBIN_DIR/lw-tray"
+        rm -f "$HBIN_DIR/runimage-lw"
+        rm -f "$LW_DIR/wprefixes/defprefix/.lwtheme"
+        ln_lwrun
+fi
+if [ -L "$OLD_HLWDIRLN" ]
+    then
+        rm -f "$OLD_HLWDIRLN"
+        ln -sfr "$LW_DIR" "$HLWDIRLN"
+fi
+if [ -d "$OLD_LW_APPS_DIR" ]
+    then
+        mv -f "$OLD_LW_APPS_DIR" "$LW_APPS_DIR"
+        grep '^Categories=Lutris Wine App' -lr "$MENU_APPS_DIR"|\
+        xargs -d'\n' sed -i "s|^Categories=.*|Categories=Lux Wine Apps|g;s|$OLD_LW_DIR|$LW_DIR|g"
+        ln -sfr "$LW_APPS_DIR" "$LW_DIR/LuxWineApps"
+        rm -f "$LW_DIR/LutrisWineApp"
+fi
+
 RUNSRCRPTH="$(readrealpath "$RUNSRC")"
 
-case $1 in
+case "$1" in
     --lwrap-help) print_help
                   exit ;;
     --uninstall) uninstall_lw "$2"
@@ -666,6 +822,9 @@ case $1 in
     --install) try_install_lwrun
                is_lwrun||try_dl_lwrun
                install_lw "$2"
+               NO_RUNPKG_UPDATE=1 \
+               FORCE_UPDATE=1 \
+               update_lwrun
                exit $? ;;
     --update) FORCE_UPDATE=1
               update_lw
@@ -677,31 +836,37 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
     then
         try_install_lwrun
         is_lw||install_lw
-        if [ "$CHK_UPDATE" != 0 ] && is_net_conn
+        if [[ "$CHK_UPDATE" != 0 || "$FORCE_UPDATE" == 1 ]] && \
+            is_net_conn
             then
-                if [ ! -x "$(find "$LWSRC" -mtime -$CHK_UPDATE \
-                    -print 2>/dev/null)" ]
-                    then
-                        update_lw
+                if [[ ! -x "$(find "$LWSRC" -mtime -$CHK_UPDATE \
+                    -print 2>/dev/null)" || "$FORCE_UPDATE" == 1 ]]
+                    then update_lw
                 fi
                 if is_not_pts_home && \
-                [ ! -x "$(find "$LWRUN" -mtime -$CHK_UPDATE \
-                    -print 2>/dev/null)" ]
-                    then
-                        update_lwrun
+                   [[ ! -x "$(find "$LWRUN" -mtime -$CHK_UPDATE \
+                    -print 2>/dev/null)" || "$FORCE_UPDATE" == 1 ]]
+                    then update_lwrun
                 fi
         fi
         "$LWSRC" "$@"
     else
+        if [[ "$FORCE_UPDATE" == 1 || "$LW_MIGRATION" == 1 ]]
+            then
+                if is_net_conn
+                    then
+                        update_lwrap
+                        FORCE_UPDATE=1 \
+                        update_lwrun
+                    else error_msg "No internet connection!"
+                fi
+        fi
         if [ -x "$LWRUN_LN" ]
-            then
-                "$LWRUN_LN" "$@"
+            then "$LWRUN_LN" "$@"
         elif is_lwrun
-            then
-                "$LWRUN" "$@"
+            then "$LWRUN" "$@"
         elif [ -x "$(which_exe lwrun)" ]
-            then
-                "$(which_exe lwrun)" "$@"
+            then "$(which_exe lwrun)" "$@"
         else
             if is_net_conn
                 then
