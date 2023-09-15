@@ -572,9 +572,9 @@ update_lwrun() {
     if is_lwrun
         then
             info_msg "Checking the lwrun update..."
-            GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
+            GIT_LWRUN_VERSION="$(get_lwrun_hf_ver)"
             [ ! -n "$GIT_LWRUN_VERSION" ] && \
-                GIT_LWRUN_VERSION="$(get_lwrun_hf_ver)"
+                GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
             GIT_LWRUN_VERSION_PARS="$(echo "$GIT_LWRUN_VERSION"|vers_parser)"
             [ -n "$RUNIMAGE_VERSION" ] && \
                 LWRUN_VERSION="$(echo "$RUNIMAGE_VERSION"|vers_parser)"||\
