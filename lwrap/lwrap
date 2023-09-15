@@ -457,9 +457,9 @@ try_dl_lwrun() {
     TMP_LWRUN="$LWRUN.new$BASHPID"
     info_msg "Downloading lwrun..."
     [ ! -n "$GIT_LWRUN_VERSION" ] && \
-        GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
-    [ ! -n "$GIT_LWRUN_VERSION" ] && \
         GIT_LWRUN_VERSION="$(get_lwrun_hf_ver)"
+    [ ! -n "$GIT_LWRUN_VERSION" ] && \
+        GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
     if [ -n "$GIT_LWRUN_VERSION" ] && \
        (try_dl "$GIT_HF_LWRUN/$GIT_LWRUN_VERSION/lwrun" "$TMP_LWRUN"||\
        try_dl "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/lwrun" "$TMP_LWRUN")
