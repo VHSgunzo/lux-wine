@@ -359,8 +359,8 @@ install_lw() {
     TMP_LW="/tmp/lux-wine.$RANDOM"
     info_msg "Installing Lux Wine..."
     if [ "$1" != "local" ] && \
-        (try_dl "$GIT_LWZIP" "$TMP_LW.zip"||\
-        try_dl "$GIT_HF_LWZIP" "$TMP_LW.zip")
+        (try_dl "$GIT_HF_LWZIP" "$TMP_LW.zip"||\
+        try_dl "$GIT_LWZIP" "$TMP_LW.zip")
         then
             (exzip "$TMP_LW.zip" "$TMP_LW" && \
             cd "$TMP_LW/lux-wine-main" && \
