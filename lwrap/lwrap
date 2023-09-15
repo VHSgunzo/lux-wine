@@ -532,13 +532,12 @@ try_shutdown_lw() {
     if [[ -n "$((pgrep -fa lutris-wine||pgrep -fa lux-wine)|\
         grep -Eom1 "LutrisWine/bin|LuxWine/bin")" ]]
         then
-            local IS_RES_TITLE="Restart Lux Wine..."
-            local IS_RES_TEXT="You need to restart Lux Wine!\nDo you want to turn it off now?"
             if [ "$FORCE_UPDATE" != 1 ]
                 then
+                    local qtext="You need to restart Lux Wine!\nDo you want to turn it off now?"
                     if [ "$NOT_TERM" != 1 ]
-                        then yn_case "$IS_RES_TEXT"
-                        else gui_question "$IS_RES_TITLE" "$IS_RES_TEXT"
+                        then yn_case "$qtext"
+                        else gui_question "Restart Lux Wine..." "$qtext"
                     fi
             fi
             if [ "$?" == 0 ]
