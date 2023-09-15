@@ -12,6 +12,7 @@ YELLOW='\033[1;33m'
 RESETCOLOR='\033[1;00m'
 
 GIT_REPO='https://github.com/VHSgunzo'
+GIT_HF_REPO='https://huggingface.co/spaces/lux-wine'
 LW_DIR="$HOME/.local/share/LuxWine"
 OLD_LW_DIR="$HOME/.local/share/LutrisWine"
 MENU_APPS_DIR="$HOME/.local/share/applications"
@@ -23,12 +24,15 @@ LWBIN_DIR="$LW_DIR/bin"
 OLD_LWBIN_DIR="$OLD_LW_DIR/bin"
 LWSRC="$LWBIN_DIR/lux-wine"
 OLD_LWSRC="$LWBIN_DIR/lutris-wine"
-GIT_SRC_RAW='https://raw.githubusercontent.com/VHSgunzo/lux-wine/main'
-GIT_LWSRC="$GIT_SRC_RAW/lux-wine"
+GIT_RAW='https://raw.githubusercontent.com/VHSgunzo/lux-wine/main'
+GIT_LWSRC="$GIT_RAW/lux-wine"
+GIT_HF_LWSRC="$GIT_HF_REPO/git/resolve/main/lux-wine"
 GIT_LWZIP="$GIT_REPO/lux-wine/archive/refs/heads/main.zip"
-GIT_LWRAP="$GIT_SRC_RAW/lwrap/lwrap"
+GIT_HF_LWZIP="$GIT_HF_REPO/git/resolve/main/main.zip"
+GIT_LWRAP="$GIT_RAW/lwrap/lwrap"
+GIT_HF_LWRAP="$GIT_HF_REPO/git/resolve/main/lwrap/lwrap"
 GIT_LWRUN="$GIT_REPO/lwrun/releases"
-GIT_HF_LWRUN='https://huggingface.co/lux-wine/lwrun/resolve/main/releases'
+GIT_HF_LWRUN="${GIT_HF_REPO//\/spaces/}/lwrun/resolve/main/releases"
 HOME_ICONS="$HOME/.local/share/icons"
 HOME_DESK_DIRS="$HOME/.local/share/desktop-directories"
 HSTEAM_DESKF="$MENU_APPS_DIR/steam-lw.desktop"
@@ -105,7 +109,7 @@ check_path() {
 
 add_path() {
     if [ "$1" == "$F_RC" ]
-        then check_path "$1"||echo -e '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$1"
+        then check_path "$1"||(mkdir -p "$(dirname "$1")" && echo -e '\nset -U fish_user_paths "$HOME/.local/bin"' >> "$1")
         else check_path "$1"||echo -e '\nexport PATH="$HOME/.local/bin:$PATH"' >> "$1"
     fi
 }
@@ -226,8 +230,9 @@ try_install_lwrun() {
                         then
                             chmod u+x "$LWRUN"
                             ln_lwrun
-                            restart_lw
                             info_msg "lwrun installed!"
+                            restart_lw && \
+                            return 0||return 1
                         else
                             error_msg "Failed to install lwrun!"
                             is_lwrun && \
@@ -238,6 +243,7 @@ try_install_lwrun() {
                     mkdir -p "$LWBIN_DIR"
                     ln -sf "$RUNSRCRPTH" "$LWRUN"
                     ln_lwrun
+                    return 0
             fi
     fi
 }
@@ -353,7 +359,8 @@ install_lw() {
     TMP_LW="/tmp/lux-wine.$RANDOM"
     info_msg "Installing Lux Wine..."
     if [ "$1" != "local" ] && \
-        try_dl "$GIT_LWZIP" "$TMP_LW.zip"
+        (try_dl "$GIT_LWZIP" "$TMP_LW.zip"||\
+        try_dl "$GIT_HF_LWZIP" "$TMP_LW.zip")
         then
             (exzip "$TMP_LW.zip" "$TMP_LW" && \
             cd "$TMP_LW/lux-wine-main" && \
@@ -387,7 +394,8 @@ get_lw_version() {
 update_lwrap() {
     info_msg "Update lwrap..."
     TMP_LWRAP="${LWRAP}.new$BASHPID"
-    if try_dl "$GIT_LWRAP" "$TMP_LWRAP"
+    if (try_dl "$GIT_HF_LWRAP" "$TMP_LWRAP"||\
+        try_dl "$GIT_LWRAP" "$TMP_LWRAP")
         then
             mv -f "$TMP_LWRAP" "$LWRAP"
             chmod +x "$LWRAP"
@@ -401,6 +409,9 @@ update_lw() {
     if is_lw
         then
             info_msg "Checking the Lux Wine update..."
+            GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 \
+                try_dl "$GIT_HF_LWSRC" /dev/stdout 2>/dev/null|get_lw_version)"
+            [ ! -n "$GIT_LW_VERSION" ] && \
             GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 \
                 try_dl "$GIT_LWSRC" /dev/stdout 2>/dev/null|get_lw_version)"
             LW_VERSION="$(get_lw_version "$LWSRC")"
@@ -437,10 +448,9 @@ get_lwrun_git_ver() {
 }
 
 get_lwrun_hf_ver() {
-    local main='/lux-wine/lwrun/tree/main/releases'
     NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl \
-        "https://huggingface.co$main" /dev/stdout 2>/dev/null|\
-        grep -Po "$main/v\d+\.\d+\.\d+"|tail -1|awk -F/ '{print $NF}'
+        "${GIT_HF_LWRUN/resolve/tree}" /dev/stdout \
+        2>/dev/null|grep -Po "v\d+\.\d+\.\d+"|tail -1
 }
 
 try_dl_lwrun() {
@@ -450,17 +460,14 @@ try_dl_lwrun() {
         GIT_LWRUN_VERSION="$(get_lwrun_git_ver)"
     [ ! -n "$GIT_LWRUN_VERSION" ] && \
         GIT_LWRUN_VERSION="$(get_lwrun_hf_ver)"
-    if [ -n "$GIT_LWRUN_VERSION" ]
-        then
-            LWRUN_URL="$GIT_HF_LWRUN/$GIT_LWRUN_VERSION/lwrun" && \
-            is_url "$LWRUN_URL"||\
-            LWRUN_URL="$GIT_LWRUN/download/$GIT_LWRUN_VERSION/lwrun"
-    fi
-    if [ -n "$LWRUN_URL" ] && try_dl "$LWRUN_URL" "$TMP_LWRUN"
+    if [ -n "$GIT_LWRUN_VERSION" ] && \
+       (try_dl "$GIT_HF_LWRUN/$GIT_LWRUN_VERSION/lwrun" "$TMP_LWRUN"||\
+       try_dl "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/lwrun" "$TMP_LWRUN")
        then
             info_msg "lwrun downloaded!"
             RUNSRCRPTH="$TMP_LWRUN" \
-            RUNSRC="lwrun" try_install_lwrun
+            RUNSRC="lwrun" try_install_lwrun &&
+            return 0||return 1
         else
             error_msg "Failed to download lwrun!"
             [ -f "$TMP_LWRUN" ] && \
@@ -530,8 +537,8 @@ restart_lw() {
             if [ "$FORCE_UPDATE" != 1 ]
                 then
                     if [ "$NOT_TERM" != 1 ]
-                        then yn_case "$IS_RES_TEXT"||return 1
-                        else gui_question "$IS_RES_TITLE" "$IS_RES_TEXT"||return 1
+                        then yn_case "$IS_RES_TEXT"
+                        else gui_question "$IS_RES_TITLE" "$IS_RES_TEXT"
                     fi
             fi
             if [ "$?" == 0 ]
@@ -542,17 +549,22 @@ restart_lw() {
                         then "$OLD_LWSRC" -exit
                     else return 1
                     fi
+                else return 1
             fi
-            return $?
-        else return 1
     fi
+    return 0
 }
 
 no_color() { sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" ; }
 
 update_runimage() {
     if is_update "RunImage" "Do you want to check updates for RunImage packages?"
-        then runimage_lw --rU && restart_lw
+        then
+            if (runimage_lw --rU && restart_lw)
+                then return 0
+                else return 1
+            fi
+        else return 1
     fi
 }
 
@@ -570,19 +582,28 @@ update_lwrun() {
                     grep 'RunImage version:'|awk '{print$7}'|vers_parser)"
             if [[ -n "$GIT_LWRUN_VERSION_PARS" && -n "$LWRUN_VERSION" ]]
                 then
+                    local ret=1
+                    unset dlret pkgret
                     if [ "$LWRUN_VERSION" != "$GIT_LWRUN_VERSION_PARS" ]
                         then
                             if is_update "lwrun"
                                 then
                                     info_msg "lwrun update..."
-                                    try_dl_lwrun && restart_lw
+                                    try_dl_lwrun && \
+                                    local dlret=0
                             fi
                         else
                             info_msg "The latest version is already installed!"
                             touch "$LWRUN"
                     fi
-                    [ "$NO_RUNPKG_UPDATE" != 1 ] && \
-                        update_runimage
+                    if [ "$NO_RUNPKG_UPDATE" != 1 ]
+                        then
+                            update_runimage
+                            local pkgret=$?
+                    fi
+                    [[ "$dlret" == 0 || "$pkgret" == 0 ]] && \
+                        local ret=0
+                    return $ret
                 else
                     error_msg "Failed to check for updates!"
                     return 1
@@ -846,7 +867,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                 if is_not_pts_home && \
                    [[ ! -x "$(find "$LWRUN" -mtime -$CHK_UPDATE \
                     -print 2>/dev/null)" || "$FORCE_UPDATE" == 1 ]]
-                    then update_lwrun
+                    then update_lwrun && exit $?
                 fi
         fi
         "$LWSRC" "$@"
