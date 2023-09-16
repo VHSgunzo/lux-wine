@@ -213,9 +213,9 @@ make_install() {
                 cp -f "$TMP_LW_CFG" "$LW_CFG"
     fi
     grep "$LWRUN_LN" -lr "$MENU_APPS_DIR"|\
-    xargs -d'\n' sed -i "s|$LWRUN_LN|$LWRAP|g"
+    xargs -d'\n' sed -i "s|$LWRUN_LN|$LWRAP|g" 2>/dev/null
     grep "$LWRUN" -lr "$MENU_APPS_DIR"|\
-    xargs -d'\n' sed -i "s|$LWRUN|$LWRAP|g"
+    xargs -d'\n' sed -i "s|$LWRUN|$LWRAP|g" 2>/dev/null
 }
 
 mv_lwrun() {
