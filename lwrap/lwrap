@@ -131,9 +131,9 @@ make_install() {
     if is_not_pts_home
         then
             grep -m1 '^Exec=".*"' -lr ./*|\
-            xargs -d'\n' sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g"
+            xargs -d'\n' sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g" 2>/dev/null
             grep -m1 'Icon=/.*/lux-wine/icons/.*.png$' -lr ./*|\
-            xargs -d'\n' sed -i "s|Icon=/.*/lux-wine/icons/|Icon=$LW_DIR/icons/|g"
+            xargs -d'\n' sed -i "s|Icon=/.*/lux-wine/icons/|Icon=$LW_DIR/icons/|g" 2>/dev/null
             if [ -f 'lwrap' ]
                 then local lwrapf='lwrap'
             elif [ -f 'bin/lwrap' ]
@@ -819,7 +819,7 @@ if [[ -d "$OLD_LW_DIR" && ! -d "$LW_DIR" ]]
         LW_MIGRATION=1
         NO_RUNPKG_UPDATE=1
         grep "$OLD_LW_DIR" -lr "$OLD_LW_DIR"/*.*|\
-        xargs -d'\n' sed -i "s|$OLD_LW_DIR|$LW_DIR|g"
+        xargs -d'\n' sed -i "s|$OLD_LW_DIR|$LW_DIR|g" 2>/dev/null
         if [ -d "$OLD_LW_DIR/appcfg" ]
             then
                 for wcfg in "$OLD_LW_DIR/appcfg"/*
@@ -845,7 +845,7 @@ if [ -d "$OLD_LW_APPS_DIR" ]
     then
         mv -f "$OLD_LW_APPS_DIR" "$LW_APPS_DIR"
         grep '^Categories=Lutris Wine App' -lr "$MENU_APPS_DIR"|\
-        xargs -d'\n' sed -i "s|^Categories=.*|Categories=Lux Wine Apps|g;s|$OLD_LW_DIR|$LW_DIR|g"
+        xargs -d'\n' sed -i "s|^Categories=.*|Categories=Lux Wine Apps|g;s|$OLD_LW_DIR|$LW_DIR|g" 2>/dev/null
         ln -sfr "$LW_APPS_DIR" "$LW_DIR/LuxWineApps"
         rm -f "$LW_DIR/LutrisWineApp"
 fi
