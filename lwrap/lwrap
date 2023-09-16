@@ -140,21 +140,21 @@ make_install() {
                 then local lwrapf='bin/lwrap'
             else local lwrapf='lwrap/lwrap'
             fi
-            install -Dm755 "$lwrapf" "$LWRAP"
-            ln_lwrap
             if [ -f 'lwexec' ]
                 then local lwexecf='lwexec'
             elif [ -f 'bin/lwexec' ]
                 then local lwexecf='bin/lwexec'
             else local lwexecf='lwrap/lwexec'
             fi
-            install -Dm755 "$lwexecf" "$LWEXEC"
             if [ -x "$RUNSTATIC/bash" ]
                 then
-                    sed -i "1 s|^.*$|#!$LWBASH|" "$LWRAP"
-                    sed -i "1 s|^.*$|#!$LWBASH|" "$LWEXEC"
+                    sed -i "1 s|^.*$|#!$LWBASH|" "$lwrapf"
+                    sed -i "1 s|^.*$|#!$LWBASH|" "$lwexecf"
                     install -Dm755 "$RUNSTATIC/bash" "$LWBASH"
             fi
+            install -Dm755 "$lwrapf" "$LWRAP"
+            ln_lwrap
+            install -Dm755 "$lwexecf" "$LWEXEC"
             install -Dm644 LuxWine.menu "$HOME/.config/menus/applications-merged/LuxWine.menu"
             install -Dm644 LuxWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LuxWineService.desktop"
             mkdir -p "$MENU_APPS_DIR"
