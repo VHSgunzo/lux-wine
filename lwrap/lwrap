@@ -42,6 +42,7 @@ B_RC="$HOME/.bashrc"
 Z_RC="$HOME/.zshrc"
 HBIN_DIR="$HOME/.local/bin"
 LWRUN_LN="$HBIN_DIR/lwrun"
+LWRAP_LN="$HBIN_DIR/lwrap"
 LWRAP="$LWBIN_DIR/lwrap"
 LWBASH="$LWBIN_DIR/bash"
 LWRUN="$LWBIN_DIR/lwrun"
@@ -51,6 +52,8 @@ LWRAP_DIR='/opt/lwrap'
 LWRUNTIME="$LWRAP_DIR/runtime.tar.zst"
 HLWDIRLN="$HOME/LuxWine"
 OLD_HLWDIRLN="$HOME/LutrisWine"
+LWRUNPIDFL='/tmp/.lwrunpid'
+LWEXEC="$LWBIN_DIR/lwexec"
 HICOLOR_SIZES=(
     "512x512" "256x256" "192x192" "128x128"
     "96x96" "80x80" "72x72" "64x64" "48x48"
@@ -114,6 +117,8 @@ add_path() {
     fi
 }
 
+ln_lwrap() { [[ -x "$LWRAP" && -x "$LWRAP_LN" ]]||ln -sfr "$LWRAP" "$LWRAP_LN" ; }
+
 make_install() {
     if [ "$1" == "force" ]
         then QUIET_MODE=1 uninstall_lw force
@@ -125,25 +130,31 @@ make_install() {
     install -Dm755 "$lwf" "$LWSRC"
     if is_not_pts_home
         then
-            (IFS=$'\n'
-            for DESKFL in $(grep -rm1 '^Exec=".*"' ./*|cut -d ':' -f1)
-                do sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g" "$DESKFL"
-            done
-            for DESKFL in $(grep -rm1 'Icon=/.*/lux-wine/icons/.*.png$' ./*|cut -d ':' -f1)
-                do sed -i "s|Icon=/.*/lux-wine/icons/|Icon=$LW_DIR/icons/|g" "$DESKFL"
-            done)
+            grep -m1 '^Exec=".*"' -lr ./*|\
+            xargs -d'\n' sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g"
+            grep -m1 'Icon=/.*/lux-wine/icons/.*.png$' -lr ./*|\
+            xargs -d'\n' sed -i "s|Icon=/.*/lux-wine/icons/|Icon=$LW_DIR/icons/|g"
             if [ -f 'lwrap' ]
                 then local lwrapf='lwrap'
             elif [ -f 'bin/lwrap' ]
                 then local lwrapf='bin/lwrap'
             else local lwrapf='lwrap/lwrap'
             fi
+            install -Dm755 "$lwrapf" "$LWRAP"
+            ln_lwrap
+            if [ -f 'lwexec' ]
+                then local lwexecf='lwexec'
+            elif [ -f 'bin/lwexec' ]
+                then local lwexecf='bin/lwexec'
+            else local lwexecf='lwrap/lwexec'
+            fi
+            install -Dm755 "$lwexecf" "$LWEXEC"
             if [ -x "$RUNSTATIC/bash" ]
                 then
-                    sed -i "1 s|^.*$|#!$LWBASH|" "$lwrapf"
+                    sed -i "1 s|^.*$|#!$LWBASH|" "$LWRAP"
+                    sed -i "1 s|^.*$|#!$LWBASH|" "$LWEXEC"
                     install -Dm755 "$RUNSTATIC/bash" "$LWBASH"
             fi
-            install -Dm755 "$lwrapf" "$LWRAP"
             install -Dm644 LuxWine.menu "$HOME/.config/menus/applications-merged/LuxWine.menu"
             install -Dm644 LuxWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LuxWineService.desktop"
             mkdir -p "$MENU_APPS_DIR"
@@ -201,6 +212,10 @@ make_install() {
             [[ ! -f "$LW_CFG" && -f "$TMP_LW_CFG" ]] && \
                 cp -f "$TMP_LW_CFG" "$LW_CFG"
     fi
+    grep "$LWRUN_LN" -lr "$MENU_APPS_DIR"|\
+    xargs -d'\n' sed -i "s|$LWRUN_LN|$LWRAP|g"
+    grep "$LWRUN" -lr "$MENU_APPS_DIR"|\
+    xargs -d'\n' sed -i "s|$LWRUN|$LWRAP|g"
 }
 
 mv_lwrun() {
@@ -307,6 +322,7 @@ uninstall_lw() {
                     rm -rf "$LW_DIR"
                     rm -rf "$HLWDIRLN"
                     rm -rf "$LWRUN_LN"
+                    rm -rf "$LWRAP_LN"
                     rm -rf "$OLD_LW_DIR"
                     rm -rf "$OLD_HLWDIRLN"
                     rm -rf "$HBIN_DIR/runimage-lw"
@@ -399,6 +415,7 @@ update_lwrap() {
         then
             mv -f "$TMP_LWRAP" "$LWRAP"
             chmod +x "$LWRAP"
+            ln_lwrap
         else
             error_msg "Failed to get lwrap!"
             return 1
@@ -833,6 +850,8 @@ if [ -d "$OLD_LW_APPS_DIR" ]
         rm -f "$LW_DIR/LutrisWineApp"
 fi
 
+try_set_lwrunpid() { lwrunpid="$(cat "$LWRUNPIDFL" 2>/dev/null)" ; }
+
 RUNSRCRPTH="$(readrealpath "$RUNSRC")"
 
 case "$1" in
@@ -870,7 +889,43 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                     then update_lwrun && exit $?
                 fi
         fi
+        try_set_lwrunpid
+        if ! [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
+            then
+                LWEXECFLDIR="/tmp/.lwexec.$RUNPID"
+                echo "$RUNPID" > "$LWRUNPIDFL" 2>/dev/null
+                (JOBNUMFL="$LWEXECFLDIR/job"
+                mkdir -p "$LWEXECFLDIR" 2>/dev/null
+                mkfifo "$JOBNUMFL" 2>/dev/null
+                unset jobnum
+                while [[ -d "/proc/$RUNPID" && -d "$LWEXECFLDIR" ]]
+                    do
+                        jobnum=$(( $jobnum + 1 ))
+                        execjobdir="$LWEXECFLDIR/$jobnum"
+                        execjobfl="$execjobdir/exec"
+                        execjoboutfl="$execjobdir/out"
+                        execjobstatfl="$execjobdir/stat"
+                        mkdir "$execjobdir" 2>/dev/null
+                        mkfifo "$execjobfl" 2>/dev/null
+                        mkfifo "$execjoboutfl" 2>/dev/null
+                        mkfifo "$execjobstatfl" 2>/dev/null
+                        tee <<<"$jobnum" "$JOBNUMFL" &>/dev/null
+                        if [ -e "$execjobfl" ]
+                            then
+                                (cat "$execjobfl" 2>/dev/null|"$RUNSTATIC/bash" &>"$execjoboutfl" &
+                                execjobpid=$!
+                                tee <<<"$execjobpid" "$execjobstatfl" &>/dev/null
+                                wait $execjobpid 2>/dev/null
+                                execstat=$?
+                                tee <<<"$execstat" "$execjobstatfl" &>/dev/null) &
+                        fi
+                done) &
+        fi
         "$LWSRC" "$@"
+        [ -d "$LWEXECFLDIR" ] && \
+            rm -rf "$LWEXECFLDIR"
+        [ -f "$LWRUNPIDFL" ] && \
+            rm -f "$LWRUNPIDFL"
     else
         if [[ "$FORCE_UPDATE" == 1 || "$LW_MIGRATION" == 1 ]]
             then
@@ -882,7 +937,10 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                     else error_msg "No internet connection!"
                 fi
         fi
-        if [ -x "$LWRUN_LN" ]
+        try_set_lwrunpid
+        if [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
+            then LWEXECFLDIR="/tmp/.lwexec.$lwrunpid" "$LWEXEC" "$LWSRC" "$@"
+        elif [ -x "$LWRUN_LN" ]
             then "$LWRUN_LN" "$@"
         elif is_lwrun
             then "$LWRUN" "$@"

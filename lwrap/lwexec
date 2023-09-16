@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+PATH="$PATH:$RUNSTATIC"
+JOBNUMFL="$LWEXECFLDIR/job"
+
+get_child_pids() {
+    local child_pids="$(ps --forest -o pid= -g $(ps -o sid= -p $1 2>/dev/null) 2>/dev/null)"
+    echo -e "$1\n$(ps -o pid=,cmd= -p $child_pids 2>/dev/null|sort -n|\
+    sed "0,/$1/d" 2>/dev/null|grep -Pv '\d+ sleep \d+'|awk '{print$1}')"|sort -nu
+}
+
+try_kill() {
+    ret=1
+    if [ -n "$1" ]
+        then
+            for pid in $1
+                do
+                    trykillnum=1
+                    while [[ -n "$pid" && -d "/proc/$pid" ]]
+                        do
+                            if [[ "$trykillnum" -le 3 ]]
+                                then
+                                    kill -2 $pid 2>/dev/null
+                                    ret=$?
+                                    sleep 0.05
+                                else
+                                    kill -9 $pid 2>/dev/null
+                                    ret=$?
+                                    wait $pid &>/dev/null
+                                    wait_pid "$pid"
+                            fi
+                            trykillnum="$(( $trykillnum + 1 ))"
+                    done
+            done
+    fi
+    return $ret
+}
+
+wait_pid() {
+    if [ -n "$1" ]
+        then
+            if [ "$UNLIM_WAIT" == 1 ]
+                then
+                    while [ -d "/proc/$1" ]; do sleep 0.1; done
+                else
+                    [ -n "$2" ] && \
+                        timeout="$2"||
+                        timeout="100"
+                    waittime=1
+                    while [[ -d "/proc/$1" && "$waittime" -le "$timeout" ]]
+                        do
+                            sleep 0.01
+                            waittime="$(( $waittime + 1 ))"
+                    done
+            fi
+    fi
+}
+
+killjobpids() { try_kill "$(get_child_pids "$execjobpid")" ; }
+
+check_args_spaces() {
+    for arg in "$@"
+        do
+            echo "$arg"|grep -Po '\s' &>/dev/null && \
+                arg="$(echo "$arg"|sed 's|.*|"&"|' 2>/dev/null)"
+            args+=("$arg")
+    done
+}
+
+cleanup() { [[ -d "$execjobdir" && -n "$jobnum" ]] && rm -rf "$execjobdir" 2>/dev/null ; }
+
+if [[ -d "$LWEXECFLDIR" && -e "$JOBNUMFL" ]]
+    then
+        trap 'killjobpids;cleanup' SIGINT SIGTERM
+        trap 'cleanup' EXIT
+        unset args
+        jobnum="$(cat "$JOBNUMFL" 2>/dev/null)"
+        if [ -n "$jobnum" ]
+            then
+                execjobdir="$LWEXECFLDIR/$jobnum"
+                execjobfl="$execjobdir/exec"
+                execjoboutfl="$execjobdir/out"
+                execjobstatfl="$execjobdir/stat"
+                if [ -n "$1" ]
+                    then
+                        check_args_spaces "$@"
+                        echo "${args[@]}" > "$execjobfl"
+                    else cat > "$execjobfl" 2>/dev/null
+                fi
+                execjobpid="$(cat "$execjobstatfl" 2>/dev/null)"
+                cat "$execjoboutfl" 2>/dev/null
+                execstat="$(cat "$execjobstatfl" 2>/dev/null)"
+        fi
+        [ -n "$execstat" ]||execstat=1
+        exit $execstat
+    else
+        echo "LWEXECFLDIR is not configured!"
+        exit 1
+fi

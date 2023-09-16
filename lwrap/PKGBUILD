@@ -34,14 +34,15 @@ depends=('aria2' 'qt5-tools' 'xterm' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'fir
 optdepends=('xf86-video-amdgpu' 'xf86-video-intel' 'llvm'
             'lib32-opencl-icd-loader' 'opencl-icd-loader'
             'lib32-llvm' 'wine-prefix-dotnet')
-source=('lwrap')
-sha256sums=('SKIP')
+source=('lwrap' 'lwexec')
+sha256sums=('SKIP' 'SKIP')
 
 shopt -s extglob
 
 package() {
     install -dm755 "$pkgdir/usr/bin"
     install -Dm755 "$pkgname" "$pkgdir/opt/$pkgname/bin/$pkgname"
+    install -Dm755 "lwexec" "$pkgdir/opt/$pkgname/bin/lwexec"
     cp -ar --no-preserve=ownership "$(realpath ../../)"/!(.git*|$pkgname|lutris-wine) "$pkgdir/opt/$pkgname"
     mv -f "$pkgdir/opt/$pkgname/lux-wine" "$pkgdir/opt/$pkgname/bin/lux-wine"
     ln -sfr "$pkgdir/opt/$pkgname/bin/$pkgname" "$pkgdir/usr/bin/$pkgname"

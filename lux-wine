@@ -61,6 +61,7 @@ OLD_LW_DIR="$HOME/.local/share/LutrisWine"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LuxWine"
 [ ! -n "$LW_BIN_DIR" ] && export LW_BIN_DIR="$LW_DIR/bin"
+[ ! -n "$LWRAP" ] && LWRAP="$LW_BIN_DIR/lwrap"
 [ ! -n "$LW_TRAY" ] && export LW_TRAY="$LWRAP_DIR/bin/lw-tray"
 if [ ! -n "$LW_THEMES_DIR" ]
     then [ -d "$LW_DIR/themes" ] && \
@@ -1521,7 +1522,7 @@ create_shortcut() {
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
             ([[ "$RUNSRC" =~ "lwrun" ]] && \
-                LW_SOURCE="$HOME/.local/bin/lwrun"
+                LW_SOURCE="$LWRAP"
             [[ "$1" =~ "'" ]] && \
                 SHRTEXEPATH="\"$1\""||\
                 SHRTEXEPATH="'$1'"
@@ -6169,7 +6170,7 @@ lu_tray() {
                 then
                     (sleep 1 2>/dev/null
                     check_tray
-                    while [ -n "$TRAY_PID" ]
+                    while [[ -n "$TRAY_PID" && -d "/proc/$TRAY_PID" ]]
                         do NO_YAD=1 check_shrt
                             check_tray
                             sleep 2 2>/dev/null
