@@ -786,6 +786,8 @@ try_dl() {
     fi
 }
 
+try_set_lwrunpid() { lwrunpid="$(cat "$LWRUNPIDFL" 2>/dev/null)" ; }
+
 rm_broken_link() { find -L "$1" -type l -exec rm -rf {} \; 2>/dev/null ; }
 
 readrealpath() {
@@ -849,8 +851,6 @@ if [ -d "$OLD_LW_APPS_DIR" ]
         ln -sfr "$LW_APPS_DIR" "$LW_DIR/LuxWineApps"
         rm -f "$LW_DIR/LutrisWineApp"
 fi
-
-try_set_lwrunpid() { lwrunpid="$(cat "$LWRUNPIDFL" 2>/dev/null)" ; }
 
 RUNSRCRPTH="$(readrealpath "$RUNSRC")"
 
