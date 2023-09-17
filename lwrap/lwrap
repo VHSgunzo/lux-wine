@@ -938,7 +938,8 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                 fi
         fi
         try_set_lwrunpid
-        if [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
+        if [[ -x "$LWEXEC" && -x "$LWSRC" ]] && \
+           [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
             then LWEXECFLDIR="/tmp/.lwexec.$lwrunpid" "$LWEXEC" "$LWSRC" "$@"
         elif [ -x "$LWRUN_LN" ]
             then "$LWRUN_LN" "$@"
@@ -949,6 +950,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
         else
             if is_net_conn
                 then
+                    update_lwrap
                     try_dl_lwrun
                     "$LWRUN" "$@"
                 else
