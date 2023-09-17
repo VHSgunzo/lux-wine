@@ -246,6 +246,12 @@ try_install_lwrun() {
                             chmod u+x "$LWRUN"
                             ln_lwrun
                             info_msg "lwrun installed!"
+                            if [ ! -n "$TMP_LWRUN" ] && \
+                                is_net_conn
+                                then
+                                    update_lwrap
+                                    "$LWRAP" --install
+                            fi
                             try_shutdown_lw && \
                             return 0||return 1
                         else
@@ -862,9 +868,12 @@ case "$1" in
     --install) try_install_lwrun
                is_lwrun||try_dl_lwrun
                install_lw "$2"
-               NO_RUNPKG_UPDATE=1 \
-               FORCE_UPDATE=1 \
-               update_lwrun
+               if [ "$LW_MIGRATION" == 1 ]
+                    then
+                        NO_RUNPKG_UPDATE=1 \
+                        FORCE_UPDATE=1 \
+                        update_lwrun
+               fi
                exit $? ;;
     --update) FORCE_UPDATE=1
               update_lw
@@ -927,7 +936,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
         [ -f "$LWRUNPIDFL" ] && \
             rm -f "$LWRUNPIDFL"
     else
-        if [[ "$FORCE_UPDATE" == 1 || "$LW_MIGRATION" == 1 ]]
+        if [ "$LW_MIGRATION" == 1 ]
             then
                 if is_net_conn
                     then
