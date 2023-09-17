@@ -237,7 +237,7 @@ try_install_lwrun() {
             REALP_LWRUN="$(readrealpath "$LWRUN")"
             if [[ "$RUNSRC" =~ "lwrun" && -f "$RUNSRCRPTH" && \
                 "$RUNSRCRPTH" != "$LWRUN" && ! "$RUNSRCRPTH" =~ "Run" && \
-                "$RUNSRCRPTH" != "$OLD_LWRUN" ]]
+                "$RUNSRCRPTH" != "$OLD_LWRUN" && "$LWRUN_INSTALLED" != 1 ]]
                 then
                     info_msg "Installing lwrun..."
                     mkdir -p "$LWBIN_DIR"
@@ -250,6 +250,7 @@ try_install_lwrun() {
                                 is_net_conn
                                 then
                                     update_lwrap
+                                    LWRUN_INSTALLED=1 \
                                     "$LWRAP" --install
                             fi
                             try_shutdown_lw && \
