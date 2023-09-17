@@ -3538,7 +3538,7 @@ shrt_from_lnk() {
                 'unins000.exe' 'uninstall.exe' 'unwise.exe'
                 'openuserfolder.bat' 'language.changer.exe'
                 'uninst.exe' 'q2rtxded-x86.exe' 'q2rtxded.exe'
-                'ErrorReporter.exe' 'EAUpdater.exe'
+                'ErrorReporter.exe' 'EAUpdater.exe' 'explorer.exe'
             )
             IGNLNK=('VKPlay.ru.lnk' 'App Recovery.lnk')
             BROKEICONEXES=('Warframe.*/Launcher.exe')

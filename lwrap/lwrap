@@ -948,7 +948,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                 fi
         fi
         try_set_lwrunpid
-        if [[ -x "$LWEXEC" && -x "$LWSRC" ]] && \
+        if [[ "$FORCE_UPDATE" != 1 && -x "$LWEXEC" && -x "$LWSRC" ]] && \
            [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
             then LWEXECFLDIR="/tmp/.lwexec.$lwrunpid" "$LWEXEC" "$LWSRC" "$@"
         elif [ -x "$LWRUN_LN" ]
