@@ -23,7 +23,7 @@ TMP_LW_CFG="$LW_DIR/tmp/luwine.wcfg"
 LWBIN_DIR="$LW_DIR/bin"
 OLD_LWBIN_DIR="$OLD_LW_DIR/bin"
 LWSRC="$LWBIN_DIR/lux-wine"
-OLD_LWSRC="$LWBIN_DIR/lutris-wine"
+OLD_LWSRC="$OLD_LWBIN_DIR/lutris-wine"
 GIT_RAW='https://raw.githubusercontent.com/VHSgunzo/lux-wine/main'
 GIT_LWSRC="$GIT_RAW/lux-wine"
 GIT_HF_LWSRC="$GIT_HF_REPO/git/resolve/main/lux-wine"
@@ -52,7 +52,7 @@ LWRAP_DIR='/opt/lwrap'
 LWRUNTIME="$LWRAP_DIR/runtime.tar.zst"
 HLWDIRLN="$HOME/LuxWine"
 OLD_HLWDIRLN="$HOME/LutrisWine"
-LWRUNPIDFL='/tmp/.lwrunpid'
+LWRPIDFL='/tmp/.lwrpid'
 LWEXEC="$LWBIN_DIR/lwexec"
 HICOLOR_SIZES=(
     "512x512" "256x256" "192x192" "128x128"
@@ -793,7 +793,7 @@ try_dl() {
     fi
 }
 
-try_set_lwrunpid() { lwrunpid="$(cat "$LWRUNPIDFL" 2>/dev/null)" ; }
+try_set_lwrunpid() { lwrunpid="$(cat "$LWRPIDFL" 2>/dev/null)" ; }
 
 rm_broken_link() { find -L "$1" -type l -exec rm -rf {} \; 2>/dev/null ; }
 
@@ -823,7 +823,7 @@ print_help() {
         "
 }
 
-if [[ -d "$OLD_LW_DIR" && ! -d "$LW_DIR" ]]
+if [[ -f "$OLD_LWSRC" && ! -f "$LWSRC" ]]
     then
         LW_MIGRATION=1
         NO_RUNPKG_UPDATE=1
@@ -903,7 +903,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
         if ! [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
             then
                 LWEXECFLDIR="/tmp/.lwexec.$RUNPID"
-                echo "$RUNPID" > "$LWRUNPIDFL" 2>/dev/null
+                echo "$RUNPID" > "$LWRPIDFL" 2>/dev/null
                 (JOBNUMFL="$LWEXECFLDIR/job"
                 mkdir -p "$LWEXECFLDIR" 2>/dev/null
                 mkfifo "$JOBNUMFL" 2>/dev/null
@@ -934,8 +934,8 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
         "$LWSRC" "$@"
         [ -d "$LWEXECFLDIR" ] && \
             rm -rf "$LWEXECFLDIR"
-        [ -f "$LWRUNPIDFL" ] && \
-            rm -f "$LWRUNPIDFL"
+        [ -f "$LWRPIDFL" ] && \
+            rm -f "$LWRPIDFL"
     else
         if [ "$LW_MIGRATION" == 1 ]
             then
