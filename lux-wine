@@ -2281,11 +2281,11 @@ lu_prestart() {
             dis_cmd_msg
             reg_edit "$LU_EXE"
     else
-        if [[ -n "$(file "$LU_EXE"|grep "for MS Windows"|grep -o "executable")" || -n "$(file "$LU_EXE"|grep "MS Windows"|grep -o "shortcut")" ]]
-            then
-                lu_run "$LU_EXE"
-            else
-                print_error yad "Unable to start Lux Wine for this file!"
+        local exe_file_info="$(file "$LU_EXE" 2>/dev/null)"
+        if [[ -n "$(echo "$exe_file_info"|grep "for MS Windows"|grep -o "executable")" || \
+              -n "$(echo "$exe_file_info"|grep "MS Windows"|grep -o "shortcut")" ]]
+            then lu_run "$LU_EXE"
+            else print_error yad "Unable to start Lux Wine for this file!"
         fi
     fi
 }
@@ -3742,7 +3742,7 @@ lu_help() {
             ${RED}-killshell $GREEN              Kill SHELL
             ${RED}-exit $GREEN                   Force exit
             ${RED}-clearpfx $GREEN               Clear prefix
-            ${RED}-rmapp $GREEN                  Remove menu app
+            ${RED}-rmapp $BLUE{num|name|all}$GREEN    Remove menu app
             ${RED}-shortcut $GREEN               Create shortcut
             ${RED}-debug $GREEN                  DEBUG
             ${RED}-help $GREEN                   Show this usage info
@@ -3754,8 +3754,8 @@ lu_help() {
             ${RED}-backupmnt $GREEN              Mount prefix backup
             ${RED}-backupunmnt $GREEN            Unmount prefix backup
             ${RED}-lsapp $GREEN                  Show a list of added apps
-            ${RED}-runapp $BLUE {num|app name}$GREEN  Launch the added application
-            ${RED}-update$BLUE {all} $GREEN           Runtime updater$BLUE
+            ${RED}-runapp $BLUE{num|name}$GREEN       Launch the added application
+            ${RED}-update $BLUE{all} $GREEN           Runtime updater$BLUE
             {dx|dxvk} {vkd|vkd3d} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
             {nvml|wine_nvml} {dxnv|dxvk-nvapi|dxvk_nvapi} {wtrx|winetricks}
             {bat|battleye|battleye_runtime} {dg|dgvoodoo2}

@@ -793,7 +793,7 @@ try_dl() {
     fi
 }
 
-try_set_lwrunpid() { lwrunpid="$(cat "$LWRPIDFL" 2>/dev/null)" ; }
+try_set_lwrpid() { lwrpid="$(cat "$LWRPIDFL" 2>/dev/null)" ; }
 
 rm_broken_link() { find -L "$1" -type l -exec rm -rf {} \; 2>/dev/null ; }
 
@@ -899,8 +899,8 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                     then update_lwrun && exit $?
                 fi
         fi
-        try_set_lwrunpid
-        if ! [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
+        try_set_lwrpid
+        if ! [[ -n "$lwrpid" && -f "/tmp/.bwinf.$lwrpid" && -d "/proc/$lwrpid" ]]
             then
                 LWEXECFLDIR="/tmp/.lwexec.$RUNPID"
                 echo "$RUNPID" > "$LWRPIDFL" 2>/dev/null
@@ -947,10 +947,10 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                     else error_msg "No internet connection!"
                 fi
         fi
-        try_set_lwrunpid
+        try_set_lwrpid
         if [[ "$FORCE_UPDATE" != 1 && -x "$LWEXEC" && -x "$LWSRC" ]] && \
-           [[ -n "$lwrunpid" && -f "/tmp/.bwinf.$lwrunpid" && -d "/proc/$lwrunpid" ]]
-            then LWEXECFLDIR="/tmp/.lwexec.$lwrunpid" "$LWEXEC" "$LWSRC" "$@"
+           [[ -n "$lwrpid" && -f "/tmp/.bwinf.$lwrpid" && -d "/proc/$lwrpid" ]]
+            then LWEXECFLDIR="/tmp/.lwexec.$lwrpid" "$LWEXEC" "$LWSRC" "$@"
         elif [ -x "$LWRUN_LN" ]
             then "$LWRUN_LN" "$@"
         elif is_lwrun
