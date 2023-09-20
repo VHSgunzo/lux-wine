@@ -9,7 +9,7 @@ on:
 
 jobs:
   build_and_release:
-    name: lutris-wine
+    name: lwrap
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -18,37 +18,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-
-      - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          override: true
-          profile: minimal
-          toolchain: nightly
-          target: x86_64-unknown-linux-gnu
-
-      - name: Build tray
-        run: >
-          sudo apt update -y && sudo apt install dbus libdbus-1-dev -y;
-          cd lw-tray ;
-          rustup component add rust-src --toolchain nightly ;
-          cargo build --release ;
-          mv -fv target/x86_64-unknown-linux-gnu/release/lw-tray ./ ;
-          rm -rf target ;
-          cd ../ ;
-
       - name: Build archlinux packages
         uses: countstarlight/arch-makepkg-action@master
         with:
-          scripts: "cd lwrap && makepkg --nodeps && cd ../ && makepkg --nodeps"
+          scripts: "cd lwrap && makepkg -fsCc --noconfirm --nodeps"
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            lutris-wine-git-*.pkg*
-            lwrap/lwrap-*.pkg*
-            lw-tray/lw-tray
+          files: lwrap/lwrap-*.pkg*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

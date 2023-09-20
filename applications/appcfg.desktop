@@ -1,7 +1,7 @@
 [Desktop Entry]
-Categories=Lutris Wine
-Exec="/usr/bin/lutris-wine" -appcfg
-Icon=/usr/share/lutris-wine/icons/lw_default_icon.png
+Categories=Lux Wine
+Exec="/usr/bin/lux-wine" -appcfg
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
 Name=Apps settings
 Name[ru_RU]=Настройки приложений
 NoDisplay=false

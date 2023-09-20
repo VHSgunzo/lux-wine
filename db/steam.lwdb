@@ -1,4 +1,3 @@
-#!/bin/bash
 check_win_version 10
 check_exe_args "-no-cef-sandbox -opengl"
 if [[ -f "$LW_REGPATCH_DIR/steam.reg" && \

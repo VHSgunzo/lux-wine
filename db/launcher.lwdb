@@ -1,0 +1,19 @@
+set_dxvk_ver() {
+    if [ "$DXVK" != '0' ]
+        then
+            export NEEDCHKDLL=1 CHK_UPDATE=0
+            CUR_DXVK_VERSION="$DXVK_VERSION"
+            DXVK_GAME_VERSION="$1"
+            [[ -n "$CUR_DXVK_VERSION" && "$CUR_DXVK_VERSION" != "$DXVK_GAME_VERSION" ]] && \
+                post_launch() {
+                    check_dxvk '1' "$CUR_DXVK_VERSION"
+                    sed -i "s/DXVK_VERSION.*/DXVK_VERSION='$CUR_DXVK_VERSION'/" "$LW_CFG"
+                }
+            check_dxvk '1' "$DXVK_GAME_VERSION"
+    fi
+}
+
+check_win_version 10
+case "$(basename "$EXE_PATH")" in
+    Crossout|'Dark Sector') set_dxvk_ver '1.10.3' ;;
+esac
