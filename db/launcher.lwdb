@@ -6,6 +6,7 @@ set_dxvk_ver() {
             DXVK_GAME_VERSION="$1"
             [[ -n "$CUR_DXVK_VERSION" && "$CUR_DXVK_VERSION" != "$DXVK_GAME_VERSION" ]] && \
                 post_launch() {
+                    wine_is_death
                     check_dxvk '1' "$CUR_DXVK_VERSION"
                     sed -i "s/DXVK_VERSION.*/DXVK_VERSION='$CUR_DXVK_VERSION'/" "$LW_CFG"
                 }
