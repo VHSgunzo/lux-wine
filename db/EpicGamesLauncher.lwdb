@@ -1,0 +1,2 @@
+check_win_version 10
+check_exe_args '-opengl'
