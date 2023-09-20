@@ -2255,6 +2255,7 @@ lu_run() {
             fi
     fi
     wait
+    sleep 2
 }
 
 lu_prestart() {
