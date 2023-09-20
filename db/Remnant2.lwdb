@@ -1,0 +1,1 @@
+export VKD3D_DISABLE_EXTENSIONS=VK_EXT_mesh_shader

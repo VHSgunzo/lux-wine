@@ -117,7 +117,7 @@ add_path() {
     fi
 }
 
-ln_lwrap() { [[ -x "$LWRAP" && -x "$LWRAP_LN" ]]||ln -sfr "$LWRAP" "$LWRAP_LN" ; }
+ln_lwrap() { [[ -x "$LWRAP" && -x "$LWRAP_LN" ]]||(mkdir -p "$HBIN_DIR" && ln -sfr "$LWRAP" "$LWRAP_LN") ; }
 
 make_install() {
     if [ "$1" == "force" ]

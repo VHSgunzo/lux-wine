@@ -158,7 +158,6 @@ check_def_config() {
     [ ! -n "$WINEPREFIX" ] && export WINEPREFIX="$LW_DEF_WINEPFX"
     [ ! -n "$WTRX_LOG" ] && export WTRX_LOG="$WINEPREFIX/winetricks.log"
     [ ! -n "$VKICDFILES" ] && export VKICDFILES="AUTO"
-    [ ! -n "$ESYNC" ] && export ESYNC=1
     [ ! -n "$FSYNC" ] && export FSYNC=1
     [ ! -n "$FSR_MODE" ] && export FSR_MODE="Disabled"
     [ ! -n "$VSYNC" ] && export VSYNC="Default"
@@ -1971,7 +1970,8 @@ check_def_wine() {
     if [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|eval $SEDLWPRM|wc -l)" == 0 && -n "$SYS_WINE" ]]
         then
             print_info "System Wine found"
-            if print_question "Wine Manager" "System Wine found, do you want to select it as default?"
+            if is_first_run||\
+                print_question "Wine Manager" "System Wine found, do you want to select it as default?"
                 then
                     sed -i "s/WINE_VERSION.*/WINE_VERSION=\'System\'/g" "$LW_CFG"
                     export NEW_WINE_VERSION="System"

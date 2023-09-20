@@ -61,7 +61,8 @@ killjobpids() { try_kill "$(get_child_pids "$execjobpid")" ; }
 check_args_spaces() {
     for arg in "$@"
         do
-            echo "$arg"|grep -Po '\s' &>/dev/null && \
+            (echo "$arg"|grep -Po '\s' &>/dev/null||\
+             echo "$arg"|grep -Eo '.*(.*|.*).*' &>/dev/null) && \
                 arg="$(echo "$arg"|sed 's|.*|"&"|' 2>/dev/null)"
             args+=("$arg")
     done

@@ -6,7 +6,6 @@
 * Create [steam-runtime-libs](https://github.com/VHSgunzo/steam-runtime-libs) package
 * Create EasyAntiCheat patched [glibc-eac-rc](https://github.com/VHSgunzo/glibc-eac-rc) (2.38-3) for Rogue Company
 * Create Reshade Shaders [reshade-shaders-lw](https://github.com/VHSgunzo/reshade-shaders-lw) package
-* Update [GE-Proton v8-15](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.15)
 * Replace palemoon with firefox
 * Remove mangoapp and lib32-mangoapp
 * Replace mangohud-lw-git with mangohud lib32-mangohud
@@ -22,6 +21,7 @@
 * Change default LW loading gif
 * Remove "Add app to Lutris"
 * Disable by default DXR/RTX (and now it's one checkbox)
+* Disable by default ESYNC
 * Revert MangoHud DLSYM mode
 * Remove some notify
 * Fix zenity icon
@@ -52,4 +52,15 @@
 * Revert packages update for lwrun
 * Add lwrun packages update from builtin terminal (if the update is not launched from the terminal)
 * Add migration from old LW
+* Remove [Proton GE](https://github.com/GloriousEggroll/proton-ge-custom)
+* Add DB script for Ubisoft Connect
+* Add DB script for Dark Sector
+* Add DB script for Crossout
+* Add DB script for Remnant 2
+* Add DB script for Serious Sam 4
+* Add DB script for Starfield
+* Add DB script for xrEngine (S.T.A.L.K.E.R)
+* Add DB script for Crashday
+* Add DB script for Crysis
+* Update DB script for Zona
 * Minor fixes
