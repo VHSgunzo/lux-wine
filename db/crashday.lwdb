@@ -1,3 +1,5 @@
-crashday_gcfg="$WINEPREFIX/drive_c/users/steamuser/Local Settings/Crashday/config/graphics.config"
-[ -f "$crashday_gcfg" ] && \
-sed -i 's|"FSAA": 2,|"FSAA": 0,|' "$crashday_gcfg"
+pre_launch() {
+    crashday_gcfg="$WINEPREFIX/drive_c/users/steamuser/Local Settings/Crashday/config/graphics.config"
+    [ -f "$crashday_gcfg" ] && \
+    sed -i 's|"FSAA": 2,|"FSAA": 0,|' "$crashday_gcfg"
+}

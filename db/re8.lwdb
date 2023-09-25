@@ -1,5 +1,8 @@
-check_win_version 10
-try_mkdir "$WINEPREFIX/drive_c/Program Files (x86)/Steam/userdata/418370/remote/win64_save"
-check_gstreamer 1
-check_mangohud Disabled
-check_dxr Disabled
+pre_launch() {
+    try_mkdir "$WINEPREFIX/drive_c/Program Files (x86)/Steam/userdata/418370/remote/win64_save"
+}
+
+WIN_VER=10
+GSTREAMER=1
+LWMANGOHUD=Disabled
+DXR=0

@@ -1,0 +1,14 @@
+set_syswine() {
+    RESTORE_RESOL=1
+    WINE_VERSION=System
+}
+
+WIN_VER=10
+WINEARCH=win64
+
+case "$EXE_DIR" in
+    'Need for Speed Most Wanted'|\
+    'Need for Speed Carbon') set_syswine ;;
+    'Need for Speed Underground'|\
+    'Need for Speed Underground 2') set_syswine ; WD3DMODE=WineD3D ;;
+esac

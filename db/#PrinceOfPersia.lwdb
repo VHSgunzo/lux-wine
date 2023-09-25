@@ -1,14 +1,16 @@
-POP_EXE="$(ls "$EXE_PATH"/pop*.exe|head -1)"
-POP_EXE_NAME="$(basename "$POP_EXE")"
-if [ -f "$POP_EXE" ]
-    then
-        (while ! pidof "$LU_EXE" &>/dev/null
-            do sleep 0.5
-        done
-        EXE_LWDB=0 LOADBAR=0 NO_TRAY=1 lu_run "$POP_EXE") &
-        (while ! pidof "$POP_EXE_NAME" &>/dev/null
-            do sleep 0.5
-        done
-        sleep 10
-        kill $(pidof "$LU_EXE") 2>/dev/null) &
-fi
+pre_launch() {
+    POP_EXE="$(ls "$EXE_PATH"/pop*.exe|head -1)"
+    POP_EXE_NAME="$(basename "$POP_EXE")"
+    if [ -f "$POP_EXE" ]
+        then
+            (while ! pidof "$LU_EXE" &>/dev/null
+                do sleep 0.5
+            done
+            EXE_LWDB=0 LOADBAR=0 NO_TRAY=1 lu_run "$POP_EXE") &
+            (while ! pidof "$POP_EXE_NAME" &>/dev/null
+                do sleep 0.5
+            done
+            sleep 10
+            kill $(pidof "$LU_EXE") 2>/dev/null) &
+    fi
+}

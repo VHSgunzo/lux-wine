@@ -1,2 +1,3 @@
-check_win_version 10
-check_exe_args '+gfxapi D3D12 +sfxapi OpenAL'
+pre_launch() { check_exe_args '+gfxapi D3D12 +sfxapi OpenAL' ; }
+
+WIN_VER=10

@@ -1,10 +1,13 @@
-check_win_version 10
-check_exe_args "-no-cef-sandbox -opengl"
-if [[ -f "$LW_REGPATCH_DIR/steam.reg" && \
-    ! -n "$(grep -A2 "\[Software.*Wine.*AppDefaults.*steam.exe\]" \
-    "$WINEPREFIX/user.reg"|grep -wo 'win10')" ]]
-    then
-        DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" \
-            regedit "$LW_REGPATCH_DIR/steam.reg" &>/dev/null
-        try_shutdown_wine
-fi
+pre_launch() {
+    check_exe_args "-no-cef-sandbox -opengl"
+    if [[ -f "$LW_REGPATCH_DIR/steam.reg" && \
+        ! -n "$(grep -A2 "\[Software.*Wine.*AppDefaults.*steam.exe\]" \
+        "$WINEPREFIX/user.reg"|grep -wo 'win10')" ]]
+        then
+            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" \
+                regedit "$LW_REGPATCH_DIR/steam.reg" &>/dev/null
+            try_shutdown_wine
+    fi
+}
+
+WIN_VER=10

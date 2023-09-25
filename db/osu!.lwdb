@@ -1,0 +1,14 @@
+WIN_VER=10
+FPS_LIMIT=0
+PULSE_LTCY=0
+WINEARCH=win64
+VSYNC=Disabled
+WD3DMODE=WineD3D
+MUST_HAVE_DLL=Disabled
+WPREFIX_NAME=defprefix_dotnet
+
+[ "$EXE_NAME" == 'osu!install' ] && \
+post_launch() {
+    osuexe="$WINEPREFIX/dosdevices/c:/users/steamuser/AppData/Local/osu!/osu!.exe"
+    [ -f "$osuexe" ] && lu_shortcut "$osuexe" 'osu'
+}

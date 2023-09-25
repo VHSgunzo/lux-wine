@@ -1,2 +1,3 @@
-check_win_version 10
-check_exe_args '-opengl'
+pre_launch() { check_exe_args '-opengl' ; }
+
+WIN_VER=10

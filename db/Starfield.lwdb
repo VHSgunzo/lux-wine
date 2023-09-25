@@ -1,2 +1,2 @@
-check_win_version 10
-check_dxr Disabled
+WIN_VER=10
+DXR=0

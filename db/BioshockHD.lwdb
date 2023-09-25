@@ -1,3 +1,3 @@
-check_win_version 10
-check_esync 0
-check_fsync 0
+WIN_VER=10
+ESYNC=0
+FSYNC=0

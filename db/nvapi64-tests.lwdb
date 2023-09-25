@@ -1,4 +1,3 @@
-export HOLD_TERMINAL=1
-export TERMINAL=1
-check_win_version 10
-check_terminal
+WIN_VER=10
+TERMINAL=1
+HOLD_TERMINAL=1

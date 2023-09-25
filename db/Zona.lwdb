@@ -1,6 +1,6 @@
-check_win_version 10
+WIN_VER=10
 if [ -n "$(lspci|grep -o 'NVIDIA')" ]
     then
-        export WINE_HIDE_NVIDIA_GPU=1
-        check_vulkan_icd Lvp
+        HIDE_NVIDIA_GPU=1
+        VKICDFILES=Lvp
 fi
