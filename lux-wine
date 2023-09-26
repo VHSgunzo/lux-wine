@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.9.6"
+export LW_VERSION="0.77.9.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -211,7 +211,7 @@ check_def_config() {
     [ ! -n "$LW_STEAMAPPS_DIR" ] && export LW_STEAMAPPS_DIR="$HOME/.local/share/Steam/steamapps/common"
     [ ! -n "$CHKSTEAMAPPS" ] && export CHKSTEAMAPPS=1
     [ ! -n "$RESIZABLE_BAR" ] && export RESIZABLE_BAR=1
-    [ ! -n "$DEFPFX_VERSION" ] && export DEFPFX_VERSION='v0.0.6'
+    [ ! -n "$DEFPFX_VERSION" ] && export DEFPFX_VERSION='v0.0.7'
     export DEFPFX_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix.xz.lwpfx"
     export DEFPFXDOTNET_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
     export DEFPFX_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix.xz.lwpfx"
@@ -2413,6 +2413,7 @@ check_db_script() {
                         case "${EXE_NAME,,}" in
                             *'league of legends'*) export EXE_LWDBFL="$LW_DB_DIR/LeagueClient.lwdb" ;;
                             gog_galaxy*) export EXE_LWDBFL="$LW_DB_DIR/setup.lwdb" ;;
+                            wemod-*) export EXE_LWDBFL="$LW_DB_DIR/WeMod.lwdb" ;;
                         esac
                     fi
             fi
@@ -5359,37 +5360,31 @@ check_reset_pulse() {
 
 check_win_version() {
     [ -n "$1" ] && export WIN_VER="$1"
-    if [ ! -n "$(cat "$WINEPREFIX/system.reg" 2>/dev/null|grep -i "Microsoft Windows $WIN_VER" 2>/dev/null)" ]
+    if [[ ! -n "$(grep -i "ProductName.*Microsoft Windows $WIN_VER" "$WINEPREFIX/system.reg" 2>/dev/null)" || \
+        "$(cat "$WINEPREFIX/.winver" 2>/dev/null)" != "$WIN_VER" ]]
         then
+            unset WINVEROK
             [[ "$WIN_VER" == "xp" && "$WINEARCH" == "win64" ]] && \
                 export WIN_VER="xp64"
             check_wine_pids
             [[ ! -n "$WINE_PIDS" && -n "$OLD_WINE" ]] && unset OLD_WINE
             check_ld_library
-            if [[ -n "$OLD_WINE" && -f "$OLD_WINE" ]]
+            [[ -n "$OLD_WINE" && -f "$OLD_WINE" ]] && \
+                local WINE="$OLD_WINE"
+            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" \
+            winecfg -v win$WIN_VER &>/dev/null && \
+            local WINVEROK=1
+            export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
+            if [ "$WINVEROK" == 1 ]
                 then
-                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$OLD_WINE" winecfg -v win$WIN_VER &>/dev/null
-                    [ "$?" == 0 ] && export WINVEROK=1
-                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
-            elif [ -f "$WINE" ]
-                then
-                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$WINE" winecfg -v win$WIN_VER &>/dev/null
-                    [ "$?" == 0 ] && export WINVEROK=1
-                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
-            fi
-            if [ -n "$WINVEROK" ]
-                then
-                    unset WINVEROK
+                    echo "$WIN_VER" > "$WINEPREFIX/.winver"
                     print_info notify "Windows version changed to Windows $WIN_VER"
                     try_shutdown_wine
                 else
-                    export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
-                    unset WINVEROK
                     print_error yad "Windows version not changed to Windows $WIN_VER"
                     return 1
             fi
-        else
-            return 1
+        else return 1
     fi
 }
 

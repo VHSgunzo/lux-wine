@@ -1,0 +1,7 @@
+pre_launch() {
+    wicconfig="$WINEPREFIX/drive_c/users/steamuser/Documents/World in Conflict/Game Options.txt"
+    [ -f "$wicconfig" ] && \
+    sed -i 's|myDX10Flag 1|myDX10Flag 0|g' "$wicconfig"
+}
+
+WIN_VER=10

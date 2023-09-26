@@ -1,0 +1,3 @@
+pre_launch() { check_exe_args '+set com_skipIntro 1' ; }
+
+WIN_VER=10

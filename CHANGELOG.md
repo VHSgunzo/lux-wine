@@ -1,3 +1,15 @@
+# v0.77.9.7
+
+* Update [lwrun](https://github.com/VHSgunzo/lwrun/releases/tag/v0.39.1) packages
+* Add DB script for `Wolfenstein 2009`
+* Add DB script for `World in Conflict`
+* Add DB script for `Command and Conquer - Red Alert 3`
+* Update DB script for `WeMod` (now installation from `WeMod` setup EXE is also possible)
+* Remove old DB scripts
+* Fix fake Windows version in wine registry
+* Update [wine-prefix](https://github.com/VHSgunzo/wine-prefix/releases/tag/v0.0.7) `v0.0.7`
+* Update README.md
+
 # v0.77.9.6
 
 * Update [lwrun](https://github.com/VHSgunzo/lwrun) packages
