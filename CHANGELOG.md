@@ -1,6 +1,6 @@
 # v0.77.9.7
 
-* Update [lwrun](https://github.com/VHSgunzo/lwrun/releases/tag/v0.39.1) packages
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
 * Add DB script for `Wolfenstein 2009`
 * Add DB script for `World in Conflict`
 * Add DB script for `Command and Conquer - Red Alert 3`
