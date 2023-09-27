@@ -1,3 +1,10 @@
+# v0.77.9.8
+
+* Add DB script for `Heritage of Kings - The Settlers`
+* Add DB script for `Command and Conquer Red Alert 3 Uprising`
+* Update DB script for setup's
+* Fix auto-creation of shortcuts for apps and games (now case insensitive)
+
 # v0.77.9.7
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

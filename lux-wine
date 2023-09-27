@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.9.7"
+export LW_VERSION="0.77.9.8"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -1443,7 +1443,7 @@ reg_edit() {
 }
 
 exe2png() {
-    unset rm_ico
+    unset SHRT_ICON rm_ico
     if [ -f "$exe_ico" ]
         then
             local SHRT_NAME="$(basename "$exe_ico"|sed 's|\.ico$||gi')"
@@ -1542,6 +1542,7 @@ exe2png() {
                         else
                             print_error notify "Failed to get ico from exe file!"
                             export SHRT_ICON="$LW_DEF_ICO"
+                            return 1
                     fi
             fi
         else
@@ -1554,7 +1555,7 @@ create_shortcut() {
     if [ -n "$1" ]
         then
             SHRT_NAME="${ADD_APP_NAME//[^[:alnum:] ._-]/}"
-            SHRT_NAME="$(sed 's|^Запустить ||gi;s|^Играть ||gi'<<<"$SHRT_NAME")"
+            SHRT_NAME="$(sed 's|^Запустить ||gi;s|^Играть ||gi;s|^Launch ||gi'<<<"$SHRT_NAME")"
             try_mkdir "$LW_DEF_TMP"
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
@@ -3637,7 +3638,7 @@ shrt_from_lnk() {
             lnk_name_alnum="${lnk_name//[^[:alnum:] ._-]/}"
             SHRT_NAME="$(echo "$lnk_name"|sed 's|\.lnk$||i')"
             lnk_exe_drive="$(lnk_data_get 'Local Base Path'|drive_tolower)"
-            lnk_exe="$(lnk_data_get 'Local Base Path'|fix_path)"
+            lnk_exe="$(ipath "$(lnk_data_get 'Local Base Path'|fix_path)"|head -1)"
             lnk_exe_ico="$(lnk_data_get 'Icon File Name')"
             lnk_exe_ico_drive="$(echo "$lnk_exe_ico"|fix_winstd_path|drive_tolower)"
             lnk_exe_ico="$(ipath "$(lnk_exe_drive=$lnk_exe_ico_drive ; echo "$lnk_exe_ico"|fix_path)"|head -1)"
@@ -3660,7 +3661,7 @@ shrt_from_lnk() {
                 ! "${IGNLNK[@],,}" =~ "${lnk_name,,}" && \
                 "$lnk_args" != "--uninstall" ]]
                 then
-                    LU_EXE="$(ipath "$lnk_exe"|head -1)"
+                    LU_EXE="$lnk_exe"
                     if [ -f "$LU_EXE" ]
                         then
                             if [[ -n "$lnk_args" && ! -n "$(grep -F "'$lnk_exe' $lnk_args" -lr "$LW_APPS_DIR" 2>/dev/null||\
@@ -3679,6 +3680,7 @@ shrt_from_lnk() {
                                                                 get_shrt_data ;;
                                                 *.[Ee][Xx][Ee]) LU_EXE="$lnk_exe_ico" get_shrt_data "$lnk_exe_ico" ;;
                                             esac
+                                            [ "$?" == 0 ]||get_shrt_data "$LU_EXE"
                                         else get_shrt_data "$LU_EXE"
                                     fi
                                     create_shortcut "$lnk_exe" "$lnk_args"
@@ -3746,6 +3748,7 @@ shrt_from_url() {
                                                                 get_shrt_data ;;
                                                 *.[Ee][Xx][Ee]) LU_EXE="$url_exe_ico" get_shrt_data "$url_exe_ico" ;;
                                             esac
+                                            [ "$?" == 0 ]||get_shrt_data "$LU_EXE"
                                         else get_shrt_data "$LU_EXE"
                                     fi
                                     create_shortcut "$LU_EXE" "$url_name"
