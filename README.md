@@ -120,7 +120,7 @@ lwrun --uninstall
 - [x] SHELL mode or open file in SHELL (with access to all lux-wine functions)
 - [x] CMD mode or open file in CMD
 - [x] Built-in [Wine-staging](https://github.com/wine-staging/wine-staging)
-- [x] Built-in [Proton GEn](https://github.com/VHSgunzo/ge-proton-lw)
+- [x] Built-in [Proton GE](https://github.com/VHSgunzo/ge-proton-lw)
 - [x] Wine Manager ([Lutris](https://github.com/lutris/wine/releases), [Proton GE](https://github.com/GloriousEggroll/proton-ge-custom/releases), [Wine GE](https://github.com/GloriousEggroll/wine-ge-custom/releases), [Kron4ek](https://github.com/Kron4ek/Wine-Builds/releases))
 - [x] Manage and install multiple wine/proton/dxvk/dxvk-nvapi/vkd3d/d3d_extras/dgvoodoo2 versions and on-the-fly change
 - [x] DXR/RTX (Ray Tracing) (if the video adapter support and depends on [VKD3D](https://github.com/HansKristian-Work/vkd3d-proton))
