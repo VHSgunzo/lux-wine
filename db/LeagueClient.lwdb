@@ -12,9 +12,9 @@ EXE_ARG='--launch-product=league_of_legends --launch-patchline=live'
 
 if [ ! -f "$WINEPREFIX/.setup" ]
     then
-        touch "$WINEPREFIX/.setup"
         source "$LW_DB_DIR/setup.lwdb"
         pre_launch() {
+            touch "$WINEPREFIX/.setup"
             (if [ "$EXE_NAME" == "LeagueClient" ]
                 then wait_kill_exe LeagueClient.exe unlim
                 else wait_kill_exe RiotClientServices.exe unlim
