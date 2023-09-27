@@ -10,11 +10,12 @@ WINE_VERSION=wine-lutris-ge-lol-p8-12-x86_64
 [ "$EXE_NAME" == "RiotClientServices" ] && \
 EXE_ARG='--launch-product=league_of_legends --launch-patchline=live'
 
-if [ ! -f "$WINEPREFIX/.setup" ]
+pfxsetupfl="$LW_DEF_WPFXS_DIR/$WPREFIX_NAME/.setup"
+if [ ! -f "$pfxsetupfl" ]
     then
         source "$LW_DB_DIR/setup.lwdb"
         pre_launch() {
-            touch "$WINEPREFIX/.setup"
+            touch "$pfxsetupfl"
             (if [ "$EXE_NAME" == "LeagueClient" ]
                 then wait_kill_exe LeagueClient.exe unlim
                 else wait_kill_exe RiotClientServices.exe unlim
