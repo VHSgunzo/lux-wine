@@ -1,3 +1,14 @@
+# v0.77.9.9
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Add `Enabled` FSR mode without preset (fix dx9 bug)
+* Update DB script for `Command and Conquer Red Alert 3`
+* Update DB script for `Command and Conquer Red Alert 3 Uprising`
+* Update DB script for `Heritage of Kings - The Settlers`
+* Update DB script for `League of Legends`
+* Update [wine-prefix](https://github.com/VHSgunzo/wine-prefix/releases/tag/v0.0.8) `v0.0.8`
+* Minor fixes
+
 # v0.77.9.8
 
 * Add DB script for `Heritage of Kings - The Settlers`

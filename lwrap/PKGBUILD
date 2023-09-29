@@ -2,7 +2,7 @@
 
 pkgname='lwrap'
 pkgver='0.77.9'
-pkgrel='8'
+pkgrel='9'
 pkgdesc='Lux Wine wrapper for RunImage container'
 arch=('x86_64')
 url='https://github.com/VHSgunzo/lux-wine'
@@ -32,6 +32,7 @@ depends=(
     'lib32-vulkan-intel' 'vulkan-radeon' 'lib32-vulkan-radeon' 'lib32-libxnvctrl' 'libxnvctrl'
     'dos2unix' 'lw-runtime' 'wine-gecko' 'wine-mono' 'libdvdread' 'a52dec' 'wavpack' 'lib32-wavpack'
     'libmpeg2' 'twolame' 'lib32-twolame' 'gst-plugin-msdk' 'lib32-libdv' 'libdv' 'GE-Proton'
+    'xxd-standalone'
 )
 optdepends=(
     'xf86-video-amdgpu' 'xf86-video-intel' 'llvm'

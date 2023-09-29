@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.9.8"
+export LW_VERSION="0.77.9.9"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -129,8 +129,10 @@ done
 [ ! -n "$LW_DEF_WINEPFXBKP_DIR" ] && export LW_DEF_WINEPFXBKP_DIR="$LW_DIR/prefix_backups"
 [ ! -n "$LWRAP_DEFPFX" ] && export LWRAP_DEFPFX="$LWRAP_PFX_DIR/defprefix.xz.lwpfx"
 [ ! -n "$LWRAP_DEFPFXDOTNET" ] && export LWRAP_DEFPFXDOTNET="$LWRAP_PFX_DIR/defprefix_dotnet.xz.lwpfx"
+[ ! -n "$LWRAP_DEFPFXDOTNETDESKTOP" ] && export LWRAP_DEFPFXDOTNETDESKTOP="$LWRAP_PFX_DIR/defprefix_dotnetdesktop.xz.lwpfx"
 [ ! -n "$LWDIR_DEFPFX" ] && export LWDIR_DEFPFX="$LW_DEF_WINEPFXBKP_DIR/defprefix.xz.lwpfx"
 [ ! -n "$LWDIR_DEFPFXDOTNET" ] && export LWDIR_DEFPFXDOTNET="$LW_DEF_WINEPFXBKP_DIR/defprefix_dotnet.xz.lwpfx"
+[ ! -n "$LWDIR_DEFPFXDOTNETDESKTOP" ] && export LWDIR_DEFPFXDOTNETDESKTOP="$LW_DEF_WINEPFXBKP_DIR/defprefix_dotnetdesktop.xz.lwpfx"
 [ ! -n "$LW_DEF_CACHE" ] && export LW_DEF_CACHE="$LW_DIR/cache"
 [ ! -n "$LW_DEF_TMP" ] && export LW_DEF_TMP="$LW_DIR/tmp"
 [ ! -n "$LW_DEF_CENV" ] && export LW_DEF_CENV="$LW_DIR/luwine.cenv"
@@ -162,7 +164,7 @@ check_def_config() {
     [ ! -n "$WTRX_LOG" ] && export WTRX_LOG="$WINEPREFIX/winetricks.log"
     [ ! -n "$VKICDFILES" ] && export VKICDFILES="AUTO"
     [ ! -n "$FSYNC" ] && export FSYNC=1
-    [ ! -n "$FSR_MODE" ] && export FSR_MODE='balanced'
+    [ ! -n "$FSR_MODE" ] && export FSR_MODE='Enabled'
     [ ! -n "$VSYNC" ] && export VSYNC="Default"
     [ ! -n "$PULSE_LTCY" ] && export PULSE_LTCY=1
     [ ! -n "$VKBASALT" ] && export VKBASALT=1
@@ -211,11 +213,13 @@ check_def_config() {
     [ ! -n "$LW_STEAMAPPS_DIR" ] && export LW_STEAMAPPS_DIR="$HOME/.local/share/Steam/steamapps/common"
     [ ! -n "$CHKSTEAMAPPS" ] && export CHKSTEAMAPPS=1
     [ ! -n "$RESIZABLE_BAR" ] && export RESIZABLE_BAR=1
-    [ ! -n "$DEFPFX_VERSION" ] && export DEFPFX_VERSION='v0.0.7'
+    [ ! -n "$DEFPFX_VERSION" ] && export DEFPFX_VERSION='v0.0.8'
     export DEFPFX_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix.xz.lwpfx"
     export DEFPFXDOTNET_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
+    export DEFPFXDOTNETDESKTOP_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix_dotnetdesktop.xz.lwpfx"
     export DEFPFX_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix.xz.lwpfx"
     export DEFPFXDOTNET_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
+    export DEFPFXDOTNETDESKTOP_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnetdesktop.xz.lwpfx"
 }
 
 print_var() {
@@ -1928,8 +1932,13 @@ set_wine_version() {
     && export "$(grep -wo 'WINE_VERSION.*$' "$LW_DEF_CFG"|tr -d \')"
     export WINEDIR="$LW_WINE_DIR/$WINE_VERSION"
     export WINE="$WINEDIR/bin/wine"
-    [ "$WINE_VERSION" == "System" ] \
-    && unset WINEDIR && export WINE="$SYS_WINE"
+    export WINEDLLPATH="$WINEDIR/lib64/wine:$WINEDIR/lib/wine:$EXE_PATH"
+    if [ "$WINE_VERSION" == "System" ]
+        then
+            unset WINEDIR
+            export WINE="$SYS_WINE"
+            export WINEDLLPATH="/usr/lib/wine:/usr/lib32/wine:$EXE_PATH"
+    fi
 }
 
 check_luwine_wcfg_cenv() {
@@ -2181,13 +2190,14 @@ shrt_loop() {
     )
     find_wpfxlnk() { find "$@" -type f -iname "*.lnk" 2>/dev/null ; }
     find_wpfxurl() { find "$@" -type f -iname "*.url" 2>/dev/null ; }
-    [ -f '/tmp/.lwshrtloop' ] && \
+    export pfxshrtname="$(basename "$WINEPREFIX")"
+    [ -f "/tmp/.lwshrt.$pfxshrtname" ] && \
     ! pidof wineserver &>/dev/null && \
-        rm -f '/tmp/.lwshrtloop'
-    if [ ! -f '/tmp/.lwshrtloop' ]
+        rm -f "/tmp/.lwshrt.$pfxshrtname"
+    if [ ! -f "/tmp/.lwshrt.$pfxshrtname" ]
         then
             (IFS=$'\n'
-            touch '/tmp/.lwshrtloop'
+            touch "/tmp/.lwshrt.$pfxshrtname"
             wait_wpids=100
             while [ "$wait_wpids" -gt 0 ] && \
                 ! pidof wineserver &>/dev/null
@@ -2216,7 +2226,7 @@ shrt_loop() {
                     check_tray
                     [ "$FORCE_TRAY" != 1 ] && \
                         check_shrt
-            done; rm -f '/tmp/.lwshrtloop')
+            done; rm -f "/tmp/.lwshrt.$pfxshrtname")
     fi
 }
 
@@ -2273,7 +2283,7 @@ lu_run() {
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
                     $TERM_APP $LWSHELL
             else
-                if [ -n "$LU_LNK" ]
+                if [ "$LU_LNK" == 1 ]
                     then
                         export TMP_OUT="/tmp/${WINE_VERSION}_$(date +'%Y-%m-%d_%H%M%S').out"
                         $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n' ; \
@@ -2311,23 +2321,14 @@ lu_run() {
 
 lu_prestart() {
     export LU_EXE="$LU_START"
-    export LU_MSI="$(basename "$LU_EXE"|grep -io "\.msi$")"
-    export LU_BAT="$(basename "$LU_EXE"|grep -io "\.bat$")"
-    export LU_REG="$(basename "$LU_EXE"|grep -io "\.reg$")"
-    export LU_LNK="$(basename "$LU_EXE"|grep -io "\.lnk$")"
-    if [[ -n "$LU_MSI" && -n "$(file "$LU_EXE"|grep "Os: Windows"|grep -o "MSI Installer")" ]]
-        then
-            dis_debug_msg
-            UNSET_CMPSTR_SW=1
-            lu_run "$LU_EXE"
-    elif [ -n "$LU_BAT" ]
+    if [ "$LU_BAT" == 1 ]
         then
             dis_debug_msg
             LOADBAR=0
             TERMINAL=1
             UNSET_CMPSTR_SW=1
             lu_run "$LU_EXE"
-    elif [ -n "$LU_REG" ]
+    elif [ "$LU_REG" == 1 ]
         then
             dis_debug_msg
             dis_cmd_msg
@@ -2337,6 +2338,7 @@ lu_prestart() {
 }
 
 check_startfile() {
+    unset LU_MSI LU_BAT LU_REG LU_LNK
     if [ -f "$(ipath "$1"|head -1)" ]
         then
             ipath_pth="$(ipath "$1"|head -1)"
@@ -2355,6 +2357,12 @@ check_startfile() {
         [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE="$0 $1"
     fi
     [ ! -n "$LU_START" ] && export LU_START="$ipath_pth"
+    case "$LU_START" in
+        *.[Mm][Ss][Ii]) export LU_MSI=1 ;;
+        *.[Bb][Aa][Tt]) export LU_BAT=1 ;;
+        *.[Rr][Ee][Gg]) export LU_REG=1 ;;
+        *.[Ll][Nn][Kk]) export LU_LNK=1 ;;
+    esac
 }
 
 check_exe_wcfg_cenv() {
@@ -2459,6 +2467,21 @@ check_db_script() {
                                         if (try_download "$DEFPFXDOTNET_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
                                             try_download "$DEFPFXDOTNET_URL" "$LW_DEF_WINEPFXBKP_DIR/")
                                             then PFXRESTORE="$LWDIR_DEFPFXDOTNET"
+                                            else exit 1
+                                        fi
+                                    fi
+                                    restore_dbpfx
+                            elif [[ "$WPREFIX_NAME" == 'defprefix_dotnetdesktop' || \
+                                  "$USE_DEFPFXDOTNETDESKTOP_BACKUP" == 1 ]]
+                                then
+                                    if [ -f "$LWDIR_DEFPFXDOTNETDESKTOP" ]
+                                        then PFXRESTORE="$LWDIR_DEFPFXDOTNETDESKTOP"
+                                    elif [ -f "$LWRAP_DEFPFXDOTNETDESKTOP" ]
+                                        then PFXRESTORE="$LWRAP_DEFPFXDOTNETDESKTOP"
+                                    else
+                                        if (try_download "$DEFPFXDOTNETDESKTOP_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                            try_download "$DEFPFXDOTNETDESKTOP_URL" "$LW_DEF_WINEPFXBKP_DIR/")
+                                            then PFXRESTORE="$LWDIR_DEFPFXDOTNETDESKTOP"
                                             else exit 1
                                         fi
                                     fi
@@ -2746,12 +2769,12 @@ lu_config() {
     is_exe_nofirstrun() { [[ -n "$LU_EXE" && ! -n "$FIRST_RUN" ]] ; }
     export LWCFGKEY=$RANDOM
     WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*') $(is_exe_nofirstrun && echo '\n Default') $([ -n "$SYS_WINE" ] && echo '\n System')"
-    WINETHEMESLST="Disabled \n $(ls -1 "$LW_THEMES_DIR" 2>/dev/null|sed 's/.reg//g')"
+    WINETHEMESLST="Disabled \n $(ls -1 "$LW_THEMES_DIR" 2>/dev/null|sed 's|.reg||gi')"
     WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe= \n Disabled"
     WMONOOVERLST="Microsoft.Xna.Framework.*,Gac=n \n Disabled"
     WINVERLST="10 \n \n 8 \n 7 \n xp"
     WARCHLST="win64 \n win32"
-    MHAVEDLLST="corefonts vcrun2022 mfc42 mfc140 \n corefonts lucida tahoma vcrun6 vcrun6sp6 vcrun2005 vcrun2008 vcrun2010 vcrun2012 vcrun2013 vcrun2022 mfc120 mfc140 mfc42 msvcirt physx vb6run openal 7zip \n dotnet20 xna40 dotnet48 dotnetdesktop6 dotnetdesktop7 faudio \n physx \n Disabled"
+    MHAVEDLLST="corefonts vcrun2022 mfc42 mfc140 \n corefonts lucida tahoma vcrun6 vcrun6sp6 vcrun2005 vcrun2008 vcrun2010 vcrun2012 vcrun2013 vcrun2022 mfc120 mfc140 mfc42 msvcirt vb6run openal 7zip \n dotnet20 xna40 dotnet48 faudio \n dotnetdesktop6 dotnetdesktop7 \n physx \n Disabled"
     TERMAPPLST="$(for whichterm in {konsole,gnome-terminal,kitty,deepin-terminal,xfce4-terminal,xterm} ; do which_exe "$whichterm" ; done)"
     DOWNLOADERLST="$(for whichdwnl in {aria2c,wget} ; do is_exe_exist "$whichdwnl" && echo "$whichdwnl" ; done)"
     VSYNCLST="Enabled \n Disabled \n Default"
@@ -2768,7 +2791,7 @@ lu_config() {
     DGVOOLST="$(ls_dlls dgvoodoo2) \n v2.8 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     NVMLLST="$(ls_dlls wine_nvml) \n v0.1 \n 0.3 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     CMPRSSLST="xz \n zstd"
-    FSRMODELST="ultra \n quality \n balanced \n performance \n Disabled"
+    FSRMODELST="Enabled \n ultra \n quality \n balanced \n performance \n Disabled"
     MANGOHUDLST="Enabled \n DLSYM \n Disabled"
     lwconfig_save() {
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE DISABLE_NVAPI WINE_DXGI D3D_EXTRAS DGVOODOO2 \
@@ -3351,7 +3374,7 @@ lu_exit() {
             print_info notify "Lux Wine successfully killed!"
             sleep 2
             rm -rf /tmp/FORCE_EXIT /tmp/syssett* /tmp/winesett* \
-                /tmp/ressett* /tmp/settbtn* rm -f /tmp/.lwshrtloop
+                /tmp/ressett* /tmp/settbtn* rm -f /tmp/.lwshrt*
             kill $(pgrep -fa "$LW_NAME"|awk '{print$1}')
             lu_killtray
         else
@@ -5155,10 +5178,13 @@ check_fsr() {
     if [[ -n "$FSR_MODE" && "$FSR_MODE" != "Disabled" ]]
         then
             export WINE_FULLSCREEN_FSR=1
-            #export WINE_FULLSCREEN_FSR_STRENGTH=2
+            export WINE_FULLSCREEN_FSR_STRENGTH=2
+            export WINE_FULLSCREEN_INTEGER_SCALING=0
+            [ "$FSR_MODE" == 'Enabled' ]||\
             export WINE_FULLSCREEN_FSR_MODE="$FSR_MODE"
         else
-            unset WINE_FULLSCREEN_FSR WINE_FULLSCREEN_FSR_MODE #WINE_FULLSCREEN_FSR_STRENGTH
+            unset WINE_FULLSCREEN_FSR WINE_FULLSCREEN_FSR_MODE \
+            WINE_FULLSCREEN_FSR_STRENGTH WINE_FULLSCREEN_INTEGER_SCALING
     fi
 }
 
