@@ -1,3 +1,7 @@
+# v0.78.1.1
+
+* Add MSI install with wine-staging (hotfix)
+
 # v0.77.9.9
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

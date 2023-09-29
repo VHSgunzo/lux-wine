@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.77.9.9"
+export LW_VERSION="0.78.1.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -2412,18 +2412,25 @@ check_db_script() {
         then
             if [ ! -f "$EXE_LWDBFL" ]
                 then
-                    local EXE_PATH_LWDB="$(ipath "$EXE_PATH/$EXE_NAME.lwdb")"
-                    local LW_PATH_LWDB="$(ipath "$LW_DB_DIR/$EXE_NAME.lwdb")"
-                    if [ -f "$EXE_PATH_LWDB" ]
-                        then export EXE_LWDBFL="$EXE_PATH_LWDB"
-                    elif [ -f "$LW_PATH_LWDB" ]
-                        then export EXE_LWDBFL="$LW_PATH_LWDB"
-                    else
-                        case "${EXE_NAME,,}" in
-                            *'league of legends'*) export EXE_LWDBFL="$LW_DB_DIR/LeagueClient.lwdb" ;;
-                            gog_galaxy*) export EXE_LWDBFL="$LW_DB_DIR/setup.lwdb" ;;
-                            wemod-*) export EXE_LWDBFL="$LW_DB_DIR/WeMod.lwdb" ;;
-                        esac
+                    if [ "$LU_MSI" == 1 ]
+                        then
+                            dis_debug_msg
+                            UNSET_CMPSTR_SW=1
+                            export EXE_LWDBFL="$LW_DB_DIR/setup.lwdb"
+                        else
+                            local EXE_PATH_LWDB="$(ipath "$EXE_PATH/$EXE_NAME.lwdb")"
+                            local LW_PATH_LWDB="$(ipath "$LW_DB_DIR/$EXE_NAME.lwdb")"
+                            if [ -f "$EXE_PATH_LWDB" ]
+                                then export EXE_LWDBFL="$EXE_PATH_LWDB"
+                            elif [ -f "$LW_PATH_LWDB" ]
+                                then export EXE_LWDBFL="$LW_PATH_LWDB"
+                            else
+                                case "${EXE_NAME,,}" in
+                                    *'league of legends'*) export EXE_LWDBFL="$LW_DB_DIR/LeagueClient.lwdb" ;;
+                                    gog_galaxy*) export EXE_LWDBFL="$LW_DB_DIR/setup.lwdb" ;;
+                                    wemod-*) export EXE_LWDBFL="$LW_DB_DIR/WeMod.lwdb" ;;
+                                esac
+                            fi
                     fi
             fi
             if [ -f "$EXE_LWDBFL" ]
