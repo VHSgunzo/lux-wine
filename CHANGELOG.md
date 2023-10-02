@@ -1,3 +1,10 @@
+# v0.78.1.2
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Force use msiexec for MSI install
+* Fix symlinks for Proton libvkd3d-1 libvkd3d-shader-1 dlls
+* Minor fixes
+
 # v0.78.1.1
 
 * Add MSI install with wine-staging (hotfix)
