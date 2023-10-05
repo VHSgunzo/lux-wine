@@ -15,7 +15,7 @@ curl -sL lwrap.github.io|bash
 ```
 * HF mirror:
 ```
-curl -sL lux-wine-git.hf.space|bash
+curl -sL lux-wine-git.static.hf.space|bash
 ```
 
 * or with `wget`:
@@ -24,7 +24,7 @@ wget -qO - lwrap.github.io|bash
 ```
 * HF mirror:
 ```
-wget -qO - lux-wine-git.hf.space|bash
+wget -qO - lux-wine-git.static.hf.space|bash
 ```
 
 ## **Offline installation**:
