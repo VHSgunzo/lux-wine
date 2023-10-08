@@ -1,0 +1,6 @@
+WIN_VER=10
+WINEARCH=win64
+TZ=Europe/Moscow
+USE_DEFPFX_BACKUP=1
+WPREFIX_NAME=arcaniapfx
+MUST_HAVE_DLL='wmp11 physx'
