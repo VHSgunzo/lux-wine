@@ -27,6 +27,9 @@ wget -qO - lwrap.github.io|bash
 wget -qO - lux-wine-git.static.hf.space|bash
 ```
 
+## Video of the installation process:
+[![Installation video](https://img.youtube.com/vi/a0vrAgY2uZk/0.jpg)](https://www.youtube.com/watch?v=a0vrAgY2uZk)
+
 ## **Offline installation**:
 1. Download latest `lwrun` release from the [**releases**](https://github.com/VHSgunzo/lwrun) page ([HF mirror](https://huggingface.co/lux-wine/lwrun/tree/main/releases))
 2. Make it executable before run
