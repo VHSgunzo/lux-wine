@@ -189,7 +189,10 @@ make_install() {
                             fi
                     done
             fi
-            case "$(basename "$SHELL")" in
+            [ "$ENABLE_HOSTEXEC" == 1 ] && \
+                local INSTALL_SHELL="$(hostexec echo '$SHELL')"||\
+                local INSTALL_SHELL="$SHELL"
+            case "$(basename "$INSTALL_SHELL")" in
                 zsh) add_path "$Z_RC" ;;
                 bash) add_path "$B_RC" ;;
                 fish) add_path "$F_RC" ;;

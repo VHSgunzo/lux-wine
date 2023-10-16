@@ -2,7 +2,7 @@
 
 pkgname='lwrap'
 pkgver='0.78.1'
-pkgrel='2'
+pkgrel='3'
 pkgdesc='Lux Wine wrapper for RunImage container'
 arch=('x86_64')
 url='https://github.com/VHSgunzo/lux-wine'
