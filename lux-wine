@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.1.3"
+export LW_VERSION="0.78.1.4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -179,6 +179,7 @@ check_def_config() {
     [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe='
     [ ! -n "$WINE_THEME" ] && export WINE_THEME='Breeze Dark'
     [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='Enabled'
+    [ ! -n "$LWVKCAPTURE" ] && export LWVKCAPTURE='Disabled'
     [ ! -n "$FPS_LIMIT" ] && export FPS_LIMIT="75"
     [ ! -n "$GAMEMODE" ] && export GAMEMODE=1
     [ ! -n "$GSTREAMER" ] && export GSTREAMER=1
@@ -1563,8 +1564,7 @@ create_shortcut() {
             try_mkdir "$LW_DEF_TMP"
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
-            ([[ "$RUNSRC" =~ "lwrun" ]] && \
-                LW_SOURCE="$LWRAP"
+            (LW_SOURCE="$LWRAP"
             [[ "$1" =~ "'" ]] && \
                 SHRTEXEPATH="\"$1\""||\
                 SHRTEXEPATH="'$1'"
@@ -2016,7 +2016,7 @@ check_def_wine() {
                                     mv -f "$LW_WINE_DIR/$BINWINE/"* "$WFILESDIR/" 2>/dev/null
                                     try_ln "$WFILESDIR/"* "$LW_WINE_DIR/$BINWINE/"
                                     [ -f "$WVERSFL" ]||\
-                                    (BINWINE="${BINWINE,,}"
+                                    (rm -f "$WVERSFL"
                                     echo "$(date +%s) $(sed 's|[_-]x86_64||gi;s|[_-]amd64||gi;s|[_-]x86||gi' \
                                         <<<"${BINWINE//[^[:alnum:]._-]/}")" > "$WVERSFL")
 
@@ -2254,14 +2254,14 @@ lu_run() {
                     $TERM_APP $LWSHELL
             else
                 $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; \
-                $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
+                $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
                 clear_log  2>/dev/null
                 $LW_EDITOR "$LOG_FILE" 2>/dev/null &
             fi
     elif [ "$LOG" == 1 ]
         then
             echo -en "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n"
-            $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "$@" $EXE_ARG|& tee -a "$LOG_FILE"
+            $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "$@" $EXE_ARG|& tee -a "$LOG_FILE"
             clear_log  2>/dev/null
             $LW_EDITOR "$LOG_FILE" 2>/dev/null &
     elif [ "$TERMINAL" == 1 ]
@@ -2287,15 +2287,15 @@ lu_run() {
                     then
                         export TMP_OUT="/tmp/${WINE_VERSION}_$(date +'%Y-%m-%d_%H%M%S').out"
                         $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n' ; \
-                        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
+                        $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
                     else
                         $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n' ; \
-                        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
+                        $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
                 fi
             fi
     else
         echo -en "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n"
-        $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "$@" $EXE_ARG
+        $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "$@" $EXE_ARG
     fi
     export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
     post_launch 2>/dev/null
@@ -2686,6 +2686,7 @@ full_init() {
             check_vulkan_icd
             check_mangohud
             check_vkbasalt_eff
+            check_vkcapture
             check_gamemode
             check_gstreamer
             check_dxvk
@@ -2798,6 +2799,7 @@ lu_config() {
     CMPRSSLST="xz \n zstd"
     FSRMODELST="Enabled \n ultra \n quality \n balanced \n performance \n Disabled"
     MANGOHUDLST="Enabled \n DLSYM \n Disabled"
+    VKCAPTURELST="Vulkan \n OpenGL \n Disabled"
     lwconfig_save() {
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE DISABLE_NVAPI WINE_DXGI D3D_EXTRAS DGVOODOO2 \
             DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION VKD3DCFG MUST_HAVE_DLL \
@@ -2807,7 +2809,7 @@ lu_config() {
             LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
-            VSYNC NVPRIME DRIPRIME"
+            VSYNC LWVKCAPTURE NVPRIME DRIPRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             if [ -n "$(echo "$CFGPARAM"|sed "s/''//")" ]
@@ -2964,6 +2966,7 @@ lu_config() {
             --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" "$DEF_MANGOHUDCFG")" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
             --field="Vsync::CB" "$(cfg_items "$VSYNC" "$VSYNCLST")" \
+            --field="OBS-VkCapture::CB" "$(cfg_items "$LWVKCAPTURE" "$VKCAPTURELST")" \
             --field="NVIDIA Prime Render Offload:CHK" "$NVPRIME" \
             --field="DRI_PRIME:CHK" "$DRIPRIME" \
             --file-filter="All Files | *.*" \
@@ -4294,6 +4297,33 @@ check_mangohud() {
             print_info "MANGOHUD is disabled!"
             export DISABLE_MANGOHUD=1
             unset MANGOHUD RUN_MANGOHUD
+    fi
+}
+
+check_vkcapture() {
+    [ -n "$1" ] && export LWVKCAPTURE="$1"
+    if [[ "$LWVKCAPTURE" != "0" && "$LWVKCAPTURE" != "Disabled" ]]
+        then
+            if is_exe_exist obs-gamecapture
+                then
+                    if [[ "$LWVKCAPTURE" == "OpenGL" || "$WINED3D" == 1 ]]
+                        then
+                            print_info "OBS-VkCapture in OpenGL mode!"
+                            export RUN_VKCAPTURE="obs-gamecapture"
+                        else
+                            print_info "OBS-VkCapture enabled!"
+                            export OBS_VKCAPTURE=1 \
+                                VK_LOADER_LAYERS_ENABLE="$VK_LOADER_LAYERS_ENABLE,VK_LAYER_OBS_vkcapture_*"
+                            unset RUN_VKCAPTURE
+                    fi
+                else
+                    print_error yad "OBS-VkCapture not found in your system!"
+                    export DISABLE_OBS_VKCAPTURE=1
+                    unset OBS_VKCAPTURE RUN_VKCAPTURE
+            fi
+        else
+            export DISABLE_OBS_VKCAPTURE=1
+            unset OBS_VKCAPTURE RUN_VKCAPTURE
     fi
 }
 
@@ -5755,7 +5785,7 @@ export_all_functions() {
         create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_wcfg check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd select_lwpfx \
         lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr winepfx_init \
         lu_killtray lu_killwine lu_killexe lu_clearpfx lu_rmapp lu_shortcut lu_explorer lu_help lu_version lu_tray lu_winemgr updcfgchksum lite_init \
-        us_layout_sw check_mangohud check_wd3dmode check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
+        us_layout_sw check_mangohud check_vkcapture check_wd3dmode check_gamemode check_gstreamer check_dxvk check_vkd3d check_dxvk-nvapi check_d3d_extras check_dgvoodoo2 \
         check_battleye check_winepfx check_vulkan_icd check_crash_dialog lu_update check_fps_limit lu_config full_init upd_winetricks check_shell unpack_squash \
         check_nvprime check_esync check_fsync check_fsr check_path check_terminal check_pulse_latency check_ld_library check_wdllover try_rm_broken_link \
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \

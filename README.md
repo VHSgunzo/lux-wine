@@ -198,6 +198,7 @@ lwrun --uninstall
 - [x] Nvidia Resizable BAR (if your system support)
 - [x] Сreating/restoring backups of Wine prefixes
 - [x] Mounting/unmounting backups of Wine prefixes
+- [x] [OBS-VkCapture](https://github.com/nowrep/obs-vkcapture) supports
 - [x] Redefining Wine options in settings GUI:
 ```
       * WINE_HIDE_NVIDIA_GPU

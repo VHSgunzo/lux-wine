@@ -1,3 +1,10 @@
+# v0.78.1.4
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Create [obs-vkcapture-lw](https://github.com/VHSgunzo/obs-vkcapture-lw) package
+* Add [OBS-VkCapture](https://github.com/nowrep/obs-vkcapture) supports
+* Minor fixes
+
 # v0.78.1.3
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
