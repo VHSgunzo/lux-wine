@@ -4,10 +4,11 @@
 * Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.19) `v8.19`
 * Update `HF mirror`
 * Add DB script for `Gothic 4: Arcania`
-* Update DB script for `The Honkers Railway` v1.4.0
+* Update DB script for `The Honkers Railway` `v1.4.0`
 * Update DB script for `World of Warships`
 * Fix add `$HOME/.local/bin` to `PATH`
 * Add [installation video](https://www.youtube.com/watch?v=a0vrAgY2uZk)
+* Update [glibc-eac-rc](https://github.com/VHSgunzo/glibc-eac-rc/releases/tag/v2.38-8) `v2.38-8`
 
 # v0.78.1.2
 
