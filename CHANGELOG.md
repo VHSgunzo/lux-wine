@@ -3,6 +3,7 @@
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
 * Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.20) `v8.20`
 * Add `egl-wayland` to `lwrap` depends
+* Remove DB script for `World of Warships`
 
 # v0.78.1.4
 
