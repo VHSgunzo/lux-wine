@@ -1,3 +1,9 @@
+# v0.78.1.6
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.22) `v8.22`
+* Add `gstreamer-vaapi` to `lwrap` depends
+
 # v0.78.1.5
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
