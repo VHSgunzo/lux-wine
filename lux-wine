@@ -5773,7 +5773,8 @@ check_other_fixes() {
     export MESA_SHADER_CACHE_MAX_SIZE=5G
     export __GL_SHADER_DISK_CACHE_PATH="$LW_DEF_CACHE/gl_shader_cache"
     export __GL_SHADER_DISK_CACHE=1
-    export __GL_SHADER_DISK_CACHE_SIZE="1000000000"
+    export __GL_SHADER_DISK_CACHE_SIZE=5000000000
+    export __GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1
     export RADV_PERFTEST='rt,gpl'
 }
 
