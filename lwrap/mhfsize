@@ -1,0 +1,16 @@
+#!/usr/bin/python3
+import os
+
+from Xlib import display as xdisplay
+
+display = xdisplay.Display()
+root_screen = display.screen().root
+
+try:
+    mhfratio = int(os.getenv('MANGOHUD_FONT_SIZE_RATION'))
+except:
+    mhfratio = 45
+
+for mon in root_screen.xrandr_get_monitors().monitors:
+    if mon.primary:
+        print(int(mon.height_in_pixels / mhfratio))

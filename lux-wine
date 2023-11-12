@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.1.6"
+export LW_VERSION="0.78.1.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -147,7 +147,7 @@ done
 [ ! -n "$DEF_MANGOHUDCFG" ] && export DEF_MANGOHUDCFG="no_display,time,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
 cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
 engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
-resolution,vkbasalt,gamemode,background_alpha=0.4,font_size=24,background_color=020202,position=top-right,text_color=ffffff,toggle_hud=Shift_R+F12"
+resolution,vkbasalt,gamemode,background_alpha=0.4,background_color=020202,position=top-right,text_color=ffffff,toggle_hud=Shift_R+F12"
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
     NOT_TERM=1
 
@@ -2795,7 +2795,7 @@ lu_config() {
     D3DXTRLST="$(ls_dlls d3d_extras) \n v2 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     DXNVALST="$(ls_dlls dxvk-nvapi) \n v0.4 \n \n v0.6.4 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     DGVOOLST="$(ls_dlls dgvoodoo2) \n v2.8 \n latest $(is_exe_nofirstrun && echo '\n Default')"
-    NVMLLST="$(ls_dlls wine_nvml) \n v0.1 \n 0.3 \n latest $(is_exe_nofirstrun && echo '\n Default')"
+    NVMLLST="$(ls_dlls wine_nvml) \n v0.1 \n v0.3 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     CMPRSSLST="xz \n zstd"
     FSRMODELST="Enabled \n ultra \n quality \n balanced \n performance \n Disabled"
     MANGOHUDLST="Enabled \n DLSYM \n Disabled"
@@ -2808,7 +2808,7 @@ lu_config() {
             VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX DXR EXEARGS CHK_UPDATE EXE_LWDB EXE_LWDBFL \
             LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
-            LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF MANGOHUDCFG FPS_LIMIT \
+            LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT \
             VSYNC LWVKCAPTURE NVPRIME DRIPRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
@@ -2823,14 +2823,26 @@ lu_config() {
         for read_list_fx in $(cat /tmp/ressett$LWCFGKEY 2>/dev/null)
             do
                 [[ "$read_list_fx" == 1 ]] && \
-                export FX_RESULT+=":${RES_LST[$COUNT_FX]}"
+                FX_RESULT+=":${RES_LST[$COUNT_FX]}"
                 COUNT_FX=$(( $COUNT_FX + 1 ))
         done
         FX_RESULT="$(echo "cas$FX_RESULT"|sed 's/:://')"
+
+        DEF_MHCFG='gpu_text=GPU,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram_color=ad64c1,ram_color=c26693,engine_color=eb5b5b,gpu_color=2e9762,wine_color=eb5b5b,frametime_color=00ff00,background_alpha=0.4,background_color=020202,position=top-right,text_color=ffffff,toggle_hud=Shift_R+F12,gpu_load_change,cpu_load_change,core_load_change'
+        COUNT_MH=0
+        for read_list_mh in $(cat /tmp/mhsett$LWCFGKEY 2>/dev/null)
+            do
+                [[ "$read_list_mh" == 1 ]] && \
+                MH_RESULT+=",${MH_LST[$COUNT_MH]}"
+                COUNT_MH=$(( $COUNT_MH + 1 ))
+        done
+        MH_RESULT="${DEF_MHCFG}$(echo "$MH_RESULT"|sed 's|,,||g')"
+
         if [ -n "$(echo "$WCFGOUT"|head -1)" ]
             then
                 echo "$WCFGOUT" > "$LW_CFG"
                 echo "VKBASALT_EFFECTS='$FX_RESULT'" >> "$LW_CFG"
+                echo "MANGOHUDCFG='$MH_RESULT'" >> "$LW_CFG"
                 WINEWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINE_VERSION.*$'|cut -d'=' -f2|tr -d \')"
                 WINEPFXWCFGOUT="$(echo "$WCFGOUT"|grep -wo 'WINEPREFIX.*$'|cut -d'=' -f2|tr -d \')"
                 [[ "$WINEPFXWCFGOUT" == "$WINEPREFIX" && -f "$WINEPREFIX/update_pfx.log" ]] \
@@ -2963,7 +2975,6 @@ lu_config() {
             --field="GameMode:CHK" "$GAMEMODE" \
             --field="MangoHud::CB" "$(cfg_items "$LWMANGOHUD" "$MANGOHUDLST")" \
             --field="MangoHud User config:CHK" "$MANGOHUD_USER_CONF" \
-            --field="MangoHud config::CBE" "$(cfg_items "$MANGOHUDCFG" "$DEF_MANGOHUDCFG")" \
             --field="FPS limit (0-disabled)::NUM" "$FPS_LIMIT" \
             --field="Vsync::CB" "$(cfg_items "$VSYNC" "$VSYNCLST")" \
             --field="OBS-VkCapture::CB" "$(cfg_items "$LWVKCAPTURE" "$VKCAPTURELST")" \
@@ -2979,23 +2990,49 @@ lu_config() {
                 for add_relst in ${RES_LST[@]}
                     do
                         if [[ -n "$(echo "${RES_CFG[@]}"|grep -o "$add_relst")" ]]
-                            then
-                                RESHADE_SETT+="--field=$add_relst:CHK%TRUE%"
-                            else
-                                RESHADE_SETT+="--field=$add_relst:CHK%FALSE%"
+                            then RESHADE_SETT+="--field=$add_relst:CHK%TRUE%"
+                            else RESHADE_SETT+="--field=$add_relst:CHK%FALSE%"
                         fi
                 done
         fi
         ( IFS="%" ; yad --plug=$LWCFGKEY --tabnum=3 --form --separator=" " --bool-fmt=1 --columns=4 \
              "${YADSCROLL[@]}" $RESHADE_SETT 1> /tmp/ressett$LWCFGKEY & )
 
-        echo -e "$(yad --plug=$LWCFGKEY --tabnum=4 --separator="" --form "${YADSCROLL[@]}" \
-            --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
+        if is_exe_exist mangohud
+            then
+                MH_LST=(
+                    arch battery battery_icon battery_time battery_watt core_bars core_load
+                    cpu_mhz cpu_power cpu_temp device_battery_icon engine_short_names
+                    engine_version exec_name fcat fps_metrics fps_only frame_count full
+                    gamemode gpu_core_clock gpu_fan gpu_junction_temp gpu_mem_clock
+                    gpu_mem_temp gpu_name gpu_power gpu_temp gpu_voltage histogram horizontal
+                    horizontal_stretch hud_compact hud_no_margin io_read io_write no_display
+                    no_small_font procmem procmem_shared procmem_virt ram read_cfg resolution
+                    show_fps_limit swap temp_fahrenheit throttling_status throttling_status_graph
+                    time version vkbasalt vram vulkan_driver wine
+                )
+                if [ -n "$MANGOHUDCFG" ]
+                    then MH_CFG=($(echo "$MANGOHUDCFG"|tr ',' '\n'|grep -v '='))
+                    else MH_CFG=($(echo "$DEF_MANGOHUDCFG"|tr ',' '\n'|grep -v '='))
+                fi
+                for add_mhlst in ${MH_LST[@]}
+                    do
+                        if [[ -n "$(grep -wo "$add_mhlst"<<<"${MH_CFG[@]}")" ]]
+                            then MANGOGUD_SETT+="--field=$add_mhlst:CHK%TRUE%"
+                            else MANGOGUD_SETT+="--field=$add_mhlst:CHK%FALSE%"
+                        fi
+                done
+        fi
+        ( IFS="%" ; yad --plug=$LWCFGKEY --tabnum=4 --form --separator=" " --bool-fmt=1 --columns=4 \
+             "${YADSCROLL[@]}" $MANGOGUD_SETT 1> /tmp/mhsett$LWCFGKEY & )
 
         echo -e "$(yad --plug=$LWCFGKEY --tabnum=5 --separator="" --form "${YADSCROLL[@]}" \
+            --field="Env file [ $LW_CENV ]:TXT" "$(cat "$LW_CENV" 2>/dev/null)" 2>/dev/null)" > /tmp/envsett$LWCFGKEY &
+
+        echo -e "$(yad --plug=$LWCFGKEY --tabnum=6 --separator="" --form "${YADSCROLL[@]}" \
             --field="Log file [ $WTRX_LOG ]:TXT" "$(cat "$WTRX_LOG" 2>/dev/null)" 2>/dev/null)" > /tmp/wlogsett$LWCFGKEY &
 
-        [ ! -n "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=6 --columns=2 --form \
+        [ ! -n "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=7 --columns=2 --form \
             "${YADSCROLL[@]}" \
             --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
             --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
@@ -3032,29 +3069,38 @@ lu_config() {
         if [[ -n "$LU_EXE" && ! -n "$RUN_EXE" && ! -n "$FIRST_RUN" ]]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
-                    --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                    --tab="VkBasalt Effects" --tab="MangoHud config" \
+                     --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lux Wine settings for $EXE_FULL_NAME" "${YADSCROLL[@]}" \
-                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
-                    --button="EXIT:1" --button="RESET:3" --button="SAVE:0" --button="SAVE and RUN:4" 2>/dev/null
+                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center \
+                    --center --window-icon="$LW_DEF_ICO" \
+                    --button="EXIT:1" --button="RESET:3" --button="SAVE:0" \
+                    --button="SAVE and RUN:4" 2>/dev/null
         elif [[ -n "$LU_EXE" && -n "$RUN_EXE" && ! -n "$FIRST_RUN" ]]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
-                    --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                    --tab="VkBasalt Effects" --tab="MangoHud config" \
+                    --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                     --title="Lux Wine settings for $EXE_FULL_NAME" "${YADSCROLL[@]}" \
-                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
+                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center \
+                    --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         elif [ -n "$FIRST_RUN" ]
             then
                 yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
-                    --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" \
+                    --tab="VkBasalt Effects" --tab="MangoHud config" \
+                    --tab="Custom Environment" --tab="Winetricks Log" \
                     --title="Lux Wine settings" "${YADSCROLL[@]}" \
-                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
+                    --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center \
+                    --center --window-icon="$LW_DEF_ICO" \
                     --button="EXIT:1" --button="SAVE:0" 2>/dev/null
         else
             yad --notebook --key=$LWCFGKEY --tab="Wine" --tab="System" \
-                --tab="VkBasalt Effects" --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
+                --tab="VkBasalt Effects" --tab="MangoHud config" \
+                --tab="Custom Environment" --tab="Winetricks Log" --tab="Tools" \
                 --title="Lux Wine settings" "${YADSCROLL[@]}" \
-                --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center --center --window-icon="$LW_DEF_ICO" \
+                --width="$SETTWIDTH" --height="$SETTHEIGHT" --text-align=center \
+                --center --window-icon="$LW_DEF_ICO" \
                 --button="EXIT:1" --button="RESET:3" --button="SAVE:0" 2>/dev/null
         fi
         case $? in
@@ -3114,11 +3160,10 @@ lu_config() {
         else
             lwconfig_menu
     fi
-    try_rm "/tmp/syssett$LWCFGKEY" &>/dev/null
-    try_rm "/tmp/winesett$LWCFGKEY" &>/dev/null
-    try_rm "/tmp/ressett$LWCFGKEY" &>/dev/null
-    try_rm "/tmp/envsett$LWCFGKEY" &>/dev/null
-    try_rm "/tmp/wlogsett$LWCFGKEY" &>/dev/null
+    try_rm "/tmp/syssett$LWCFGKEY" "/tmp/winesett$LWCFGKEY" \
+        "/tmp/ressett$LWCFGKEY" "/tmp/mhsett$LWCFGKEY" \
+        "/tmp/envsett$LWCFGKEY" "/tmp/wlogsett$LWCFGKEY" \
+        "$LW_DIR/.lwcfgchksum" &>/dev/null
     if [ -f "/tmp/settbtn$LWCFGKEY" ]
         then
             SETTBTN="$(cat "/tmp/settbtn$LWCFGKEY")"
@@ -3145,7 +3190,6 @@ lu_config() {
                     appcfg) lu_appcfg || btntls_run ;;
             esac
     fi
-    try_rm "$LW_DIR/.lwcfgchksum" &>/dev/null
 }
 
 btntls_run() {
@@ -3527,8 +3571,9 @@ lu_clearpfx() {
                     try_rm "$LW_DEF_CACHE/gl_shader_cache/"* &>/dev/null
                     try_rm "$LW_DEF_CACHE/dxvk_cache/"* &>/dev/null
                     try_rm "$LW_DEF_CACHE/gstreamer-1.0/"* &>/dev/null
-                    try_rm "$HOME/.cache/gstreamer-1.0/"* &>/dev/null
                     try_rm "$LW_DEF_CACHE/mesa_shader_cache/"* &>/dev/null
+                    try_rm "$LW_DEF_CACHE/vkd3d_cache/"* &>/dev/null
+                    try_rm "$HOME/.cache/gstreamer-1.0/"* &>/dev/null
                     try_rm "$HOME/.cache/wine" &>/dev/null
                     print_info notify "Cache successfully cleared!"
             fi
@@ -4283,10 +4328,20 @@ check_mangohud() {
                             export MANGOHUD=1
                             unset RUN_MANGOHUD
                     fi
-                    if [[ ! -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
-                        then export MANGOHUD_CONFIG="$DEF_MANGOHUDCFG"
-                    elif [[ -n "$MANGOHUDCFG" && "$MANGOHUD_USER_CONF" != 1 ]]
-                        then export MANGOHUD_CONFIG="$MANGOHUDCFG"
+                    if [ "$MANGOHUD_USER_CONF" != 1 ]
+                        then
+                            if [ -n "$MANGOHUD_FONT_SIZE" ]
+                                then mhfsize=",font_size=$MANGOHUD_FONT_SIZE"
+                                else mhfsize=",font_size=$(mhfsize 2>/dev/null)"
+                            fi
+                            if [ -n "$MANGOHUDCFG" ]
+                                then
+                                    if [[ "$MANGOHUDCFG" =~ "font_size" ]]
+                                        then export MANGOHUD_CONFIG="$MANGOHUDCFG"
+                                        else export MANGOHUD_CONFIG="${MANGOHUDCFG}${mhfsize}"
+                                    fi
+                                else export MANGOHUD_CONFIG="${DEF_MANGOHUDCFG}${mhfsize}"
+                            fi
                     fi
                 else
                     print_error yad "MANGOHUD not found in your system!"
@@ -4331,15 +4386,13 @@ check_fps_limit() {
     [ -n "$1" ] && export FPS_LIMIT="$1"
     if [[ -n "$FPS_LIMIT" && "$FPS_LIMIT" != 0 ]]
         then
-            if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 ]] && [[ -n "$RUN_MANGOHUD" || "$MANGOHUD" == 1 ]]
+            if [[ "$MANGOHUD_USER_CONF" != 1 && "$DISABLE_MANGOHUD" != 1 ]] && \
+                [[ -n "$RUN_MANGOHUD" || "$MANGOHUD" == 1 ]]
                 then
                     add_fps_limit="toggle_fps_limit=Shift_L+F1,fps_limit=$FPS_LIMIT+0"
-                    if [ -n "$MANGOHUDCFG" ]
-                        then
-                            [[ ! "$MANGOHUDCFG" =~ "fps_limit" ]] && \
-                                export MANGOHUD_CONFIG="${MANGOHUDCFG},$add_fps_limit"
-                        else
-                            export MANGOHUD_CONFIG="${DEF_MANGOHUDCFG},$add_fps_limit"
+                    if [ -n "$MANGOHUD_CONFIG" ]
+                        then export MANGOHUD_CONFIG="${MANGOHUD_CONFIG},$add_fps_limit"
+                        else export MANGOHUD_CONFIG="${DEF_MANGOHUDCFG},$add_fps_limit"
                     fi
              elif is_exe_exist strangle
                 then
@@ -4637,8 +4690,12 @@ check_vkd3d() {
                     wdllover_upd "$(echo $check_dlls_slk|sed 's|.dll||g;s| |,|g')=n"
                     wdllover_upd "${ALLLIBVKD3DDLLS}=n"
                     export VKD3D_FEATURE_LEVEL=12_1
-                    try_mkdir "$LW_DEF_CACHE/vkd3d_cache"
-                    export VKD3D_SHADER_CACHE_PATH="$LW_DEF_CACHE/vkd3d_cache"
+                    local CACHE_DIRNAME="${EXE_DIR//[^[:alnum:]._-]/}${EXE_NAME//[^[:alnum:]._-]/}"
+                    export VKD3D_SHADER_CACHE_PATH="$LW_DEF_CACHE/vkd3d_cache/$CACHE_DIRNAME"
+                    try_mkdir "$VKD3D_SHADER_CACHE_PATH"
+                    local EXE_CACHE="$EXE_PATH/vkd3d-proton.cache"
+                    [[ -f "$EXE_CACHE" && ! -f "$VKD3D_SHADER_CACHE_PATH/vkd3d-proton.cache" ]]
+                        try_mv "$EXE_CACHE"* "$VKD3D_SHADER_CACHE_PATH"
                     unset GIT_RELEASE_URL
                     local ret=0
                 else
@@ -5712,6 +5769,8 @@ check_other_fixes() {
     try_mkdir "$LW_DEF_CACHE/mesa_shader_cache"
     export MESA_GLSL_CACHE_DIR="$LW_DEF_CACHE"
     export MESA_SHADER_CACHE_DIR="$LW_DEF_CACHE"
+    export MESA_DISK_CACHE_SINGLE_FILE=1
+    export MESA_SHADER_CACHE_MAX_SIZE=5G
     export __GL_SHADER_DISK_CACHE_PATH="$LW_DEF_CACHE/gl_shader_cache"
     export __GL_SHADER_DISK_CACHE=1
     export __GL_SHADER_DISK_CACHE_SIZE="1000000000"

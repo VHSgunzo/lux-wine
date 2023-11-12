@@ -2,7 +2,7 @@
 
 pkgname='lwrap'
 pkgver='0.78.1'
-pkgrel='6'
+pkgrel='7'
 pkgdesc='Lux Wine wrapper for RunImage container'
 arch=('x86_64')
 url='https://github.com/VHSgunzo/lux-wine'
@@ -33,14 +33,15 @@ depends=(
     'dos2unix' 'lw-runtime' 'wine-gecko' 'wine-mono' 'libdvdread' 'a52dec' 'wavpack' 'lib32-wavpack'
     'libmpeg2' 'twolame' 'lib32-twolame' 'gst-plugin-msdk' 'lib32-libdv' 'libdv' 'GE-Proton'
     'xxd-standalone' 'obs-vkcapture-lw' 'lib32-obs-vkcapture-lw' 'egl-wayland' 'gstreamer-vaapi'
+    'python-xlib'
 )
 optdepends=(
     'xf86-video-amdgpu' 'xf86-video-intel' 'llvm'
     'lib32-opencl-icd-loader' 'opencl-icd-loader'
     'lib32-llvm' 'wine-prefix-dotnet'
 )
-source=('lwrap' 'lwexec')
-sha256sums=('SKIP' 'SKIP')
+source=('lwrap' 'lwexec' 'mhfsize')
+sha256sums=('SKIP' 'SKIP' 'SKIP')
 
 shopt -s extglob
 
@@ -48,6 +49,7 @@ package() {
     install -dm755 "$pkgdir/usr/bin"
     install -Dm755 "$pkgname" "$pkgdir/opt/$pkgname/bin/$pkgname"
     install -Dm755 "lwexec" "$pkgdir/opt/$pkgname/bin/lwexec"
+    install -Dm755 "mhfsize" "$pkgdir/usr/bin/mhfsize"
     cp -ar --no-preserve=ownership "$(realpath ../../)"/!(.git*|$pkgname|lutris-wine) "$pkgdir/opt/$pkgname"
     mv -f "$pkgdir/opt/$pkgname/lux-wine" "$pkgdir/opt/$pkgname/bin/lux-wine"
     ln -sfr "$pkgdir/opt/$pkgname/bin/$pkgname" "$pkgdir/usr/bin/$pkgname"

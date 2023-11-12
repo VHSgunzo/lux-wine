@@ -1,3 +1,15 @@
+# v0.78.1.7
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.22) `v8.23`
+* Update [obs-vkcapture-lw](https://github.com/VHSgunzo/obs-vkcapture-lw/releases/tag/v1.4.5) `v1.4.5`
+* Add ([mhfsize](https://github.com/VHSgunzo/lux-wine/blob/main/lwrap/mhfsize)) for automatic `MangoHud` font size detection
+* Add `MANGOHUD_FONT_SIZE` env var
+* Add `MangoHud config` tab to `Settings`
+* Changed the way `VKD3D` cache is stored
+* Changed the way `Mesa` cache is stored
+* Minor fixes
+
 # v0.78.1.6
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
