@@ -4694,7 +4694,7 @@ check_vkd3d() {
                     export VKD3D_SHADER_CACHE_PATH="$LW_DEF_CACHE/vkd3d_cache/$CACHE_DIRNAME"
                     try_mkdir "$VKD3D_SHADER_CACHE_PATH"
                     local EXE_CACHE="$EXE_PATH/vkd3d-proton.cache"
-                    [[ -f "$EXE_CACHE" && ! -f "$VKD3D_SHADER_CACHE_PATH/vkd3d-proton.cache" ]]
+                    [[ -f "$EXE_CACHE" && ! -f "$VKD3D_SHADER_CACHE_PATH/vkd3d-proton.cache" ]] && \
                         try_mv "$EXE_CACHE"* "$VKD3D_SHADER_CACHE_PATH"
                     unset GIT_RELEASE_URL
                     local ret=0
