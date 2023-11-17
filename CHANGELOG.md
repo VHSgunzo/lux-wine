@@ -1,3 +1,11 @@
+# v0.78.1.8
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Replace `mhfsize` with [moninfo](https://github.com/VHSgunzo/moninfo) for automatic `MangoHud` font size detection
+* Changed the way `GL SHADER` cache is stored
+* Fix move `vkd3d-proton.cache`
+* Add `RU` translation to [lw-tray](https://github.com/VHSgunzo/lw-tray/releases/tag/v0.0.5) `v0.0.5`
+
 # v0.78.1.7
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
