@@ -79,9 +79,18 @@ if [[ -d "$LWEXECFLDIR" && -e "$JOBNUMFL" ]]
         if [ -n "$jobnum" ]
             then
                 execjobdir="$LWEXECFLDIR/$jobnum"
+                execenvfl="$execjobdir/env"
                 execjobfl="$execjobdir/exec"
                 execjoboutfl="$execjobdir/out"
                 execjobstatfl="$execjobdir/stat"
+                export -p|\
+                    grep -v 'SHELL='|\
+                    grep -v 'DISPLAY='|\
+                    grep -v 'XDG_DATA_DIRS='|\
+                    grep -v 'XDG_CONFIG_DIRS='|\
+                    grep -v 'XDG_RUNTIME_DIR='|\
+                    grep -v 'DBUS_SESSION_BUS_ADDRESS=' \
+                > "$execenvfl" 2>/dev/null
                 if [ -n "$1" ]
                     then
                         check_args_spaces "$@"

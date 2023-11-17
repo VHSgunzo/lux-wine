@@ -74,7 +74,7 @@ fi
 unset NO_EXT_LWRAP
 
 [ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
-    NOT_TERM=1
+    NOT_TERM=1||NOT_TERM=0
 
 error_msg() {
     echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR"
@@ -915,17 +915,24 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
                     do
                         jobnum=$(( $jobnum + 1 ))
                         execjobdir="$LWEXECFLDIR/$jobnum"
+                        execenvfl="$execjobdir/env"
                         execjobfl="$execjobdir/exec"
                         execjoboutfl="$execjobdir/out"
                         execjobstatfl="$execjobdir/stat"
                         mkdir "$execjobdir" 2>/dev/null
+                        mkfifo "$execenvfl" 2>/dev/null
                         mkfifo "$execjobfl" 2>/dev/null
                         mkfifo "$execjoboutfl" 2>/dev/null
                         mkfifo "$execjobstatfl" 2>/dev/null
                         tee <<<"$jobnum" "$JOBNUMFL" &>/dev/null
                         if [ -e "$execjobfl" ]
                             then
-                                (cat "$execjobfl" 2>/dev/null|"$RUNSTATIC/bash" &>"$execjoboutfl" &
+                                (OLD_PATH="$PATH"
+                                OLD_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+                                source "$execenvfl" && cd "$PWD"
+                                export PATH="$PATH:$OLD_PATH"
+                                export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$OLD_LD_LIBRARY_PATH"
+                                cat "$execjobfl" 2>/dev/null|"$RUNSTATIC/bash" &>"$execjoboutfl" &
                                 execjobpid=$!
                                 tee <<<"$execjobpid" "$execjobstatfl" &>/dev/null
                                 wait $execjobpid 2>/dev/null
@@ -953,7 +960,9 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
         try_set_lwrpid
         if [[ "$FORCE_UPDATE" != 1 && -x "$LWEXEC" && -x "$LWSRC" ]] && \
            [[ -n "$lwrpid" && -f "/tmp/.bwinf.$lwrpid" && -d "/proc/$lwrpid" ]]
-            then LWEXECFLDIR="/tmp/.lwexec.$lwrpid" "$LWEXEC" "$LWSRC" "$@"
+            then
+                LWEXECFLDIR="/tmp/.lwexec.$lwrpid" \
+                NOT_TERM="$NOT_TERM" "$LWEXEC" "$LWSRC" "$@"
         elif [ -x "$LWRUN_LN" ]
             then "$LWRUN_LN" "$@"
         elif is_lwrun

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.1.8"
+export LW_VERSION="0.78.1.9"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -148,8 +148,8 @@ done
 cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
 engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
 resolution,vkbasalt,gamemode,background_alpha=0.4,background_color=020202,position=top-right,text_color=ffffff,toggle_hud=Shift_R+F12"
-[ ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ] && \
-    NOT_TERM=1
+[[ ! -n "$NOT_TERM" && ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ]] && \
+    NOT_TERM=1||NOT_TERM=0
 
 export LWPID=$BASHPID
 [ ! -n "$LWPPID" ] && \
@@ -2251,7 +2251,10 @@ lu_run() {
             elif [ -n "$LU_SHELL_PTH" ]
                 then
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
-                    $TERM_APP $LWSHELL
+                    if [ -n "$1" ]
+                        then $TERM_APP "$@"
+                        else $TERM_APP $LWSHELL
+                    fi
             else
                 $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; \
                 $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
@@ -3240,20 +3243,36 @@ lu_shell() {
     export DEBUG=0
     if [ -f "$2" ]
         then
-            if [[ -n "$(file "$2"|grep "script"|grep -o "executable")" || -n "$(file "$2"|grep "ELF"|grep -o "executable")" ]]
+            local file_info="$(file "$2")"
+            if [[ -n "$(grep "script"<<<"$file_info"|grep -o "executable")" || \
+                  -n "$(grep "ELF"<<<"$file_info"|grep -o "executable")" ]]
                 then
                     export LU_SHELL_EXE="$(readlink -f "$2")"
                     lu_run "$LU_SHELL_EXE"
                 else
                     print_error yad "Lux Wine SHELL" "Unable to start Lux Wine for this file!"
             fi
-        elif [ -d "$2" ]
-            then
-                export LU_SHELL_PTH="$(readlink -f "$2")"
-                lu_run
-        else
-            export LU_SHELL_PTH="$HOME"
+    elif [ -d "$2" ]
+        then
+            export LU_SHELL_PTH="$(readlink -f "$2")"
             lu_run
+    else
+        shift
+        if [ "$NOT_TERM" == 1 ]
+            then
+                export LU_SHELL_PTH="$HOME"
+                lu_run "$@"
+            else
+                if [ -n "$1" ]
+                    then
+                        unset TERMINAL LOADBAR \
+                            DEBUG UNSET_CMPSTR_SW
+                        "$@"
+                    else
+                        export LU_SHELL_PTH="$PWD"
+                        lu_run
+                fi
+        fi
     fi
 }
 

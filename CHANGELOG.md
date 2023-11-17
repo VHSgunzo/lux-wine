@@ -1,3 +1,10 @@
+# v0.78.1.9
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update DB script for `The Honkers Railway` `v1.5.0`
+* Fix passing environment variables for `lwrap` - `lwexec`
+* Add ability exec command as args in SHELL mode from terminal
+
 # v0.78.1.8
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
