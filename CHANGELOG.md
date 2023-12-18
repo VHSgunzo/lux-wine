@@ -1,3 +1,15 @@
+# v0.78.2.1
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [obs-vkcapture-lw](https://github.com/VHSgunzo/obs-vkcapture-lw/releases/tag/v1.4.7) `v1.4.7`
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.25) `v8.25`
+* Speedup `lite_init()`
+* Add DB script for `Battle.net`
+* Update DB script for `League of Legends`
+* Update lwrap `PKGBUILD`
+* Fix `dll_manager()` for set old local `Wine` runtime DLLs
+* Fix open `Settings` with different versions of `Wine` in the same `prefix`
+
 # v0.78.1.9
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

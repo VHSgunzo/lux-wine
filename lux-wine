@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.1.9"
+export LW_VERSION="0.78.2.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -503,11 +503,13 @@ dll_manager() {
                         do
                             if [ -d "$LW_RUNTIME_DIR/$1/$2/$dlls_arch" ]
                                 then
-                                    all_dlls="$(ls "$LW_RUNTIME_DIR/$1/$2/$dlls_arch/"*.dll 2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
+                                    all_dlls="$(ls "$LW_RUNTIME_DIR/$1/$2/$dlls_arch/"*.dll \
+                                    2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
                             fi
                             if [ -d "$LW_RUNTIME_DIR/$1/v$2/$dlls_arch" ]
                                 then
-                                    all_dlls="$(ls "$LW_RUNTIME_DIR"/$1/v$2/$dlls_arch/*.dll 2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
+                                    all_dlls="$(ls "$LW_RUNTIME_DIR"/$1/v$2/$dlls_arch/*.dll \
+                                    2>/dev/null|awk -F"/" '{print $NF}' 2>/dev/null)\n$all_dlls"
                             fi
                     done
                     all_dlls="$(echo -en "$all_dlls"|sort -u)"
@@ -520,7 +522,9 @@ dll_manager() {
                     fi
             fi
     fi
-    if [[ -n "$all_dlls" && -n "$(find "$LW_RUNTIME_DIR/$1" -type d -name "$2" -mtime -$CHK_UPDATE -print 2>/dev/null)" ]]
+    if [[ -n "$all_dlls" && \
+        -n "$(find "$LW_RUNTIME_DIR/$1" -type d -name "$2" \
+            -mtime -$CHK_UPDATE -print 2>/dev/null)" ]]
         then
             check_all_dlls "$1" "$2"
     elif [[ -n "$all_dlls" && "$CHK_UPDATE" == 0 ]]
@@ -541,18 +545,23 @@ dll_manager() {
             print_error yad "No internet connection, it is not possible to download $1 $2"
             return 1
     elif [[ -n "$all_dlls" && -n "$CHK_UPDATE" && "$CHK_UPDATE" != 0 && "$NETSTATUS" != 0 \
-        && ! -n "$(find "$LW_RUNTIME_DIR/$1" -type d -name "$2" -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
+        && ! -n "$(find "$LW_RUNTIME_DIR/$1" -type d -name "$2" \
+                    -mtime -$CHK_UPDATE -print 2>/dev/null)" ]] \
         || [ -n "$FORCE_DLL_UPDATE" ]
         then
             export NEEDCHKDLL=1
-            if download_dll_release "$1" "latest"
+            if [ "$SETT_INIT" == 1 ] || download_dll_release "$1" "latest"
                 then
                     if [ -d "$LW_RUNTIME_DIR/$1/$2" ]
                         then
                             touch "$LW_RUNTIME_DIR/$1/$2"
+                            [ "$SETT_INIT" == 1 ] && \
+                            dll_manager "$1" "$2"
                     elif [ -d "$LW_RUNTIME_DIR/$1/v$2" ]
                         then
                             touch "$LW_RUNTIME_DIR/$1/v$2"
+                            [ "$SETT_INIT" == 1 ] && \
+                            dll_manager "$1" "v$2"
                     fi
                 else
                     return 1
@@ -2660,6 +2669,7 @@ lite_init() {
             check_nvprime
             check_driprime
             check_videodrv
+            [ "$1" == '-config' ]||\
             check_def_wine
             check_proton_d3dlib
             check_path
@@ -2669,7 +2679,6 @@ lite_init() {
             check_first_run "$@"
             check_esync
             check_fsync
-            check_shrt
     fi
 }
 

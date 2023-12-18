@@ -1,12 +1,11 @@
 WIN_VER=10
 DIS_NETCORE=1
 WINEARCH=win64
-LWMANGOHUD=DLSYM
 WINE_THEME=Disabled
 WPREFIX_NAME=lolpfx
 USE_DEFPFX_BACKUP=1
 MUST_HAVE_DLL=Disabled
-WINE_VERSION=wine-lutris-ge-lol-p8-12-x86_64
+WINE_VERSION=wine-lutris-GE-Proton8-27-LoL-x86_64
 [ "$EXE_NAME" == "RiotClientServices" ] && \
 EXE_ARG='--launch-product=league_of_legends --launch-patchline=live'
 
