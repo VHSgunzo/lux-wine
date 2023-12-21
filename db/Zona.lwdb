@@ -1,6 +1,7 @@
 WIN_VER=10
 if [ -n "$(lspci|grep -o 'NVIDIA')" ]
     then
+        unset VK_ICD_FILENAMES
         HIDE_NVIDIA_GPU=1
         VKICDFILES=Lvp
 fi
