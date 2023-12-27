@@ -2,7 +2,7 @@
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -uninstaller %f
 Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-MimeType=application/x-ms-dos-executable;application/x-msdos-program
+MimeType=application/x-ms-dos-executable;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit;application/x-msi
 Name=Wine uninstaller
 Name[ru_RU]=Устан/удал программ
 NoDisplay=false

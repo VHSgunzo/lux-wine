@@ -2384,7 +2384,7 @@ check_startfile() {
 
 check_exe_wcfg_cenv() {
     check_startfile "$@"
-    if [ -n "$(echo "$LU_START"|grep -io ".exe$")" ]
+    if [ -n "$(grep -Eio ".exe$|.bat$|.msi$|.reg$|.lnk$"<<<"$LU_START")" ]
         then
             export LU_EXE="$LU_START"
             lu_prerun
