@@ -1,3 +1,17 @@
+pkg_tool() {
+    unset pacdblck_exist
+    pacdblck='/var/lib/pacman/db.lck'
+    if [ -f "$pacdblck" ]
+        then
+            pacdblck_exist=1
+            rm -f "$pacdblck"
+    fi
+    LANG= sh -c "$@"
+    [ "$pacdblck_exist" == 1 ] && \
+    touch "$pacdblck"
+}
+export -f pkg_tool
+
 ## arg 1:  the new package version
 # pre_install() {
 #     true
@@ -17,12 +31,16 @@
 ## arg 1:  the new package version
 ## arg 2:  the old package version
 post_upgrade() {
-    if pac -Q python-xlib &>/dev/null
-        then
-            rm -f /var/lib/pacman/db.lck
-            yes|pac -Rsn python-xlib
-            touch /var/lib/pacman/db.lck
-    fi
+    pac -Q python-xlib &>/dev/null && \
+    pkg_tool 'yes|pac -Rsn python-xlib'
+
+    pac -Q zenity 2>/dev/null|grep -q '4.0.0' && \
+    pkg_tool 'yes|sudo downgrade zenity=3.44.2'
+
+    pac -Q mesa 2>/dev/null|grep -q '23.3.2' && \
+    pkg_tool 'yes|pac -Sy mesa-tkg-git && yes|pac -S lib32-mesa-tkg-git'
+
+    return 0
 }
 
 ## arg 1:  the old package version

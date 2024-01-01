@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.2.1"
+export LW_VERSION="0.78.2.2"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -231,84 +231,78 @@ print_var() {
 }
 
 print_error() {
+    local yad_args=(
+        --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0"
+        --center --on-top --fixed --timeout="30" --timeout-indicator="top"
+        --selectable-labels
+    )
     if [[ "$1" == "yad" && -n "$2" && -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && -n "$3" ]]
-        then
-            echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
+        then echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
     elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && ! -n "$3" ]]
-        then
-            echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
-    else
-        echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
+        then echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
+    else echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
     fi
     if [[ "$1" == "yad" && -n "$2" && -n "$3" && "$NO_YAD" != 1 ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0" --title="$2" --text="$3" \
-                --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
+        then yad "${yad_args[@]}" --title="$2" --text="$3" Lux Wine
     elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" && "$NO_YAD" != 1 ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --image="dialog-error" --button="OK:0" --title="Lux Wine Error" \
-                --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
+        then yad "${yad_args[@]}" --title="Lux Wine Error" --text="$2" Lux Wine
     elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
-        then
-            notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Error' "$2" "$3" &
+        then notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Error' "$2" "$3" &
     elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
-        then
-            notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Error' "$2" &
+        then notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Error' "$2" &
     fi
 }
 
 print_info() {
     if [ "$QUIET_MODE" != 1 ]
         then
+            local yad_args=(
+                --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0"
+                --center --on-top --fixed --timeout="30" --timeout-indicator="top"
+                --selectable-labels
+            )
             if [[ "$1" == "yad" && -n "$2" && -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && -n "$3" ]]
-                then
-                    echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
+                then echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
             elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && ! -n "$3" ]]
-                then
-                    echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
-            else
-                echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
+                then echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
+            else echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
             fi
             if [[ "$1" == "yad" && -n "$2" && -n "$3" && "$NO_YAD" != 1 ]]
-                then
-                    yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="$2" --text="$3" \
-                        --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
+                then yad "${yad_args[@]}" --title="$2" --text="$3" Lux Wine
             elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" && "$NO_YAD" != 1 ]]
-                then
-                    yad --window-icon="$LW_DEF_ICO" --image="dialog-information" --button="OK:0" --title="Lux Wine Info" \
-                        --text="$2" --center --on-top --fixed --timeout="30" --timeout-indicator="top" --selectable-labels Lux Wine
+                then yad "${yad_args[@]}" --title="Lux Wine Info" --text="$2" Lux Wine
             elif [[ "$1" == "notify" && -n "$2" && -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
-                then
-                    notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Info' "$2" "$3" &
+                then notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Info' "$2" "$3" &
             elif [[ "$1" == "notify" && -n "$2" && ! -n "$3" && "$NO_NOTIFY" != 1 && "$NOT_TERM" == 1 ]]
-                then
-                    notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Info' "$2" &
+                then notify-send -i "$LW_DEF_ICO" -a 'Lux Wine Info' "$2" &
             fi
     fi
 }
 
 print_question() {
     [ "$NO_YAD" != 1 ]||return 0
+    local yad_args=(
+        --window-icon="$LW_DEF_ICO" --image="dialog-question"
+        --button="NO:1" --button="YES:0"
+        --center --on-top --fixed --selectable-labels
+    )
     if [[ -n "$1" && -n "$2" ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --image="dialog-question" --button="NO:1" --button="YES:0" --title="$1" \
-                --text="$2" --center --on-top --fixed --selectable-labels Lux Wine
+        then yad "${yad_args[@]}" --title="$1" --text="$2" Lux Wine
     elif [[ -n "$1" && ! -n "$2" ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --image="dialog-question" --button="NO:1" --button="YES:0" \
-                --title="Lux Wine Question" --text="$1" --center --on-top --fixed --selectable-labels Lux Wine
+        then yad "${yad_args[@]}" --title="Lux Wine Question" --text="$1" Lux Wine
     fi
 }
 
 print_input() {
+    local yad_args=(
+        --window-icon="$LW_DEF_ICO" --entry
+        --button="EXIT:1" --button="OK:0"
+        --center --on-top --fixed
+    )
     if [[ -n "$1" && -n "$2" && -n "$3" ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="$1" --text="$2" \
-                --center --on-top --fixed --entry-text="$3"
+        then yad "${yad_args[@]}" --title="$1" --text="$2" --entry-text="$3"
     elif [[ -n "$1" && -n "$2" && ! -n "$3"  ]]
-        then
-            yad --window-icon="$LW_DEF_ICO" --entry --button="EXIT:1" --button="OK:0" --title="Lux Wine Input" \
-                --text="$1" --center --on-top --fixed --entry-text="$2"
+        then yad "${yad_args[@]}" --title="Lux Wine Input" --text="$1" --entry-text="$2"
     fi
 }
 
@@ -818,70 +812,60 @@ try_download() {
 }
 
 unpack_tar_xz() {
-    set -o pipefail
     try_mkdir "$2"
     TAR_NAME="$(basename "$1")"
-    tar -Jxf "$1" -C "$2"|settingbar_nostdout "Unpacking $TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
+    settingbar --text="Unpacking $TAR_NAME is in progress. Please wait..." \
+    tar -Jxf "$1" -C "$2"
+    [ "$?" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar_gz() {
-    set -o pipefail
     try_mkdir "$2"
     TAR_NAME="$(basename "$1")"
-    tar -xzvf "$1" -C "$2"|settingbar_nostdout "Unpacking $TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
+    settingbar --text="Unpacking $TAR_NAME is in progress. Please wait..." \
+    tar -xzvf "$1" -C "$2"
+    [ "$?" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar_zst() {
-    set -o pipefail
     try_mkdir "$2"
     TAR_NAME="$(basename "$1")"
-    tar --use-compress-program=unzstd -xvf "$1" -C "$2"|settingbar_nostdout "Unpacking $TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
+    settingbar --text="Unpacking $TAR_NAME is in progress. Please wait..." \
+    tar --use-compress-program=unzstd -xvf "$1" -C "$2"
+    [ "$?" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 unpack_tar() {
     set -o pipefail
     try_mkdir "$2"
     TAR_NAME="$(basename "$1")"
-    tar -xvf "$1" -C "$2"|settingbar_nostdout "$TAR_NAME" "Unpacking $TAR_NAME is in progress. Please wait..."
-    [ "${PIPESTATUS[0]}" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
+    settingbar --text="Unpacking $TAR_NAME is in progress. Please wait..." \
+    tar -xvf "$1" -C "$2"
+    [ "$?" != 0 ] && print_error "File $TAR_NAME unpacked with error!" && return 1 || return 0
 }
 
 settingbar() {
-    SETTBARKEY="$RANDOM"
-    SETTOUTFILE="/tmp/lwsettout$SETTBARKEY"
-    if [[ -n "$1" && -n "$2" ]]
-        then
-            tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO_PTH" --progress --pulsate --auto-close \
-                --width=650 --height=40 --no-cancel --title="$1" --text="$2" "$SETTBARKEY" Lux Wine &
-    elif [[ -n "$1" && ! -n "$2" ]]
-        then
-            tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO_PTH" --progress --pulsate --auto-close \
-                --width=650 --height=40 --no-cancel --title="Settings" --text="$1" "$SETTBARKEY" Lux Wine &
-    else
-        tee "$SETTOUTFILE"|& zenity --window-icon="$LW_DEF_ICO_PTH" --progress --pulsate --auto-close \
-            --width=650 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." "$SETTBARKEY" Lux Wine &
+    local ret=1
+    local yad_args=(
+        --icon="$LW_DEF_ICO_PTH" --progress --pulsate
+        --width=650 --height=40 --undecorated --skip-taskbar
+        --no-buttons --text-align center --auto-close
+        --center --fixed --on-top
+    )
+    if [[ "$1" =~ '--text=' ]]
+        then yad_args+=("$1") ; shift
+        else yad_args+=(--text="Updating parameters is in progress. Please wait...")
     fi
-    sleep 0.1
-    tail --pid="$!" -q -f "$SETTOUTFILE"
-    try_rm "$SETTOUTFILE"
-}
-
-settingbar_nostdout() {
-    if [[ -n "$1" && -n "$2" ]]
-        then
-            zenity --window-icon="$LW_DEF_ICO_PTH" --progress --pulsate --auto-close \
-                --width=650 --height=40 --no-cancel --title="$1" --text="$2" Lux Wine
-    elif [[ -n "$1" && ! -n "$2" ]]
-        then
-            zenity --window-icon="$LW_DEF_ICO_PTH" --progress --pulsate --auto-close \
-                --width=650 --height=40 --no-cancel --title="Settings" --text="$1" Lux Wine
-    else
-        zenity --window-icon="$LW_DEF_ICO_PTH" --progress --pulsate --auto-close \
-            --width=650 --height=40 --no-cancel --title="Settings" --text="Updating parameters is in progress. Please wait..." Lux Wine
-    fi
+    "$@" &
+    local exec_pid="$!"
+    (while kill -0 "$!" &>/dev/null
+        do echo -e "#\n" ; sleep 0.1 2>/dev/null
+    done)|yad "${yad_args[@]}" Lux Wine &>/dev/null &
+    local yad_pid="$!"
+    wait "$exec_pid" &>/dev/null
+    ret="$?"
+    kill "$yad_pid" &>/dev/null
+    return "$ret"
 }
 
 shell_is_death() {
@@ -2646,12 +2630,12 @@ lite_init() {
     export_all_functions
     if ! [[ "${DEPRECATE_INIT[@]}" =~ "$1" ]] || [ ! -n "$1" ]
         then
-            if [ ! -n "$SETT_INIT" ] && [[ -n "$(pgrep -fa 'zenity'|grep -w 'Runtime initialization'|awk '{print$1}')" \
-                || -n "$(pgrep -fa 'zenity'|grep -w 'Updating parameters'|awk '{print$1}')" ]]
+            if [ ! -n "$SETT_INIT" ] && [[ -n "$(pgrep -fa 'yad'|grep -w 'Runtime initialization'|awk '{print$1}')" \
+                || -n "$(pgrep -fa 'yad'|grep -w 'Updating parameters'|awk '{print$1}')" ]]
                 then
                     print_info yad "Initialization is in progress! Please wait..."
-                    while pgrep -fa 'zenity'|grep -w 'Runtime initialization' &>/dev/null ; do sleep 1 ; done
-                    while pgrep -fa 'zenity'|grep -w 'Updating parameters' &>/dev/null ; do sleep 1 ; done
+                    while pgrep -fa 'yad'|grep -w 'Runtime initialization' &>/dev/null ; do sleep 1 ; done
+                    while pgrep -fa 'yad'|grep -w 'Updating parameters' &>/dev/null ; do sleep 1 ; done
             fi
             [[ -n "$SETT_INIT" || "$1" == "-init" ]] && \
                 initbar && rm -rf "$LW_DIR/.lwcfgchksum"
@@ -3439,14 +3423,12 @@ lu_openpfx() { $LW_FLMGR "$WINEPREFIX/drive_c/" 2>/dev/null ; }
 lu_exit() {
     check_tray; check_wine_pids; check_exes; check_luwine_sh_pid
     if [[ -n "$WINE_PIDS" || -n "$EXE_PIDS" || -n "$TRAY_PID" || -n "$LW_SH_PID" \
-        || -n "$(pgrep -fa 'yad'|grep 'Lux Wine'|awk '{print$1}')" \
-        || -n "$(pgrep -fa 'zenity'|grep 'Lux Wine'|awk '{print$1}')" ]]
+        || -n "$(pgrep -fa 'yad'|grep 'Lux Wine'|awk '{print$1}')" ]]
         then
             touch /tmp/FORCE_EXIT
             lu_killshell "$@"
             lu_killexe
             lu_killwine "$@"
-            kill $(pgrep -fa 'zenity'|grep 'Lux Wine'|awk '{print$1}') 2>/dev/null
             kill $(pgrep -fa 'yad'|grep 'Lux Wine'|awk '{print$1}') 2>/dev/null
             kill $(pgrep -fa 'Winetricks'|awk '{print$1}') 2>/dev/null
             pkill winetricks 2>/dev/null
@@ -4125,15 +4107,18 @@ try_dl_install_wine() {
 
 get_wine_git_lst() {
     [ -n "$WGUIDW" ]||local WGUIDW=$RANDOM
+    get_wine_releases() (
+        get_wlu_releases 1>"/tmp/WLUGITLIST$WGUIDW" &
+        get_pge_releases 1>"/tmp/PGEGITLIST$WGUIDW" &
+        get_wge_releases 1>"/tmp/WGEGITLIST$WGUIDW" &
+        get_wk4_releases 1>"/tmp/WK4GITLIST$WGUIDW" &
+        wait
+    )
     if [[ ! -n "$PGE_GIT_LIST" || ! -n  "$WLU_GIT_LIST" || ! -n  "$WK4_GIT_LIST" || ! -n  "$WGE_GIT_LIST" ]]
         then
             catlist() { cat /tmp/${1}GITLIST$WGUIDW 2>/dev/null ; }
             print_info notify "Сhecking new Wine versions on GitHub..."
-            (get_wlu_releases 1>"/tmp/WLUGITLIST$WGUIDW" &
-            get_pge_releases 1>"/tmp/PGEGITLIST$WGUIDW" &
-            get_wge_releases 1>"/tmp/WGEGITLIST$WGUIDW" &
-            get_wk4_releases 1>"/tmp/WK4GITLIST$WGUIDW" &
-            wait)|settingbar_nostdout "Сhecking GitHub" "Сhecking new Wine versions on GitHub..."
+            settingbar --text="Сhecking new Wine versions on GitHub..." get_wine_releases
             WLU_GIT_LIST="$(catlist 'WLU')"
             PGE_GIT_LIST="$(catlist 'PGE')"
             WGE_GIT_LIST="$(catlist 'WGE')"
@@ -4241,27 +4226,30 @@ lu_winemgr() {
     }
     if [ -n "$(echo "$WDEL_SET"|head -1)" ]
         then
-            (IFS=$'\n' ; for WINE_DEL in $(echo "$WDEL_SET"|sedspaces)
-                do
-                    if [[ -d "$LW_RUNTIME_DIR/dxvk/$WINE_DEL" \
-                        || -d "$LW_RUNTIME_DIR/vkd3d/$WINE_DEL" \
-                        || -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_DEL" ]]
-                        then
-                            if print_question "Remove DXVK, DXVK-NVAPI and VKD3D from ${WINE_DEL}?"
-                                then
-                                    rm_pd3dll
-                                    sed -i "/DXVK_NVAPI_VERSION='$WINE_DEL'/d;/DXVK_VERSION='$WINE_DEL'/d;/VKD3D_VERSION='$WINE_DEL'/d" "$LW_CFG" 2>/dev/null
-                                    print_info notify "Removing DXVK, DXVK-NVAPI and VKD3D from $WINE_DEL completed!"
-                                else
-                                    rm_pd3dll
-                                    WINE_VERSION="$WINE_DEL" WINEDIR="$LW_WINE_DIR/$WINE_DEL" get_proton_d3dlib 'cp'
-                                    unset P_DXVK P_NVAPI P_VKD3D
-                            fi
-                    fi
-                    try_rm "$LW_WINE_DIR/$WINE_DEL"
-                    print_info notify "Removing $WINE_DEL completed!"
-                    [ "$WINE_VERSION" == "$WINE_DEL" ] && touch "/tmp/WINEINUSEDEL$WGUIDW"
-            done)|settingbar "Wine Manager" "Deletion is in progress. Please wait..."
+            wine_rm() (
+                IFS=$'\n' ; for WINE_DEL in $(echo "$WDEL_SET"|sedspaces)
+                    do
+                        if [[ -d "$LW_RUNTIME_DIR/dxvk/$WINE_DEL" \
+                            || -d "$LW_RUNTIME_DIR/vkd3d/$WINE_DEL" \
+                            || -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_DEL" ]]
+                            then
+                                if print_question "Remove DXVK, DXVK-NVAPI and VKD3D from ${WINE_DEL}?"
+                                    then
+                                        rm_pd3dll
+                                        sed -i "/DXVK_NVAPI_VERSION='$WINE_DEL'/d;/DXVK_VERSION='$WINE_DEL'/d;/VKD3D_VERSION='$WINE_DEL'/d" "$LW_CFG" 2>/dev/null
+                                        print_info notify "Removing DXVK, DXVK-NVAPI and VKD3D from $WINE_DEL completed!"
+                                    else
+                                        rm_pd3dll
+                                        WINE_VERSION="$WINE_DEL" WINEDIR="$LW_WINE_DIR/$WINE_DEL" get_proton_d3dlib 'cp'
+                                        unset P_DXVK P_NVAPI P_VKD3D
+                                fi
+                        fi
+                        try_rm "$LW_WINE_DIR/$WINE_DEL"
+                        print_info notify "Removing $WINE_DEL completed!"
+                        [ "$WINE_VERSION" == "$WINE_DEL" ] && touch "/tmp/WINEINUSEDEL$WGUIDW"
+                done
+            )
+            settingbar --text="Deletion is in progress. Please wait..." wine_rm
             if [ -f "/tmp/WINEINUSEDEL$WGUIDW" ]
                 then
                     if [[ -n "$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*'|head -1)" || -n "$SYS_WINE" ]]
@@ -5679,8 +5667,7 @@ lu_update() {
     LWRUNTIMELST="dxvk vkd3d dxvk-nvapi wine_nvml d3d_extras dgvoodoo2 battleye_runtime eac_runtime winetricks"
     check_winepfx
     if [ "$2" == "all" ]
-        then
-            upd_all|settingbar "Runtime Updater" "Updating Lux Wine Runtime is in progress. Please wait..."
+        then settingbar --text="Updating Lux Wine Runtime is in progress. Please wait..." upd_all
     elif [[ ! -n "$2" || "$2" == "openupdtr" ]]
         then
             if [ ! -n "$(pgrep -fa yad|grep "Runtime Updater"|awk '{print$1}')" ]; then :
@@ -5693,64 +5680,70 @@ lu_update() {
                 --text-align=center --center --window-icon="$LW_DEF_ICO" \
                 --width=400 --height=500 --button="UPDATE ALL:2"  --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ "$?" == "2" ]
-                then
-                    upd_all|settingbar "Runtime Updater" "Updating Lux Wine Runtime is in progress. Please wait..."
+                then settingbar --text="Updating Lux Wine Runtime is in progress. Please wait..." upd_all
             elif [ -n "$(echo "$LW_RUN_UPD"|head -1)" ]
                 then
                     LW_RUN_UPD="$(echo "$LW_RUN_UPD"|sed '/^TRUE$/d'|sed '/^$/d')"
-                    (IFS=$'\n' ; for LWRUNUPD in $LW_RUN_UPD
-                        do
-                            case "$LWRUNUPD" in
-                                battleye_runtime) upd_battleye &
-                                                  sleep 0.2 ;;
-                                eac_runtime) upd_eac &
-                                                  sleep 0.2 ;;
-                                d3d_extras) upd_d3d_extras &
+                    upd_loop() (
+                        IFS=$'\n' ; for LWRUNUPD in $LW_RUN_UPD
+                            do
+                                case "$LWRUNUPD" in
+                                    battleye_runtime) upd_battleye &
+                                                    sleep 0.2 ;;
+                                    eac_runtime) upd_eac &
+                                                    sleep 0.2 ;;
+                                    d3d_extras) upd_d3d_extras &
+                                                sleep 0.2 ;;
+                                    dgvoodoo2) upd_dgvoodoo2 &
                                             sleep 0.2 ;;
-                                dgvoodoo2) upd_dgvoodoo2 &
-                                           sleep 0.2 ;;
-                                dxvk) upd_dxvk &
-                                      sleep 0.2 ;;
-                                dxvk-nvapi) upd_dxvk_nvapi &
+                                    dxvk) upd_dxvk &
+                                        sleep 0.2 ;;
+                                    dxvk-nvapi) upd_dxvk_nvapi &
+                                                sleep 0.2 ;;
+                                    vkd3d) upd_vkd3d &
+                                        sleep 0.2 ;;
+                                    wine_nvml) upd_wine_nvml &
                                             sleep 0.2 ;;
-                                vkd3d) upd_vkd3d &
-                                       sleep 0.2 ;;
-                                wine_nvml) upd_wine_nvml &
-                                           sleep 0.2 ;;
-                                winetricks) upd_winetricks &
-                                            sleep 0.2 ;;
-                            esac
-                    done
-                    wait)|settingbar "Runtime Updater" "Updating Lux Wine Runtime is in progress. Please wait..."
+                                    winetricks) upd_winetricks &
+                                                sleep 0.2 ;;
+                                esac
+                        done
+                        wait
+                    )
+                    settingbar --text="Updating Lux Wine Runtime is in progress. Please wait..." upd_loop
                     print_info notify "Runtime update completed!"
             fi
         else
-            (while [[ -n "$2" ]]
-                do
-                    case "$2" in
-                        bat|battleye|battleye_runtime) upd_battleye &
-                                                       sleep 0.2 ;;
-                        eac|eac_runtime) upd_eac &
-                                         sleep 0.2 ;;
-                        d3d|d3d_extras|d3d-extras) upd_d3d_extras &
-                                                   sleep 0.2 ;;
-                        dg|dgvoodoo2) upd_dgvoodoo2 &
-                                      sleep 0.2 ;;
-                        dx|dxvk) upd_dxvk &
-                                 sleep 0.2 ;;
-                        dxnv|dxvk-nvapi|dxvk_nvapi) upd_dxvk_nvapi &
+            shift
+            upd_loop() (
+                while [ -n "$1" ]
+                    do
+                        case "$1" in
+                            bat|battleye|battleye_runtime) upd_battleye &
+                                                        sleep 0.2 ;;
+                            eac|eac_runtime) upd_eac &
+                                            sleep 0.2 ;;
+                            d3d|d3d_extras|d3d-extras) upd_d3d_extras &
                                                     sleep 0.2 ;;
-                        vkd|vkd3d) upd_vkd3d &
-                                   sleep 0.2 ;;
-                        nvml|wine_nvml) upd_wine_nvml &
+                            dg|dgvoodoo2) upd_dgvoodoo2 &
                                         sleep 0.2 ;;
-                        wtrx|winetricks) upd_winetricks &
-                                         sleep 0.2 ;;
-                        *) print_error "Invalid argument: '$2'" ;;
-                    esac
-                    shift
-            done
-            wait)|settingbar "Runtime Updater" "Updating Lux Wine Runtime is in progress. Please wait..."
+                            dx|dxvk) upd_dxvk &
+                                    sleep 0.2 ;;
+                            dxnv|dxvk-nvapi|dxvk_nvapi) upd_dxvk_nvapi &
+                                                        sleep 0.2 ;;
+                            vkd|vkd3d) upd_vkd3d &
+                                    sleep 0.2 ;;
+                            nvml|wine_nvml) upd_wine_nvml &
+                                            sleep 0.2 ;;
+                            wtrx|winetricks) upd_winetricks &
+                                            sleep 0.2 ;;
+                            *) print_error "Invalid argument: '$1'" ;;
+                        esac
+                        shift
+                done
+                wait
+            )
+            settingbar --text="Updating Lux Wine Runtime is in progress. Please wait..." upd_loop "$@"
             print_info notify "Runtime update completed!"
     fi
 }
@@ -5868,7 +5861,7 @@ export_all_functions() {
     export SORTU="sort -u"
     export -f print_var print_error print_info check_tray check_wine_pids check_luwine_pid check_vkd3dconfig try_rm check_themes import_cenv sedspaces \
         check_luwine_sh_pid check_exes check_compositor try_mkdir check_symlink check_netcore try_download check_cpu_limit ld_lib_upd wait_kill_exe \
-        unpack_tar_xz unpack_tar_gz unpack_tar settingbar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher check_proton_d3dlib \
+        unpack_tar_xz unpack_tar_gz unpack_tar shell_is_death exe_is_death exes_is_death wine_is_death try_cp check_us_switcher check_proton_d3dlib \
         compositor_sw check_winetricks check_musthave_dll check_other_fixes wdllover_upd reg_edit exe2png gamma_sw vkd3dcfg_upd check_downloader \
         create_shortcut lu_debug clear_log dis_debug_msg dis_cmd_msg import_luwine_wcfg check_def_wine lu_prerun lu_run lu_prestart try_mv path_upd select_lwpfx \
         lu_start lu_cmd lu_shell lu_regedit lu_control lu_winecfg lu_taskmgr lu_uninstaller winetricks lu_openpfx lu_exit lu_killshell check_dxr winepfx_init \
@@ -5880,7 +5873,7 @@ export_all_functions() {
         runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd btntls_run get_app_exe check_driprime greptardlurl get_wlu_releases \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all is_loadbar lu_runapp lu_lsapp set_wine_version get_pge_releases get_wge_releases \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config get_wk4_releases \
-        settingbar_nostdout check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
+        settingbar check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
         check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps is_winepfx \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
@@ -5890,9 +5883,8 @@ export_all_functions() {
 initbar() {
     INIPRGRS="/tmp/iniprgrs$LWPID"
     touch "$INIPRGRS"
-    while [ -f "$INIPRGRS" ]; do echo; sleep 0.1; done| \
-    zenity --window-icon="$LW_DEF_ICO_PTH" --progress --title="Runtime initialization" --width=650 --height=40 --no-cancel \
-        --text="Initialization is in progress. Please wait..." --pulsate --auto-close Lux Wine &>/dev/null &
+    initbar_loop() { while [ -f "$INIPRGRS" ]; do sleep 0.1; done ; }
+    settingbar --text="Runtime initialization is in progress. Please wait..." initbar_loop &
 }
 
 check_loadbar_cover() {
@@ -5920,10 +5912,11 @@ loadbar_cover() {
             [ -n "$1" ] && \
                 GIF_FILE="$1" || \
                 GIF_FILE="$LOADBARGIF"
-            GIF_SIZE_X="$(file "$GIF_FILE" 2>/dev/null|awk '{print $7 + 20}')"
-            GIF_SIZE_Y="$(file "$GIF_FILE" 2>/dev/null|awk '{print $9 + 20}')"
+            GIF_FILE_INFO="$(file "$GIF_FILE" 2>/dev/null)"
+            GIF_SIZE_X="$(awk '{print $7 + 20}'<<<"$GIF_FILE_INFO")"
+            GIF_SIZE_Y="$(awk '{print $9 + 20}'<<<"$GIF_FILE_INFO")"
             yad --picture --filename="$GIF_FILE" $(is_exe_exist wmctrl||echo "--close-on-unfocus") \
-                --no-buttons --undecorated --on-top --center --skip-taskbar \
+                --no-buttons --undecorated --center --skip-taskbar \
                 --width="$GIF_SIZE_X" --height="$GIF_SIZE_Y" Lux Wine &>/dev/null &
             LOADBARPID="$!"
             if is_loadbar && \
@@ -5983,7 +5976,6 @@ lu_appcfg() {
 
 makesquash_zstd() {
     unset squashsource squashpath squashmane extension compres_lvl
-    set -o pipefail
     if [ ! -n "$3" ]; then extension='sfs' ; else extension=$3 ; fi
     if [ ! -n "$4" ]; then compres_lvl=1 ; else compres_lvl=$4 ; fi
     if [[ -f "$1" || -d "$1" || -L "$1" ]]
@@ -6002,9 +5994,10 @@ makesquash_zstd() {
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").zst.$extension"
                     print_info "Making SquashFS ZSTD image : [ $squashmane ]\n[ FROM ]: [ $squashsource ] [ COMPRESS LVL ]: $compres_lvl \n[  TO  ]: [ ${squashpath}$squashmane ]"
-                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp zstd -Xcompression-level $compres_lvl -no-xattrs|\
-                    settingbar_nostdout "Making SquashFS ZSTD image : $squashmane" "From : $squashsource \nTo : ${squashpath}$squashmane \nCompression level : $compres_lvl"
-                    [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
+                    settingbar \
+                    --text="Making SquashFS ZSTD image : $squashmane\nFrom : $squashsource \nTo : ${squashpath}$squashmane \nCompression level : $compres_lvl" \
+                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp zstd -Xcompression-level $compres_lvl -no-xattrs
+                    [ "$?" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
                     && return 1 || print_info "Making SquashFS ZSTD image completed!" && return 0
                 else
                     print_error yad "ZSTD Squashing..." "mksquashfs not found in your system!"
@@ -6018,7 +6011,6 @@ makesquash_zstd() {
 
 makesquash_xz() {
     unset squashsource squashpath squashmane extension
-    set -o pipefail
     if [ ! -n "$3" ]; then extension='sfs' ; else extension=$3 ; fi
     if [[ -f "$1" || -d "$1" || -L "$1" ]]
         then
@@ -6036,9 +6028,9 @@ makesquash_xz() {
                 then
                     squashmane="$(basename "$squashsource").$(date +"%Y.%m.%d.%H%M%S").xz.$extension"
                     print_info "Making SquashFS XZ image : [ $squashmane ]\n[ FROM ]: [ $squashsource ]\n[  TO  ]: [ ${squashpath}$squashmane ]"
-                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp xz -no-xattrs|\
-                    settingbar_nostdout "Making SquashFS XZ image : $squashmane" "From : $squashsource \nTo : ${squashpath}$squashmane"
-                    [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
+                    settingbar --text="Making SquashFS XZ image : $squashmane\nFrom : $squashsource \nTo : ${squashpath}$squashmane" \
+                    mksquashfs "$squashsource" "${squashpath}$squashmane" -noappend -b 1M -comp xz -no-xattrs
+                    [ "$?" != 0 ] && print_error yad "Failed to squashing" "From : $squashsource \nTo : ${squashpath}$squashmane" \
                     && return 1 || print_info "Making SquashFS XZ image completed!" && return 0
                 else
                     print_error yad "XZ Squashing..." "mksquashfs not found in your system!"
@@ -6052,7 +6044,6 @@ makesquash_xz() {
 
 unpack_squash() {
     unset unsquashsource unsquashpath unsquashmane
-    set -o pipefail
     if [[ -f "$1" || -L "$1" ]]
         then
             unsquashsource="$(readlink -f "$1")"
@@ -6071,9 +6062,9 @@ unpack_squash() {
                     [ -n "$3" ] && unsquashmane="$3"||\
                     unsquashmane="$(echo "$unsquashimage"|awk -F'.' '{print $1}')"
                     print_info "Unsquashing image : [ $unsquashimage ]\n[ FROM ]: [ $unsquashsource ]\n[  TO  ]: [ ${unsquashpath}$unsquashmane ]"
-                    unsquashfs -f -d "${unsquashpath}$unsquashmane" "$unsquashsource"|\
-                    settingbar_nostdout "Unsquashing image : $unsquashimage" "From : $unsquashsource \nTo : ${unsquashpath}$unsquashmane"
-                    [ "${PIPESTATUS[0]}" != 0 ] && print_error yad "Failed to unsquashing" "From :'$unsquashsource' \nTo : ${unsquashpath}$unsquashmane" \
+                    settingbar --text="Unsquashing image : $unsquashimage\nFrom : $unsquashsource \nTo : ${unsquashpath}$unsquashmane" \
+                    unsquashfs -f -d "${unsquashpath}$unsquashmane" "$unsquashsource"
+                    [ "$?" != 0 ] && print_error yad "Failed to unsquashing" "From :'$unsquashsource' \nTo : ${unsquashpath}$unsquashmane" \
                     && return 1 || print_info "Unsquashing image completed!" && return 0
                 else
                     print_error yad "Unsquashing..." "unsquashfs not found in your system!"

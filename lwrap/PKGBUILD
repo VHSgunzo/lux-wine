@@ -2,7 +2,7 @@
 
 pkgname='lwrap'
 pkgver='0.78.2'
-pkgrel='1'
+pkgrel='2'
 pkgdesc='Lux Wine wrapper for RunImage container'
 arch=('x86_64')
 url='https://github.com/VHSgunzo/lux-wine'
@@ -10,7 +10,7 @@ license=('MIT')
 depends=(
     'aria2' 'qt5-tools' 'xterm' 'xorg-fonts-100dpi' 'xorg-fonts-75dpi' 'firefox' 'intel-media-driver'
     'xorg-fonts-cyrillic' 'xorg-fonts-type1' 'xorg-fonts-misc' 'cabextract' 'exo' 'xapp' 'pulseaudio'
-    'perl' 'unzip' 'xorg-xmessage' 'zenity' 'yad' 'xkb-switch' 'imagemagick' 'qt5ct' 'syslog-ng'
+    'perl' 'unzip' 'xorg-xmessage' 'yad' 'xkb-switch' 'imagemagick' 'qt5ct' 'syslog-ng'
     'icoextract' 'lib32-vkbasalt' 'mangohud' 'lib32-mangohud' 'latencyflex-wine-git' 'steam' 'gamescope'
     'vkbasalt' 'gamemode' 'lib32-gamemode' 'giflib' 'lib32-giflib' 'libpng' 'appmenu-gtk-module'
     'lib32-libpng' 'libldap' 'lib32-libldap' 'gnutls' 'lib32-gnutls' 'bash' 'gawk' 'steam-native-runtime'

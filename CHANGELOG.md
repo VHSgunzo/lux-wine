@@ -1,3 +1,13 @@
+# v0.78.2.2
+
+* Add ability to create config for `msi`, `reg`, `bat` and `lnk`
+* Update DB script for `The Honkers Railway` `v1.6.0`
+* Update DB script for `Zona`
+* Replace all GUI on `Zenity` with `YAD`
+* Downgrade `Zenity` to `v3.44.2` in `lwrun`
+* Temporary replace `mesa` with `mesa-tkg-git` in `lwrun` (mesa v23.3.2 is broken)
+* Minor fixes
+
 # v0.78.2.1
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
