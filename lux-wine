@@ -2528,8 +2528,8 @@ check_first_run() {
             update-desktop-database -q "$MENU_APPS_DIR"
             [ ! -L "$HOME/LuxWine" ] && \
                 try_ln "$LW_DIR" "$HOME/"
-            touch "$LW_DIR/.firstrun"
             [ "$1" != "-init" ] && full_init
+            touch "$LW_DIR/.firstrun"
             unset FIRST_RUN
     fi
 }
@@ -2660,9 +2660,9 @@ lite_init() {
             check_terminal
             check_vkbasalt_cfg
             check_exe_args
-            check_first_run "$@"
             check_esync
             check_fsync
+            check_first_run "$@"
     fi
 }
 
