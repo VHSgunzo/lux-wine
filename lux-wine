@@ -2528,9 +2528,10 @@ check_first_run() {
             update-desktop-database -q "$MENU_APPS_DIR"
             [ ! -L "$HOME/LuxWine" ] && \
                 try_ln "$LW_DIR" "$HOME/"
-            [ "$1" != "-init" ] && full_init
+            full_init
             touch "$LW_DIR/.firstrun"
             unset FIRST_RUN
+            [ "$1" != "-init" ]||exit
     fi
 }
 
