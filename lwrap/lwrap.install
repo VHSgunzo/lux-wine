@@ -37,8 +37,16 @@ post_upgrade() {
     pac -Q zenity 2>/dev/null|grep -q '4.0.0' && \
     pkg_tool 'yes|sudo downgrade zenity=3.44.2'
 
-    pac -Q mesa 2>/dev/null|grep -q '23.3.2' && \
-    pkg_tool 'yes|pac -Sy mesa-tkg-git && yes|pac -S lib32-mesa-tkg-git'
+    if pac -Q lib32-mesa-tkg-git &>/dev/null
+       then
+            pkg_tool 'yes|pac -Rsndd mesa-tkg-git lib32-mesa-tkg-git'
+            pkg_tool 'yes|pac -S mesa vulkan-swrast libva-mesa-driver mesa-vdpau vulkan-mesa-layers \
+                vulkan-intel vulkan-radeon lib32-mesa lib32-vulkan-swrast lib32-libva-mesa-driver \
+                lib32-mesa-vdpau lib32-vulkan-mesa-layers lib32-vulkan-intel lib32-vulkan-radeon'
+    fi
+
+    pac -Q vulkan-virtio &>/dev/null && \
+    pkg_tool 'yes|pac -Rdd vulkan-virtio lib32-vulkan-virtio'
 
     return 0
 }

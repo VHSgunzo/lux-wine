@@ -6205,8 +6205,7 @@ lu_pfxrestore() {
                     [ "$DEFPFXRESTORE" == 1 ] && \
                         PFXRESTORE_MSG="The default prefix is not initialized! \nDo you want to restore the default prefix from the backup?"||\
                         PFXRESTORE_MSG="Are you sure you want to restore this prefix backup image?"
-                    if [[ "$DEFPFXRESTORE" == 1 && "$NETSTATUS" == 0 ]]|| \
-                        [[ "$DEFPFXRESTORE" == 1 && "$FIRST_RUN" == 1 ]]||\
+                    if ([ "$DEFPFXRESTORE" == 1 ] && (is_first_run||[ "$NETSTATUS" == 0 ]))||\
                         print_question "Prefix restore" "${PFXRESTORE_MSG}\n[ $LU_LWPFX ]"
                         then
                             pfxrestore||return 1

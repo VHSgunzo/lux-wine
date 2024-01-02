@@ -1,3 +1,9 @@
+# v0.78.2.3
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Revert/replace `mesa-tkg-git` with `mesa` in `lwrun`
+* Fix prefix restore on first run with `-init`
+
 # v0.78.2.2
 
 * Add ability to create config for `msi`, `reg`, `bat` and `lnk`
