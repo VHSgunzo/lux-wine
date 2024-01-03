@@ -1,6 +1,8 @@
 # v0.78.2.3
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update `lwrap`
+* Update [lw-runtime](https://github.com/VHSgunzo/lw-runtime/releases/tag/v0.0.2) `v0.0.2`
 * Reduce the size of the `lwrun` installer
 * Revert/replace `mesa-tkg-git` with `mesa` in `lwrun`
 * Fix prefix restore on first run with `-init`

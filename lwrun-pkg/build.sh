@@ -6,10 +6,16 @@ RUNTIME='runtime-fuse2-all'
 RUNTIMESIZE=($(du -sb "$RUNTIME" 2>/dev/null))
 
 # RunDir/static
-#     bash      # https://github.com/robxu9/bash-static
-#     mkdir     # https://github.com/VHSgunzo/coreutils-static
-#     tar       # https://github.com/VHSgunzo/tar-static
-#     zstd      # https://github.com/VHSgunzo/zstd-static
+#     bash        https://github.com/robxu9/bash-static
+#     coreutils   https://github.com/VHSgunzo/coreutils-static :
+#         cat
+#         cp
+#         dirname
+#         mkdir
+#         mv
+#         realpath
+#     tar         https://github.com/VHSgunzo/tar-static
+#     zstd        https://github.com/VHSgunzo/zstd-static
 
 # https://github.com/VHSgunzo/Run-wrapper
 # RunDir/Run

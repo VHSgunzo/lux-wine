@@ -1,5 +1,10 @@
 [coreutils](https://github.com/VHSgunzo/coreutils-static) 9.3 (musl):
+    cat
+    cp
+    dirname
     mkdir
+    mv
+    realpath
 (musl):
     [tar](https://github.com/VHSgunzo/tar-static) 1.34
     [bash](https://github.com/robxu9/bash-static) 5.2.015-1.2.3-2

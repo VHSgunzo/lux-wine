@@ -235,6 +235,20 @@ is_not_pts_home() {
 }
 
 try_install_lwrun() {
+    finalize_install() {
+        chmod u+x "$LWRUN"
+        ln_lwrun
+        info_msg "lwrun installed!"
+        if [ ! -n "$TMP_LWRUN" ] && \
+            is_net_conn
+            then
+                update_lwrap
+                LWRUN_INSTALLED=1 \
+                "$LWRAP" --install
+        fi
+        try_shutdown_lw && \
+        return 0||return 1
+    }
     if is_not_pts_home
         then
             REALP_LWRUN="$(readrealpath "$LWRUN")"
@@ -245,19 +259,7 @@ try_install_lwrun() {
                     info_msg "Installing lwrun..."
                     mkdir -p "$LWBIN_DIR"
                     if mv_lwrun "$RUNSRCRPTH" "$LWRUN"
-                        then
-                            chmod u+x "$LWRUN"
-                            ln_lwrun
-                            info_msg "lwrun installed!"
-                            if [ ! -n "$TMP_LWRUN" ] && \
-                                is_net_conn
-                                then
-                                    update_lwrap
-                                    LWRUN_INSTALLED=1 \
-                                    "$LWRAP" --install
-                            fi
-                            try_shutdown_lw && \
-                            return 0||return 1
+                        then finalize_install
                         else
                             error_msg "Failed to install lwrun!"
                             is_lwrun && \
@@ -269,6 +271,8 @@ try_install_lwrun() {
                     ln -sf "$RUNSRCRPTH" "$LWRUN"
                     ln_lwrun
                     return 0
+            elif [[ ! -n "$TMP_LWRUN" && "$LWRUN_PKG" == 1 ]]
+                then finalize_install
             fi
     fi
 }
