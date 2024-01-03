@@ -271,7 +271,8 @@ try_install_lwrun() {
                     ln -sf "$RUNSRCRPTH" "$LWRUN"
                     ln_lwrun
                     return 0
-            elif [[ ! -n "$TMP_LWRUN" && "$LWRUN_PKG" == 1 ]]
+            elif [[ ! -n "$TMP_LWRUN" && "$LWRUN_PKG" == 1 && \
+                "$LWRUN_INSTALLED" != 1 ]]
                 then finalize_install
             fi
     fi
