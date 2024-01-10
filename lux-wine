@@ -5923,7 +5923,8 @@ loadbar_cover() {
             if is_loadbar && \
                 is_exe_exist wmctrl
                 then
-                    (CUR_WIND_NUM="$(windows_num)"
+                    (sleep 0.1
+                    CUR_WIND_NUM="$(windows_num)"
                     while is_loadbar && \
                     [ "$CUR_WIND_NUM" == "$(windows_num)" ]
                         do sleep 0.1

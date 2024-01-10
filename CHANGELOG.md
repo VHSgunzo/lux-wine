@@ -1,3 +1,9 @@
+# v0.78.2.4
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.27) `v8.27`
+* Fix loading bar cover
+
 # v0.78.2.3
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
