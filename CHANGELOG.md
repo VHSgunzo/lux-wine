@@ -1,8 +1,11 @@
 # v0.78.2.4
 
-* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
-* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.27) `v8.27`
+* Update [steam-runtime-libs](https://github.com/VHSgunzo/steam-runtime-libs/releases/tag/v0.0.4) `v0.0.4`
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.28) `v8.28`
 * Fix loading bar cover
+* Add duplicate application installation config for automatically created shortcuts
+* Fix creation of shortcuts
+* Minor fixes
 
 # v0.78.2.3
 

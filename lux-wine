@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.2.3"
+export LW_VERSION="0.78.2.4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -30,8 +30,7 @@ ipath() {
         then local -n _res="$2" ; shift 2
         else local _res
     fi
-    local arg="$(echo "$1"|\
-    sed "s|[^[:alnum:]/$&+,:;=?@#|'<>.^%!-]|*|g")"
+    local arg="$(sed "s|[^[:alnum:]/$&+,:;=?@#|'<>.^%!-]|*|g"<<<"$1")"
     local _path _i _chr
     _res=
     for ((_i=0;_i<"${#arg}";_i++))
@@ -1668,6 +1667,14 @@ create_shortcut() {
             try_ln "$LW_APPS_DIR" "${LW_DIR}/"
             try_mv "$DESKF" "${LW_APPS_DIR}/"
             update-desktop-database -q "$MENU_APPS_DIR"
+            if [ -f "$LU_EXE" ] && [[ -f "$EXE_CFG" || -f "$EXE_CENV" ]]
+                then
+                    local SHRTEXEPFX="$(dirname "$LU_EXE")/$(basename "$LU_EXE"|sed 's|\.exe$||gi')"
+                    [ -f "$EXE_CFG" ] && \
+                    try_cp "$EXE_CFG" "$SHRTEXEPFX.wcfg"
+                    [ -f "$EXE_CENV" ] && \
+                    try_cp "$EXE_CENV" "$SHRTEXEPFX.cenv"
+            fi
             [ -f "${LW_APPS_DIR}/${SHRT_NAME}.desktop" ] && \
             print_info notify "Shortcut for '$SHRT_NAME' successfully created!"
             wait
@@ -2173,16 +2180,14 @@ check_shrt() (
 )
 
 shrt_loop() {
-    WPFXDESKDIRS=(
+    WPFXSHRTDIRS=(
         "$WINEPREFIX/drive_c/users/steamuser/Desktop"
         "$WINEPREFIX/drive_c/users/Public/Desktop"
-    )
-    WPFXMENUDIRS=(
         "$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming/Microsoft/Windows/Start Menu"
         "$WINEPREFIX/drive_c/ProgramData/Microsoft/Windows/Start Menu"
     )
-    find_wpfxlnk() { find "$@" -type f -iname "*.lnk" 2>/dev/null ; }
-    find_wpfxurl() { find "$@" -type f -iname "*.url" 2>/dev/null ; }
+    find_wpfxlnk() { find "$@" -type f -iname "*.lnk" 2>/dev/null|sort -u ; }
+    find_wpfxurl() { find "$@" -type f -iname "*.url" 2>/dev/null|sort -u ; }
     export pfxshrtname="$(basename "$WINEPREFIX")"
     [ -f "/tmp/.lwshrt.$pfxshrtname" ] && \
     ! pidof wineserver &>/dev/null && \
@@ -2204,16 +2209,10 @@ shrt_loop() {
             while pidof wineserver &>/dev/null
                 do
                     sleep 1 2>/dev/null
-                    WPREFIXLNK=($(find_wpfxlnk "${WPFXDESKDIRS[@]}"))
+                    WPREFIXLNK=($(find_wpfxlnk "${WPFXSHRTDIRS[@]}"))
                     unset LU_EXE EXE_ARG
                     shrt_from_lnk "${WPREFIXLNK[@]}"
-                    WPREFIXURL=($(find_wpfxurl "${WPFXDESKDIRS[@]}"))
-                    unset LU_EXE EXE_ARG
-                    shrt_from_url "${WPREFIXURL[@]}"
-                    WPREFIXLNK=($(find_wpfxlnk "${WPFXMENUDIRS[@]}"))
-                    unset LU_EXE EXE_ARG
-                    shrt_from_lnk "${WPREFIXLNK[@]}"
-                    WPREFIXURL=($(find_wpfxurl "${WPFXMENUDIRS[@]}"))
+                    WPREFIXURL=($(find_wpfxurl "${WPFXSHRTDIRS[@]}"))
                     unset LU_EXE EXE_ARG
                     shrt_from_url "${WPREFIXURL[@]}"
                     check_tray
@@ -3877,14 +3876,14 @@ lu_shortcut() {
             print_error yad "Shortcuts Creator" "Lux Wine Shortcuts Creator already runing!"
             exit 1
     fi
-    if [ -f "$LU_EXE" ]
+    if [ -n "$(grep -io "\.lnk$"<<<"$LU_EXE")" ]
+        then shrt_from_lnk "$(realpath "$LU_START")"
+    elif [ -n "$(grep -io "\.url$"<<<"$LU_EXE")" ]
+        then shrt_from_url "$(realpath "$LU_START")"
+    elif [ -f "$LU_EXE" ]
         then
             get_shrt_data "$LU_EXE"
             create_shortcut "$LU_EXE"
-    elif [ -n "$(basename "$LU_START"|grep -io "\.lnk$")" ]
-        then shrt_from_lnk "$(realpath "$LU_START")"
-    elif [ -n "$(basename "$LU_START"|grep -io "\.url$")" ]
-        then shrt_from_url "$(realpath "$LU_START")"
         else
             SHRT_EXE="$(yad --window-icon="$LW_DEF_ICO" --title "Lux Wine Shortcuts Creator" --file --center \
                 --file-filter="*.[Ee][Xx][Ee] *.[Ll][Nn][Kk]" --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0" 2>/dev/null)"
