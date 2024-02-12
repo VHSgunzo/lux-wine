@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.2.4"
+export LW_VERSION="0.78.2.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -143,10 +143,10 @@ done
 [ ! -n "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
 [ ! -n "$SYS_LDLIBPTH" ] && export SYS_LDLIBPTH="$LD_LIBRARY_PATH"
 [ ! -n "$SYS_STM_COMPAT_DIR" ] && export SYS_STM_COMPAT_DIR="/usr/share/steam/compatibilitytools.d"
-[ ! -n "$DEF_MANGOHUDCFG" ] && export DEF_MANGOHUDCFG="no_display,time,gpu_stats,gpu_temp,gpu_core_clock,gpu_mem_clock,gpu_power,gpu_load_change,gpu_text=GPU,\
-cpu_stats,cpu_temp,cpu_load_change,core_load_change,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram,vram_color=ad64c1,ram,ram_color=c26693,fps,\
-engine_version,engine_color=eb5b5b,gpu_name,gpu_color=2e9762,vulkan_driver,wine,wine_color=eb5b5b,arch,frame_timing=1,frametime_color=00ff00,\
-resolution,vkbasalt,gamemode,background_alpha=0.4,background_color=020202,position=top-right,text_color=ffffff,toggle_hud=Shift_R+F12"
+[ ! -n "$DEF_MANGOHUDCFG" ] && export DEF_MANGOHUDCFG="gpu_text=GPU,cpu_color=2e97cb,cpu_text=CPU,io_color=a491d3,vram_color=ad64c1,ram_color=c26693,\
+engine_color=eb5b5b,gpu_color=2e9762,wine_color=eb5b5b,frametime_color=00ff00,background_alpha=0.4,background_color=020202,position=top-right,\
+text_color=ffffff,toggle_hud=Shift_R+F12,gpu_load_change,cpu_load_change,core_load_change,arch,cpu_mhz,cpu_temp,engine_version,gamemode,\
+gpu_core_clock,gpu_mem_clock,gpu_name,gpu_power,gpu_temp,no_display,ram,resolution,show_fps_limit,time,vkbasalt,vram,vulkan_driver,wine"
 [[ ! -n "$NOT_TERM" && ! -n "$(tty|grep -v 'not a'|grep -Eo 'tty|pts')" ]] && \
     NOT_TERM=1||NOT_TERM=0
 
@@ -165,7 +165,6 @@ check_def_config() {
     [ ! -n "$FSYNC" ] && export FSYNC=1
     [ ! -n "$FSR_MODE" ] && export FSR_MODE='Enabled'
     [ ! -n "$VSYNC" ] && export VSYNC="Default"
-    [ ! -n "$PULSE_LTCY" ] && export PULSE_LTCY=1
     [ ! -n "$VKBASALT" ] && export VKBASALT=1
     [ ! -n "$WIN_VER" ] && export WIN_VER="10"
     [ ! -n "$VKD3DCFG" ] && export VKD3DCFG="Disabled"
@@ -188,7 +187,7 @@ check_def_config() {
     [ ! -n "$BATTLEYE" ] && export BATTLEYE=1
     [ ! -n "$EAC" ] && export EAC=1
     [ ! -n "$EXE_LWDB" ] && export EXE_LWDB=1
-    [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='corefonts vcrun2022 mfc42 mfc140'
+    [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='Disabled'
     [ ! -n "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
     export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
     export VKD3D_GIT_RELEASE_URL="https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases"
@@ -769,17 +768,10 @@ try_rm() {
     return 1
 }
 
-check_freespace() {
-    USEDDS="$(echo "$(df -h 2>/dev/null|grep "$(echo $(mount|grep -w "on $(stat -c %m -- "$(dirname "$1")")")|awk '{print$1}')")"|awk '{print$5}'|head -1|sed 's/.$//')"
-    [ "$USEDDS" -ge "95" ] \
-    && print_error yad "Disk space error" "There [ $(stat -c %m -- "$(dirname "$1")") ] is little free disk space left, you need to free up disk space!"
-}
-
 try_download() {
     set -o pipefail
     [ ! -n "$1" ] && print_error "Specify download URL!" && return 1 || DLFLNAME="$(basename "$1")"
     [ ! -n "$2" ] && DLPTH="./" || DLPTH="$2"
-    check_freespace "$DLPTH"
     try_mkdir "$DLPTH"
     if [ "$LW_DOWNLOADER" == "aria2c" ]
         then
@@ -2423,6 +2415,8 @@ check_db_script() {
                             *'league of legends'*) export EXE_LWDBFL="$LW_DB_DIR/LeagueClient.lwdb" ;;
                             gog_galaxy*) export EXE_LWDBFL="$LW_DB_DIR/setup.lwdb" ;;
                             wemod-*) export EXE_LWDBFL="$LW_DB_DIR/WeMod.lwdb" ;;
+                            zonasetup*) export EXE_LWDBFL="$LW_DB_DIR/Zona.lwdb" ;;
+                            'direct commander setup'*) export EXE_LWDBFL="$LW_DB_DIR/Direct Commander.lwdb" ;;
                         esac
                     fi
             fi
@@ -2639,7 +2633,6 @@ lite_init() {
             fi
             [[ -n "$SETT_INIT" || "$1" == "-init" ]] && \
                 initbar && rm -rf "$LW_DIR/.lwcfgchksum"
-            check_freespace "$HOME/.local"
             check_exe_wcfg_cenv "$@"
             check_luwine_wcfg_cenv
             check_def_config
@@ -5873,7 +5866,7 @@ export_all_functions() {
         runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd btntls_run get_app_exe check_driprime greptardlurl get_wlu_releases \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all is_loadbar lu_runapp lu_lsapp set_wine_version get_pge_releases get_wge_releases \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config get_wk4_releases \
-        settingbar check_freespace initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
+        settingbar initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
         check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps is_winepfx \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \

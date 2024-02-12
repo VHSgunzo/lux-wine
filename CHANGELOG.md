@@ -1,3 +1,24 @@
+# v0.78.2.5
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v8.32) `v8.32`
+* Update [glibc-eac](https://github.com/VHSgunzo/glibc-eac-rc/releases/tag/v2.39.2) `v2.39.2`
+* Update [obs-vkcapture-lw](https://github.com/VHSgunzo/obs-vkcapture-lw/releases/tag/v1.4.9) `v1.4.9`
+* Move `lwrun-pkg` to [lwrun](https://github.com/VHSgunzo/lwrun/tree/main/lwrun-pkg)
+* Add `init` after update RunImage packages
+* Add `xorg-xlsfonts` to `lwrap` depends
+* Disable by default `Reduce PulseAudio latency`
+* Change default MangoHud options
+* Change default `MUST_HAVE_DLL` to `Disabled`
+* Remove check free space
+* Add DB script for `Anno 1800`
+* Add DB script for `Assassin's Creed Odyssey`
+* Add DB script for `Soldier of Fortune 2`
+* Add DB script for `Direct Commander`
+* Update DB script for `Zona`
+* Update DB script for `The Honkers Railway` `v2.0.0`
+* Update DB script for `WeMod`
+
 # v0.78.2.4
 
 * Update [steam-runtime-libs](https://github.com/VHSgunzo/steam-runtime-libs/releases/tag/v0.0.4) `v0.0.4`

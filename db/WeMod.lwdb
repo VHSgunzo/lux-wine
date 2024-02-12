@@ -7,8 +7,8 @@ pre_launch() {
             wemodexe="$wemoddir/WeMod.exe"
             cleanwemodtmp
             mkdir -p "$wemodtmp"
-            if (unzip -o "$LU_EXE" *.nupkg -d "$wemodtmp" ; \
-                unzip -o "$wemodtmp"/*.nupkg lib/net*/* -d "$wemodtmp")
+            if (unzip -o "$LU_EXE" '*.nupkg' -d "$wemodtmp" ; \
+                unzip -o "$wemodtmp"/*.nupkg 'lib/net*/*' -d "$wemodtmp")
                 then
                     [ -d "$wemoddir" ] && rm -f "$wemoddir"
                     mkdir -p "$(dirname "$wemoddir")"

@@ -1,7 +1,19 @@
 WIN_VER=10
+ZUPDATER="$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming/Zona/plugins/zupdater"
 if [ -n "$(lspci|grep -o 'NVIDIA')" ]
     then
         unset VK_ICD_FILENAMES
         HIDE_NVIDIA_GPU=1
         VKICDFILES=Lvp
+fi
+
+pre_launch() { [ -d "$ZUPDATER" ] && rm -rf "$ZUPDATER" && ln -sf /dev/null "$ZUPDATER" && return 0 ; }
+
+if [[ "${EXE_NAME,,}" == 'zonasetup'* ]]
+    then
+        (while kill -0 $LWPID
+            do
+                pre_launch && break
+                sleep 3
+        done) &
 fi

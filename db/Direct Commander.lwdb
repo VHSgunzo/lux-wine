@@ -1,0 +1,40 @@
+pre_launch() {
+    if [[ "${EXE_NAME,,}" == 'direct commander setup'* ]]
+        then
+            cleandcmdtmp() { [ -d "$dcmdtmp" ] && rm -rf "$dcmdtmp" ; }
+            dcmdtmp="$LW_DEF_TMP/dcmd-$RANDOM"
+            dcmddir="$WINEPREFIX/dosdevices/c:/Program Files/Direct Commander"
+            dcmdexe="$dcmddir/Direct Commander.exe"
+            cleandcmdtmp
+            mkdir -p "$dcmdtmp"
+            if (7z x "$LU_EXE" '*.nupkg' -o"$dcmdtmp" ; \
+                unzip -o "$dcmdtmp"/*.nupkg 'lib/net*/*' -d "$dcmdtmp")
+                then
+                    [ -d "$dcmddir" ] && rm -f "$dcmddir"
+                    mkdir -p "$(dirname "$dcmddir")"
+                    if mv -f "$dcmdtmp/lib/net"* "$dcmddir" && \
+                        [ -f "$dcmdexe" ]
+                        then
+                            cleandcmdtmp
+                            export LU_EXE="$dcmdexe"
+                            lu_shortcut "$LU_EXE" 'Direct Commander'
+                            cleanrun "$LW_SOURCE" "$LU_EXE"
+                            exit $?
+                        else
+                            print_error yad "Failed to install: $EXE_NAME"
+                            cleandcmdtmp
+                            exit 1
+                    fi
+                    cleandcmdtmp
+                else
+                    print_error yad "Failed to extract: $EXE_NAME"
+                    cleandcmdtmp
+                    exit 1
+            fi
+    fi
+}
+
+WIN_VER=10
+WINEARCH=win64
+MUST_HAVE_DLL=Disabled
+WPREFIX_NAME=defprefix_dotnet

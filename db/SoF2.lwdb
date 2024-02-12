@@ -1,0 +1,4 @@
+SUM=($(sha256sum SoF2.exe 2>/dev/null))
+PATCH_SUM='bf8225821e1b0e27ea97a7507034a575d93e3e190adbc9f162510bb547a52bbb'
+[ "$SUM" == "$PATCH_SUM" ] && \
+dd if=/dev/zero of=SoF2.exe bs=1 count=1 seek=987627 conv=notrunc

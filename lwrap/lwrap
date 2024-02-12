@@ -632,6 +632,13 @@ update_lwrun() {
                         then
                             update_runimage
                             local pkgret=$?
+                            if [ "$pkgret" == 0 ]
+                                then
+                                    if [ "$ENABLE_HOSTEXEC" == 1 ]
+                                        then hostexec ptyspawn importenv '$RUNPID' "$LWRAP" -init
+                                        else "$LWRAP" -init
+                                    fi
+                            fi
                     fi
                     [[ "$dlret" == 0 || "$pkgret" == 0 ]] && \
                         local ret=0
