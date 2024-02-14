@@ -1,3 +1,7 @@
+# v0.78.2.6
+
+* Add DB script for `Caliber`
+
 # v0.78.2.5
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
