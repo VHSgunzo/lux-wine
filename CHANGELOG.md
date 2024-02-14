@@ -1,6 +1,7 @@
 # v0.78.2.6
 
 * Add DB script for `Caliber`
+* Add prefix `syswinepfx` to DB scripts for games that runs on `System` wine
 
 # v0.78.2.5
 

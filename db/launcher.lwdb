@@ -44,8 +44,11 @@ pre_launch() {
     case "$EXE_DIR" in
         Crossout|'Dark Sector') set_dxvk_ver '1.10.3' ;;
         'Star Rail') srlauncher ;;
-        Caliber) source "$LW_DB_DIR/CaliberSetup.lwdb" ;;
     esac
 }
 
 WIN_VER=10
+
+case "$EXE_DIR" in
+    Caliber) source "$LW_DB_DIR/CaliberSetup.lwdb" ;;
+esac
