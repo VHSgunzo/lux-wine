@@ -1,10 +1,12 @@
 set_syswine() {
+    WIN_VER=10
+    WINEARCH=win64
     RESTORE_RESOL=1
+    USE_DEFPFX_BACKUP=1
     WINE_VERSION=System
+    MUST_HAVE_DLL=Disabled
+    WPREFIX_NAME=syswinepfx
 }
-
-WIN_VER=10
-WINEARCH=win64
 
 case "$EXE_DIR" in
     'Need for Speed Most Wanted'|\
