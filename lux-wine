@@ -2172,9 +2172,11 @@ check_shrt() (
 )
 
 shrt_loop() {
-    WPFXSHRTDIRS=(
+    WPFXDESKDIRS=(
         "$WINEPREFIX/drive_c/users/steamuser/Desktop"
         "$WINEPREFIX/drive_c/users/Public/Desktop"
+    )
+    WPFXMENUDIRS=(
         "$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming/Microsoft/Windows/Start Menu"
         "$WINEPREFIX/drive_c/ProgramData/Microsoft/Windows/Start Menu"
     )
@@ -2201,10 +2203,12 @@ shrt_loop() {
             while pidof wineserver &>/dev/null
                 do
                     sleep 1 2>/dev/null
-                    WPREFIXLNK=($(find_wpfxlnk "${WPFXSHRTDIRS[@]}"))
+                    WPREFIXLNK=($(find_wpfxlnk "${WPFXDESKDIRS[@]}"))
+                    WPREFIXLNK+=($(find_wpfxlnk "${WPFXMENUDIRS[@]}"))
                     unset LU_EXE EXE_ARG
                     shrt_from_lnk "${WPREFIXLNK[@]}"
-                    WPREFIXURL=($(find_wpfxurl "${WPFXSHRTDIRS[@]}"))
+                    WPREFIXURL=($(find_wpfxurl "${WPFXDESKDIRS[@]}"))
+                    WPREFIXURL+=($(find_wpfxurl "${WPFXMENUDIRS[@]}"))
                     unset LU_EXE EXE_ARG
                     shrt_from_url "${WPREFIXURL[@]}"
                     check_tray
@@ -3714,8 +3718,20 @@ shrt_from_lnk() {
             unset exe_ico lnk_exe_ico lnk_args
             lnk_data="$(exiftool "$lnk_file")"
             lnk_name="$(basename "$lnk_file")"
+            if grep -qwo 'Start Menu/Programs'<<<"$lnk_file"
+                then
+                    old_lnk_name="$lnk_name"
+                    lnk_name="$(basename "$(dirname "$lnk_file")"|sed 's| \[GOG.com\]||i')"
+                    IGNLNKDIRS=('by.xatab')
+                    IGNLNKNAMES=('Запустить игру.lnk' 'Launch the game.lnk')
+                    if [[ "${IGNLNKDIRS[@],,}" =~ "${lnk_name,,}" ]]
+                        then lnk_name="$old_lnk_name"
+                    elif [[ ! "${IGNLNKNAMES[@],,}" =~ "${old_lnk_name,,}" ]]
+                        then lnk_name+=" - $old_lnk_name"
+                    fi
+            fi
             lnk_name_alnum="${lnk_name//[^[:alnum:] ._-]/}"
-            SHRT_NAME="$(echo "$lnk_name"|sed 's|\.lnk$||i')"
+            SHRT_NAME="$(sed 's|\.lnk$||i'<<<"$lnk_name")"
             lnk_exe_drive="$(lnk_data_get 'Local Base Path'|drive_tolower)"
             lnk_exe="$(ipath "$(lnk_data_get 'Local Base Path'|fix_path)"|head -1)"
             lnk_exe_ico="$(lnk_data_get 'Icon File Name')"
@@ -3796,8 +3812,16 @@ shrt_from_url() {
             dos2unix "$url_file" &>/dev/null
             unset LU_EXE exe_ico url_exe_ico url_name url_exe_ico_drive
             url_file_name="$(basename "$url_file")"
+            if grep -qwo 'Start Menu/Programs'<<<"$url_file"
+                then
+                    old_url_name="$url_file_name"
+                    url_file_name="$(basename "$(dirname "$url_file")"|sed 's| \[GOG.com\]||i')"
+                    IGNURLNAMES=('Запустить игру.url' 'Launch the game.url')
+                    [[ "${IGNURLNAMES[@],,}" =~ "${old_url_name,,}" ]]||\
+                        url_file_name+=" - $old_url_name"
+            fi
             url_file_name_alnum="${url_file_name//[^[:alnum:] ._-]/}"
-            SHRT_NAME="$(echo "$url_file_name"|sed 's|\.url$||i')"
+            SHRT_NAME="$(sed 's|\.url$||i'<<<"$url_file_name")"
             url_name="$(url_data_get 'URL')"
             url_proto="$(echo "$url_name"|sed 's|://.*||g')"
             if [[ ! "${IGNPROTO[@]}" =~ "$url_proto" ]]

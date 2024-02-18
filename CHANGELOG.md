@@ -2,6 +2,7 @@
 
 * Add DB script for `Caliber`
 * Add prefix `syswinepfx` to DB scripts for games that runs on `System` wine
+* Update automatic shortcuts creation
 
 # v0.78.2.5
 
