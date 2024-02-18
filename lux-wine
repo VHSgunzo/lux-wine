@@ -3722,7 +3722,7 @@ shrt_from_lnk() {
                 then
                     old_lnk_name="$lnk_name"
                     lnk_name="$(basename "$(dirname "$lnk_file")"|sed 's| \[GOG.com\]||i')"
-                    IGNLNKDIRS=('by.xatab')
+                    IGNLNKDIRS=('by.xatab' 'Programs')
                     IGNLNKNAMES=('Запустить игру.lnk' 'Launch the game.lnk' "${lnk_name}.lnk")
                     if [[ "${IGNLNKDIRS[@],,}" =~ "${lnk_name,,}" ]]
                         then lnk_name="$old_lnk_name"
@@ -3816,9 +3816,13 @@ shrt_from_url() {
                 then
                     old_url_name="$url_file_name"
                     url_file_name="$(basename "$(dirname "$url_file")"|sed 's| \[GOG.com\]||i')"
+                    IGNURLDIRS=('by.xatab' 'Programs')
                     IGNURLNAMES=('Запустить игру.url' 'Launch the game.url' "${url_file_name}.url")
-                    [[ "${IGNURLNAMES[@],,}" =~ "${old_url_name,,}" ]]||\
-                        url_file_name+=" - $old_url_name"
+                    if [[ "${IGNURLDIRS[@],,}" =~ "${url_file_name,,}" ]]
+                        then url_file_name="$old_url_name"
+                    elif [[ ! "${IGNURLNAMES[@],,}" =~ "${old_url_name,,}" ]]
+                        then url_file_name+=" - $old_url_name"
+                    fi
             fi
             url_file_name_alnum="${url_file_name//[^[:alnum:] ._-]/}"
             SHRT_NAME="$(sed 's|\.url$||i'<<<"$url_file_name")"
