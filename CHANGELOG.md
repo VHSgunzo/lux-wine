@@ -1,3 +1,18 @@
+# v0.78.2.7
+
+* Add app and EXE names to all DB scripts
+* Update automatic shortcuts creation
+* Fix manual shortcut creation from *.url file
+* Fix manual shortcut removing for apps with a partial of the same name
+* Fix passing arguments for EXE
+* Fix launch GOG `Blade Runner` and other games with `ScummVM`
+* Add DB script for `Syberia`
+* Add DB script for `Infernal`
+* Add DB script for `Abe's Oddysee`
+* Add DB script for `upc.exe` from `Ubisoft Connect`
+* Update DB script for `Crashday`
+* Minor fixes
+
 # v0.78.2.6
 
 * Add DB script for `Caliber`

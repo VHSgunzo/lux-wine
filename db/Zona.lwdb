@@ -1,3 +1,5 @@
+# Zona  ('Zona.exe' 'ZonaSetup*.exe')
+
 WIN_VER=10
 ZUPDATER="$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming/Zona/plugins/zupdater"
 if [ -n "$(lspci|grep -o 'NVIDIA')" ]

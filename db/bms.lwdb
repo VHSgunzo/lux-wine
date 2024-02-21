@@ -1,4 +1,6 @@
+# Black Mesa ('bms.exe')
+
 WIN_VER=10
 pre_launch() {
-    check_exe_args "-oldgameui -w $(echo "$PRIMDISPL_RES"|cut -d'x' -f1) -h $(echo "$PRIMDISPL_RES"|cut -d'x' -f2)"
+    EXE_ARGS+=(-oldgameui -w $(echo "$PRIMDISPL_RES"|cut -d'x' -f1) -h $(echo "$PRIMDISPL_RES"|cut -d'x' -f2))
 }

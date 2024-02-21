@@ -1,0 +1,5 @@
+# Abe's Oddysee ('AbeWin.exe')
+
+pre_launch() { EXE_ARGS+=(-interline) ; }
+WIN_VER=10
+DGVOODOO2=1

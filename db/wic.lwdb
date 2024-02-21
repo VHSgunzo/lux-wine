@@ -1,3 +1,5 @@
+# World in Conflict ('wic.exe')
+
 pre_launch() {
     wicconfig="$WINEPREFIX/drive_c/users/steamuser/Documents/World in Conflict/Game Options.txt"
     [ -f "$wicconfig" ] && \

@@ -1,3 +1,5 @@
-pre_launch() { check_exe_args '-opengl' ; }
+# Epic Games Launcher ('EpicGamesLauncher.exe')
+
+pre_launch() { EXE_ARGS+=(-opengl) ; }
 
 WIN_VER=10

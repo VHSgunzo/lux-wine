@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.2.6"
+export LW_VERSION="0.78.2.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -1544,7 +1544,7 @@ create_shortcut() {
     if [ -n "$1" ]
         then
             SHRT_NAME="${ADD_APP_NAME//[^[:alnum:] ._-]/}"
-            SHRT_NAME="$(sed 's|^Запустить ||gi;s|^Играть ||gi;s|^Launch ||gi'<<<"$SHRT_NAME")"
+            SHRT_NAME="$(sed 's|^Запустить ||gi;s|^Играть ||gi;s|^Launch ||gi;s|^Play ||gi'<<<"$SHRT_NAME")"
             try_mkdir "$LW_DEF_TMP"
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
@@ -1553,9 +1553,9 @@ create_shortcut() {
                 SHRTEXEPATH="\"$1\""||\
                 SHRTEXEPATH="'$1'"
             shift
-            [ -n "$EXE_ARG" ] && \
-            SHRTEXEARGS="$(echo "$EXE_ARG"|sed 's|"|\"|g')"||\
-            SHRTEXEARGS="$(echo "$@"|sed 's|"|\"|g')"
+            [ -n "$EXE_ARGS" ] && \
+            SHRTEXEARGS="$(echo "${EXE_ARGS[@]}"|sed 's|"|\"|g;s|\\|\\\\|g')"||\
+            SHRTEXEARGS="$(echo "$@"|sed 's|"|\"|g;s|\\|\\\\|g')"
             echo "Name=$SHRT_NAME" >> "$DESKF"
             [ -n "$SHRTEXEARGS" ] && \
             echo "Exec='$LW_SOURCE' $SHRTEXEPATH $SHRTEXEARGS" >> "$DESKF"||\
@@ -1584,12 +1584,12 @@ create_shortcut() {
             echo "Name=DEBUG" >> "$DESKF"
             echo "Name[ru_RU]=ДЕБАГ" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -debug $SHRTEXEPATH" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -debug $SHRTEXEPATH $SHRTEXEARGS" >> "$DESKF"
             echo -e "\n[Desktop Action cmd]" >> "$DESKF"
             echo "Name=Open in CMD" >> "$DESKF"
             echo "Name[ru_RU]=Открыть в CMD" >> "$DESKF"
             echo "Icon="$SHRT_ICON"" >> "$DESKF"
-            echo "Exec='$LW_SOURCE' -cmd $SHRTEXEPATH" >> "$DESKF"
+            echo "Exec='$LW_SOURCE' -cmd $SHRTEXEPATH $SHRTEXEARGS" >> "$DESKF"
             echo -e "\n[Desktop Action explorer]" >> "$DESKF"
             echo "Name=Explorer" >> "$DESKF"
             echo "Name[ru_RU]=Рабочий стол" >> "$DESKF"
@@ -1693,7 +1693,7 @@ lu_debug() {
             check_ld_library
             export PRINT_VARS="$(print_var "WINE_VERSION" "WINEDIR" "WINE" "WINEARCH" "WINEPREFIX" "WIN_VER" "WINEDLLOVERRIDES" "CHK_UPDATE" "NVPRIME" \
                 "VKBASALT_EFFECTS" "WINE_MONO_OVERRIDES" "EXE_PATH" "LU_EXE" "VKD3D_CONFIG" "LD_LIBRARY_PATH" "PATH" "WINEDEBUG" "CPU_LIMIT" "VSYNC" \
-                "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARG" "PULSE_LATENCY_MSEC" "VIRTUAL_DESKTOP" "FPS_LIMIT" "LW_CENV" \
+                "VKD3D_DEBUG" "WINE_MONO_TRACE" "VKBASALT_LOG_LEVEL" "DXVK_LOG_LEVEL" "EXE_ARGS" "PULSE_LATENCY_MSEC" "VIRTUAL_DESKTOP" "FPS_LIMIT" "LW_CENV" \
                 "LW_DIR" "LW_CFG" "GSTREAMER" "HIDE_NVIDIA_GPU" "EXE_LWDB" "EXE_LWDBFL" "GST_PLUGIN_SYSTEM_PATH_1_0" "WINE_GST_REGISTRY_DIR" "RUNSRC" "RUNROOTFS_VERSION" \
                 "WINE_SANDBOX" "WINEFSYNC" "WINEFSYNC_FUTEX2" "WINE_FULLSCREEN_FSR" "WINE_FULLSCREEN_FSR_STRENGTH" "STAGING_SHARED_MEMORY" "WINEESYNC" "VKBASALT_LOG_FILE" \
                 "LOG_FILE" "WINE_LARGE_ADDRESS_AWARE" "TERM_APP" "VKBASALT" "DXVK_NVAPIHACK" "MANGOHUD" "MANGOHUD_USER_CONF" "RUN_GAMEMODE" "VKD3D_LOG_FILE" \
@@ -2162,11 +2162,11 @@ check_shrt() (
     IFS=$'\n'
     LW_APPS_EXES=($(grep -Eiom1 " [\"']/.*\.exe| [\"']/.*\.bat" -r \
         "$LW_APPS_DIR" 2>/dev/null|sed "s|.*\.desktop: ['\"]||g"))
-    if [ -n "${LW_APPS_EXES[*]}" ]
+    if [ -n "$LW_APPS_EXES" ]
         then
             for exe in "${LW_APPS_EXES[@]}"
                 do [ ! -f "$(ipath "$exe"|head -1)" ] && \
-                    NO_YAD=1 lu_rmapp "$exe"
+                    NO_YAD=1 RM_ALL_EXE_APPS=1 lu_rmapp "$exe"
             done
     fi
 )
@@ -2205,11 +2205,11 @@ shrt_loop() {
                     sleep 1 2>/dev/null
                     WPREFIXLNK=($(find_wpfxlnk "${WPFXDESKDIRS[@]}"))
                     WPREFIXLNK+=($(find_wpfxlnk "${WPFXMENUDIRS[@]}"))
-                    unset LU_EXE EXE_ARG
+                    unset LU_EXE EXE_ARGS
                     shrt_from_lnk "${WPREFIXLNK[@]}"
                     WPREFIXURL=($(find_wpfxurl "${WPFXDESKDIRS[@]}"))
                     WPREFIXURL+=($(find_wpfxurl "${WPFXMENUDIRS[@]}"))
-                    unset LU_EXE EXE_ARG
+                    unset LU_EXE EXE_ARGS
                     shrt_from_url "${WPREFIXURL[@]}"
                     check_tray
                     [ "$FORCE_TRAY" != 1 ] && \
@@ -2219,6 +2219,20 @@ shrt_loop() {
 }
 
 lu_run() {
+    LU_EXEC=("$@")
+    echo_dbg() { echo -e "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS" ; }
+    exec_wine() {
+        [[ "$E_LU_EXEC" =~ ^declare ]] && eval "$E_LU_EXEC"
+        [[ "$E_EXE_ARGS" =~ ^declare ]] && eval "$E_EXE_ARGS"
+        [[ "$E_EXE_WRAPPER" =~ ^declare ]] && eval "$E_EXE_WRAPPER"
+        $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT \
+        "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "${LU_EXEC[@]}" "${EXE_ARGS[@]}"
+    }
+    exec_with_log() {
+        [[ "$E_LU_EXEC" =~ ^declare ]] && eval "$E_LU_EXEC"
+        echo_dbg|& tee -a "$LOG_FILE" ; "${LU_EXEC[@]}"|& tee -a "$LOG_FILE"
+    }
+    export -f exec_wine echo_dbg exec_with_log
     shrt_loop &
     pre_launch 2>/dev/null
     dis_displ_sw 2>/dev/null
@@ -2228,31 +2242,33 @@ lu_run() {
     lu_debug 2>/dev/null
     compositor_sw 2>/dev/null
     check_ld_library
+    [[ -n "$LU_EXEC" ]] && export E_LU_EXEC="$(declare -p LU_EXEC)"
+    [[ -n "$EXE_ARGS" ]] && export E_EXE_ARGS="$(declare -p EXE_ARGS)"
+    [[ -n "$EXE_WRAPPER" ]] && export E_EXE_WRAPPER="$(declare -p EXE_WRAPPER)"
     if [[ "$LOG" == 1 && "$TERMINAL" == 1 ]]
         then
             if [ -n "$LU_SHELL_EXE" ]
                 then
                     unset LU_SHELL_PTH TERMINAL LU_SHELL_EXE LD_LIBRARY_PATH
-                    $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
+                    $TERM_APP $LWSHELL -c 'exec_with_log'
                     clear_log  2>/dev/null
                     $LW_EDITOR "$LOG_FILE" 2>/dev/null &
             elif [ -n "$LU_SHELL_PTH" ]
                 then
                     unset LU_SHELL_PTH TERMINAL LD_LIBRARY_PATH
                     if [ -n "$1" ]
-                        then $TERM_APP "$@"
+                        then $TERM_APP "${LU_EXEC[@]}"
                         else $TERM_APP $LWSHELL
                     fi
             else
-                $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; \
-                $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$LOG_FILE'"
+                $TERM_APP $LWSHELL -c "echo_dbg|& tee -a '$LOG_FILE' ; exec_wine|& tee -a '$LOG_FILE'"
                 clear_log  2>/dev/null
                 $LW_EDITOR "$LOG_FILE" 2>/dev/null &
             fi
     elif [ "$LOG" == 1 ]
         then
-            echo -en "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n"
-            $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "$@" $EXE_ARG|& tee -a "$LOG_FILE"
+            echo_dbg
+            exec_wine|& tee -a "$LOG_FILE"
             clear_log  2>/dev/null
             $LW_EDITOR "$LOG_FILE" 2>/dev/null &
     elif [ "$TERMINAL" == 1 ]
@@ -2262,12 +2278,12 @@ lu_run() {
                     if [ "$LOG" == 1 ]
                         then
                             unset LU_SHELL_EXE TERMINAL
-                            $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n\n'|& tee -a '$LOG_FILE' ; '$@'|& tee -a '$LOG_FILE'"
+                            $TERM_APP $LWSHELL -c 'exec_with_log'
                             clear_log  2>/dev/null
                             $LW_EDITOR "$LOG_FILE" 2>/dev/null &
                         else
                             unset LU_SHELL_EXE TERMINAL
-                            $TERM_APP $LWSHELL -c "$@"
+                            $TERM_APP $LWSHELL -c "${LU_EXEC[@]}"
                     fi
             elif [ -n "$LU_SHELL_PTH" ]
                 then
@@ -2277,16 +2293,14 @@ lu_run() {
                 if [ "$LU_LNK" == 1 ]
                     then
                         export TMP_OUT="/tmp/${WINE_VERSION}_$(date +'%Y-%m-%d_%H%M%S').out"
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n' ; \
-                        $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG|& tee -a '$TMP_OUT'"
+                        $TERM_APP $LWSHELL -c "echo_dbg ; exec_wine|& tee -a '$TMP_OUT'"
                     else
-                        $TERM_APP $LWSHELL -c "echo -en '$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n' ; \
-                        $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT '$WINE' $RUN_VDESKTOP '$@' $EXE_ARG"
+                        $TERM_APP $LWSHELL -c 'echo_dbg ; exec_wine'
                 fi
             fi
     else
-        echo -en "$(cat "$TMP_DBG" 2>/dev/null)\n$PRINT_VARS\n"
-        $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "$@" $EXE_ARG
+        echo_dbg
+        exec_wine
     fi
     export LD_LIBRARY_PATH="$SYS_LDLIBPTH"
     post_launch 2>/dev/null
@@ -2340,17 +2354,17 @@ check_startfile() {
             ipath_pth="$(ipath "$1"|head -1)"
             [[ -n "$(basename "$1"|grep -io "\.lwpfx$")" \
             && ! -n "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$ipath_pth")"
-            [ ! -n "$EXE_ARG" ] && export EXE_ARG="${*:2}"
-            [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE="$0 '${*:1}'"
+            [ ! -n "$EXE_ARGS" ] && export EXE_ARGS=("${@:2}")
+            [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE=("$0" "${@:1}")
     elif [ -f "$(ipath "$2"|head -1)" ]
         then
             ipath_pth="$(ipath "$2"|head -1)"
             [[ -n "$(basename "$2"|grep -io "\.lwpfx$")" \
             && ! -n "$LU_LWPFX" ]] && export LU_LWPFX="$(readlink -f "$ipath_pth")"
-            [ ! -n "$EXE_ARG" ] && export EXE_ARG="${*:3}"
-            [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE="$0 $1 '${*:2}'"
+            [ ! -n "$EXE_ARGS" ] && export EXE_ARGS=("${@:3}")
+            [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE=("$0" "$1" "${@:2}")
     else
-        [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE="$0 $1"
+        [ ! -n "$FULLCMDLINE" ] && export FULLCMDLINE=("$0" "$1")
     fi
     [ ! -n "$LU_START" ] && export LU_START="$ipath_pth"
     case "$LU_START" in
@@ -2624,6 +2638,7 @@ check_latencyflex() {
 }
 
 lite_init() {
+    unset EXE_ARGS
     DEPRECATE_INIT=("-killwine" "-killtray" "-killexe" "-killshell" "-exit" "-tray" "-lsapp" "-runapp")
     export_all_functions
     if ! [[ "${DEPRECATE_INIT[@]}" =~ "$1" ]] || [ ! -n "$1" ]
@@ -2805,9 +2820,8 @@ lu_config() {
             VSYNC LWVKCAPTURE NVPRIME DRIPRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
-                            if [ -n "$(echo "$CFGPARAM"|sed "s/''//")" ]
-                                then echo "$CFGVAR=$CFGPARAM"
-                            fi
+                            [ -n "$(echo "$CFGPARAM"|sed "s|''||")" ] && \
+                                echo "$CFGVAR=$CFGPARAM"
                     done 3< <(echo "$LWCFGVAR"|tr ' ' '\n'|sedspaces) \
                          4< <(echo -e "$(cat "/tmp/winesett$LWCFGKEY" 2>/dev/null)\n\
                                        $(cat "/tmp/syssett$LWCFGKEY" 2>/dev/null)"|sedspaces))"
@@ -2933,8 +2947,15 @@ lu_config() {
             --field="DXR/RTX (Ray Tracing):CHK" "$DXR" \
         1> /tmp/winesett$LWCFGKEY &
 
+        local SETT_EXE_ARGS=()
+        for arg in "${EXE_ARGS[@]}"
+            do
+                [[ "$arg" == *' '* ]] && \
+                SETT_EXE_ARGS+=("\"$(sed 's|\\|\\\\\\\\\\\\|g'<<<"$arg")\"")||\
+                SETT_EXE_ARGS+=("$(sed 's|\\|\\\\\\\\\\\\|g'<<<"$arg")")
+        done
         yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 "${YADSCROLL[@]}" \
-            --field="EXE arguments::CBE" "$(echo "$EXE_ARG"|eval $AWKFIX)" \
+            --field="EXE arguments::CBE" "$(echo "${SETT_EXE_ARGS[@]}"|eval $AWKFIX)" \
             --field="Check update days (0-disabled)::NUM" "$CHK_UPDATE" \
             --field="Run EXE DB script:CHK" "$EXE_LWDB" \
             --field="EXE DB script::FL" "$EXE_LWDBFL" \
@@ -3274,7 +3295,7 @@ lu_explorer() {
     fi
     full_init
     UNSET_CMPSTR_SW=1
-    unset EXE_ARG
+    unset EXE_ARGS
     export DEBUG=0
     lu_run explorer
 }
@@ -3288,7 +3309,7 @@ lu_regedit() {
     full_init
     UNSET_CMPSTR_SW=1
     export DEBUG=0
-    unset EXE_ARG
+    unset EXE_ARGS
     lu_run regedit
 }
 
@@ -3301,7 +3322,7 @@ lu_control() {
     full_init
     UNSET_CMPSTR_SW=1
     export DEBUG=0
-    unset EXE_ARG
+    unset EXE_ARGS
     lu_run control
 }
 
@@ -3314,7 +3335,7 @@ lu_winecfg() {
     full_init
     UNSET_CMPSTR_SW=1
     export DEBUG=0
-    unset EXE_ARG
+    unset EXE_ARGS
     lu_run winecfg
 }
 
@@ -3327,7 +3348,7 @@ lu_taskmgr() {
     full_init
     UNSET_CMPSTR_SW=1
     export DEBUG=0
-    unset EXE_ARG
+    unset EXE_ARGS
     lu_run taskmgr
 }
 
@@ -3340,7 +3361,7 @@ lu_uninstaller() {
     full_init
     UNSET_CMPSTR_SW=1
     export DEBUG=0
-    unset EXE_ARG
+    unset EXE_ARGS
     lu_run uninstaller
 }
 
@@ -3351,9 +3372,9 @@ winetricks() {
             exit 1
     fi
     unset WTRX_ARG WTRX_RUN
-    WTRX_RUN="$(echo "$FULLCMDLINE"|grep -wo '\-winetricks')"
+    WTRX_RUN="$(echo "${FULLCMDLINE[@]}"|grep -wo '\-winetricks')"
     [[ ! -n "$NEED_INSTALL_DLLS" && -n "$2" && ! -f "$2" \
-    && ! -d "$2" && ! -L "$2" ]] && export WTRX_ARG="${*:2}"
+    && ! -d "$2" && ! -L "$2" ]] && export WTRX_ARG=("${@:2}")
     check_winepfx
     check_wine_pids
     [[ ! -n "$WINE_PIDS" && -n "$OLD_WINE" ]] && unset OLD_WINE
@@ -3375,10 +3396,10 @@ winetricks() {
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks"
                     elif [[ -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                         then
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks $@ || return 1
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks "$@" || return 1
                     elif [[ ! -n "$NEED_INSTALL_DLLS" && -n "$WTRX_ARG" ]]
                         then
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks $WTRX_ARG || return 1
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 /usr/bin/winetricks "${WTRX_ARG[@]}" || return 1
                     fi
                 else
                     print_error yad "Winetricks" "Winetricks not found in your system. Using Lux Wine winetricks!"
@@ -3389,9 +3410,9 @@ winetricks() {
                             DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
                     elif [[ ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                         then
-                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
+                            DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" "$@" || return 1
                     else
-                        DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
+                        DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" "${WTRX_ARG[@]}" || return 1
                     fi
             fi
         else
@@ -3405,10 +3426,10 @@ winetricks() {
                     DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 '$LW_WTRX_DIR/winetricks'"
             elif [[ -n "$NEED_INSTALL_DLLS" && ! -n "$WTRX_ARG" && ! -n "$WTRX_RUN" ]]
                 then
-                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $@ || return 1
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" "$@" || return 1
             elif [[ ! -n "$NEED_INSTALL_DLLS" && -n "$WTRX_ARG" ]]
                 then
-                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" $WTRX_ARG || return 1
+                    DISABLE_MANGOHUD=1 DISABLE_VKBASALT=1 "$LW_WTRX_DIR/winetricks" "${WTRX_ARG[@]}" || return 1
             fi
     fi
     [[ -n "$NEW_WINE" && -f "$NEW_WINE" ]] && export WINE="$NEW_WINE"
@@ -3599,6 +3620,29 @@ lu_clearpfx() {
     fi
 }
 
+is_app_exist() {
+    ret=1
+    unset args
+    if [ -n "$2" ]
+        then
+            [ "$lurmapp" == 1 ] && \
+            local args="$(sed 's|"|\"|g;s|\\|\\\\|g'<<<"$2")"||\
+            local args="$(sed 's|"|\"|g;s|\\|\\\\\\\\|g'<<<"$2")"
+    fi
+    for app in "$LW_APPS_DIR"/*
+        do
+            [ -n "$(if [ -n "$args" ]
+                then
+                    awk -v s="Exec='$LWRAP' '$1' $args" '$0==s' "$app" 2>/dev/null
+                    awk -v s="Exec='$LWRAP' \"$1\" $args" '$0==s' "$app" 2>/dev/null
+                else
+                    awk -v s="Exec='$LWRAP' '$1'" '$0==s' "$app" 2>/dev/null
+                    awk -v s="Exec='$LWRAP' \"$1\"" '$0==s' "$app" 2>/dev/null
+            fi|head -1)" ] && ret=0 && echo "$app" && break
+    done
+    return $ret
+}
+
 lu_rmapp() {
     if [ ! -n "$(pgrep -fa yad|grep "Shortcuts Remover"|awk '{print$1}')" ]; then :
         else
@@ -3612,13 +3656,9 @@ lu_rmapp() {
                 try_rm "$LW_APPS_DIR"
         fi
     }
-    find_app_exe_with_arg() {
-        grep -F "'$LU_EXE' $EXE_ARG" -lr "$LW_APPS_DIR" 2>/dev/null||\
-        grep -F "\"$LU_EXE\" $EXE_ARG" -lr "$LW_APPS_DIR" 2>/dev/null
-    }
     rm_srtcts() {
         (IFS=$'\n'
-        if [ -n "$@" ]
+        if [ -n "$1" ]
             then
                 for LWAPPRM in $@
                     do
@@ -3665,16 +3705,20 @@ lu_rmapp() {
                         else [ -n "$1" ] && LU_EXE="$1"
                     fi
             fi
-            if [[ -n "$(echo "$LU_EXE"|grep -Eiom1 '\.exe$|\.bat$'||\
-                grep -iom1 "^Name=$LU_EXE$" -lr "$MENU_APPS_DIR" 2>/dev/null)" ]]
+            grep -qiom1 "^Name=$LU_EXE$" -lr "$MENU_APPS_DIR" 2>/dev/null && \
+                get_app_exe "$LU_EXE"
+            if [[ -n "$(grep -Eiom1 '\.exe$|\.bat$'<<<"$LU_EXE")" ]]
                 then
                     (IFS=$'\n'
-                    if [ -n "$EXE_ARG" ]
-                        then LWAPPSRM=($(find_app_exe_with_arg))
-                        else LWAPPSRM=($(grep -F "$LU_EXE" -lr "$MENU_APPS_DIR" 2>/dev/null))
+                    local lurmapp=1
+                    if [ "$RM_ALL_EXE_APPS" == 1 ]
+                        then LWAPPSRM=($(grep -F "$LU_EXE" -lr "$MENU_APPS_DIR" 2>/dev/null))
+                    elif [ -n "$EXEARGS" ]
+                        then LWAPPSRM=($(is_app_exist "$LU_EXE" "$EXEARGS"))
+                    else LWAPPSRM=($(is_app_exist "$LU_EXE"))
                     fi
-                    if [ -n "${LWAPPSRM[*]}" ]
-                        then rm_srtcts "${LWAPPSRM[*]}"
+                    if [ -n "$LWAPPSRM" ]
+                        then rm_srtcts "${LWAPPSRM[@]}"
                         else print_error yad "Shortcuts Remover" "'$LU_EXE' not found in the menu!"
                     fi)
                 else
@@ -3689,7 +3733,7 @@ lu_rmapp() {
                             LW_APP_RM="$(echo "$LW_APP_RM"|sed '/^TRUE$/d'|sed '/^$/d')"
                             (IFS=$'\n' ; for LWAPPRM in $LW_APP_RM
                                 do
-                                    LWSHRTRM="$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -lo "Name=$LWAPPRM" {} 2>/dev/null)"
+                                    LWSHRTRM="$(echo "$LWAPPSHRT"|xargs -d "\n" -I {} grep -lo "^Name=$LWAPPRM$" {} 2>/dev/null)"
                                     rm_srtcts "$LWSHRTRM"
                             done)
                     fi
@@ -3718,16 +3762,23 @@ shrt_from_lnk() {
             unset exe_ico lnk_exe_ico lnk_args
             lnk_data="$(exiftool "$lnk_file")"
             lnk_name="$(basename "$lnk_file")"
+            orig_lnk_name="$lnk_name"
             if grep -qwo 'Start Menu/Programs'<<<"$lnk_file"
                 then
-                    old_lnk_name="$lnk_name"
-                    lnk_name="$(basename "$(dirname "$lnk_file")"|sed 's| \[GOG.com\]||i')"
+                    lnk_dir="$(basename "$(dirname "$lnk_file")"|sed 's| \[GOG.com\]||i')"
                     IGNLNKDIRS=('by.xatab' 'Programs')
-                    IGNLNKNAMES=('Запустить игру.lnk' 'Launch the game.lnk' "${lnk_name}.lnk")
-                    if [[ "${IGNLNKDIRS[@],,}" =~ "${lnk_name,,}" ]]
-                        then lnk_name="$old_lnk_name"
-                    elif [[ ! "${IGNLNKNAMES[@],,}" =~ "${old_lnk_name,,}" ]]
-                        then lnk_name+=" - $old_lnk_name"
+                    IGNLNKNAMES=(
+                        'Запустить игру.lnk' 'Launch the game.lnk'
+                        "Launch ${lnk_dir}.lnk" "Играть ${lnk_dir}.lnk"
+                        "Запустить ${lnk_dir}.lnk" "Play ${lnk_dir}.lnk"
+                    )
+                    if [[ "${IGNLNKDIRS[@],,}" =~ "${lnk_dir,,}" ]]||\
+                        grep -qo "^$lnk_dir"<<<"$lnk_name"||\
+                        grep -qo "^$(sed 's|.*/Start Menu/Programs/||;s| \[GOG.com\]||i'\
+                        <<<"$lnk_file"|awk -F'/' '{print$1}')"<<<"$lnk_name"; then true
+                    elif [[ "${IGNLNKNAMES[@],,}" =~ "${lnk_name,,}" ]]
+                        then lnk_name="$lnk_dir"
+                    else lnk_name="$(sed 's|.*/Start Menu/Programs/||;s| \[GOG.com\]||i;s|/| - |g'<<<"$lnk_file")"
                     fi
             fi
             lnk_name_alnum="${lnk_name//[^[:alnum:] ._-]/}"
@@ -3753,15 +3804,14 @@ shrt_from_lnk() {
             BROKEICONEXES=('Warframe.*/Launcher.exe')
             if [[ -n "$(echo "$lnk_exe_name"|grep -Eio '\.exe$|\.bat$')" && \
                 ! "${IGNEXES[@],,}" =~ "${lnk_exe_name,,}" && \
-                ! "${IGNLNK[@],,}" =~ "${lnk_name,,}" && \
+                ! "${IGNLNK[@],,}" =~ "${orig_lnk_name,,}" && \
                 "$lnk_args" != "--uninstall" ]]
                 then
                     LU_EXE="$lnk_exe"
                     if [ -f "$LU_EXE" ]
                         then
-                            if [[ -n "$lnk_args" && ! -n "$(grep -F "'$lnk_exe' $lnk_args" -lr "$LW_APPS_DIR" 2>/dev/null||\
-                                         grep -F "\"$lnk_exe\" $lnk_args" -lr "$LW_APPS_DIR" 2>/dev/null)" ]]|| \
-                               [[ ! -n "$lnk_args" && ! -n "$(grep "['\"] ['\"]$lnk_exe['\"]$" -lr "$LW_APPS_DIR" 2>/dev/null)" ]]
+                            if ([ -n "$lnk_args" ] && ! is_app_exist "$lnk_exe" "$lnk_args" &>/dev/null)||\
+                               ([ ! -n "$lnk_args" ] && ! is_app_exist "$lnk_exe" &>/dev/null)
                                 then
                                     for broken in "${BROKEICONEXES[@]}"
                                         do [ -n "$(echo "$lnk_exe"|grep -io "$broken")" ] && \
@@ -3814,14 +3864,20 @@ shrt_from_url() {
             url_file_name="$(basename "$url_file")"
             if grep -qwo 'Start Menu/Programs'<<<"$url_file"
                 then
-                    old_url_name="$url_file_name"
-                    url_file_name="$(basename "$(dirname "$url_file")"|sed 's| \[GOG.com\]||i')"
+                    url_dir="$(basename "$(dirname "$url_file")"|sed 's| \[GOG.com\]||i')"
                     IGNURLDIRS=('by.xatab' 'Programs')
-                    IGNURLNAMES=('Запустить игру.url' 'Launch the game.url' "${url_file_name}.url")
-                    if [[ "${IGNURLDIRS[@],,}" =~ "${url_file_name,,}" ]]
-                        then url_file_name="$old_url_name"
-                    elif [[ ! "${IGNURLNAMES[@],,}" =~ "${old_url_name,,}" ]]
-                        then url_file_name+=" - $old_url_name"
+                    IGNURLNAMES=(
+                        'Запустить игру.url' 'Launch the game.url'
+                        "Launch ${url_dir}.url" "Играть ${url_dir}.url"
+                        "Запустить ${url_dir}.url" "Play ${url_dir}.url"
+                    )
+                    if [[ "${IGNURLDIRS[@],,}" =~ "${url_dir,,}" ]]||\
+                        grep -qo "^$url_dir"<<<"$url_file_name"||\
+                        grep -qo "^$(sed 's|.*/Start Menu/Programs/||;s| \[GOG.com\]||i'\
+                        <<<"$url_file"|awk -F'/' '{print$1}')"<<<"$url_file_name"; then true
+                    elif [[ "${IGNURLNAMES[@],,}" =~ "${url_file_name,,}" ]]
+                        then url_file_name="$url_dir"
+                    else url_file_name="$(sed 's|.*/Start Menu/Programs/||;s| \[GOG.com\]||i;s|/| - |g'<<<"$url_file")"
                     fi
             fi
             url_file_name_alnum="${url_file_name//[^[:alnum:] ._-]/}"
@@ -3844,8 +3900,7 @@ shrt_from_url() {
                     url_exe_ico="$(ipath "$(url_exe_drive="$url_exe_ico_drive" ; echo "$url_exe_ico"|fix_path)"|head -1)"
                     if [ -f "$LU_EXE" ]
                         then
-                            if [[ ! -n "$(grep -F "'$LU_EXE' $url_name" -lr "$LW_APPS_DIR" 2>/dev/null||\
-                                          grep -F "\"$LU_EXE\" $url_name" -lr "$LW_APPS_DIR" 2>/dev/null)" ]]
+                            if ! is_app_exist "$LU_EXE" "$url_name" &>/dev/null
                                 then
                                     if [ -f "$url_exe_ico" ]
                                         then
@@ -3897,17 +3952,18 @@ lu_shortcut() {
             print_error yad "Shortcuts Creator" "Lux Wine Shortcuts Creator already runing!"
             exit 1
     fi
-    if [ -n "$(grep -io "\.lnk$"<<<"$LU_EXE")" ]
-        then shrt_from_lnk "$(realpath "$LU_START")"
-    elif [ -n "$(grep -io "\.url$"<<<"$LU_EXE")" ]
-        then shrt_from_url "$(realpath "$LU_START")"
+    if [ -n "$(grep -io "\.lnk$"<<<"$LU_START")" ]
+        then shrt_from_lnk "$LU_START"
+    elif [ -n "$(grep -io "\.url$"<<<"$LU_START")" ]
+        then shrt_from_url "$LU_START"
     elif [ -f "$LU_EXE" ]
         then
             get_shrt_data "$LU_EXE"
             create_shortcut "$LU_EXE"
         else
             SHRT_EXE="$(yad --window-icon="$LW_DEF_ICO" --title "Lux Wine Shortcuts Creator" --file --center \
-                --file-filter="*.[Ee][Xx][Ee] *.[Ll][Nn][Kk]" --on-top  --width=900 --height=600 --button="EXIT:1" --button="OK:0" 2>/dev/null)"
+                --file-filter="*.[Ee][Xx][Ee] *.[Ll][Nn][Kk] *.[Uu][Rr][Ll]" --on-top \
+                --width=900 --height=600 --button="EXIT:1" --button="OK:0" 2>/dev/null)"
             if [ -f "$SHRT_EXE" ]
                 then
                     export SHRT_FL="$(readlink -f "$SHRT_EXE")"
@@ -3917,9 +3973,13 @@ lu_shortcut() {
                             lite_init "$LU_EXE"
                             get_shrt_data "$LU_EXE"
                             create_shortcut "$LU_EXE"
-                        else
-                            print_error yad "Shortcuts Creator" "Unable to create Lux Wine shortcut for this file!"
-                            lu_shortcut
+                    elif [ -n "$(grep -io "\.lnk$"<<<"$SHRT_FL")" ]
+                        then shrt_from_lnk "$SHRT_FL"
+                    elif [ -n "$(grep -io "\.url$"<<<"$SHRT_FL")" ]
+                        then shrt_from_url "$SHRT_FL"
+                    else
+                        print_error yad "Shortcuts Creator" "Unable to create Lux Wine shortcut for this file!"
+                        lu_shortcut
                     fi
             elif [ -d "$SHRT_EXE" ]
                 then
@@ -5838,24 +5898,47 @@ check_videodrv() {
     fi
 }
 
-exeargs_upd() {
-    if [ -n "$EXE_ARG" ]
-        then
-            if [ ! -n "$(echo "$EXE_ARG"|grep -ow "$1" 2>/dev/null)" ]
+exeargs_parse() {
+    sed_arg_quotes() { sed "s|^\"||;s|\"$||;s|^'||;s|'$||" ; }
+    local char
+    local result=''
+    local inside=''
+    for (( i=0 ; i<${#EXEARGS} ; i++ ))
+        do
+            char="${EXEARGS:i:1}"
+            if [ -n "$inside" ]
                 then
-                    export EXE_ARG="$1 $EXE_ARG"
+                    if [[ "$char" == \\ ]]
+                        then
+                            if [[ "$inside" == '"' && "${EXEARGS:i+1:1}" == '"' ]]
+                                then
+                                    let i++
+                                    char="$inside"
+                            fi
+                    elif [[ "$char" == "$inside" ]]
+                        then inside=''
+                    fi
+            else
+                if [[ "$char" == '"' ]]
+                    then inside="$char"
+                elif [[ "$char" == ' ' ]]
+                    then
+                        char=''
+                        EXE_ARGS+=("$(sed_arg_quotes<<<"$result")")
+                        result=''
+                fi
             fi
-        else
-            export EXE_ARG="$1"
-    fi
+            result+="$char"
+    done
+    [ -n "$result" ] && \
+    EXE_ARGS+=("$(sed_arg_quotes<<<"$result")")
 }
 
 check_exe_args() {
-    [ -n "$1" ] && export EXEARGS="$1"
-    if [ -n "$EXEARGS" ]
-        then
-            exeargs_upd "$EXEARGS"
-    fi
+    [ -n "$1" ] && \
+        EXE_ARGS+=("$@")
+    [ -n "$EXEARGS" ] && \
+        exeargs_parse
 }
 
 check_wmonover() {
@@ -5893,10 +5976,10 @@ export_all_functions() {
         check_reset_pulse export_all_functions check_win_version check_hold_terminal dll_manager check_dll_symlink try_ln check_git_release cleanrun \
         runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd btntls_run get_app_exe check_driprime greptardlurl get_wlu_releases \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all is_loadbar lu_runapp lu_lsapp set_wine_version get_pge_releases get_wge_releases \
-        check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config get_wk4_releases \
+        check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config get_wk4_releases is_app_exist \
         settingbar initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
         check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps is_winepfx \
-        check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg exeargs_upd check_exe_args \
+        check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
         check_dxvk_async check_vsync get_wine_git_lst try_dl_install_wine
 }
@@ -6356,14 +6439,16 @@ lu_lsapp() {
 get_app_exe() {
     LU_EXE="$(grep -Eiom1 " [\"']/.*\.exe| [\"']/.*\.bat" "$(grep -wm1 "^Name=$1$" -lr "$LW_APPS_DIR" \
                 2>/dev/null|head -1)" 2>/dev/null|sed "s|^ ['\"]||g" 2>/dev/null)"
-    EXE_ARG="$(grep -Eiom1 " [\"']/.*\.exe.*| [\"']/.*\.bat.*" "$(grep -wm1 "^Name=$1$" -lr "$LW_APPS_DIR" \
+    EXEARGS="$(grep -Eiom1 " [\"']/.*\.exe.*| [\"']/.*\.bat.*" "$(grep -wm1 "^Name=$1$" -lr "$LW_APPS_DIR" \
                 2>/dev/null|head -1)" 2>/dev/null|sed "s| ['\"]$LU_EXE['\"]||gi;s|^ ||g;s| $||g" 2>/dev/null)"
+    export EXE_ARGS=()
+    exeargs_parse
     [ ! -n "$LU_EXE" ] && \
     return 1||return 0
 }
 
 lu_runapp() {
-    unset LU_EXE EXE_ARG
+    unset LU_EXE EXE_ARGS
     shift
     if [ -n "$1" ]
         then
@@ -6383,7 +6468,7 @@ lu_runapp() {
                     exit 1
             fi
             shift
-            cleanrun env LWPPID="$LWPPID" "$LW_SOURCE" "$LU_EXE" $EXE_ARG "$@"
+            cleanrun env LWPPID="$LWPPID" "$LW_SOURCE" "$LU_EXE" "${EXE_ARGS[@]}" "$@"
         else
             print_error yad "Specify App for launch!"
             exit 1

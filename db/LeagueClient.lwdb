@@ -1,3 +1,5 @@
+# League of Legends ('live.na.exe' 'LeagueClient.exe' 'RiotClientServices.exe' '*league of legends*')
+
 WIN_VER=10
 DIS_NETCORE=1
 WINEARCH=win64
@@ -7,7 +9,7 @@ USE_DEFPFX_BACKUP=1
 MUST_HAVE_DLL=Disabled
 WINE_VERSION=wine-lutris-GE-Proton8-27-LoL-x86_64
 [ "$EXE_NAME" == "RiotClientServices" ] && \
-EXE_ARG='--launch-product=league_of_legends --launch-patchline=live'
+EXE_ARGS=(--launch-product=league_of_legends --launch-patchline=live)
 
 pfxsetupfl="$LW_DEF_WPFXS_DIR/$WPREFIX_NAME/.setup"
 if [ ! -f "$pfxsetupfl" ]

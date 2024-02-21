@@ -1,0 +1,11 @@
+# Syberia ('Syberia.exe')
+
+pre_launch() {
+    syberia_cfg="$EXE_PATH/player.ini"
+    [ ! -f "$syberia_cfg" ] && \
+    echo "800 600 32 0 BaseCMO.cmo" > "$syberia_cfg"
+}
+
+WIN_VER=10
+DGVOODOO2=1
+

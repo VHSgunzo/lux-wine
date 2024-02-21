@@ -1,3 +1,9 @@
+# Need for Speed Most Wanted ('speed.exe')
+# Need for Speed Carbon ('NFSC.exe')
+# Need for Speed Underground ('speed.exe')
+# Need for Speed Underground 2 ('SPEED2.exe')
+
+
 set_syswine() {
     WIN_VER=10
     WINEARCH=win64

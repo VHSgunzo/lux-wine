@@ -1,0 +1,3 @@
+# Battle.net Launcher ('Battle.net-Setup.exe' 'Battle.net Launcher.exe')
+
+WINE_SIMULATE_WRITECOPY=1

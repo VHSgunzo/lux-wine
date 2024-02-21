@@ -1,3 +1,5 @@
+# Assassin's Creed Odyssey ('ACOdyssey.exe')
+
 WIN_VER=10
 GSTREAMER=0
 WINEARCH=win64

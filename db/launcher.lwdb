@@ -1,3 +1,8 @@
+# Crossout ('launcher.exe')
+# Dark Sector ('DS.exe' 'launcher.exe')
+# Caliber  ('CaliberSetup.exe' 'Caliber.exe' 'CaliberStart.exe' 'launcher.exe')
+# Honkai: Star Rail ('launcher.exe') !'StarRail.exe'
+
 srlauncher() {
     SR_PATCH_VER=v3.1.1
     SR_PATCH_DIR="$LW_DEF_TMP/srpatch_$SR_PATCH_VER"

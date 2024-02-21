@@ -1,3 +1,5 @@
+# S.T.A.L.K.E.R.  ('xrEngine.exe')
+
 pre_launch() {
      [[ ! -f "$EXE_PATH/fsgame.ltx" && \
           -f "$EXE_PATH/../fsgame.ltx" ]] && \

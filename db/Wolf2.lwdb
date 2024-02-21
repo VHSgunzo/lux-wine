@@ -1,3 +1,5 @@
-pre_launch() { check_exe_args '+set com_skipIntro 1' ; }
+# Wolfenstein (2009) ('Wolf2.exe')
+
+pre_launch() { EXE_ARGS+=(+set com_skipIntro 1) ; }
 
 WIN_VER=10

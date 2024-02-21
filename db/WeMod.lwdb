@@ -1,3 +1,5 @@
+# WeMod ('WeMod.exe' 'WeMod-*.exe')
+
 pre_launch() {
     if [[ "${EXE_NAME,,}" == 'wemod-'[0-9]* ]]
         then

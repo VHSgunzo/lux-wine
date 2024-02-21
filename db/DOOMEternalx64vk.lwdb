@@ -1,3 +1,5 @@
-pre_launch() { check_exe_args '+com_skipIntroVideo 1 +com_skipKeyPressOnLoadScreens 1 +m_smoothing 0' ; }
+# Doom Eternal ('DOOMEternalx64vk.exe')
+
+pre_launch() { EXE_ARGS+=(+com_skipIntroVideo 1 +com_skipKeyPressOnLoadScreens 1 +m_smoothing 0) ; }
 
 WIN_VER=10

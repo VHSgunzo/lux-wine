@@ -1,3 +1,7 @@
+# ('setup.exe')
+# GOG Galaxy ('gog_galaxy*.exe')
+# League of Legends ('live.na.exe' 'LeagueClient.exe' 'RiotClientServices.exe' '*league of legends*')
+
 ESYNC=0
 FSYNC=0
 WIN_VER=10

@@ -1,3 +1,5 @@
+# Direct Commander ('Direct Commander.exe' 'Direct Commander Setup*.exe')
+
 pre_launch() {
     if [[ "${EXE_NAME,,}" == 'direct commander setup'* ]]
         then

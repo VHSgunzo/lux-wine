@@ -1,3 +1,5 @@
+# Gothic 4: Arcania - ('Arcania Addon.exe' 'ArcaniA Addon POL.exe' 'ArcaniA Addon RUS.exe' 'Arcania.exe')
+
 WIN_VER=10
 WINEARCH=win64
 TZ=Europe/Moscow

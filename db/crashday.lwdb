@@ -1,5 +1,25 @@
+# Crashday ('crashday.exe')
+
+is_crashday_gcfg_fixed() { grep -qo '"FSAA": 0,' "$crashday_gcfg" 2>/dev/null ; }
+
 pre_launch() {
-    crashday_gcfg="$WINEPREFIX/drive_c/users/steamuser/Local Settings/Crashday/config/graphics.config"
-    [ -f "$crashday_gcfg" ] && \
-    sed -i 's|"FSAA": 2,|"FSAA": 0,|' "$crashday_gcfg"
+    if [ -f "$crashday_gcfg" ] && ! is_crashday_gcfg_fixed
+        then
+            sed -i 's|"FSAA": 2,|"FSAA": 0,|' "$crashday_gcfg"
+            sleep 0.5
+            killall crashday.exe
+            return 0
+    fi
+    return 1
 }
+
+crashday_gcfg="$WINEPREFIX/drive_c/users/steamuser/Local Settings/Crashday/config/graphics.config"
+if ! is_crashday_gcfg_fixed
+    then
+        (while kill -0 $LWPID
+            do
+                pre_launch && break
+                sleep 3
+        done) &
+        post_launch() { sleep 0.5 ; cleanrun "$LW_SOURCE" "$LU_EXE" ; }
+fi

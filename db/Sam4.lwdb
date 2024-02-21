@@ -1,3 +1,5 @@
-pre_launch() { check_exe_args '+gfxapi D3D12 +sfxapi OpenAL' ; }
+# Serious Sam 4 ('Sam4.exe')
+
+pre_launch() { EXE_ARGS+=(+gfxapi D3D12 +sfxapi OpenAL) ; }
 
 WIN_VER=10

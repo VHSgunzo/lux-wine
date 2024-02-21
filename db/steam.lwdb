@@ -1,5 +1,7 @@
+# Steam ('Steam.exe')
+
 pre_launch() {
-    check_exe_args "-no-cef-sandbox -opengl"
+    EXE_ARGS+=(-no-cef-sandbox -opengl)
     if [[ -f "$LW_REGPATCH_DIR/steam.reg" && \
         ! -n "$(grep -A2 "\[Software.*Wine.*AppDefaults.*steam.exe\]" \
         "$WINEPREFIX/user.reg"|grep -wo 'win10')" ]]

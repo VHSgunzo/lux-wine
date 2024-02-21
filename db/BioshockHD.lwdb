@@ -1,3 +1,6 @@
+# BioShock Remastered ('BioshockHD.exe')
+# Ubisoft Connect ('UbisoftConnect.exe' 'UbisoftConnectInstaller.exe' 'upc.exe')
+
 WIN_VER=10
 ESYNC=0
 FSYNC=0

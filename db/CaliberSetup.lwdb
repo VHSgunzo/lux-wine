@@ -1,3 +1,5 @@
+# Caliber  ('CaliberSetup.exe' 'Caliber.exe' 'CaliberStart.exe' 'launcher.exe')
+
 WIN_VER=10
 WINEARCH=win64
 WINE_VERSION=System

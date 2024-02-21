@@ -1,3 +1,5 @@
+# nvapi64-tests ('nvapi64-tests.exe')
+
 WIN_VER=10
 TERMINAL=1
 HOLD_TERMINAL=1
