@@ -5107,9 +5107,13 @@ try_add_reg_cdrom() {
                                     echo -e "\n[Software\\\\\\Wine\\\\\\Drives]\n\"$drive\"=\"cdrom\"" >> "$PFXSYSREG"
                             fi
                     fi
-                else print_error 'Specify the cdrom drive!'
+                else
+                    print_error 'Specify the cdrom drive!'
+                    return 1
             fi
-        else print_error 'system.reg not found in prefix!'
+        else
+            print_error 'system.reg not found in prefix!'
+            return 1
     fi
 }
 
