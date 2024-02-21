@@ -5089,8 +5089,32 @@ is_winepfx() {
     || -f "$1/user.reg" && -f "$1/.update-timestamp" ]]
 }
 
+try_add_reg_cdrom() {
+    local PFXSYSREG="$WINEPREFIX/system.reg"
+    if [ -f "$PFXSYSREG" ]
+        then
+            if [ "$1" ]
+                then
+                    local drive="${1,,}:"
+                    if ! grep -qo "\"$drive\"=\"cdrom\"" "$PFXSYSREG" 2>/dev/null
+                        then
+                            if grep -Fqo '[Software\\Wine\\Drives]' "$PFXSYSREG" 2>/dev/null
+                                then
+                                    sed -i "/\[Software\\\\\\\\Wine\\\\\\\\Drives\]/{n;a\
+\"$drive\"=\"cdrom\"
+}" "$PFXSYSREG"
+                                else
+                                    echo -e "\n[Software\\\\\\Wine\\\\\\Drives]\n\"$drive\"=\"cdrom\"" >> "$PFXSYSREG"
+                            fi
+                    fi
+                else print_error 'Specify the cdrom drive!'
+            fi
+        else print_error 'system.reg not found in prefix!'
+    fi
+}
+
 check_winepfx() {
-    is_wine_drive() { ls -l "$WINEPREFIX/dosdevices"/[a-z]: 2>/dev/null|grep -w "${1}$"|grep -o '[a-z]:' &>/dev/null ; }
+    is_wine_drive() { ls -l "$WINEPREFIX/dosdevices"/[a-z]: 2>/dev/null|grep -w "${1}$"|grep -qo '[a-z]:' ; }
     [ -n "$1" ] && export WINEPREFIX="$1"
     [ -n "$2" ] && export WINEARCH="$2"
     WPFX_STEAMUSER_DIR="$WINEPREFIX/drive_c/users/steamuser"
@@ -5131,7 +5155,12 @@ check_winepfx() {
     drive_h="$WINEPREFIX/dosdevices/h:"
     is_wine_drive "$HOME"||(rm -f "$drive_h" && \
         ln -sf "$HOME" "$drive_h")
-    (DRIVES=(a b d e f g i j k l m n o p q r s t u v w x y)
+    export PFX_CDROM="$WINEPREFIX/cdrom"
+    cdrom_r="$WINEPREFIX/dosdevices/r:"
+    try_mkdir "$PFX_CDROM"
+    is_wine_drive '../cdrom'||(rm -f "$cdrom_r" && \
+        ln -sfr "$PFX_CDROM" "$cdrom_r")
+    (DRIVES=(a b d e f g i j k l m n o p q s t u v w x y)
     DEF_MP_DIRS=('/media' "/media/$USER" '/mnt' '/run/media' "/run/media/$USER")
     IFS=$'\n' MP_DIRS=($(find "${DEF_MP_DIRS[@]}" -maxdepth 1 -type d 2>/dev/null|sort -u))
     try_rm_broken_link "$WINEPREFIX/dosdevices" &>/dev/null
@@ -5173,6 +5202,7 @@ check_winepfx() {
             fi
     done
     is_winepfx "$WINEPREFIX"||winepfx_init
+    try_add_reg_cdrom r
     DEF_WDESK_DIR=("Desktop" "Documents" "Music" "Videos" "Pictures" "Downloads" "Templates")
     (IFS=$'\n' ; for WINEDESK_DIR in "${DEF_WDESK_DIR[@]}"
         do

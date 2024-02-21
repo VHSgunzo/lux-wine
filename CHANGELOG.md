@@ -1,3 +1,7 @@
+# v0.78.2.8
+
+* Add pseudo CD-ROM for fix old games CD-ROM check (`Road Rash` and others)
+
 # v0.78.2.7
 
 * Add app and EXE names to all DB scripts
