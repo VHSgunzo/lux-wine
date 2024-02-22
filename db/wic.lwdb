@@ -1,4 +1,4 @@
-# World in Conflict ('wic.exe')
+#DB# World in Conflict # DB_EXES=('wic.exe')
 
 pre_launch() {
     wicconfig="$WINEPREFIX/drive_c/users/steamuser/Documents/World in Conflict/Game Options.txt"

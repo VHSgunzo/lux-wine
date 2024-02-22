@@ -1,4 +1,4 @@
-# Mass Effect ('MassEffect.exe')
+#DB# Mass Effect # DB_EXES=('MassEffect.exe')
 
 WIN_VER=10
 WINEARCH=win64

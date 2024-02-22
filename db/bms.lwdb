@@ -1,4 +1,4 @@
-# Black Mesa ('bms.exe')
+#DB# Black Mesa # DB_EXES=('bms.exe')
 
 WIN_VER=10
 pre_launch() {

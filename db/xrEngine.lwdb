@@ -1,4 +1,4 @@
-# S.T.A.L.K.E.R.  ('xrEngine.exe')
+#DB# S.T.A.L.K.E.R. # DB_EXES=('xrEngine.exe')
 
 pre_launch() {
      [[ ! -f "$EXE_PATH/fsgame.ltx" && \

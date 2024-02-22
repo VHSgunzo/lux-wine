@@ -1,5 +1,5 @@
-# Need for Speed Porsche ('Porsche.exe')
-# Emperor: Rise of the Middle Kingdom ('EMPEROR.exe')
+#DB# Need for Speed Porsche # DB_EXES=('Porsche.exe')
+#DB# Emperor: Rise of the Middle Kingdom # DB_EXES=('EMPEROR.exe')
 
 WIN_VER=10
 DGVOODOO2=1

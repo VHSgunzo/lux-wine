@@ -1,4 +1,4 @@
-# World Of Sea Battle ('WorldOfSeaBattleClient.exe' 'wos_client.exe')
+#DB# World Of Sea Battle # DB_EXES=('WorldOfSeaBattleClient.exe' 'wos_client.exe')
 
 WIN_VER=10
 WINEARCH=win64

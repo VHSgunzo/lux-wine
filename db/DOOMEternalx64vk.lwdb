@@ -1,4 +1,4 @@
-# Doom Eternal ('DOOMEternalx64vk.exe')
+#DB# Doom Eternal # DB_EXES=('DOOMEternalx64vk.exe')
 
 pre_launch() { EXE_ARGS+=(+com_skipIntroVideo 1 +com_skipKeyPressOnLoadScreens 1 +m_smoothing 0) ; }
 

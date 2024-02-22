@@ -1,6 +1,12 @@
 # v0.78.2.8
 
 * Add pseudo CD-ROM for fix old games CD-ROM check (`Road Rash` and others)
+* Add `installrun_nupkg_exe()` for install and run exe with `*.nupkg` in DB scripts
+* Update DB script for `Direct Commander`
+* Update DB script for `WeMod`
+* Add DB script for `EVE Online Setup`
+* Add `Auto remove apps shortcuts` option to LW `Settings`
+* Minor fixes
 
 # v0.78.2.7
 

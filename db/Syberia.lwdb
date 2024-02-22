@@ -1,4 +1,4 @@
-# Syberia ('Syberia.exe')
+#DB# Syberia # DB_EXES=('Syberia.exe')
 
 pre_launch() {
     syberia_cfg="$EXE_PATH/player.ini"

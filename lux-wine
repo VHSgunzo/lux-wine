@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.2.7"
+export LW_VERSION="0.78.2.8"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -187,6 +187,7 @@ check_def_config() {
     [ ! -n "$BATTLEYE" ] && export BATTLEYE=1
     [ ! -n "$EAC" ] && export EAC=1
     [ ! -n "$EXE_LWDB" ] && export EXE_LWDB=1
+    [ ! -n "$CHECK_LW_APPS" ] && export CHECK_LW_APPS=1
     [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='Disabled'
     [ ! -n "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
     export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
@@ -2127,7 +2128,7 @@ check_def_wine() {
 lu_prerun() {
     if [ -n "$LU_EXE" ]
         then
-            export EXE_NAME="$(basename "$LU_EXE"|sed 's|.exe||i')"
+            export EXE_NAME="$(basename "$LU_EXE"|sed 's|.exe$||i')"
             export EXE_FULL_NAME="$(basename "$LU_EXE")"
             [ ! -n "$EXE_PATH" ] && \
             export EXE_PATH="$(realpath "$(dirname "$LU_EXE")")"
@@ -2159,15 +2160,20 @@ lu_prerun() {
 }
 
 check_shrt() (
-    IFS=$'\n'
-    LW_APPS_EXES=($(grep -Eiom1 " [\"']/.*\.exe| [\"']/.*\.bat" -r \
-        "$LW_APPS_DIR" 2>/dev/null|sed "s|.*\.desktop: ['\"]||g"))
-    if [ -n "$LW_APPS_EXES" ]
+    [ -f "$LW_DEF_CFG" ] && \
+    source "$LW_DEF_CFG" 2>/dev/null
+    if [ "$CHECK_LW_APPS" == 1 ]
         then
-            for exe in "${LW_APPS_EXES[@]}"
-                do [ ! -f "$(ipath "$exe"|head -1)" ] && \
-                    NO_YAD=1 RM_ALL_EXE_APPS=1 lu_rmapp "$exe"
-            done
+            IFS=$'\n'
+            LW_APPS_EXES=($(grep -Eiom1 " [\"']/.*\.exe| [\"']/.*\.bat" -r \
+                "$LW_APPS_DIR" 2>/dev/null|sed "s|.*\.desktop: ['\"]||g"))
+            if [ -n "$LW_APPS_EXES" ]
+                then
+                    for exe in "${LW_APPS_EXES[@]}"
+                        do [ ! -f "$(ipath "$exe"|head -1)" ] && \
+                            NO_YAD=1 RM_ALL_EXE_APPS=1 lu_rmapp "$exe"
+                    done
+            fi
     fi
 )
 
@@ -2814,7 +2820,7 @@ lu_config() {
             FSR_MODE WINE_SANDBOX ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             NO_WRITE_WATCH HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD DIS_NETCORE \
             VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX DXR EXEARGS CHK_UPDATE EXE_LWDB EXE_LWDBFL \
-            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
+            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR CHECK_LW_APPS LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT \
             VSYNC LWVKCAPTURE NVPRIME DRIPRIME"
@@ -2965,6 +2971,7 @@ lu_config() {
             --file-filter="Loading bar cover (*.gif)| *.gif *.GIF" \
             --field="Check Steam apps:CHK" "$CHKSTEAMAPPS" \
             --field="Steam apps common folder::DIR" "$LW_STEAMAPPS_DIR" \
+            --field="Auto remove apps shortcuts:CHK" "$CHECK_LW_APPS" \
             --field="LOG:CHK" "$LOG" \
             --field="DEBUG:CHK" "$DEBUG" \
             --field="Use system Winetricks:CHK" "$SYS_WINETRICKS" \
@@ -6011,7 +6018,7 @@ export_all_functions() {
         runtime_manager upd_battleye is_exe_exist which_exe try_ln_wine_build_dll find_vk_icd btntls_run get_app_exe check_driprime greptardlurl get_wlu_releases \
         upd_d3d_extras upd_dgvoodoo2 upd_dxvk upd_dxvk_nvapi upd_vkd3d upd_all is_loadbar lu_runapp lu_lsapp set_wine_version get_pge_releases get_wge_releases \
         check_wined3d check_vkbasalt_eff check_luwine_wcfg_cenv check_videodrv check_startfile check_def_config get_wk4_releases is_app_exist \
-        settingbar initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover \
+        settingbar initbar check_network_status print_question print_input loadbar_cover check_first_run check_eac check_loadbar_cover installrun_nupkg_exe \
         check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps is_winepfx \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
@@ -6526,6 +6533,67 @@ lu_tray() {
                     "$LW_TRAY"
                 else "$LW_TRAY" &
             fi
+    fi
+}
+
+installrun_nupkg_exe() {
+    cleanextrtmp() { [ -d "$extrtmp" ] && rm -rf "$extrtmp" ; }
+    installrun_errexit() {
+        print_error yad "$1: $EXE_NAME"
+        cleanextrtmp
+        exit 1
+    }
+    findnupkgexe() {
+        local retexe="$(ls -1 "$extrtmp/lib/net"*/*.[Ee][Xx][Ee] 2>/dev/null)"
+        local IGNEXES=('squirrel.exe' '.*ExecutionStub.exe')
+        if [ -n "$retexe" ]
+            then
+                for exe in "${IGNEXES[@]}"
+                    do retexe="$(grep -iv "$exe"<<<"$retexe")"
+                done
+        fi
+        [ -n "$retexe" ] && echo "$(basename "$(head -1<<<"$retexe")")"||return 1
+    }
+    [ -n "$1" ] && local LU_EXE="$1"
+    [ -n "$2" ] && local NUPKG_EXE="$2"
+    [ -n "$3" ] && local SHRT_NAME="$3"
+    if [ -f "$LU_EXE" ]
+        then
+            if (7z l "$LU_EXE" '*.nupkg'|awk '{print$6}'|grep -qo '.*.nupkg')
+                then
+                    local extrtmp="$LW_DEF_TMP/nupkg-$RANDOM"
+                    cleanextrtmp
+                    mkdir -p "$extrtmp"
+                    if (7z x "$LU_EXE" '*.nupkg' -o"$extrtmp" ; \
+                        unzip -o "$extrtmp"/*.nupkg 'lib/net*/*' -d "$extrtmp")
+                        then
+                            local nupkgexe="$(findnupkgexe)"
+                            if [ -n "$nupkgexe" ]
+                                then
+                                    [ -n "$NUPKG_EXE" ]||\
+                                    local NUPKG_EXE="$WINEPREFIX/dosdevices/c:/Program Files/$(sed 's|.exe$||i'<<<"$nupkgexe")/$nupkgexe"
+                                    local installdir="$(dirname "$NUPKG_EXE")"
+                                    [ -d "$installdir" ] && rm -rf "$installdir"
+                                    mkdir -p "$(dirname "$installdir")"
+                                    if cp -Trf "$extrtmp/lib/net"* "$installdir" && \
+                                        [ -f "$NUPKG_EXE" ]
+                                        then
+                                            cleanextrtmp
+                                            [ -n "$SHRT_NAME" ]||\
+                                            local SHRT_NAME="$(basename "$NUPKG_EXE"|sed 's|.exe$||i')"
+                                            lu_shortcut "$NUPKG_EXE" "$SHRT_NAME"
+                                            cleanrun "$LW_SOURCE" "$LU_EXE" "${EXE_ARGS[@]}"
+                                            exit $?
+                                        else installrun_errexit 'Failed to install'
+                                    fi
+                                    cleanextrtmp
+                                else installrun_errexit 'EXE not found in nupkg'
+                            fi
+                        else installrun_errexit 'Failed to extract'
+                    fi
+                else installrun_errexit 'Not found *.nupkg'
+            fi
+        else installrun_errexit 'Specify LU_EXE'
     fi
 }
 

@@ -1,4 +1,4 @@
-# Infernal ('game.exe')
+#DB# Infernal # DB_EXES=('game.exe')
 
 infernal() {
     WIN_VER=10

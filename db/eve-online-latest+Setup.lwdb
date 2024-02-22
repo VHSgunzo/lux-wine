@@ -1,0 +1,8 @@
+#DB# EVE Online Setup # DB_EXES=('eve-online-latest+Setup.exe')
+
+pre_launch() { installrun_nupkg_exe ; }
+
+WIN_VER=10
+WINEARCH=win64
+SHRT_NAME='EVE Online'
+EXE_ARGS=('--product=eve-online')

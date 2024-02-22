@@ -1,5 +1,5 @@
-# Heritage of Kings - The Settlers ('SettlersHoK.exe')
-# Command & Conquer: Red Alert 3 ('RA3.exe')
-# Command & Conquer: Red Alert 3 — Uprising ('RA3EP1.exe')
+#DB# Heritage of Kings - The Settlers # DB_EXES=('SettlersHoK.exe')
+#DB# Command & Conquer: Red Alert 3 # DB_EXES=('RA3.exe')
+#DB# Command & Conquer: Red Alert 3 — Uprising # DB_EXES=('RA3EP1.exe')
 
 FSR_MODE=Enabled

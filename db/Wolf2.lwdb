@@ -1,4 +1,4 @@
-# Wolfenstein (2009) ('Wolf2.exe')
+#DB# Wolfenstein 2009 # DB_EXES=('Wolf2.exe')
 
 pre_launch() { EXE_ARGS+=(+set com_skipIntro 1) ; }
 

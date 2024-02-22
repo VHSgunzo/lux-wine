@@ -1,4 +1,4 @@
-# League of Legends ('live.na.exe' 'LeagueClient.exe' 'RiotClientServices.exe' '*league of legends*')
+#DB# League of Legends # DB_EXES=('live.na.exe' 'LeagueClient.exe' 'RiotClientServices.exe' '.*league of legends.*')
 
 WIN_VER=10
 DIS_NETCORE=1

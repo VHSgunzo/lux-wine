@@ -1,4 +1,4 @@
-# Serious Sam 4 ('Sam4.exe')
+#DB# Serious Sam 4 # DB_EXES=('Sam4.exe')
 
 pre_launch() { EXE_ARGS+=(+gfxapi D3D12 +sfxapi OpenAL) ; }
 

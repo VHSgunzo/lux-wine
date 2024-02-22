@@ -1,4 +1,4 @@
-# Starfield ('Starfield.exe')
+#DB# Starfield # DB_EXES=('Starfield.exe')
 
 WIN_VER=10
 DXR=0

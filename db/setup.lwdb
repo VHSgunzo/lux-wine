@@ -1,6 +1,6 @@
-# ('setup.exe')
-# GOG Galaxy ('gog_galaxy*.exe')
-# League of Legends ('live.na.exe' 'LeagueClient.exe' 'RiotClientServices.exe' '*league of legends*')
+#DB# Setup # DB_EXES=('setup.exe')
+#DB# GOG Galaxy # DB_EXES=('gog_galaxy.*.exe')
+#DB# League of Legends # DB_EXES=('live.na.exe' 'LeagueClient.exe' 'RiotClientServices.exe' '.*league of legends.*')
 
 ESYNC=0
 FSYNC=0

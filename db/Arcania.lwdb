@@ -1,4 +1,4 @@
-# Gothic 4: Arcania - ('Arcania Addon.exe' 'ArcaniA Addon POL.exe' 'ArcaniA Addon RUS.exe' 'Arcania.exe')
+#DB# Gothic 4: Arcania # DB_EXES=('Arcania Addon.exe' 'ArcaniA Addon POL.exe' 'ArcaniA Addon RUS.exe' 'Arcania.exe')
 
 WIN_VER=10
 WINEARCH=win64

@@ -1,4 +1,4 @@
-# Soldier of Fortune 2 ('SoF2.exe')
+#DB# Soldier of Fortune 2 # DB_EXES=('SoF2.exe')
 
 SUM=($(sha256sum SoF2.exe 2>/dev/null))
 PATCH_SUM='bf8225821e1b0e27ea97a7507034a575d93e3e190adbc9f162510bb547a52bbb'

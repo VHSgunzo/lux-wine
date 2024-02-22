@@ -1,4 +1,4 @@
-# Abe's Oddysee ('AbeWin.exe')
+#DB# Abe's Oddysee # DB_EXES=('AbeWin.exe')
 
 pre_launch() { EXE_ARGS+=(-interline) ; }
 WIN_VER=10

@@ -1,4 +1,4 @@
-# Steam ('Steam.exe')
+#DB# Steam # DB_EXES=('Steam.exe')
 
 pre_launch() {
     EXE_ARGS+=(-no-cef-sandbox -opengl)

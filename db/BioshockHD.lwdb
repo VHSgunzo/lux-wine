@@ -1,5 +1,5 @@
-# BioShock Remastered ('BioshockHD.exe')
-# Ubisoft Connect ('UbisoftConnect.exe' 'UbisoftConnectInstaller.exe' 'upc.exe')
+#DB# BioShock Remastered # DB_EXES=('BioshockHD.exe')
+#DB# Ubisoft Connect # DB_EXES=('UbisoftConnect.exe' 'UbisoftConnectInstaller.exe' 'upc.exe')
 
 WIN_VER=10
 ESYNC=0

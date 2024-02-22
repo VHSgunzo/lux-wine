@@ -1,4 +1,4 @@
-# nvapi64-tests ('nvapi64-tests.exe')
+#DB# nvapi64-tests # DB_EXES=('nvapi64-tests.exe')
 
 WIN_VER=10
 TERMINAL=1

@@ -1,4 +1,4 @@
-# Caliber  ('CaliberSetup.exe' 'Caliber.exe' 'CaliberStart.exe' 'launcher.exe')
+#DB# Caliber # DB_EXES=('CaliberSetup.exe' 'Caliber.exe' 'CaliberStart.exe' 'launcher.exe')
 
 WIN_VER=10
 WINEARCH=win64

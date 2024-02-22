@@ -1,4 +1,4 @@
-# osu!  ('osu!install.exe' 'osu!.exe')
+#DB# osu! # DB_EXES=('osu!install.exe' 'osu!.exe')
 
 WIN_VER=10
 FPS_LIMIT=0

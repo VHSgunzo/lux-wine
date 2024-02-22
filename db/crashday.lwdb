@@ -1,4 +1,4 @@
-# Crashday ('crashday.exe')
+#DB# Crashday # DB_EXES=('crashday.exe')
 
 is_crashday_gcfg_fixed() { grep -qo '"FSAA": 0,' "$crashday_gcfg" 2>/dev/null ; }
 

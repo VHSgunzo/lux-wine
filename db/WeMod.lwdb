@@ -1,39 +1,8 @@
-# WeMod ('WeMod.exe' 'WeMod-*.exe')
+#DB# WeMod # DB_EXES=('WeMod.exe' 'WeMod-.*.exe')
 
 pre_launch() {
-    if [[ "${EXE_NAME,,}" == 'wemod-'[0-9]* ]]
-        then
-            cleanwemodtmp() { [ -d "$wemodtmp" ] && rm -rf "$wemodtmp" ; }
-            wemodtmp="$LW_DEF_TMP/wemod-$RANDOM"
-            wemoddir="$WINEPREFIX/dosdevices/c:/Program Files/WeMod"
-            wemodexe="$wemoddir/WeMod.exe"
-            cleanwemodtmp
-            mkdir -p "$wemodtmp"
-            if (unzip -o "$LU_EXE" '*.nupkg' -d "$wemodtmp" ; \
-                unzip -o "$wemodtmp"/*.nupkg 'lib/net*/*' -d "$wemodtmp")
-                then
-                    [ -d "$wemoddir" ] && rm -f "$wemoddir"
-                    mkdir -p "$(dirname "$wemoddir")"
-                    if mv -f "$wemodtmp/lib/net"* "$wemoddir" && \
-                        [ -f "$wemodexe" ]
-                        then
-                            cleanwemodtmp
-                            export LU_EXE="$wemodexe"
-                            lu_shortcut "$LU_EXE" 'WeMod'
-                            cleanrun "$LW_SOURCE" "$LU_EXE"
-                            exit $?
-                        else
-                            print_error yad "Failed to install: $EXE_NAME"
-                            cleanwemodtmp
-                            exit 1
-                    fi
-                    cleanwemodtmp
-                else
-                    print_error yad "Failed to extract: $EXE_NAME"
-                    cleanwemodtmp
-                    exit 1
-            fi
-    fi
+    [[ "${EXE_NAME,,}" == 'wemod-'[0-9]* ]] && \
+        installrun_nupkg_exe
 }
 
 WIN_VER=10

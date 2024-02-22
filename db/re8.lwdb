@@ -1,4 +1,4 @@
-# Resident Evil Village ('re8.exe')
+#DB# Resident Evil Village # DB_EXES=('re8.exe')
 
 pre_launch() {
     try_mkdir "$WINEPREFIX/drive_c/Program Files (x86)/Steam/userdata/418370/remote/win64_save"
