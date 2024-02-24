@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.2.9"
+export LW_VERSION="0.78.3.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -2200,7 +2200,8 @@ shrt_loop() {
             touch "$lwshrt"
             wait_wpids=100
             while [ "$wait_wpids" -gt 0 ] && \
-                ! pidof wineserver &>/dev/null
+                ! pidof wineserver &>/dev/null && \
+                ! pgrep winetricks &>/dev/null
                 do
                     wait_wpids="$(( $wait_wpids - 1 ))"
                     sleep 0.01 2>/dev/null
@@ -2208,7 +2209,8 @@ shrt_loop() {
             NO_YAD=1
             CSHRT_WITH_RM=1
             NO_ADD_APP_NAME=1
-            while pidof wineserver &>/dev/null
+            while pidof wineserver &>/dev/null || \
+                  pgrep winetricks &>/dev/null
                 do
                     sleep 1 2>/dev/null
                     WPREFIXLNK=($(find_wpfxlnk "${WPFXDESKDIRS[@]}"))
@@ -3392,6 +3394,7 @@ winetricks() {
             export NEW_WINE="$WINE"
             export WINE="$OLD_WINE"
     fi
+    shrt_loop &
     if [ "$SYS_WINETRICKS" == 1 ]
         then
             if [ -x "/usr/bin/winetricks" ]
@@ -3805,6 +3808,7 @@ shrt_from_lnk() {
                 'openuserfolder.bat' 'language.changer.exe'
                 'uninst.exe' 'q2rtxded-x86.exe' 'q2rtxded.exe'
                 'ErrorReporter.exe' 'EAUpdater.exe' 'explorer.exe'
+                'UninstWA.exe'
             )
             IGNLNK=(
                 'VKPlay.ru.lnk' 'App Recovery.lnk'
@@ -6627,7 +6631,10 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
                     rm -f "/tmp/.lwait.$RUNPID"
                 if [ ! -f "/tmp/.lwait.$RUNPID" ]
                     then
-                        IGNPS=('sleep' 'gamemoded' 'bash' 'grep' 'tee' 'ls' 'shellsrv')
+                        IGNPS=(
+                            'tee' 'ls' 'shellsrv' 'cat'
+                            'sleep' 'gamemoded' 'bash' 'grep'
+                        )
                         find_processes
                         wait_lwpids=100
                         while [[ "$wait_lwpids" -gt 0 && \
@@ -6641,7 +6648,7 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
                         while [[ -n "$processes" && \
                             -f "/tmp/.lwait.$RUNPID" ]]
                             do
-                                sleep 0.5
+                                sleep 1
                                 find_processes
                         done
                         rm -f "/tmp/.lwait.$RUNPID"

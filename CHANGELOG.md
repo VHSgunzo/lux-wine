@@ -1,3 +1,10 @@
+# v0.78.3.1
+
+* HotFix wait for `lwrun` container processes exit
+* Add automatic shortcut creation for `Winetricks`
+* Add DB script for `Bio F.R.E.A.K.S.`
+* Minor fixes
+
 # v0.78.2.9
 
 * Add `[EXE_NAMES].lwdb` DB script with custom EXE names
