@@ -1,3 +1,11 @@
+# v0.78.2.9
+
+* Add `[EXE_NAMES].lwdb` DB script with custom EXE names
+* Fix set `WINE_VERSION` from DB scripts for `System` Wine
+* Fix wait for `lwrun` container processes exit
+* Add check for duplicate exe arguments
+* Minor fixes
+
 # v0.78.2.8
 
 * Add pseudo CD-ROM for fix old games CD-ROM check (`Road Rash` and others)

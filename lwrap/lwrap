@@ -52,7 +52,7 @@ LWRAP_DIR='/opt/lwrap'
 LWRUNTIME="$LWRAP_DIR/runtime.tar.zst"
 HLWDIRLN="$HOME/LuxWine"
 OLD_HLWDIRLN="$HOME/LutrisWine"
-LWRPIDFL='/tmp/.lwrpid'
+LWRPIDFL="$XDG_RUNTIME_DIR/lwrpid"
 LWEXEC="$LWBIN_DIR/lwexec"
 HICOLOR_SIZES=(
     "512x512" "256x256" "192x192" "128x128"

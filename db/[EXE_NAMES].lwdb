@@ -1,0 +1,12 @@
+case "${EXE_NAME,,}" in
+    *'league of legends'*)
+        EXE_LWDBFL="$LW_DB_DIR/LeagueClient.lwdb" ;;
+    gog_galaxy*)
+        EXE_LWDBFL="$LW_DB_DIR/setup.lwdb" ;;
+    wemod-*)
+        EXE_LWDBFL="$LW_DB_DIR/WeMod.lwdb" ;;
+    zonasetup*)
+        EXE_LWDBFL="$LW_DB_DIR/Zona.lwdb" ;;
+    'direct commander setup'*)
+        EXE_LWDBFL="$LW_DB_DIR/Direct Commander.lwdb" ;;
+esac
