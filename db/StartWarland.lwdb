@@ -1,0 +1,6 @@
+#DB# Lineage 2 Warland # DB_EXES=('StartWarland.exe')
+
+WIN_VER=10
+WINEARCH=win64
+MUST_HAVE_DLL=Disabled
+WPREFIX_NAME=defprefix_dotnet

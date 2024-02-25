@@ -1,3 +1,7 @@
+# v0.78.3.2
+
+* Add DB script for `Lineage 2 Warland`
+
 # v0.78.3.1
 
 * HotFix wait for `lwrun` container processes exit
