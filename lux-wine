@@ -6656,7 +6656,7 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
                         rm -f "$lwait_fl"
                         sleep 0.5
                 fi
-        fi) &
+        fi) 2>/dev/null &
         lwait_pid=$!
         lite_init "$@"
         case $1 in
