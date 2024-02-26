@@ -850,13 +850,16 @@ settingbar() {
     fi
     "$@" &
     local exec_pid="$!"
-    (while [ -d "/proc/$exec_pid" ]
-        do echo -e "#\n" ; sleep 0.1 2>/dev/null
-    done)|yad "${yad_args[@]}" Lux Wine &>/dev/null &
-    local yad_pid="$!"
-    wait "$exec_pid" &>/dev/null
-    ret="$?"
-    kill "$yad_pid" &>/dev/null
+    if [[ -n "$exec_pid" && -d "/proc/$exec_pid" ]]
+        then
+            (while [ -d "/proc/$exec_pid" ]
+                do echo -e "#\n" ; sleep 0.1 2>/dev/null
+            done)|yad "${yad_args[@]}" Lux Wine &>/dev/null &
+            local yad_pid="$!"
+            wait "$exec_pid" &>/dev/null
+            ret="$?"
+            kill "$yad_pid" &>/dev/null
+    fi
     return "$ret"
 }
 
