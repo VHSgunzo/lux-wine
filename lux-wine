@@ -2189,17 +2189,17 @@ shrt_loop() {
     find_wpfxlnk() { find "$@" -type f -iname "*.lnk" 2>/dev/null|sort -u ; }
     find_wpfxurl() { find "$@" -type f -iname "*.url" 2>/dev/null|sort -u ; }
     local pfxshrtname="$(basename "$WINEPREFIX")"
-    local lwshrt="$LW_DEF_TMP/lwshrt.$pfxshrtname"
-    [ -f "$lwshrt" ] && \
+    local lwshrt_fl="$LW_DEF_TMP/lwshrt.$pfxshrtname"
+    [ -f "$lwshrt_fl" ] && \
     ! pidof wineserver &>/dev/null && \
-        rm -f "$lwshrt"
-    if [ ! -f "$lwshrt" ]
+        rm -f "$lwshrt_fl"
+    if [ ! -f "$lwshrt_fl" ]
         then
             (IFS=$'\n'
             mkdir -p "$LW_DEF_TMP"
-            touch "$lwshrt"
+            touch "$lwshrt_fl"
             wait_wpids=100
-            while [ "$wait_wpids" -gt 0 ] && \
+            while [[ "$wait_wpids" -gt 0 && -d "/proc/$LWPID" ]] && \
                 ! pidof wineserver &>/dev/null && \
                 ! pgrep winetricks &>/dev/null
                 do
@@ -2209,8 +2209,9 @@ shrt_loop() {
             NO_YAD=1
             CSHRT_WITH_RM=1
             NO_ADD_APP_NAME=1
-            while pidof wineserver &>/dev/null || \
-                  pgrep winetricks &>/dev/null
+            while [[ -d "/proc/$LWPID" ]] && \
+                (pidof wineserver &>/dev/null||\
+                 pgrep winetricks &>/dev/null)
                 do
                     sleep 1 2>/dev/null
                     WPREFIXLNK=($(find_wpfxlnk "${WPFXDESKDIRS[@]}"))
@@ -2224,7 +2225,7 @@ shrt_loop() {
                     check_tray
                     [ "$FORCE_TRAY" != 1 ] && \
                         check_shrt
-            done; rm -f "$lwshrt")
+            done; rm -f "$lwshrt_fl")
     fi
 }
 
@@ -3465,8 +3466,9 @@ lu_exit() {
             kill $(pgrep -fa 'aria2c'|grep 'LuxWine'|awk '{print$1}') 2>/dev/null
             print_info notify "Lux Wine successfully killed!"
             sleep 2
-            rm -rf /tmp/FORCE_EXIT /tmp/syssett* /tmp/winesett* \
-                /tmp/ressett* /tmp/settbtn* rm -f /tmp/.lwshrt*
+            rm -f /tmp/FORCE_EXIT /tmp/syssett* /tmp/winesett* \
+                /tmp/ressett* /tmp/settbtn* rm -f /tmp/.lwshrt* \
+                /tmp/.lwait*
             kill $(pgrep -fa "$LW_NAME"|awk '{print$1}')
             lu_killtray
         else
@@ -6620,17 +6622,17 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
     else
         (if [[ "$RUNSRC" =~ "lwrun" ]]
             then
-                find_processes() {
-                    processes="$(ls -l /proc/*/exe 2>/dev/null|grep ' ->')"
-                    for ps in "${IGNPS[@]}"
-                        do processes="$(grep -wv "$ps"<<<"$processes")"
-                    done
-                }
-                [ -f "/tmp/.lwait.$RUNPID" ] && \
-                ! kill -0 $RUNPID &>/dev/null && \
-                    rm -f "/tmp/.lwait.$RUNPID"
-                if [ ! -f "/tmp/.lwait.$RUNPID" ]
+                lwait_fl="/tmp/.lwait.$RUNPID"
+                [[ -f "$lwait_fl" && ! -d "/proc/$RUNPID" ]] && \
+                    rm -f "$lwait_fl"
+                if [ ! -f "$lwait_fl" ]
                     then
+                        find_processes() {
+                            processes="$(ls -l /proc/*/exe 2>/dev/null|grep ' ->')"
+                            for ps in "${IGNPS[@]}"
+                                do processes="$(grep -wv "$ps"<<<"$processes")"
+                            done
+                        }
                         IGNPS=(
                             'tee' 'ls' 'shellsrv' 'cat'
                             'sleep' 'gamemoded' 'bash' 'grep'
@@ -6638,20 +6640,20 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
                         find_processes
                         wait_lwpids=100
                         while [[ "$wait_lwpids" -gt 0 && \
-                            ! -n "$processes" ]]
+                            ! -n "$processes" && -d "/proc/$LWPID" ]]
                             do
                                 wait_lwpids="$(( $wait_lwpids - 1 ))"
                                 sleep 0.01 2>/dev/null
                                 find_processes
                         done
-                        touch "/tmp/.lwait.$RUNPID"
-                        while [[ -n "$processes" && \
-                            -f "/tmp/.lwait.$RUNPID" ]]
+                        touch "$lwait_fl"
+                        while [[ -f "$lwait_fl" && \
+                            -n "$processes" && -d "/proc/$LWPID" ]]
                             do
                                 sleep 1
                                 find_processes
                         done
-                        rm -f "/tmp/.lwait.$RUNPID"
+                        rm -f "$lwait_fl"
                         sleep 0.5
                 fi
         fi) &

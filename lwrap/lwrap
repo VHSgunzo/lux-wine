@@ -52,7 +52,8 @@ LWRAP_DIR='/opt/lwrap'
 LWRUNTIME="$LWRAP_DIR/runtime.tar.zst"
 HLWDIRLN="$HOME/LuxWine"
 OLD_HLWDIRLN="$HOME/LutrisWine"
-LWRPIDFL="$XDG_RUNTIME_DIR/lwrpid"
+LW_DEF_TMP="$LW_DIR/tmp"
+LWRPIDFL="$LW_DEF_TMP/lwrpid"
 LWEXEC="$LWBIN_DIR/lwexec"
 HICOLOR_SIZES=(
     "512x512" "256x256" "192x192" "128x128"
@@ -918,6 +919,7 @@ if [[ -n "$RUNSRC" && -d "$RUNROOTFS" ]]
         if ! [[ -n "$lwrpid" && -f "/tmp/.bwinf.$lwrpid" && -d "/proc/$lwrpid" ]]
             then
                 LWEXECFLDIR="/tmp/.lwexec.$RUNPID"
+                mkdir -p "$LW_DEF_TMP"
                 echo "$RUNPID" > "$LWRPIDFL" 2>/dev/null
                 (JOBNUMFL="$LWEXECFLDIR/job"
                 mkdir -p "$LWEXECFLDIR" 2>/dev/null
