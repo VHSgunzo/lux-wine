@@ -2,6 +2,7 @@
 
 * Fix exit error on install init
 * Add DB script for `Lineage 2 Warland`
+* Disable `GameMode` by default
 * Minor fixes
 
 # v0.78.3.1

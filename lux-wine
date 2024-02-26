@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.3.1"
+export LW_VERSION="0.78.3.2"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -179,7 +179,6 @@ check_def_config() {
     [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='Enabled'
     [ ! -n "$LWVKCAPTURE" ] && export LWVKCAPTURE='Disabled'
     [ ! -n "$FPS_LIMIT" ] && export FPS_LIMIT="75"
-    [ ! -n "$GAMEMODE" ] && export GAMEMODE=1
     [ ! -n "$GSTREAMER" ] && export GSTREAMER=1
     [ ! -n "$WD3DMODE" ] && export WD3DMODE='DXVK+NVAPI+VKD3D'
     [ ! -n "$WINE_SANDBOX" ] && export WINE_SANDBOX=1
