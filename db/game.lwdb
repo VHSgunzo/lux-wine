@@ -9,7 +9,7 @@ infernal() {
             then
                 physexe="$LW_DEF_TMP/PhysX.v2.5.2.exe"
                 if [ -f "$physexe" ]||try_download "https://github.com/VHSgunzo/wine-dlls/releases/download/physx-v2.5.2/PhysX.v2.5.2.exe" "$LW_DEF_TMP"
-                    then sleep 0.5 ; cleanrun "$LW_SOURCE" "$physexe" /VERYSILENT
+                    then sleep 0.5 ; "$WINE" "$physexe" /VERYSILENT
                     else
                         try_rm "$physexe" &>/dev/null
                         print_error yad "Failed to download PhysX v2.5.2!"

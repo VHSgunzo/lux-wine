@@ -15,7 +15,7 @@ curl -sL lwrap.github.io|bash
 ```
 * HF mirror:
 ```
-curl -sL lux-wine-git.static.hf.space|bash
+curl -sL lux-wine-git.static.hf.space|sed 1d|bash
 ```
 
 * or with `wget`:
@@ -24,7 +24,7 @@ wget -qO - lwrap.github.io|bash
 ```
 * HF mirror:
 ```
-wget -qO - lux-wine-git.static.hf.space|bash
+wget -qO - lux-wine-git.static.hf.space|sed 1d|bash
 ```
 
 ## Video of the installation process:
@@ -41,42 +41,42 @@ wget -qO - lux-wine-git.static.hf.space|bash
 ┌──[user@linux]─[~]
 └──╼ $ lwrap {lwrap arg} blabla.exe {exe args}
 
-      -explorer               Wine explorer
-      -cmd                    Open CMD or open file in CMD
-      -shell                  Open SHELL or open file in SHELL
-      -config                 Settings
-      -appcfg                 Apps Settings
-      -regedit                Registry editor
-      -control                Control panel
-      -winecfg                Wine settings
-      -winemgr {delonly}      Wine manager
-      -taskmgr                Task manager
-      -uninstaller            Wine uninstaller
-      -winetricks {arguments} Winetricks
-      -openpfx                Open drive C:\
-      -killwine               Kill Wine processes
-      -killtray               Kill tray
-      -killexe                Kill running EXE
-      -killshell              Kill SHELL
-      -exit                   Force exit
-      -clearpfx               Clear prefix
-      -rmapp {num|name|all}   Remove menu app
-      -shortcut               Create shortcut
-      -debug                  DEBUG
-      -help                   Show this usage info
-      -version                Show version info
-      -tray {noclose}         Tray
-      -init                   Forced initialization
-      -pfxbackup {xz}         Make prefix backup
-      -pfxrestore             Restore prefix from backup
-      -backupmnt              Mount prefix backup
-      -backupunmnt            Unmount prefix backup
-      -lsapp                  Show a list of added apps
-      -runapp {num|name}      Launch the added application
-      -update {all}           Runtime updater
+      -explorer                   Wine explorer
+      -cmd                        Open CMD or open file in CMD
+      -shell                      Open SHELL or open file in SHELL
+      -config                     Settings
+      -regedit                    Registry editor
+      -control                    Control panel
+      -winecfg                    Wine settings
+      -winemgr {delonly}          Wine manager
+      -taskmgr                    Task manager
+      -uninstaller                Wine uninstaller
+      -winetricks {arguments}     Winetricks
+      -openpfx                    Open drive C:\
+      -killwine                   Kill Wine processes
+      -killtray                   Kill tray
+      -killexe                    Kill running EXE
+      -killshell                  Kill SHELL
+      -exit                       Force exit
+      -clearpfx                   Clear prefix
+      -shortcut                   Create shortcut
+      -debug                      DEBUG
+      -help                       Show this usage info
+      -version                    Show version info
+      -tray {noclose}             Tray
+      -init                       Forced initialization
+      -pfxbackup {xz}             Create prefix backup
+      -pfxrestore                 Restore prefix from backup
+      -backupmnt                  Mount prefix backup
+      -backupunmnt                Unmount prefix backup
+      -lsapp                      Show a list of applications
+      -runapp {num|name}          Launch the application
+      -rmapp {num|name|all}       Remove application shortcut
+      -appcfg {num|name|resetall} Applications settings
+      -update {all}               Runtime updater
       {dx|dxvk} {vkd|vkd3d} {d3d|d3d_extras|d3d-extras} {eac|eac_runtime}
-      {dxnv|dxvk-nvapi|dxvk_nvapi} {bat|battleye|battleye_runtime} {wtrx|winetricks}
-      {dg|dgvoodoo2} {nvml|wine_nvml}
+      {nvml|wine_nvml} {dxnv|dxvk-nvapi|dxvk_nvapi} {wtrx|winetricks}
+      {bat|battleye|battleye_runtime} {dg|dgvoodoo2}
 ```
 
 ### **Forced re/install Lux Wine**:

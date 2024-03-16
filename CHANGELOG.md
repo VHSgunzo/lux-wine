@@ -1,3 +1,26 @@
+# v0.78.3.3
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.1) `v9.1`
+* Update [lw-runtime](https://github.com/VHSgunzo/lw-runtime/releases/tag/v0.0.3) `v0.0.3`
+* Fix showing notify
+* Update DB script for `Infernal`
+* Update DB script for `Assassin's Creed Odyssey`
+* Disable check default Wine for some arguments
+* Fix run Debug if in EXEs path exist single quotes
+* Add editable for `Wine version` field in settings
+* Add question for restore from default prefix backup if custom Wine prifix doesn't exist
+* Add run `console` EXEs in terminal
+* Fix `Wine manager` lists
+* Add `GTK theme` selector to settings (from $HOME/.themes)
+* Add `WINE_CPU_TOPOLOGY` for `CPU limit`
+* Add open apps settings with `-appcfg` arg
+* Add linking for Steam Proton's `9.0 (Beta)` `Hotfix`
+* Add linking Proton's GE from LW `Wine manager` to `Steam` ($HOME/.local/share/Steam/compatibilitytools.d)
+* Update `README.md`
+* Replace `firefox` with `chromium` in `lwrun` container
+* Minor fixes
+
 # v0.78.3.2
 
 * Fix exit error on install init

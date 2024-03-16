@@ -48,6 +48,9 @@ post_upgrade() {
     pac -Q vulkan-virtio &>/dev/null && \
     pkg_tool 'yes|pac -Rdd vulkan-virtio lib32-vulkan-virtio'
 
+    pac -Q firefox &>/dev/null && \
+    pkg_tool 'yes|pac -Rdd firefox'
+
     return 0
 }
 
