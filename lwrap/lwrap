@@ -157,7 +157,11 @@ make_install() {
             ln_lwrap
             install -Dm755 "$lwexecf" "$LWEXEC"
             install -Dm644 LuxWine.menu "$HOME/.config/menus/applications-merged/LuxWine.menu"
-            install -Dm644 LuxWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LuxWineService.desktop"
+            if [ "$KDE_SESSION_VERSION" == 6 ]
+                then install -Dm644 LuxWineService.desktop "$HOME/.local/share/kio/servicemenus/LuxWineService.desktop"
+            elif [ "$KDE_SESSION_VERSION" == 5 ]
+                then install -Dm644 LuxWineService.desktop "$HOME/.local/share/kservices5/ServiceMenus/LuxWineService.desktop"
+            fi
             mkdir -p "$MENU_APPS_DIR"
             mkdir -p "$HOME_DESK_DIRS"
             cp -rf mime "$HOME/.local/share/mime"
@@ -316,6 +320,7 @@ uninstall_lw() {
             rm -rf "$HOME_DESK_DIRS/LuxWine"*
             rm -rf "$HOME/.config/menus/applications-merged/LuxWine.menu"
             rm -rf "$HOME/.local/share/kservices5/ServiceMenus/LuxWine"*
+            rm -rf "$HOME/.local/share/kio/servicemenus/LuxWine"*
             rm -rf "$MENU_APPS_DIR/LutrisWine"
             rm -rf "$HOME_DESK_DIRS/LutrisWine"*
             rm -rf "$HOME/.config/menus/applications-merged/LutrisWine.menu"

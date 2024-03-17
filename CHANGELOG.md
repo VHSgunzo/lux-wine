@@ -1,3 +1,8 @@
+# v0.78.3.5
+
+* HotFix don't shift `lu_rmapp()` args
+* Update `lwrap` (installing `LuxWineService.desktop`)
+
 # v0.78.3.4
 
 * Add a submenu for application settings to [lw-tray](https://github.com/VHSgunzo/lw-tray/releases/tag/v0.0.6) `v0.0.6`
@@ -14,7 +19,7 @@
 * Disable check default Wine for some arguments
 * Fix run Debug if in EXEs path exist single quotes
 * Add editable for `Wine version` field in settings
-* Add question for restore from default prefix backup if custom Wine prifix doesn't exist
+* Add question for restore from default prefix backup if custom Wine prefix doesn't exist
 * Add run `console` EXEs in terminal
 * Fix `Wine manager` lists
 * Add `GTK theme` selector to settings (from $HOME/.themes)

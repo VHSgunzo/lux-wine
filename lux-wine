@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.3.4"
+export LW_VERSION="0.78.3.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -3714,7 +3714,6 @@ lu_rmapp() {
                 wait
         fi)
     }
-    shift
     LWAPPSHRT="$(grep "Categories=Lux Wine Apps" -lr "$MENU_APPS_DIR" 2>/dev/null)"
     if [[ -n "$(echo "$LWAPPSHRT"|head -1)" ]]
         then
@@ -3736,6 +3735,7 @@ lu_rmapp() {
             fi
             grep -qiom1 "^Name=$LU_EXE$" -lr "$MENU_APPS_DIR" 2>/dev/null && \
                 get_app_exe "$LU_EXE"
+            echo "LU_EXE=$LU_EXE"
             if [[ -n "$(grep -Eiom1 '\.exe$|\.bat$'<<<"$LU_EXE")" ]]
                 then
                     (IFS=$'\n'
@@ -6753,7 +6753,7 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
             -killshell) lu_killshell "$@" ;;
             -exit) lu_exit "$@" ;;
             -clearpfx) lu_clearpfx "$@" ;;
-            -rmapp) lu_rmapp "$@" ;;
+            -rmapp) shift ; lu_rmapp "$@" ;;
             -shortcut) lu_shortcut ;;
             -help) lu_help ;;
             -version) lu_version ;;

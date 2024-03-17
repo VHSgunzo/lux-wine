@@ -109,8 +109,8 @@ Name[ru_RU]=Cоздать ярлык
 [Desktop Action rmapp]
 Exec="/usr/bin/lux-wine" -rmapp %f
 Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-Name=Remove menu app
-Name[ru_RU]=Удалить приложение из меню
+Name=Remove shortcut
+Name[ru_RU]=Удалить ярлык
 
 [Desktop Action tray]
 Exec="/usr/bin/lux-wine" -tray noclose
