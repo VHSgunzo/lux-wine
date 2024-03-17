@@ -59,7 +59,7 @@ OLD_LW_DIR="$HOME/.local/share/LutrisWine"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LuxWine"
 [ ! -n "$LW_BIN_DIR" ] && export LW_BIN_DIR="$LW_DIR/bin"
-[ ! -n "$LWRAP" ] && LWRAP="$LW_BIN_DIR/lwrap"
+[ ! -n "$LWRAP" ] && export LWRAP="$LW_BIN_DIR/lwrap"
 [ ! -n "$LW_TRAY" ] && export LW_TRAY="$LWRAP_DIR/bin/lw-tray"
 if [ ! -n "$LW_THEMES_DIR" ]
     then [ -d "$LW_DIR/themes" ] && \
@@ -348,10 +348,10 @@ check_luwine_sh_pid() {
                              awk '{print$1}' 2>/dev/null)"
     for lwshpid in $CHK_LW_SH_PIDS
         do
-            export CHK_LW_SH_PID="$(pgrep -faP "$lwshpid"|grep "$(echo "$TERM_APP"|\
+            CHK_LW_SH_PID="$(pgrep -faP "$lwshpid"|grep "$(echo "$TERM_APP"|\
                                     awk '{print$1}')"|awk '{print$1}' 2>/dev/null)"
             [ -n "$CHK_LW_SH_PID" ] && \
-                export LW_SH_PID="$CHK_LW_SH_PID"
+                export LW_SH_PID="$(ps -opid=,cmd= -p "$CHK_LW_SH_PID" 2>/dev/null|grep -v 'sleep')"
     done
 }
 
@@ -3089,7 +3089,7 @@ lu_config() {
             --field="Registry editor:FBTN" "$LWSHELL -c 'lu_regedit'" \
             --field="Wine uninstaller:FBTN" "$LWSHELL -c 'lu_uninstaller'" \
             --field="Create shortcut:FBTN" "$LWSHELL -c 'lu_shortcut'" \
-            --field="Remove menu app:FBTN" "$LWSHELL -c 'lu_rmapp'" \
+            --field="Remove shortcut:FBTN" "$LWSHELL -c 'lu_rmapp'" \
             --field="Clear prefix:FBTN" "$LWSHELL -c 'btn_tools clearpfx'" \
             --field="Forced init:FBTN" "$LWSHELL -c 'btn_tools init'" \
             --field="Usage info:FBTN" "$LWSHELL -c 'lu_help'" \
@@ -3730,13 +3730,18 @@ lu_rmapp() {
                 else
                     if [ "${1,,}" == "all" ]
                         then rm_allsrtcts ; return $?
-                        else [ -n "$1" ] && LU_EXE="$1"
+                        else
+                            if [ -n "$1" ]
+                                then
+                                    LU_EXE="$1"
+                                    grep -qEiom1 '\.lnk$|\.url$'<<<"$LU_EXE" && \
+                                        LU_EXE="$(sed 's|.lnk$||i;s|.url$||i'<<<"$(basename "$LU_EXE")")"
+                                    grep -qiom1 "^Name=$LU_EXE$" -lr "$MENU_APPS_DIR" 2>/dev/null && \
+                                        get_app_exe "$LU_EXE"
+                            fi
                     fi
             fi
-            grep -qiom1 "^Name=$LU_EXE$" -lr "$MENU_APPS_DIR" 2>/dev/null && \
-                get_app_exe "$LU_EXE"
-            echo "LU_EXE=$LU_EXE"
-            if [[ -n "$(grep -Eiom1 '\.exe$|\.bat$'<<<"$LU_EXE")" ]]
+            if grep -qEiom1 '\.exe$|\.bat$'<<<"$LU_EXE"
                 then
                     (IFS=$'\n'
                     local luapp=1

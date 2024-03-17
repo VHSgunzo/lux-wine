@@ -1,3 +1,10 @@
+# v0.78.3.6
+
+* Fix `Remove shortcut` from App Settings
+* Add `application/x-ms-shortcut` MimeType for `Remove shortcut` desktop
+* Fix `Remove shortcut` for `.lnk` files
+* Minor fixes
+
 # v0.78.3.5
 
 * HotFix don't shift `lu_rmapp()` args
