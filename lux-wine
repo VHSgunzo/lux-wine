@@ -3071,7 +3071,7 @@ lu_config() {
         echo -e "$(yad --plug=$LWCFGKEY --tabnum=6 --separator="" --form "${YADSCROLL[@]}" \
             --field="Log file [ $WTRX_LOG ]:TXT" "$(cat "$WTRX_LOG" 2>/dev/null)" 2>/dev/null)" > /tmp/wlogsett$LWCFGKEY &
 
-        [ ! -n "$FIRST_RUN" ] && NO_TRAY=1 yad --plug=$LWCFGKEY --tabnum=7 --columns=2 --form \
+        [ ! -n "$FIRST_RUN" ] && NO_TRAY=1 NOT_TERM=1 yad --plug=$LWCFGKEY --tabnum=7 --columns=2 --form \
             "${YADSCROLL[@]}" \
             --field="Wine explorer:FBTN" "$LWSHELL -c 'lu_explorer'" \
             --field="Task manager:FBTN" "$LWSHELL -c 'lu_taskmgr'" \
