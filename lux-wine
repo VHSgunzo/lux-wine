@@ -6088,7 +6088,8 @@ export_all_functions() {
         check_db_script stop_loadbar check_wmonover wmonover_upd check_exe_wcfg_cenv lu_appcfg try_fix_wrtx try_shutdown_wine check_steamapps is_winepfx \
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
-        check_dxvk_async check_vsync get_wine_git_lst try_dl_install_wine exeargs_parse try_add_reg_cdrom shrt_loop shrt_from_url shrt_from_lnk check_shrt
+        check_dxvk_async check_vsync get_wine_git_lst try_dl_install_wine exeargs_parse try_add_reg_cdrom shrt_loop shrt_from_url shrt_from_lnk check_shrt \
+        get_shrt_data
 }
 
 initbar() {
