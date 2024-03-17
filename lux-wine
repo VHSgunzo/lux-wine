@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.3.3"
+export LW_VERSION="0.78.3.4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -2970,11 +2970,12 @@ lu_config() {
         1> /tmp/winesett$LWCFGKEY &
 
         local SETT_EXE_ARGS=()
+        sedbackslash() { sed 's|\\|\\\\\\\\\\\\|g'<<<"$arg" ; }
         for arg in "${EXE_ARGS[@]}"
             do
                 [[ "$arg" == *' '* ]] && \
-                SETT_EXE_ARGS+=("\"$(sed 's|\\|\\\\\\\\\\\\|g'<<<"$arg")\"")||\
-                SETT_EXE_ARGS+=("$(sed 's|\\|\\\\\\\\\\\\|g'<<<"$arg")")
+                SETT_EXE_ARGS+=("\"$(sedbackslash)\"")||\
+                SETT_EXE_ARGS+=("$(sedbackslash)")
         done
         yad --plug=$LWCFGKEY --tabnum=2 --form --separator="\n" --quoted-output --bool-fmt=1 --columns=2 "${YADSCROLL[@]}" \
             --field="EXE arguments::CBE" "$(echo "${SETT_EXE_ARGS[@]}"|eval $AWKFIX)" \
@@ -3225,7 +3226,7 @@ lu_config() {
 
                     pfxrestore) btntls_run -pfxrestore ;;
 
-                    appcfg) lu_appcfg || btntls_run ;;
+                    appcfg) LU_EXE= lu_appcfg ;;
             esac
     fi
 }
@@ -6000,7 +6001,7 @@ exe_args_add() {
 }
 
 exeargs_parse() {
-    sed_arg_quotes() { sed "s|^\"||;s|\"$||;s|^'||;s|'$||" ; }
+    sedarg() { sed "s|^\"||;s|\"$||;s|^'||;s|'$||"|sed 's|\\\\|\\|g' ; }
     local char
     local result=''
     local inside=''
@@ -6025,14 +6026,14 @@ exeargs_parse() {
                 elif [[ "$char" == ' ' ]]
                     then
                         char=''
-                        exe_args_add "$(sed_arg_quotes<<<"$result")"
+                        exe_args_add "$(sedarg<<<"$result")"
                         result=''
                 fi
             fi
             result+="$char"
     done
     [ -n "$result" ] && \
-    exe_args_add "$(sed_arg_quotes<<<"$result")"
+    exe_args_add "$(sedarg<<<"$result")"
 }
 
 check_exe_args() {
@@ -6148,7 +6149,7 @@ lu_appcfg() {
     fi
     openconfig() {
         shift ; [ "$1" ] && exe_args_add "$@"
-        cleanrun "$LW_SOURCE" -config "$LU_EXE" "${EXE_ARGS[@]}"
+        cleanrun env LWPPID="$LWPPID" "$LW_SOURCE" -config "$LU_EXE" "${EXE_ARGS[@]}"
     }
     rm_allappscfg() {
         if print_question "Applications Settings" \

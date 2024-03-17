@@ -1,3 +1,8 @@
+# v0.78.3.4
+
+* Add a submenu for application settings to [lw-tray](https://github.com/VHSgunzo/lw-tray/releases/tag/v0.0.6) `v0.0.6`
+* HotFix `-appcfg` EXEs backslash args
+
 # v0.78.3.3
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
