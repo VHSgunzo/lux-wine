@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.3.6"
+export LW_VERSION="0.78.3.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -199,10 +199,6 @@ check_def_config() {
     export DGVO_GIT_RELEASE_URL="https://api.github.com/repos/lutris/dgvoodoo2/releases"
     export BUILD_GIT_RELEASE_URL="https://api.github.com/repos/lutris/buildbot/releases"
     export NVML_GIT_RELEASE_URL="https://api.github.com/repos/VHSgunzo/nvml/releases"
-    export WLU_GIT_RELEASE_URL="https://api.github.com/repos/lutris/wine/releases"
-    export PGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
-    export WGE_GIT_RELEASE_URL="https://api.github.com/repos/GloriousEggroll/wine-ge-custom/releases"
-    export WK4_GIT_RELEASE_URL="https://api.github.com/repos/Kron4ek/Wine-Builds/releases"
     [ ! -n "$DXVK_VERSION" ] && export DXVK_VERSION="latest"
     [ ! -n "$VKD3D_VERSION" ] && export VKD3D_VERSION="latest"
     [ ! -n "$DXVK_NVAPI_VERSION" ] && export DXVK_NVAPI_VERSION="latest"
@@ -2005,7 +2001,11 @@ check_def_wine() {
         print_info notify "Wine $SETWINE selected as default!"
     }
     LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
-    IGNWINE=('Default' 'SETWINE' 'System' 'Proton 7.0' 'Proton 8.0' 'Proton - Experimental')
+    IGNWINE=(
+        'Default' 'SETWINE' 'System' 'Proton 7.0'
+        'Proton 8.0' 'Proton 9.0' 'Proton 9.0 (Beta)'
+        'Proton - Experimental'
+    )
     if [[ -n "$WINE_VERSION" && ! -d "$LW_WINE_DIR/$WINE_VERSION" && "$WINEINUSEDEL" != 1 && \
         ! -L "$LW_WINE_DIR/$WINE_VERSION" && ! "${IGNWINE[@]}" =~ "$WINE_VERSION" ]]
         then
@@ -2017,6 +2017,23 @@ check_def_wine() {
     fi
     (IFS=$'\n' ; for BINWINE in $(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)
         do
+            if [[ -f "$LW_WINE_DIR/$BINWINE/proton" && \
+                ! -L "$LW_WINE_DIR/$BINWINE/bin" ]]
+                then
+                    for dir in files dist
+                        do
+                            if [ -f "$LW_WINE_DIR/$BINWINE/$dir/bin/wine" ]
+                                then
+                                    print_info notify "Found Proton: $BINWINE"
+                                    try_ln "$LW_WINE_DIR/$BINWINE/$dir"/* "$LW_WINE_DIR/$BINWINE/"
+                                    local prtncmptooldir="$HOME_STM_COMPAT_DIR/$BINWINE"
+                                    try_rm_broken_link "$HOME_STM_COMPAT_DIR"
+                                    [[ ! -d "$prtncmptooldir" ]] && \
+                                    ln -sf "$LW_WINE_DIR/$BINWINE" "$prtncmptooldir"
+                                    break
+                            fi
+                    done
+            fi
             if [ ! -f "$LW_WINE_DIR/$BINWINE/bin/wine" ]
                 then
                     try_rm "$LW_WINE_DIR/$BINWINE" &>/dev/null
@@ -4146,10 +4163,71 @@ check_tray() {
 
 greptardlurl() { grep 'browser_download_url'|grep -iEo 'https.*download.*\.tar\.gz|https.*download.*\.tar\.xz|https.*download.*\.tar\.zst' ; }
 
-get_wlu_releases() { curl -s "$WLU_GIT_RELEASE_URL"|greptardlurl ; }
-get_pge_releases() { curl -s "$PGE_GIT_RELEASE_URL"|greptardlurl ; }
-get_wge_releases() { curl -s "$WGE_GIT_RELEASE_URL"|greptardlurl ; }
-get_wk4_releases() { curl -s "$WK4_GIT_RELEASE_URL"|greptardlurl ; }
+get_wlu_releases() {
+    local release="lutris/wine/releases"
+    local api_url="https://api.github.com/repos/$release"
+    curl -s "$api_url"|greptardlurl
+}
+get_pge_releases() {
+    local release="GloriousEggroll/proton-ge-custom/releases"
+    local url="https://github.com/$release"
+    local api_url="https://api.github.com/repos/$release"
+    local versions=(
+        9-2 9-1 8-32 8-31 8-30 8-29 8-28 8-27 8-26 8-25 8-24 8-23 8-22 8-21
+        8-20 8-19 8-18 8-17 8-16 8-15 8-14 8-13 8-12 8-11 8-10 8-9 8-8 8-7
+        8-6 8-5 8-4 8-3 8-2 8-1 7-55 7-54 7-53 7-52 7-51 7-50 7-49 7-48 7-47
+        7-46 7-45 7-44 7-43 7-42 7-41 7-40 7-39 7-38 7-37 7-36 7-35 7-34 7-33
+        7-32 7-31 7-30 7-29 7-28 7-27 7-26 7-25 7-24 7-23 7-22 7-21 7-20 7-19
+        7-18 7-17 7-16 7-15 7-14 7-13 7-12 7-11 7-10 7-9 7-8 7-7 7-6 7-5 7-4
+        7-3 7-2 7-1
+    )
+    curl -s "$api_url"|greptardlurl && \
+    for ver in "${versions[@]}"
+        do
+            local tag="GE-Proton${ver}"
+            echo "${url}/download/${tag}/${tag}.tar.gz"
+    done
+}
+get_wge_releases() {
+    local release="GloriousEggroll/wine-ge-custom/releases"
+    local url="https://github.com/$release"
+    local api_url="https://api.github.com/repos/$release"
+    local versions=(
+        8-26 8-25 8-24 8-23 8-22 8-21 8-20 8-19 8-18 8-17 8-16 8-15 8-14 8-13
+        8-12 8-11 8-9 8-10 8-8 8-7 8-6 8-5 8-4 8-3 8-2 8-1 7-43
+        7-42 7-41 7-40 7-39 7-38 7-37 7-36 7-35 7-34 7-33 7-32 7-31 7-30 7-29
+        7-28 7-27 7-26 7-25 7-24 7-23 7-22 7-21 7-20 7-19 7-18 7-17 7-16 7-15
+        7-14 7-13 7-12 7-11 7-10 7-9 7-8 7-7 7-6 7-5 7-4 7-3 7-2 7-1
+    )
+    curl -s "$api_url"|greptardlurl && \
+    for ver in "${versions[@]}"
+        do
+            local tag="GE-Proton${ver}"
+            echo "${url}/download/${tag}/wine-lutris-${tag}-x86_64.tar.xz"
+    done
+}
+get_wk4_releases() {
+    local release="Kron4ek/Wine-Builds/releases"
+    local url="https://github.com/$release"
+    local api_url="https://api.github.com/repos/$release"
+    local versions=(
+        9.4 proton-exp-9.0 9.3 9.2 9.1 9.0 proton-8.0-5 9.0-rc1 8.21 8.20 8.19
+        8.18 8.17 proton-8.0-4 8.16 8.15 proton-exp-8.0 8.14 8.13 8.0.2 proton-8.0-3
+        8.12 8.11 8.10 8.9 8.8 8.7 8.0.1 proton-8.0-2 proton-8.0-1 8.6 8.5 8.4 8.3
+        8.2 8.1 8.0 7.22 7.21 7.20 7.19 7.18 7.17 7.16 7.15 7.14 7.13 7.12 7.11 7.10
+        7.9 7.8 7.7 7.6 7.5 7.4 7.3 7.2 7.1 7.0 6.23 6.22 6.21 6.20 6.19 6.18 6.17 6.16 6.15
+    )
+    curl -s "$api_url"|greptardlurl && \
+    for tag in "${versions[@]}"
+        do
+            echo "${url}/download/${tag}/wine-${tag}-amd64.tar.xz"
+            if [[ ! "${tag}" =~ 'proton' ]]
+                then
+                    echo "${url}/download/${tag}/wine-${tag}-staging-amd64.tar.xz"
+                    echo "${url}/download/${tag}/wine-${tag}-staging-tkg-amd64.tar.xz"
+            fi
+    done
+}
 
 try_dl_install_wine() {
     local ret=1

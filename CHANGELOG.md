@@ -1,3 +1,9 @@
+# v0.78.3.7
+
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.2) `v9.2`
+* Now you can manually drop `Proton's` "as is" in `~/LuxWine/runners/wine/`
+* Add old Wine's/Proton's versions to `Wine manager`
+
 # v0.78.3.6
 
 * Fix `Remove shortcut` from App Settings
