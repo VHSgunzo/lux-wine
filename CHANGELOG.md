@@ -1,3 +1,7 @@
+# v0.78.3.8
+
+* Remove DB script for `Assassin's Creed Odyssey`
+
 # v0.78.3.7
 
 * Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.2) `v9.2`

@@ -1,8 +1,0 @@
-#DB# Assassin's Creed Odyssey # DB_EXES=('ACOdyssey.exe')
-
-WIN_VER=10
-GSTREAMER=0
-WINEARCH=win64
-WINE_VERSION=System
-USE_DEFPFX_BACKUP=1
-MUST_HAVE_DLL=Disabled
