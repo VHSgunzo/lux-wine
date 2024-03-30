@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.3.7"
+export LW_VERSION="0.78.3.8"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -219,6 +219,8 @@ check_def_config() {
     export DEFPFX_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix.xz.lwpfx"
     export DEFPFXDOTNET_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
     export DEFPFXDOTNETDESKTOP_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnetdesktop.xz.lwpfx"
+    export DEFPFX_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix.xz.lwpfx"
+    export DEFPFXDOTNET_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
 }
 
 print_var() {
@@ -1456,7 +1458,7 @@ exe2png() {
                             then
                                 chksum_shrt_png_new=($(md5sum "${SHRT_NAME}.png" 2>/dev/null))
                                 chksum_shrt_png=($(md5sum "$SHRT_PNG" 2>/dev/null))
-                                if [ "$chksum_shrt_png_new" != "$chksum_shrt_png" ]
+                                if [[ "$chksum_shrt_png_new" != "$chksum_shrt_png" ]]
                                     then
                                         shrt_num=$(( $shrt_num + 1 ))
                                         continue
@@ -1548,6 +1550,9 @@ create_shortcut() {
             SHRT_NAME="${ADD_APP_NAME//[^[:alnum:] ._-]/}"
             SHRT_NAME="$(sed 's|^Запустить ||gi;s|^Играть ||gi;s|^Launch ||gi;s|^Play ||gi'<<<"$SHRT_NAME")"
             try_mkdir "$LW_DEF_TMP"
+            [[ -f "${LW_APPS_DIR}/${SHRT_NAME}.desktop" && \
+            "$WINEPREFIX" != "$LW_DEF_WINEPFX" ]] && \
+                SHRT_NAME="$SHRT_NAME ($(basename "$WINEPREFIX"))"
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
             (LW_SOURCE="$LWRAP"
@@ -1664,10 +1669,10 @@ create_shortcut() {
             if [ -f "$LU_EXE" ] && [[ -f "$EXE_CFG" || -f "$EXE_CENV" ]]
                 then
                     local SHRTEXEPFX="$(dirname "$LU_EXE")/$(basename "$LU_EXE"|sed 's|\.exe$||gi')"
-                    [ -f "$EXE_CFG" ] && \
-                    try_cp "$EXE_CFG" "$SHRTEXEPFX.wcfg"
-                    [ -f "$EXE_CENV" ] && \
-                    try_cp "$EXE_CENV" "$SHRTEXEPFX.cenv"
+                    [[ -f "$EXE_CFG" && "$SHRTEXEPFX.wcfg" != "$EXE_CFG" ]] && \
+                        try_cp "$EXE_CFG" "$SHRTEXEPFX.wcfg"
+                    [[ -f "$EXE_CENV" && "$SHRTEXEPFX.cenv" != "$EXE_CENV" ]] && \
+                        try_cp "$EXE_CENV" "$SHRTEXEPFX.cenv"
             fi
             [ -f "${LW_APPS_DIR}/${SHRT_NAME}.desktop" ] && \
             print_info notify "Shortcut for '$SHRT_NAME' successfully created!"
@@ -1984,6 +1989,7 @@ check_def_wine() {
     def_wine_selector() {
         set -o pipefail
         unset SETWINE
+        LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
         export SETWINE="$(echo -e "\n$(echo "${LOCWINELST}$([ -n "$SYS_WINE" ] && echo -e '\nSystem')$([[ -n "$LU_EXE" \
             && ! -n "$FIRST_RUN" ]] && echo -e '\nDefault')"|sed ':a;N;$!ba;s/\n/\n\n/g')"|\
         yad --window-icon="$LW_DEF_ICO" --title "Wine Manager" --column="" --column="Select default Wine:" \
@@ -2000,7 +2006,6 @@ check_def_wine() {
         check_proton_d3dlib
         print_info notify "Wine $SETWINE selected as default!"
     }
-    LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
     IGNWINE=(
         'Default' 'SETWINE' 'System' 'Proton 7.0'
         'Proton 8.0' 'Proton 9.0' 'Proton 9.0 (Beta)'
@@ -2057,6 +2062,7 @@ check_def_wine() {
                     fi
             fi
     done)
+    LOCWINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null)"
     if [[ ! -f "$WINE" && "$(echo "$LOCWINELST"|sedspaces|wc -l)" == 0 && -n "$SYS_WINE" ]]
         then
             print_info "System Wine found"
@@ -2504,7 +2510,8 @@ check_db_script() {
                                     elif [ -f "$LWRAP_DEFPFXDOTNET" ]
                                         then PFXRESTORE="$LWRAP_DEFPFXDOTNET"
                                     else
-                                        if (try_download "$DEFPFXDOTNET_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        if (try_download "$DEFPFXDOTNET_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                            try_download "$DEFPFXDOTNET_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
                                             try_download "$DEFPFXDOTNET_URL" "$LW_DEF_WINEPFXBKP_DIR/")
                                             then PFXRESTORE="$LWDIR_DEFPFXDOTNET"
                                             else exit 1
@@ -2533,7 +2540,8 @@ check_db_script() {
                                     elif [ -f "$LWRAP_DEFPFX" ]
                                         then PFXRESTORE="$LWRAP_DEFPFX"
                                     else
-                                        if (try_download "$DEFPFX_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        if (try_download "$DEFPFX_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                            try_download "$DEFPFX_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
                                             try_download "$DEFPFX_URL" "$LW_DEF_WINEPFXBKP_DIR/")
                                             then PFXRESTORE="$LWDIR_DEFPFX"
                                             else exit 1

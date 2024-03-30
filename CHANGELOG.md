@@ -1,6 +1,13 @@
 # v0.78.3.8
 
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Remove possibility of updating from the old version (`LutrisWine`) from `lwrap`
+* Replace `chromium` with `firefox` in `lwrun` container
 * Remove DB script for `Assassin's Creed Odyssey`
+* Add the `Wine` prefix name to the shortcut name if a shortcut with the same name already exists and the app used custom `Wine` prefix
+* Add `Yandex Cloud` mirrors
+* Update `lwrap`
+* Minor fixes
 
 # v0.78.3.7
 
