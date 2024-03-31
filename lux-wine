@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.3.8"
+export LW_VERSION="0.78.3.9"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -1669,8 +1669,11 @@ create_shortcut() {
             if [ -f "$LU_EXE" ] && [[ -f "$EXE_CFG" || -f "$EXE_CENV" ]]
                 then
                     local SHRTEXEPFX="$(dirname "$LU_EXE")/$(basename "$LU_EXE"|sed 's|\.exe$||gi')"
-                    [[ -f "$EXE_CFG" && "$SHRTEXEPFX.wcfg" != "$EXE_CFG" ]] && \
-                        try_cp "$EXE_CFG" "$SHRTEXEPFX.wcfg"
+                    if [[ -f "$EXE_CFG" && "$SHRTEXEPFX.wcfg" != "$EXE_CFG" ]]
+                        then
+                            try_cp "$EXE_CFG" "$SHRTEXEPFX.wcfg" && \
+                            sed -i '/^EXE_LWDBFL=/d' "$SHRTEXEPFX.wcfg"
+                    fi
                     [[ -f "$EXE_CENV" && "$SHRTEXEPFX.cenv" != "$EXE_CENV" ]] && \
                         try_cp "$EXE_CENV" "$SHRTEXEPFX.cenv"
             fi

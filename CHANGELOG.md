@@ -1,3 +1,10 @@
+# v0.78.3.9
+
+* Update [obs-vkcapture-lw](https://github.com/VHSgunzo/obs-vkcapture-lw/releases/tag/v1.5.0) `v1.5.0`
+* Remove `EXE_LWDBFL` from the EXE installer config when automatically creating shortcuts
+* Update DB script for `Honkai: Star Rail`
+* Update DB script for `Setup`
+
 # v0.78.3.8
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

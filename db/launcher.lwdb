@@ -4,7 +4,7 @@
 #DB# Honkai: Star Rail # DB_EXES=('launcher.exe') !'StarRail.exe'
 
 srlauncher() {
-    SR_PATCH_VER=v3.1.1
+    SR_PATCH_VER=v3.1.2
     SR_PATCH_DIR="$LW_DEF_TMP/srpatch_$SR_PATCH_VER"
     EXE_DRIVE="$(grep -oi '[a-z]:'<<<"$LU_EXE")"
     SRLAUNCHER="$EXE_DRIVE\\$(sed 's|.*/[a-z]:||i;s|\/|\\|g'<<<"$LU_EXE")"
