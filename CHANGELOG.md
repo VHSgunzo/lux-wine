@@ -1,3 +1,8 @@
+# v0.78.4.1
+
+* Fix getting icon from dll when creating shortcut from `.lnk` and `.url` files
+* Add DB script for `TimeShift`
+
 # v0.78.3.9
 
 * Update [obs-vkcapture-lw](https://github.com/VHSgunzo/obs-vkcapture-lw/releases/tag/v1.5.0) `v1.5.0`

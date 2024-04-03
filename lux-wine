@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.3.9"
+export LW_VERSION="0.78.4.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -3886,7 +3886,9 @@ shrt_from_lnk() {
                                                 *.[Ii][Cc][Oo]) SHRT_PATH="$(dirname "$lnk_exe_ico")"
                                                                 exe_ico="$lnk_exe_ico"
                                                                 get_shrt_data ;;
-                                                *.[Ee][Xx][Ee]) LU_EXE="$lnk_exe_ico" get_shrt_data "$lnk_exe_ico" ;;
+                                                *.[Ee][Xx][Ee]|\
+                                                *.[Dd][Ll][Ll]) LU_EXE="$lnk_exe_ico" get_shrt_data "$lnk_exe_ico" ;;
+                                                *) false ;;
                                             esac
                                             [ "$?" == 0 ]||get_shrt_data "$LU_EXE"
                                         else get_shrt_data "$LU_EXE"
@@ -3971,7 +3973,9 @@ shrt_from_url() {
                                                 *.[Ii][Cc][Oo]) SHRT_PATH="$(dirname "$url_exe_ico")"
                                                                 exe_ico="$url_exe_ico"
                                                                 get_shrt_data ;;
-                                                *.[Ee][Xx][Ee]) LU_EXE="$url_exe_ico" get_shrt_data "$url_exe_ico" ;;
+                                                *.[Ee][Xx][Ee]|\
+                                                *.[Dd][Ll][Ll]) LU_EXE="$url_exe_ico" get_shrt_data "$url_exe_ico" ;;
+                                                *) false ;;
                                             esac
                                             [ "$?" == 0 ]||get_shrt_data "$LU_EXE"
                                         else get_shrt_data "$LU_EXE"

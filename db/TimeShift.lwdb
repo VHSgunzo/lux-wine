@@ -1,0 +1,3 @@
+#DB# TimeShift # DB_EXES=('TimeShift.exe')
+
+CPU_LIMIT='8'
