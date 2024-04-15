@@ -2037,6 +2037,7 @@ check_def_wine() {
                                     local prtncmptooldir="$HOME_STM_COMPAT_DIR/$BINWINE"
                                     try_rm_broken_link "$HOME_STM_COMPAT_DIR"
                                     [[ ! -d "$prtncmptooldir" ]] && \
+                                    mkdir -p "$HOME_STM_COMPAT_DIR" && \
                                     ln -sf "$LW_WINE_DIR/$BINWINE" "$prtncmptooldir"
                                     break
                             fi
@@ -4293,6 +4294,7 @@ try_dl_install_wine() {
                                                                             local prtncmptooldir="$HOME_STM_COMPAT_DIR/$W_DW"
                                                                             try_rm_broken_link "$HOME_STM_COMPAT_DIR"
                                                                             [[ ! -d "$prtncmptooldir" ]] && \
+                                                                            mkdir -p "$HOME_STM_COMPAT_DIR" && \
                                                                             ln -sf "$LW_WINE_DIR/$W_DW" "$prtncmptooldir"
                                                                     fi
                                                                     print_info notify "Installation $W_DW completed!"
