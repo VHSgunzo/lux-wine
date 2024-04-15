@@ -1,3 +1,7 @@
+# v0.78.4.2
+
+* Fix mkdir steam compat dir
+
 # v0.78.4.1
 
 * Fix getting icon from dll when creating shortcut from `.lnk` and `.url` files
