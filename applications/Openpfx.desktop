@@ -1,0 +1,45 @@
+[Desktop Entry]
+Categories=Lux Wine
+Exec="/usr/bin/lux-wine" -openpfx %f
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+MimeType=application/x-ms-dos-executable;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit;application/x-msi
+Name=Open drive C:\\
+Name[ru_RU]=Открыть диск C:\\
+NoDisplay=false
+StartupNotify=true
+Terminal=0
+TerminalOptions=--hold
+Type=Application
+X-KDE-SubstituteUID=false
+Actions=pfxbackup;pfxrestore;clearpfx;backupmnt;backupunmnt
+
+
+[Desktop Action clearpfx]
+Exec="/usr/bin/lux-wine" -clearpfx %f
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Name=Clear prefix
+Name[ru_RU]=Очистить префикс
+
+[Desktop Action pfxbackup]
+Exec="/usr/bin/lux-wine" -pfxbackup %f
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Name=Create prefix backup
+Name[ru_RU]=Создать бекап префикса
+
+[Desktop Action pfxrestore]
+Exec="/usr/bin/lux-wine" -pfxrestore %f
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Name=Restore prefix from backup
+Name[ru_RU]=Восстановить префикс
+
+[Desktop Action backupmnt]
+Exec="/usr/bin/lux-wine" -backupmnt %f
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Name=Mount prefix backup
+Name[ru_RU]=Монтировать бекап префикса
+
+[Desktop Action backupunmnt]
+Exec="/usr/bin/lux-wine" -backupunmnt %f
+Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Name=Unmount prefix backup
+Name[ru_RU]=Отмонтировать бекап префикса

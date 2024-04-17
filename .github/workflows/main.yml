@@ -1,11 +1,11 @@
 name: CI
 
-on:
-  push:
-    branches:
-    - action
-    tags:
-    - '*'
+# on:
+#   push:
+#     branches:
+#     - action
+#     tags:
+#     - '*'
 
 jobs:
   build_and_release:

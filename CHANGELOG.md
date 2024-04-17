@@ -1,3 +1,7 @@
+# v0.78.4.3
+
+* Change applications menu shortcuts (it is divided into categories and added to the RMB)
+
 # v0.78.4.2
 
 * Fix mkdir steam compat dir
