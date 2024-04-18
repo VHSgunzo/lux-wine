@@ -2,4 +2,4 @@
 Type=Directory
 Name=Wine Apps
 Name[ru_RU]=Wine приложения
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon

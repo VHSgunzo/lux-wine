@@ -1,3 +1,8 @@
+# v0.78.4.5
+
+* HotFix menu apps LW categories icon
+* Fix custom `GTK theme` for init progress bar
+
 # v0.78.4.4
 
 * Change applications menu shortcuts

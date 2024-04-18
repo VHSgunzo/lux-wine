@@ -1,186 +1,186 @@
 [Desktop Action explorer]
 Exec="/usr/bin/lux-wine" -explorer %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Explorer
 Name[ru_RU]=Рабочий стол
 
 [Desktop Action cmd]
 Exec="/usr/bin/lux-wine" -cmd %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Open in CMD
 Name[ru_RU]=Открыть в CMD
 
 [Desktop Action shell]
 Exec="/usr/bin/lux-wine" -shell %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Open in SHELL
 Name[ru_RU]=Открыть в SHELL
 
 [Desktop Action regedit]
 Exec="/usr/bin/lux-wine" -regedit %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Registry editor
 Name[ru_RU]=Редактор реестра
 
 [Desktop Action control]
 Exec="/usr/bin/lux-wine" -control %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Control panel
 Name[ru_RU]=Панель управления
 
 [Desktop Action winecfg]
 Exec="/usr/bin/lux-wine" -winecfg %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Wine settings
 Name[ru_RU]=Настройки Wine
 
 [Desktop Action taskmgr]
 Exec="/usr/bin/lux-wine" -taskmgr %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Task manager
 Name[ru_RU]=Диспетчер задач
 
 [Desktop Action winemgr]
 Exec="/usr/bin/lux-wine" -winemgr
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Wine manager
 Name[ru_RU]=Wine менеджер
 
 [Desktop Action uninstaller]
 Exec="/usr/bin/lux-wine" -uninstaller %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Wine uninstaller
 Name[ru_RU]=Устан/удал программ
 
 [Desktop Action winetricks]
 Exec="/usr/bin/lux-wine" -winetricks %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Winetricks
 Name[ru_RU]=Winetricks
 
 [Desktop Action openpfx]
 Exec="/usr/bin/lux-wine" -openpfx %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Open drive C:\\
 Name[ru_RU]=Открыть диск C:\\
 
 [Desktop Action killwine]
 Exec="/usr/bin/lux-wine" -killwine %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill Wine processes
 Name[ru_RU]=Убить процессы Wine
 
 [Desktop Action killtray]
 Exec="/usr/bin/lux-wine" -killtray
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill tray
 Name[ru_RU]=Убить трей
 
 [Desktop Action killexe]
 Exec="/usr/bin/lux-wine" -killexe %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill running EXE
 Name[ru_RU]=Убить запущенные EXE
 
 [Desktop Action killshell]
 Exec="/usr/bin/lux-wine" -killshell
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill SHELL
 Name[ru_RU]=Убить SHELL
 
 [Desktop Action clearpfx]
 Exec="/usr/bin/lux-wine" -clearpfx %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Clear prefix
 Name[ru_RU]=Очистить префикс
 
 [Desktop Action debug]
 Exec="/usr/bin/lux-wine" -debug %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=DEBUG
 Name[ru_RU]=ДЕБАГ
 
 [Desktop Action shortcut]
 Exec="/usr/bin/lux-wine" -shortcut %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Create shortcut
 Name[ru_RU]=Cоздать ярлык
 
 [Desktop Action rmapp]
 Exec="/usr/bin/lux-wine" -rmapp %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Remove shortcut
 Name[ru_RU]=Удалить ярлык
 
 [Desktop Action tray]
 Exec="/usr/bin/lux-wine" -tray noclose
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Tray
 Name[ru_RU]=Трей
 
 [Desktop Action exit]
 Exec="/usr/bin/lux-wine" -exit %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Force exit
 Name[ru_RU]=Закрыть всё
 
 [Desktop Action update]
 Exec="/usr/bin/lux-wine" -update openupdtr
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Update runtime
 Name[ru_RU]=Обновление рантайм
 
 [Desktop Action help]
 Exec="/usr/bin/lux-wine" -help
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Usage info
 Name[ru_RU]=Использование
 
 [Desktop Action version]
 Exec="/usr/bin/lux-wine" -version %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Version info
 Name[ru_RU]=Версия
 
 [Desktop Action config]
 Exec="/usr/bin/lux-wine" -config %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Settings
 Name[ru_RU]=Настройки
 
 [Desktop Action appcfg]
 Exec="/usr/bin/lux-wine" -appcfg
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Apps settings
 Name[ru_RU]=Настройки приложений
 
 [Desktop Action init]
 Exec="/usr/bin/lux-wine" -init %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Forced initialization
 Name[ru_RU]=Принудительная инициализация
 
 [Desktop Action pfxbackup]
 Exec="/usr/bin/lux-wine" -pfxbackup %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Create prefix backup
 Name[ru_RU]=Создать бекап префикса
 
 [Desktop Action pfxrestore]
 Exec="/usr/bin/lux-wine" -pfxrestore %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Restore prefix from backup
 Name[ru_RU]=Восстановить префикс
 
 [Desktop Action backupmnt]
 Exec="/usr/bin/lux-wine" -backupmnt %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Mount prefix backup
 Name[ru_RU]=Монтировать бекап префикса
 
 [Desktop Action backupunmnt]
 Exec="/usr/bin/lux-wine" -backupunmnt %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Unmount prefix backup
 Name[ru_RU]=Отмонтировать бекап префикса
 
@@ -190,10 +190,10 @@ Actions=explorer;cmd;shell;regedit;control;winecfg;taskmgr;winemgr;uninstaller;w
 Encoding=UTF-8
 Name=Lux Wine
 Name[ru_RU]=Lux Wine
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 ServiceTypes=all/allfiles;KonqPopupMenu/Plugin
 MimeType=all/all;
 X-KDE-ServiceTypes=KonqPopupMenu/Plugin
 X-KDE-Priority=TopLevel
 X-KDE-Submenu=Lux Wine
-X-KDE-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+X-KDE-Icon=lw_default_icon
