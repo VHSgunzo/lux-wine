@@ -2702,8 +2702,12 @@ lite_init() {
                     while pgrep -fa 'yad'|grep -w 'Runtime initialization' &>/dev/null ; do sleep 1 ; done
                     while pgrep -fa 'yad'|grep -w 'Updating parameters' &>/dev/null ; do sleep 1 ; done
             fi
-            [[ -n "$SETT_INIT" || "$1" == "-init" ]] && \
-                initbar && rm -rf "$LW_DIR/.lwcfgchksum"
+            if [[ -n "$SETT_INIT" || "$1" == "-init" ]]
+                then
+                    check_config_only "$@"
+                    initbar
+                    rm -rf "$LW_DIR/.lwcfgchksum"
+            fi
             check_exe_wcfg_cenv "$@"
             check_luwine_wcfg_cenv
             check_def_config
