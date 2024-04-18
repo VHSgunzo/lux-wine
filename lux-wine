@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.4.4"
+export LW_VERSION="0.78.4.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
