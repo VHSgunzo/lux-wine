@@ -1,3 +1,11 @@
+# v0.78.4.4
+
+* Change applications menu shortcuts
+* Remove `Don't launch tray` option from `Settings`
+* Add `Add tray to autostart` option to`Settings`
+* Fix custom `GTK theme` for some LW windows
+* Minor fixes
+
 # v0.78.4.3
 
 * Change applications menu shortcuts (it is divided into categories and added to the RMB)

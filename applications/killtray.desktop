@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -killtray
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill tray
 Name[ru_RU]=Убить трей
 NoDisplay=true

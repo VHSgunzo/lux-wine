@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -help
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Usage info
 Name[ru_RU]=Использование
 NoDisplay=true

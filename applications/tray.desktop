@@ -1,10 +1,10 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -tray noclose
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Tray
 Name[ru_RU]=Трей
-NoDisplay=false
+NoDisplay=true
 StartupNotify=true
 Terminal=0
 TerminalOptions=--hold

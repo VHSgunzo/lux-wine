@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -winemgr
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Wine manager
 Name[ru_RU]=Wine менеджер
 NoDisplay=false

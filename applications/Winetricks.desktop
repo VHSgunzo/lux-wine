@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -winetricks %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 MimeType=application/x-ms-dos-executable;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit;application/x-msi
 Name=Winetricks
 NoDisplay=false
@@ -10,3 +10,47 @@ Terminal=0
 TerminalOptions=--hold
 Type=Application
 X-KDE-SubstituteUID=false
+Actions=explorer;taskmgr;cmd;control;winecfg;regedit;uninstaller
+
+
+[Desktop Action explorer]
+Exec="/usr/bin/lux-wine" -explorer %f
+Icon=lw_default_icon
+Name=Wine explorer
+Name[ru_RU]=Рабочий стол
+
+[Desktop Action cmd]
+Exec="/usr/bin/lux-wine" -cmd %f
+Icon=lw_default_icon
+Name=CMD
+Name[ru_RU]=Командная строка
+
+[Desktop Action regedit]
+Exec="/usr/bin/lux-wine" -regedit %f
+Icon=lw_default_icon
+Name=Registry editor
+Name[ru_RU]=Редактор реестра
+
+[Desktop Action control]
+Exec="/usr/bin/lux-wine" -control %f
+Icon=lw_default_icon
+Name=Control panel
+Name[ru_RU]=Панель управления
+
+[Desktop Action winecfg]
+Exec="/usr/bin/lux-wine" -winecfg %f
+Icon=lw_default_icon
+Name=Wine settings
+Name[ru_RU]=Настройки Wine
+
+[Desktop Action taskmgr]
+Exec="/usr/bin/lux-wine" -taskmgr %f
+Icon=lw_default_icon
+Name=Task manager
+Name[ru_RU]=Диспетчер задач
+
+[Desktop Action uninstaller]
+Exec="/usr/bin/lux-wine" -uninstaller %f
+Icon=lw_default_icon
+Name=Wine uninstaller
+Name[ru_RU]=Устан/удал программ

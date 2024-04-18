@@ -1,10 +1,10 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -openpfx %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 MimeType=application/x-ms-dos-executable;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit;application/x-msi
-Name=Open drive C:\\
-Name[ru_RU]=Открыть диск C:\\
+Name=Drive С:
+Name[ru_RU]=Диск С:
 NoDisplay=false
 StartupNotify=true
 Terminal=0
@@ -16,30 +16,30 @@ Actions=pfxbackup;pfxrestore;clearpfx;backupmnt;backupunmnt
 
 [Desktop Action clearpfx]
 Exec="/usr/bin/lux-wine" -clearpfx %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-Name=Clear prefix
-Name[ru_RU]=Очистить префикс
+Icon=lw_default_icon
+Name=Clear
+Name[ru_RU]=Очистить
 
 [Desktop Action pfxbackup]
 Exec="/usr/bin/lux-wine" -pfxbackup %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-Name=Create prefix backup
-Name[ru_RU]=Создать бекап префикса
+Icon=lw_default_icon
+Name=Create backup
+Name[ru_RU]=Создать бекап
 
 [Desktop Action pfxrestore]
 Exec="/usr/bin/lux-wine" -pfxrestore %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-Name=Restore prefix from backup
-Name[ru_RU]=Восстановить префикс
+Icon=lw_default_icon
+Name=Restore from backup
+Name[ru_RU]=Восстановить
 
 [Desktop Action backupmnt]
 Exec="/usr/bin/lux-wine" -backupmnt %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-Name=Mount prefix backup
-Name[ru_RU]=Монтировать бекап префикса
+Icon=lw_default_icon
+Name=Mount backup
+Name[ru_RU]=Монтировать бекап
 
 [Desktop Action backupunmnt]
 Exec="/usr/bin/lux-wine" -backupunmnt %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-Name=Unmount prefix backup
-Name[ru_RU]=Отмонтировать бекап префикса
+Icon=lw_default_icon
+Name=Unmount backup
+Name[ru_RU]=Отмонтировать бекап

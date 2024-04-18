@@ -133,8 +133,6 @@ make_install() {
         then
             grep -m1 '^Exec=".*"' -lr ./*|\
             xargs -d'\n' sed -i "s|^Exec=\".*\"|Exec=\"$LWRAP\"|g" 2>/dev/null
-            grep -m1 'Icon=/.*/lux-wine/icons/.*.png$' -lr ./*|\
-            xargs -d'\n' sed -i "s|Icon=/.*/lux-wine/icons/|Icon=$LW_DIR/icons/|g" 2>/dev/null
             if [ -f 'lwrap' ]
                 then local lwrapf='lwrap'
             elif [ -f 'bin/lwrap' ]

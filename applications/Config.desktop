@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -config %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 MimeType=application/x-ms-dos-executable;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit;application/x-msi
 Name=Settings
 Name[ru_RU]=Настройки
@@ -16,48 +16,48 @@ Actions=appcfg;update;init;shell;shortcut;rmapp;help;version
 
 [Desktop Action update]
 Exec="/usr/bin/lux-wine" -update openupdtr
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Update runtime
 Name[ru_RU]=Обновление рантайм
 
 [Desktop Action help]
 Exec="/usr/bin/lux-wine" -help
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Usage info
 Name[ru_RU]=Использование
 
 [Desktop Action version]
 Exec="/usr/bin/lux-wine" -version %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Version info
 Name[ru_RU]=Версия
 
 [Desktop Action appcfg]
 Exec="/usr/bin/lux-wine" -appcfg
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Apps settings
 Name[ru_RU]=Настройки приложений
 
 [Desktop Action init]
 Exec="/usr/bin/lux-wine" -init %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
-Name=Forced initialization
-Name[ru_RU]=Принудительная инициализация
+Icon=lw_default_icon
+Name=Forced init
+Name[ru_RU]=Инициализация
 
 [Desktop Action shell]
 Exec="/usr/bin/lux-wine" -shell %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Open SHELL
 Name[ru_RU]=Открыть SHELL
 
 [Desktop Action shortcut]
 Exec="/usr/bin/lux-wine" -shortcut %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Create shortcut
 Name[ru_RU]=Cоздать ярлык
 
 [Desktop Action rmapp]
 Exec="/usr/bin/lux-wine" -rmapp %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Remove shortcut
 Name[ru_RU]=Удалить ярлык

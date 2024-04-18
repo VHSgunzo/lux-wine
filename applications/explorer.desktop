@@ -1,10 +1,10 @@
 [Desktop Entry]
 Categories=Lux Wine
-Exec="/usr/bin/lux-wine" -regedit %f
+Exec="/usr/bin/lux-wine" -explorer %f
 Icon=lw_default_icon
 MimeType=application/x-ms-dos-executable;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit;application/x-msi
-Name=Registry editor
-Name[ru_RU]=Редактор реестра
+Name=Wine explorer
+Name[ru_RU]=Рабочий стол
 NoDisplay=true
 StartupNotify=true
 Terminal=0

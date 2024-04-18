@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -exit %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 MimeType=application/x-ms-dos-executable;application/x-msdos-program;text/win-bat;application/x-ms-shortcut;text/x-ms-regedit;application/x-msi
 Name=Force exit
 Name[ru_RU]=Закрыть всё
@@ -16,24 +16,24 @@ Actions=killexe;killwine;killshell;killtray
 
 [Desktop Action killwine]
 Exec="/usr/bin/lux-wine" -killwine %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill Wine processes
 Name[ru_RU]=Убить процессы Wine
 
 [Desktop Action killtray]
 Exec="/usr/bin/lux-wine" -killtray
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill tray
 Name[ru_RU]=Убить трей
 
 [Desktop Action killexe]
 Exec="/usr/bin/lux-wine" -killexe %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill running EXE
 Name[ru_RU]=Убить запущенные EXE
 
 [Desktop Action killshell]
 Exec="/usr/bin/lux-wine" -killshell
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 Name=Kill SHELL
 Name[ru_RU]=Убить SHELL

@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -pfxrestore %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 MimeType=application/vnd.squashfs;application/x-ms-dos-executable;application/x-msdos-program
 Name=Restore prefix from backup
 Name[ru_RU]=Восстановить префикс

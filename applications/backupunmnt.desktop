@@ -1,7 +1,7 @@
 [Desktop Entry]
 Categories=Lux Wine
 Exec="/usr/bin/lux-wine" -backupunmnt %f
-Icon=/usr/share/lux-wine/icons/lw_default_icon.png
+Icon=lw_default_icon
 MimeType=application/vnd.squashfs
 Name=Unmount prefix backup
 Name[ru_RU]=Отмонтировать бекап префикса

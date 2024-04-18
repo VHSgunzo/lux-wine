@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.4.3"
+export LW_VERSION="0.78.4.4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -138,6 +138,7 @@ done
 [ ! -n "$LW_CENV" ] && export LW_CENV="$LW_DEF_CENV"
 [ ! -n "$LW_APPCFG_DIR" ] && export LW_APPCFG_DIR="$LW_DIR/appcfg"
 [ ! -n "$VLK_ICD_DIR" ] && export VLK_ICD_DIR="/usr/share/vulkan/icd.d"
+[ ! -n "$AUTOSTART_DIR" ] && export AUTOSTART_DIR="$HOME/.config/autostart"
 [ ! -n "$SYS_WINE" ] && export SYS_WINE="$(which -a wine 2>/dev/null|grep -v "$(basename "$LW_DIR")"|head -1)"
 [ ! -n "$CMPRSS_METHOD" ] && export CMPRSS_METHOD='zstd'
 [ ! -n "$ZSTD_CMPRSS_LVL" ] && export ZSTD_CMPRSS_LVL="1"
@@ -2780,11 +2781,23 @@ full_init() {
             check_restore_resol
             check_virt_desktop
             check_latencyflex
+            check_autostart_tray
             try_rm "$INIPRGRS" &>/dev/null
             [[ "$1" == "-init" || "$FIRST_RUN" == 1 ]] && \
                 print_info notify "Lux Wine full initialization completed!"
         else
             print_info notify "Lux Wine full startup initialization is disabled! Unexpected errors may occur..."
+    fi
+}
+
+check_autostart_tray() {
+    AUTOSTART_TRAY_FL="$AUTOSTART_DIR/LuxWine-tray.desktop"
+    if [[ "$AUTOSTART_TRAY" == 1 && ! -e "$AUTOSTART_TRAY_FL" ]]
+        then
+            try_mkdir "$AUTOSTART_DIR"
+            ln -sfr "$MENU_APPS_DIR/LuxWine/tray.desktop" "$AUTOSTART_TRAY_FL"
+    elif [[ "$AUTOSTART_TRAY" != 1 && -e "$AUTOSTART_TRAY_FL" ]]
+        then rm -f "$AUTOSTART_TRAY_FL"
     fi
 }
 
@@ -2873,7 +2886,7 @@ lu_config() {
             VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX DXR EXEARGS CHK_UPDATE EXE_LWDB EXE_LWDBFL \
             LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR CHECK_LW_APPS GTK_THEME LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
-            LW_DOWNLOADER NO_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT \
+            LW_DOWNLOADER AUTOSTART_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT \
             VSYNC LWVKCAPTURE NVPRIME DRIPRIME"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
@@ -3035,7 +3048,7 @@ lu_config() {
             --field="Hold terminal:CHK" "$HOLD_TERMINAL" \
             --field="Terminal app::CB" "$(cfg_items "$LW_TERM_APP" "$TERMAPPLST")" \
             --field="Downloader::CB" "$(cfg_items "$LW_DOWNLOADER" "$DOWNLOADERLST")" \
-            --field="Don't launch tray:CHK" "$NO_TRAY" \
+            --field="Add tray to autostart:CHK" "$AUTOSTART_TRAY" \
             --field="Switch to US keyboard layout:CHK" "$US_LAYOUT" \
             --field="VkBasalt:CHK" "$VKBASALT" \
             --field="AMD FidelityFX Contrast Adaptive Sharpening::CB" "$(cfg_items "$VKBASALT_FFX_CAS" "$(seq 0.1 0.1 1|tr ',' '.')\n Disabled")" \
@@ -3492,6 +3505,7 @@ winetricks() {
 lu_openpfx() { $LW_FLMGR "$WINEPREFIX/drive_c/" 2>/dev/null ; }
 
 lu_exit() {
+    check_config_only "$@"
     check_tray; check_wine_pids; check_exes; check_luwine_sh_pid
     if [[ -n "$WINE_PIDS" || -n "$EXE_PIDS" || -n "$TRAY_PID" || -n "$LW_SH_PID" \
         || -n "$(pgrep -fa 'yad'|grep 'Lux Wine'|awk '{print$1}')" ]]
@@ -3516,10 +3530,14 @@ lu_exit() {
     fi
 }
 
-lu_killshell() {
+check_config_only() {
     check_exe_wcfg_cenv "$@"
     check_luwine_wcfg_cenv
     check_def_config
+}
+
+lu_killshell() {
+    check_config_only "$@"
     check_terminal
     check_luwine_sh_pid
     if [ -f "/tmp/FORCE_EXIT" ]
@@ -3553,6 +3571,7 @@ lu_killshell() {
 }
 
 lu_killtray() {
+    check_config_only "$@"
     check_tray
     if [[ -f "/tmp/FORCE_EXIT" || "$FORCE_EXIT" == 1 ]]
         then
@@ -3568,9 +3587,7 @@ lu_killtray() {
 }
 
 lu_killwine() {
-    check_exe_wcfg_cenv "$@"
-    check_luwine_wcfg_cenv
-    check_def_config
+    check_config_only "$@"
     check_wine_pids
     if [ -f "/tmp/FORCE_EXIT" ]
         then
@@ -3587,6 +3604,7 @@ lu_killwine() {
 }
 
 lu_killexe() {
+    check_config_only "$@"
     check_exes
     if [ -f "/tmp/FORCE_EXIT" ]
         then
@@ -3699,6 +3717,7 @@ is_app_exist() {
 }
 
 lu_rmapp() {
+    check_config_only "$@"
     if [ ! -n "$(pgrep -fa yad|grep "Shortcuts Remover"|awk '{print$1}')" ]; then :
         else
             print_error yad "Shortcuts Remover" "Lux Wine Shortcuts Remover already runing!"
@@ -4058,6 +4077,7 @@ lu_shortcut() {
 }
 
 lu_help() {
+    check_config_only "$@"
     if [ ! -n "$(pgrep -fa xterm|grep "Lux Wine usage info"|awk '{print$1}')" ]; then :
         else
             print_error yad "Lux Wine usage info" "Lux Wine usage info already runing!"
@@ -6184,7 +6204,7 @@ export_all_functions() {
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
         check_dxvk_async check_vsync get_wine_git_lst try_dl_install_wine exeargs_parse try_add_reg_cdrom shrt_loop shrt_from_url shrt_from_lnk check_shrt \
-        get_shrt_data
+        get_shrt_data check_autostart_tray check_config_only
 }
 
 initbar() {
@@ -6680,6 +6700,7 @@ get_app_exe() {
 }
 
 lu_runapp() {
+    check_config_only "$@"
     unset LU_EXE EXE_ARGS
     shift
     if [ -n "$1" ]
