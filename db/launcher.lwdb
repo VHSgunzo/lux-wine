@@ -1,6 +1,5 @@
 #DB# Crossout # DB_EXES=('launcher.exe')
 #DB# Dark Sector # DB_EXES=('DS.exe' 'launcher.exe')
-#DB# Caliber # DB_EXES=('CaliberSetup.exe' 'Caliber.exe' 'CaliberStart.exe' 'launcher.exe')
 #DB# Honkai: Star Rail # DB_EXES=('launcher.exe') !'StarRail.exe'
 
 srlauncher() {
@@ -53,7 +52,3 @@ pre_launch() {
 }
 
 WIN_VER=10
-
-case "$EXE_DIR" in
-    Caliber) source "$LW_DB_DIR/CaliberSetup.lwdb" ;;
-esac

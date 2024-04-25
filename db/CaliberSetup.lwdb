@@ -1,8 +1,0 @@
-#DB# Caliber # DB_EXES=('CaliberSetup.exe' 'Caliber.exe' 'CaliberStart.exe' 'launcher.exe')
-
-WIN_VER=10
-WINEARCH=win64
-WINE_VERSION=System
-USE_DEFPFX_BACKUP=1
-MUST_HAVE_DLL=Disabled
-WPREFIX_NAME=syswinepfx

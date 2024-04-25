@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.4.5"
+export LW_VERSION="0.78.4.6"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -2262,7 +2262,7 @@ lu_run() {
         [[ "$E_EXE_ARGS" =~ ^declare ]] && eval "$E_EXE_ARGS"
         [[ "$E_EXE_WRAPPER" =~ ^declare ]] && eval "$E_EXE_WRAPPER"
         $RUN_VKCAPTURE $RUN_FPSLIMIT $RUN_GAMEMODE $RUN_MANGOHUD $RUN_CPU_LIMIT \
-        "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "${LU_EXEC[@]}" "${EXE_ARGS[@]}"
+        $RUN_GAMESCOPE "$WINE" $RUN_VDESKTOP "${EXE_WRAPPER[@]}" "${LU_EXEC[@]}" "${EXE_ARGS[@]}"
     }
     exec_wine_with_dbg_log() { echo_dbg|& tee -a "$LOG_FILE" ; exec_wine|& tee -a "$LOG_FILE" ; }
     exec_wine_with_log() { echo_dbg ; exec_wine|& tee -a "$LOG_FILE" ; }
@@ -2780,6 +2780,7 @@ full_init() {
             check_themes
             check_cpu_limit
             check_fps_limit
+            check_gamescope
             check_us_switcher
             check_restore_gamma
             check_restore_resol
@@ -2882,6 +2883,7 @@ lu_config() {
     MANGOHUDLST="Enabled \n DLSYM \n Disabled"
     VKCAPTURELST="Vulkan \n OpenGL \n Disabled"
     GTKTHEMELST="Adwaita:dark \n Adwaita \n $(ls -1 "$HOME/.themes" 2>/dev/null)"
+    GAMESCOPEARGSLST="Disabled \n -f \n -W 1920 -H 1080 -f \n -w 2560 -h 1440 -W 1920 -H 1080 -F fsr -f"
     lwconfig_save() {
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE DISABLE_NVAPI WINE_DXGI D3D_EXTRAS DGVOODOO2 \
             DXVK_VERSION VKD3D_VERSION DXVK_NVAPI_VERSION D3D_EXTRAS_VERSION DGVOODOO2_VERSION WINE_NVML_VERSION VKD3DCFG MUST_HAVE_DLL \
@@ -2891,7 +2893,7 @@ lu_config() {
             LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR CHECK_LW_APPS GTK_THEME LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER AUTOSTART_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT \
-            VSYNC LWVKCAPTURE NVPRIME DRIPRIME"
+            VSYNC LWVKCAPTURE NVPRIME DRIPRIME SDL_GAMECONTROLLERCONFIG GAMESCOPEARG"
         WCFGOUT="$(while read CFGVAR <&3 && read CFGPARAM <&4
                         do
                             [ -n "$(echo "$CFGPARAM"|sed "s|''||")" ] && \
@@ -3065,6 +3067,8 @@ lu_config() {
             --field="OBS-VkCapture::CB" "$(cfg_items "$LWVKCAPTURE" "$VKCAPTURELST")" \
             --field="NVIDIA Prime Render Offload:CHK" "$NVPRIME" \
             --field="DRI_PRIME:CHK" "$DRIPRIME" \
+            --field="SDL GAMECONTROLLER CONFIG:CBE" "$SDL_GAMECONTROLLERCONFIG" \
+            --field="Gamescope arguments:CBE" "$(cfg_items "$GAMESCOPEARG" "$GAMESCOPEARGSLST")" \
             --file-filter="All Files | *.*" \
         1> /tmp/syssett$LWCFGKEY &
 
@@ -3148,6 +3152,7 @@ lu_config() {
             --field="Kill SHELL:FBTN" "$LWSHELL -c 'lu_killshell'" \
             --field="Kill tray:FBTN" "$LWSHELL -c 'lu_killtray'" \
             --field="Force Exit:FBTN" "$LWSHELL -c 'lu_exit'" \
+            --field="Controllermap:FBTN" "$LWSHELL -c 'btn_tools controllermap'" \
         &>/dev/null &
 
         check_exes
@@ -3254,25 +3259,63 @@ lu_config() {
             SETTBTN="$(cat "/tmp/settbtn$LWCFGKEY")"
             try_rm "/tmp/settbtn$LWCFGKEY"
             case $SETTBTN in
-                    winemgr) lu_winemgr
-                             btntls_run ;;
-
-                    clearpfx) lu_clearpfx
-                              sleep 0.5
-                              btntls_run ;;
-
-                    update) lu_update
-                            btntls_run ;;
-
-                    winetricks) btntls_run -winetricks ;;
-
-                    init) btntls_run -init ;;
-
-                    pfxbackup) btntls_run -pfxbackup ;;
-
-                    pfxrestore) btntls_run -pfxrestore ;;
-
-                    appcfg) LU_EXE= lu_appcfg ;;
+                    winemgr)
+                        lu_winemgr
+                        btntls_run
+                    ;;
+                    clearpfx)
+                        lu_clearpfx
+                        sleep 0.5
+                        btntls_run
+                    ;;
+                    update)
+                        lu_update
+                        btntls_run
+                    ;;
+                    winetricks)
+                        btntls_run -winetricks
+                    ;;
+                    init)
+                        btntls_run -init
+                    ;;
+                    pfxbackup)
+                        btntls_run -pfxbackup
+                    ;;
+                    pfxrestore)
+                        btntls_run -pfxrestore
+                    ;;
+                    appcfg)
+                        LU_EXE= lu_appcfg
+                    ;;
+                    controllermap)
+                        if [ "$(ls /dev/input/js* 2>/dev/null)" ]
+                            then
+                                if is_exe_exist controllermap
+                                    then
+                                        print_info yad \
+"Press the buttons on your controller when indicated
+(Your controller may look different than the picture)
+If you want to correct a mistake, press backspace or the back button on your device
+To skip a button, press SPACE or click/touch the screen
+To exit, press ESC"
+                                        controllermap="$(SDL_GAMECONTROLLERCONFIG= controllermap)"
+                                        if [ "$controllermap" ]
+                                            then
+                                                if grep -q '^SDL_GAMECONTROLLERCONFIG' "$LW_CFG"
+                                                    then
+                                                        if print_question 'Add to the previous SDL GAMECONTROLLERCONFIG configuration?'
+                                                            then sed -i "s|^SDL_GAMECONTROLLERCONFIG='|SDL_GAMECONTROLLERCONFIG='$controllermap|g" "$LW_CFG"
+                                                            else sed -i "s|^SDL_GAMECONTROLLERCONFIG.*|SDL_GAMECONTROLLERCONFIG='$controllermap'|g" "$LW_CFG"
+                                                        fi
+                                                    else echo "SDL_GAMECONTROLLERCONFIG='$controllermap'" >> "$LW_CFG"
+                                                fi
+                                        fi
+                                    else print_error yad "controllermap is not found!"
+                                fi
+                            else print_error yad "Game controller is not found!"
+                        fi
+                        btntls_run
+                    ;;
             esac
     fi
 }
@@ -5838,6 +5881,20 @@ check_cpu_limit() {
     fi
 }
 
+check_gamescope() {
+    [ -n "$1" ] && export GAMESCOPEARG="$1"
+    if [[ -n "$GAMESCOPEARG" && "$GAMESCOPEARG" != 'Disabled' ]]
+        then
+            print_info "GAMESCOPE is enabled!"
+            unset __GL_THREADED_OPTIMIZATIONS
+            if [ "$VKBASALT" == 1 ]
+                then export RUN_GAMESCOPE="env -u ENABLE_VKBASALT gamescope $GAMESCOPEARG -- env ENABLE_VKBASALT=1"
+                else export RUN_GAMESCOPE="gamescope $GAMESCOPEARG --"
+            fi
+        else unset RUN_GAMESCOPE
+    fi
+}
+
 check_vkd3dconfig() {
     [ -n "$1" ] && export VKD3DCFG="$1"
     if [[ -n "$VKD3DCFG" && "$VKD3DCFG" != "Disabled" ]]
@@ -6208,7 +6265,7 @@ export_all_functions() {
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
         check_dxvk_async check_vsync get_wine_git_lst try_dl_install_wine exeargs_parse try_add_reg_cdrom shrt_loop shrt_from_url shrt_from_lnk check_shrt \
-        get_shrt_data check_autostart_tray check_config_only
+        get_shrt_data check_autostart_tray check_config_only check_gamescope
 }
 
 initbar() {

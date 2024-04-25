@@ -1,3 +1,21 @@
+# v0.78.4.6
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.4) `v9.4`
+* Update `wine-staging` (System) in container to `v9.6`
+* Remove DB script for `Caliber`
+* Remove DB script for `setup`
+* Update DB script for `Need for Speed Underground`
+* Update DB script for `Need for Speed Underground 2`
+* Update DB script for `Need for Speed Most Wanted`
+* Update DB script for `Need for Speed Carbon`
+* Add install LW from container if couldn't download from the internet
+* Fix install with `wget2`
+* Fix install with `aria2` if user config exist
+* Add `Controllermap` to `Settings`
+* Add `SDL_GAMECONTROLLERCONFIG` to `Settings`
+* Add `Gamescope` to `Settings`
+
 # v0.78.4.5
 
 * HotFix menu apps LW categories icon

@@ -144,6 +144,8 @@ lwrun --uninstall
 - [x] AMD FidelityFX Contrast Adaptive Sharpening settings (depends on [VkBasalt](https://github.com/DadSchoorse/vkBasalt/releases))
 - [x] [Gstreamer](https://github.com/GStreamer/gstreamer) (if Wine support)
 - [x] [GameMode](https://github.com/FeralInteractive/gamemode/releases)
+- [x] [Gamescope](https://github.com/ValveSoftware/gamescope)
+- [x] [controllermap](https://aur.archlinux.org/packages/controllermap)
 - [x] Esync
 - [x] Fsync (if linux kernel support)
 - [x] Vsync settings
