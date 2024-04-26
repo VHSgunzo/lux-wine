@@ -1,6 +1,7 @@
 # v0.78.4.7
 
 * Fix auto create shortcut for `Yandex Music`
+* Add `QUIET_MODE` for `check_config_only()`
 
 # v0.78.4.6
 
