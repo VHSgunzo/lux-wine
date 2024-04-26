@@ -3578,7 +3578,7 @@ lu_exit() {
 }
 
 check_config_only() {
-    check_exe_wcfg_cenv "$@"
+    QUIET_MODE=1 check_exe_wcfg_cenv "$@"
     check_luwine_wcfg_cenv
     check_def_config
 }
