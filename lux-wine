@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.4.6"
+export LW_VERSION="0.78.4.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -3876,7 +3876,7 @@ drive_tolower() { cut -d: -f1|awk '{print tolower($0)}' ; }
 
 shrt_from_lnk() {
     try_mv_lnk() { [ "$CSHRT_WITH_RM" == 1 ] && mv -f "$lnk_file" "$LW_DEF_TMP" ; }
-    lnk_data_get() { echo "$lnk_data"|grep "$1"|cut -d: -f2-|sed 's|^ ||g' ; }
+    lnk_data_get() { grep -a "$1"<<<"$lnk_data"|cut -d: -f2-|sed 's|^ ||g' ; }
     fix_winstd_path() { sed 's|%ProgramFiles(x86)%|C:\\Program Files (x86)|gi;s|%ProgramFiles%|C:\\Program Files|gi' ; }
     fix_path() {
         fix_winstd_path|sed "s|^.|$WINEPREFIX/dosdevices/$lnk_exe_drive|g"|sed 's|\\$||g;s|\\\\|/|g;s|\\|/|g;s| $||g'
@@ -3914,6 +3914,17 @@ shrt_from_lnk() {
             SHRT_NAME="$(sed 's|\.lnk$||i'<<<"$lnk_name")"
             lnk_exe_drive="$(lnk_data_get 'Local Base Path'|drive_tolower)"
             lnk_exe="$(ipath "$(lnk_data_get 'Local Base Path'|fix_path)"|head -1)"
+            BROKELNK=('Яндекс Музыка.lnk')
+            BROKELNKEXE=('Яндекс Музыка.exe')
+            if [[ "${BROKELNK[@],,}" =~ "${orig_lnk_name,,}" ]]
+                then
+                    for (( i=0; i<${#BROKELNK[@]}; i++ ))
+                        do
+                            [[ "${BROKELNK[$i],,}" == "${orig_lnk_name,,}" ]] && \
+                            lnk_exe="$(ipath "$(dirname "$(lnk_data_get 'Local Base Path'|\
+                                                fix_path)")/${BROKELNKEXE[$i]}"|head -1)"
+                    done
+            fi
             lnk_exe_ico="$(lnk_data_get 'Icon File Name')"
             lnk_exe_ico_drive="$(echo "$lnk_exe_ico"|fix_winstd_path|drive_tolower)"
             lnk_exe_ico="$(ipath "$(lnk_exe_drive=$lnk_exe_ico_drive ; echo "$lnk_exe_ico"|fix_path)"|head -1)"
@@ -3935,6 +3946,7 @@ shrt_from_lnk() {
             if [[ -n "$(echo "$lnk_exe_name"|grep -Eio '\.exe$|\.bat$')" && \
                 ! "${IGNEXES[@],,}" =~ "${lnk_exe_name,,}" && \
                 ! "${IGNLNK[@],,}" =~ "${orig_lnk_name,,}" && \
+                "${lnk_exe_name,,}" != 'uninstall '*.exe && \
                 "$lnk_args" != "--uninstall" ]]
                 then
                     LU_EXE="$lnk_exe"
