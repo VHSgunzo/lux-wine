@@ -1,3 +1,8 @@
+# v0.78.4.8
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Fix lwrap WGET_ARGS
+
 # v0.78.4.7
 
 * Fix auto create shortcut for `Yandex Music`
