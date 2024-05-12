@@ -1,6 +1,7 @@
 # v0.78.4.9
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.5) `v9.5`
 * Update DB script for `Honkai: Star Rail`
 
 # v0.78.4.8
