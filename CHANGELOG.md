@@ -1,3 +1,8 @@
+# v0.78.4.9
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update DB script for `Honkai: Star Rail`
+
 # v0.78.4.8
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
