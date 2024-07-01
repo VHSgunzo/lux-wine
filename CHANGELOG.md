@@ -1,3 +1,11 @@
+# v0.78.5.1
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.9) `v9.9`
+* Add grep CHK_UPDATE from LW global config to lwrap
+* Add DB script for `Prototype`
+* Minor fixes
+
 # v0.78.4.9
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

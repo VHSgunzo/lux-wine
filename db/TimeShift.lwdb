@@ -1,3 +1,4 @@
 #DB# TimeShift # DB_EXES=('TimeShift.exe')
+#DB# Prototype # DB_EXES=('prototypef.exe')
 
 CPU_LIMIT='8'

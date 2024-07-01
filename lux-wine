@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.4.9"
+export LW_VERSION="0.78.5.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -106,7 +106,7 @@ for icon in "$LW_ICONS_DIR"/*.png
                     do
                         mkdir -p "$HOME_ICONS/hicolor/$hi_icon_size/apps"
                         mkdir -p "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps"
-                        convert "$icon" -resize "$hi_icon_size" \
+                        magick "$icon" -resize "$hi_icon_size" \
                             "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$icon_name" && \
                         ln -sfr "$LW_ICONS_DIR/hicolor/$hi_icon_size/apps/$icon_name" \
                             "$HOME_ICONS/hicolor/$hi_icon_size/apps/$icon_name"
@@ -778,7 +778,7 @@ try_download() {
     try_mkdir "$DLPTH"
     if [ "$LW_DOWNLOADER" == "aria2c" ]
         then
-            aria2c -x 13 -s 13 --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|stdbuf -o0 grep 'ETA'| \
+            aria2c -x 13 -s 13 --no-conf --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|stdbuf -o0 grep 'ETA'| \
             sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'| \
             yad --progress --percentage=0 --text="Download:\t$DLFLNAME\n$1" --auto-close --no-escape --selectable-labels \
                 --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar Lux Wine
@@ -1485,7 +1485,7 @@ exe2png() {
                 done)
         fi
     }
-    if is_exe_exist icoextract && is_exe_exist convert
+    if is_exe_exist icoextract && is_exe_exist magick
         then
             HICOLOR_SHR_DIR="$SHRT_PATH/hicolor_icons"
             if [[ -f "$SHRT_PATH/${SHRT_NAME}.png" && \
@@ -1510,7 +1510,7 @@ exe2png() {
                                 then exe_ico="$(ls -S -1 "${SHRT_NAME}"*_*_123.ico)"
                             else exe_ico="$(ls -S -1 "${SHRT_NAME}"*.ico 2>/dev/null|head -1)"
                             fi
-                            convert "$exe_ico" "$(echo "$exe_ico"|sed 's|.ico$|.png|gi')"
+                            magick "$exe_ico" "$(echo "$exe_ico"|sed 's|.ico$|.png|gi')"
                             if [ ! -f "${SHRT_NAME}.png" ]
                                 then
                                     if [ "${SHRT_NAME}" == "osu!" ]
@@ -1524,7 +1524,7 @@ exe2png() {
                             for hi_icon_size in ${HICOLOR_SIZES[@]}
                                 do
                                     try_mkdir "$hi_icon_size/apps"
-                                    convert "../${SHRT_NAME}.png" -resize "$hi_icon_size" \
+                                    magick "../${SHRT_NAME}.png" -resize "$hi_icon_size" \
                                         "$hi_icon_size/apps/${SHRT_NAME}.png"
                             done)
                             add_exe_icon
@@ -1958,6 +1958,7 @@ import_luwine_wcfg() {
     source "$LW_CFG"
     set +a
     set_wine_version
+    [ "$NO_UPD_CHKSUM" == 1 ]||\
     updcfgchksum
 }
 
@@ -2423,7 +2424,6 @@ check_exe_wcfg_cenv() {
                 then
                     print_info notify "Found EXE config!"
                     print_info "Path: '$EXE_CFG'"
-                    sed -i "s|$OLD_LW_DIR|$LW_DIR|g" "$EXE_CFG" 2>/dev/null
                     if [ -f "$LW_DEF_CFG" ]
                         then
                             export LW_CFG="$EXE_CFG"
@@ -3579,7 +3579,7 @@ lu_exit() {
 
 check_config_only() {
     QUIET_MODE=1 check_exe_wcfg_cenv "$@"
-    check_luwine_wcfg_cenv
+    NO_UPD_CHKSUM=1 check_luwine_wcfg_cenv
     check_def_config
 }
 
@@ -5442,7 +5442,6 @@ check_winepfx() {
     DEF_WDESK_DIR=("Desktop" "Documents" "Music" "Videos" "Pictures" "Downloads" "Templates")
     (IFS=$'\n' ; for WINEDESK_DIR in "${DEF_WDESK_DIR[@]}"
         do
-            XDGUSERDIRPTH="$HOME/$WINEDESK_DIR"
             WDESKDIRPTH="$WPFX_STEAMUSER_DIR/$WINEDESK_DIR"
             if [ "$WINE_SANDBOX" == 1 ]
                 then
@@ -5457,6 +5456,7 @@ check_winepfx() {
                     fi
                 else
                     DESKLNK="$(readlink -f "$WDESKDIRPTH")"
+                    XDGUSERDIRPTH="$HOME/$WINEDESK_DIR"
                     if [ "$DESKLNK" != "$XDGUSERDIRPTH" ]
                         then
                             if [[ ! -L "$WDESKDIRPTH" && -d "$WDESKDIRPTH" ]]
@@ -5466,7 +5466,7 @@ check_winepfx() {
                                 then
                                     try_rm "$WDESKDIRPTH"
                             fi
-                            [ ! -d "$WDESKDIRPTH" ] && \
+                            [[ -d "$XDGUSERDIRPTH" && ! -d "$WDESKDIRPTH" ]] && \
                                 try_ln "$XDGUSERDIRPTH" "$WDESKDIRPTH"
                     fi
             fi
