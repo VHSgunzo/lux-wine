@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.5.1"
+export LW_VERSION="0.78.5.2"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -1682,6 +1682,14 @@ create_shortcut() {
             print_info notify "Shortcut for '$SHRT_NAME' successfully created!"
             wait
     fi
+}
+
+winpath() {
+    WINEDEBUG='-all' "$WINE" winepath -w "$@" 2>/dev/null
+}
+
+winepath() {
+    WINEDEBUG='-all' "$WINE" winepath "$@" 2>/dev/null
 }
 
 lu_debug() {
@@ -4758,13 +4766,20 @@ check_gstreamer() {
         [[ -d "/usr/lib/gstreamer-1.0" || -d "$WINEDIR/lib64/gstreamer-1.0" ]]
         then
             try_mkdir "$LW_DEF_CACHE/gstreamer-1.0"
+            export GST_GL_WINDOW='surfaceless'
             export WINE_GST_REGISTRY_DIR="$LW_DEF_CACHE/gstreamer-1.0"
             export MEDIACONV_AUDIO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/audio.foz"
             export MEDIACONV_AUDIO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_audio.foz"
             export MEDIACONV_VIDEO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/video.foz"
             export MEDIACONV_VIDEO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_video.foz"
             if [[ -d "$WINEDIR" && -d "$WINEDIR/lib64/gstreamer-1.0" ]]
-                then export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
+                then
+                    export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
+                    if [ -d "$WINEDIR/share/media" ]
+                        then
+                            export MEDIACONV_BLANK_VIDEO_FILE="$WINEDIR/share/media/blank.mkv"
+                            export MEDIACONV_BLANK_AUDIO_FILE="$WINEDIR/share/media/blank.ptna"
+                    fi
             elif [ -d '/usr/lib/gstreamer-1.0' ]
                 then export GST_PLUGIN_SYSTEM_PATH_1_0='/usr/lib/gstreamer-1.0:/usr/lib32/gstreamer-1.0'
                 else disable_gstreamer
@@ -4835,7 +4850,7 @@ check_wined3d() {
                             try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
                     fi
             fi
-            try_ln_wine_build_dll d3d11 d3d10 d3d10core d3d10_1 d3d9 d3d12 d3d12core
+            try_ln_wine_build_dll d3d11 d3d10 d3d10core d3d10_1 d3d9 d3d8 d3d12 d3d12core
     fi
 }
 
@@ -4921,7 +4936,7 @@ check_proton_d3dlib() {
 check_dxvk() {
     [ -n "$1" ] && export DXVK="$1"
     [ -n "$2" ] && export DXVK_VERSION="$2"
-    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,dxgi,openvr_api_dxvk,dxvk_config"
+    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,d3d8,dxgi,openvr_api_dxvk,dxvk_config"
     if [[ "$DXVK" == 1 && "$WINED3D" != 1 ]]
         then
             [ "$DXVK_VERSION" == "Default" ] && \
@@ -6277,7 +6292,7 @@ export_all_functions() {
         check_display check_restore_resol resol_sw check_restore_gamma dis_displ_sw restore_resol check_virt_desktop check_vkbasalt_cfg check_exe_args \
         check_wine_nvml check_resizable_bar check_latencyflex get_proton_d3dlib makesquash_zstd makesquash_xz lu_pfxbackup lu_pfxrestore lu_backupmnt lu_backupunmnt \
         check_dxvk_async check_vsync get_wine_git_lst try_dl_install_wine exeargs_parse try_add_reg_cdrom shrt_loop shrt_from_url shrt_from_lnk check_shrt \
-        get_shrt_data check_autostart_tray check_config_only check_gamescope
+        get_shrt_data check_autostart_tray check_config_only check_gamescope winpath winepath
 }
 
 initbar() {

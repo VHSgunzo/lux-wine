@@ -1,3 +1,12 @@
+# v0.78.5.2
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.9) `v9.11`
+* Add `winepath()` and `winpath()` functions
+* Add gstreamer fixes
+* Update DB script for `Honkai: Star Rail` (for StarRail.exe)
+* Minor fixes
+
 # v0.78.5.1
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

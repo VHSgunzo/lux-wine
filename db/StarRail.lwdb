@@ -1,0 +1,18 @@
+#DB# Honkai: Star Rail # DB_EXES=('StarRail.exe')
+
+SR_PATCH_URL="https://codeberg.org/mkrsym1/jadeite/releases"
+SR_PATCH_VER="$(curl -sL "$SR_PATCH_URL" 2>/dev/null|grep -o '>v[0-9].*[0-9]<'|sed 's|<||g;s|>||g'|head -1)"
+SR_PATCH_DIR="$LW_DEF_TMP/srpatch_$SR_PATCH_VER"
+SREXE="$(winpath "$LU_EXE")"
+EXE_WRAPPER=("$SR_PATCH_DIR/jadeite.exe" "$SREXE" "$SREXE")
+if [ ! -f "${EXE_WRAPPER[0]}" ]
+    then
+        if ! (try_download "$SR_PATCH_URL/download/$SR_PATCH_VER/$SR_PATCH_VER.zip" "$LW_DEF_TMP" && \
+            unzip "$LW_DEF_TMP/$SR_PATCH_VER.zip" -d "$SR_PATCH_DIR")
+            then
+                try_rm "$SR_PATCH_DIR" &>/dev/null
+                print_error yad "Failed to download SR patch!"
+                exit 1
+        fi
+        try_rm "$LW_DEF_TMP/$SR_PATCH_VER.zip" &>/dev/null
+fi
