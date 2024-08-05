@@ -1,3 +1,9 @@
+# v0.78.5.3
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Add [lw-tray on golang](https://github.com/VHSgunzo/lw-tray/commit/d5976a68237d9a8d26ab2e8bdb47803ea565bdd4)
+* Minor fixes
+
 # v0.78.5.2
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

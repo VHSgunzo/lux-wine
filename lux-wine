@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.5.2"
+export LW_VERSION="0.78.5.3"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -60,7 +60,12 @@ OLD_LW_DIR="$HOME/.local/share/LutrisWine"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LuxWine"
 [ ! -n "$LW_BIN_DIR" ] && export LW_BIN_DIR="$LW_DIR/bin"
 [ ! -n "$LWRAP" ] && export LWRAP="$LW_BIN_DIR/lwrap"
-[ ! -n "$LW_TRAY" ] && export LW_TRAY="$LWRAP_DIR/bin/lw-tray"
+if [ ! -n "$LW_TRAY" ]
+    then
+        [ "$DESKTOP_SESSION" == "plasma" ] && \
+        export LW_TRAY="$LWRAP_DIR/bin/lw-tray"||\
+        export LW_TRAY="$LWRAP_DIR/bin/lw-tray-go/lw-tray"
+fi
 if [ ! -n "$LW_THEMES_DIR" ]
     then [ -d "$LW_DIR/themes" ] && \
     export LW_THEMES_DIR="$LW_DIR/themes"||\
@@ -2289,6 +2294,8 @@ lu_run() {
     lu_debug 2>/dev/null
     compositor_sw 2>/dev/null
     check_ld_library
+    WINESERVICES=(winecfg winefile explorer regedit control taskmgr uninstaller)
+    [[ "${WINESERVICES[@]}" =~ "$LU_EXEC" ]] && unset EXE_ARGS
     [[ -n "$LU_EXEC" ]] && export E_LU_EXEC="$(declare -p LU_EXEC)"
     [[ -n "$EXE_ARGS" ]] && export E_EXE_ARGS="$(declare -p EXE_ARGS)"
     [[ -n "$EXE_WRAPPER" ]] && export E_EXE_WRAPPER="$(declare -p EXE_WRAPPER)"
