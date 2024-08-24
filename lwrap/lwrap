@@ -540,8 +540,8 @@ get_lwrun_yc_ver() {
 set_git_lwrun_ver() {
     for src in yc git hf
         do
-            GIT_LWRUN_VERSION="$(get_lwrun_${src}_ver)" && \
-                return 0
+            GIT_LWRUN_VERSION="$(get_lwrun_${src}_ver)"
+            [ -n "$GIT_LWRUN_VERSION" ] && return 0
     done
     return 1
 }
