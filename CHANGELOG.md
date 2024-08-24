@@ -1,3 +1,7 @@
+# v0.78.5.4
+
+* Remove `Yandex Cloud` mirrors
+
 # v0.78.5.3
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

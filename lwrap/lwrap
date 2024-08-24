@@ -9,10 +9,10 @@ GREEN='\033[1;92m'
 YELLOW='\033[1;33m'
 RESETCOLOR='\033[1;00m'
 
-YC_S3="https://storage.yandexcloud.net"
+# YC_S3="https://storage.yandexcloud.net"
 GIT_REPO='https://github.com/VHSgunzo'
 GIT_HF_REPO='https://huggingface.co/spaces/lux-wine'
-GIT_YC_REPO="$YC_S3/lux-wine"
+# GIT_YC_REPO="$YC_S3/lux-wine"
 LW_DIR="$HOME/.local/share/LuxWine"
 MENU_APPS_DIR="$HOME/.local/share/applications"
 LW_APPS_DIR="$MENU_APPS_DIR/LuxWineApps"
@@ -23,16 +23,16 @@ LWSRC="$LWBIN_DIR/lux-wine"
 GIT_RAW='https://raw.githubusercontent.com/VHSgunzo/lux-wine/main'
 GIT_LWSRC="$GIT_RAW/lux-wine"
 GIT_HF_LWSRC="$GIT_HF_REPO/git/resolve/main/lux-wine"
-GIT_YC_LWSRC="$GIT_YC_REPO/git/lux-wine"
+# GIT_YC_LWSRC="$GIT_YC_REPO/git/lux-wine"
 GIT_LWZIP="$GIT_REPO/lux-wine/archive/refs/heads/main.zip"
 GIT_HF_LWZIP="$GIT_HF_REPO/git/resolve/main/main.zip"
-GIT_YC_LWZIP="$GIT_YC_REPO/main.zip"
+# GIT_YC_LWZIP="$GIT_YC_REPO/main.zip"
 GIT_LWRAP="$GIT_RAW/lwrap/lwrap"
 GIT_HF_LWRAP="$GIT_HF_REPO/git/resolve/main/lwrap/lwrap"
-GIT_YC_LWRAP="$GIT_YC_REPO/git/lwrap/lwrap"
+# GIT_YC_LWRAP="$GIT_YC_REPO/git/lwrap/lwrap"
 GIT_LWRUN="$GIT_REPO/lwrun/releases"
 GIT_HF_LWRUN="${GIT_HF_REPO//\/spaces/}/lwrun/resolve/main/releases"
-YC_LWRUN="$YC_S3/lwrun"
+# YC_LWRUN="$YC_S3/lwrun"
 HOME_ICONS="$HOME/.local/share/icons"
 HOME_DESK_DIRS="$HOME/.local/share/desktop-directories"
 HSTEAM_DESKF="$MENU_APPS_DIR/steam-lw.desktop"
@@ -385,7 +385,7 @@ is_lwrun() { [ -x "$LWRUN" ] ; }
 
 try_dl_lwzip() {
     local lwzipurl=(
-        "$GIT_YC_LWZIP"
+#         "$GIT_YC_LWZIP"
         "$GIT_HF_LWZIP"
         "$GIT_LWZIP"
     )
@@ -438,7 +438,7 @@ vers_parser() { grep -Po '\d+'|sed ':a;/$/N;s/\n//;ta' ; }
 set_git_lw_version() {
     unset GIT_LW_VERSION
     local lwsrcusrls=(
-        "$GIT_YC_LWSRC"
+#         "$GIT_YC_LWSRC"
         "$GIT_HF_LWSRC"
         "$GIT_LWSRC"
     )
@@ -460,7 +460,7 @@ get_lw_version() {
 
 try_dllwrap_mirror() {
     local lwrapurl=(
-        "$GIT_YC_LWRAP"
+#         "$GIT_YC_LWRAP"
         "$GIT_HF_LWRAP"
         "$GIT_LWRAP"
     )
@@ -530,15 +530,16 @@ get_lwrun_hf_ver() {
         2>/dev/null|grep -Po "v\d+\.\d+\.\d+"|tail -1
 }
 
-get_lwrun_yc_ver() {
-    NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl \
-        "$YC_LWRUN" /dev/stdout 2>/dev/null|tr '<' '\n'|\
-        grep '^Key>'|sed 's|^Key>||g'|grep '^releases'|\
-        awk -F/ 'END {print$2}'
-}
+# get_lwrun_yc_ver() {
+#     NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 try_dl \
+#         "$YC_LWRUN" /dev/stdout 2>/dev/null|tr '<' '\n'|\
+#         grep '^Key>'|sed 's|^Key>||g'|grep '^releases'|\
+#         awk -F/ 'END {print$2}'
+# }
 
 set_git_lwrun_ver() {
-    for src in yc git hf
+#     for src in yc git hf
+    for src in git hf
         do
             GIT_LWRUN_VERSION="$(get_lwrun_${src}_ver)"
             [ -n "$GIT_LWRUN_VERSION" ] && return 0
@@ -548,7 +549,7 @@ set_git_lwrun_ver() {
 
 try_dllwrun_mirror() {
     local lwrunurl=(
-        "$YC_LWRUN/releases/$GIT_LWRUN_VERSION/lwrun"
+#         "$YC_LWRUN/releases/$GIT_LWRUN_VERSION/lwrun"
         "$GIT_HF_LWRUN/$GIT_LWRUN_VERSION/lwrun"
         "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/lwrun"
     )

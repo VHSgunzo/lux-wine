@@ -13,10 +13,6 @@ This project allows you to easily run your favorite applications and games for W
 ```
 curl -sL lwrap.github.io|bash
 ```
-* YC mirror:
-```
-curl -sL lwrap.website.yandexcloud.net|bash
-```
 * HF mirror:
 ```
 curl -sL lux-wine-git.static.hf.space|sed 1d|bash
@@ -25,10 +21,6 @@ curl -sL lux-wine-git.static.hf.space|sed 1d|bash
 * or with `wget`:
 ```
 wget -qO - lwrap.github.io|bash
-```
-* YC mirror:
-```
-wget -qO - lwrap.website.yandexcloud.net|bash
 ```
 * HF mirror:
 ```

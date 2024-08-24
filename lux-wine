@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.5.3"
+export LW_VERSION="0.78.5.4"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -225,8 +225,8 @@ check_def_config() {
     export DEFPFX_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix.xz.lwpfx"
     export DEFPFXDOTNET_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
     export DEFPFXDOTNETDESKTOP_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnetdesktop.xz.lwpfx"
-    export DEFPFX_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix.xz.lwpfx"
-    export DEFPFXDOTNET_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
+    #export DEFPFX_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix.xz.lwpfx"
+    #export DEFPFXDOTNET_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
 }
 
 print_var() {
@@ -2530,8 +2530,8 @@ check_db_script() {
                                     elif [ -f "$LWRAP_DEFPFXDOTNET" ]
                                         then PFXRESTORE="$LWRAP_DEFPFXDOTNET"
                                     else
-                                        if (try_download "$DEFPFXDOTNET_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
-                                            try_download "$DEFPFXDOTNET_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        #if (try_download "$DEFPFXDOTNET_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        if (try_download "$DEFPFXDOTNET_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
                                             try_download "$DEFPFXDOTNET_URL" "$LW_DEF_WINEPFXBKP_DIR/")
                                             then PFXRESTORE="$LWDIR_DEFPFXDOTNET"
                                             else exit 1
@@ -2560,8 +2560,8 @@ check_db_script() {
                                     elif [ -f "$LWRAP_DEFPFX" ]
                                         then PFXRESTORE="$LWRAP_DEFPFX"
                                     else
-                                        if (try_download "$DEFPFX_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
-                                            try_download "$DEFPFX_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        #if (try_download "$DEFPFX_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        if (try_download "$DEFPFX_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
                                             try_download "$DEFPFX_URL" "$LW_DEF_WINEPFXBKP_DIR/")
                                             then PFXRESTORE="$LWDIR_DEFPFX"
                                             else exit 1
