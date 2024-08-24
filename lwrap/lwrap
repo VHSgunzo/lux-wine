@@ -445,8 +445,8 @@ set_git_lw_version() {
     for url in "${lwsrcusrls[@]}"
         do
             GIT_LW_VERSION="$(NO_ARIA2C=1 NO_DL_GUI=1 NO_DL_REPEAT=1 \
-            try_dl "$url" /dev/stdout 2>/dev/null|get_lw_version)" && \
-                return 0
+            try_dl "$url" /dev/stdout 2>/dev/null|get_lw_version)"
+            [ -n "$GIT_LW_VERSION" ] && return 0
     done
     return 1
 }
