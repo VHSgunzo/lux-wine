@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.5.4"
+export LW_VERSION="0.78.5.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -183,7 +183,7 @@ check_def_config() {
     [ ! -n "$DIS_LAYER_AMD" ] && export DIS_LAYER_AMD=1
     [ ! -n "$US_LAYOUT" ] && export US_LAYOUT=1
     [ ! -n "$WMONOVER" ] && export WMONOVER="Microsoft.Xna.Framework.*,Gac=n"
-    [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe='
+    [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64,icu=n;lsteamclient,winemenubuilder.exe=;winhttp,amd_ags_x64.dll=n,b'
     [ ! -n "$WINE_THEME" ] && export WINE_THEME='Breeze Dark'
     [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='Enabled'
     [ ! -n "$LWVKCAPTURE" ] && export LWVKCAPTURE='Disabled'
@@ -314,8 +314,8 @@ print_input() {
 
 check_wine_pids() {
     unset WINE_PIDS CHK_WINE_PIDS PROC_EXES
-    if [ "$ENABLE_HOSTEXEC" == 1 ]
-        then PROC_EXES="$(echo 'ls -l /proc/*/exe 2>/dev/null'|hostexec)"
+    if [ "$INSIDE_RUNIMAGE" == 1 ]
+        then PROC_EXES="$(hostexec sh -c 'ls -l /proc/*/exe 2>/dev/null')"
         else PROC_EXES="$(ls -l /proc/*/exe 2>/dev/null)"
     fi
     if [[ "$WINE_VERSION" == "System" && "$NEW_WINE_VERSION" != "System" ]] \
@@ -361,8 +361,8 @@ check_luwine_sh_pid() {
 
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE PROC_EXES
-    if [ "$ENABLE_HOSTEXEC" == 1 ]
-        then PROC_EXES="$(echo 'ls -l /proc/*/exe 2>/dev/null'|hostexec)"
+    if [ "$INSIDE_RUNIMAGE" == 1 ]
+        then PROC_EXES="$(hostexec sh -c 'ls -l /proc/*/exe 2>/dev/null')"
         else PROC_EXES="$(ls -l /proc/*/exe 2>/dev/null)"
     fi
     RUN_EXES="$(ps -o pid=,cmd= -p $(echo "$PROC_EXES"|\
@@ -783,13 +783,13 @@ try_download() {
     try_mkdir "$DLPTH"
     if [ "$LW_DOWNLOADER" == "aria2c" ]
         then
-            aria2c -x 13 -s 13 --no-conf --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|stdbuf -o0 grep 'ETA'| \
+            aria2c --no-conf -R -x 13 -s 13 --no-conf --allow-overwrite --summary-interval=1 -o "$DLFLNAME" -d "$DLPTH" "$1"|stdbuf -o0 grep 'ETA'| \
             sed -u 's/(.*)/ &/;s/(//;s/)//;s/\[//;s/\]//;s/%//'|stdbuf -o0 awk '{print$3"\n#Downloading at "$2,$5,$6}'| \
             yad --progress --percentage=0 --text="Download:\t$DLFLNAME\n$1" --auto-close --no-escape --selectable-labels \
                 --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar Lux Wine
     elif [ "$LW_DOWNLOADER" == "wget" ]
         then
-            wget --no-check-certificate --content-disposition -t 3 -T 5 -w 0.5 "$1" --directory-prefix="$DLPTH"|& \
+            wget --no-check-certificate -t 3 -T 5 -w 0.5 "$1" --directory-prefix="$DLPTH"|& \
             tr '\r' '\n'|sed -u 's/.* \([0-9]\+%\)\ \+\([0-9,.]\+.\) \(.*\)/\1\n#Downloading at \1\, \2\/s, ETA \3/; s/^20[0-9][0-9].*/#Done./'| \
             yad --progress --percentage=0 --text="Download:\t$DLFLNAME\n$1" --auto-close --no-escape --selectable-labels \
                 --auto-kill --center --on-top --fixed --no-buttons --undecorated --skip-taskbar Lux Wine
@@ -2063,7 +2063,7 @@ check_def_wine() {
                     try_rm "$LW_WINE_DIR/$BINWINE" &>/dev/null
                     print_info notify "Deleted broken Wine: $BINWINE"
                 else
-                    if [ -w "$LW_WINE_DIR/$BINWINE" ]
+                    if [[ -w "$LW_WINE_DIR/$BINWINE" && "$(realpath "$LW_WINE_DIR/$BINWINE")" != '/usr/share/steam/compatibilitytools.d/'* ]]
                         then
                             WFILESDIR="$LW_WINE_DIR/$BINWINE/files"
                             WVERSFL="$LW_WINE_DIR/$BINWINE/version"
@@ -2873,7 +2873,7 @@ lu_config() {
     export LWCFGKEY=$RANDOM
     WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*') $(is_exe_nofirstrun && echo '\n Default') $([ -n "$SYS_WINE" ] && echo '\n System') \n GE-Proton7-55"
     WINETHEMESLST="Disabled \n $(ls -1 "$LW_THEMES_DIR" 2>/dev/null|sed 's|.reg||gi')"
-    WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64=n;lsteamclient,winemenubuilder.exe= \n Disabled"
+    WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64,icu=n;lsteamclient,winemenubuilder.exe=;winhttp,amd_ags_x64=n,b \n Disabled"
     WMONOOVERLST="Microsoft.Xna.Framework.*,Gac=n \n Disabled"
     WINVERLST="11 \n 10 \n \n 8 \n 7 \n xp"
     WARCHLST="win64 \n win32"
@@ -2885,6 +2885,8 @@ lu_config() {
     VKICDFILESLST="AUTO $([ -n "$(find_vk_icd nvidia)" ] && echo '\n Nvidia') \
                         $([ -n "$(find_vk_icd intel)" ] && echo '\n Intel') \
                         $([ -n "$(find_vk_icd radeon)" ] && echo '\n AMD') \
+                        $([ -n "$(find_vk_icd amd)" ] && echo '\n AMDVLK') \
+                        $([ -n "$(find_vk_icd nouveau)" ] && echo '\n NVK') \
                         $([ -n "$(find_vk_icd lvp)" ] && echo '\n Lvp')"
     DXVKLST="$(ls_dlls dxvk) \n v1.10.3 \n v2.3 \n latest $(is_exe_nofirstrun && echo '\n Default')"
     VKD3DLST="$(ls_dlls vkd3d) \n v2.1 \n v2.5 \n \n v2.10 \n latest $(is_exe_nofirstrun && echo '\n Default')"
@@ -5571,8 +5573,10 @@ check_vulkan_icd() {
     setvkicd() {
             case "${1,,}" in
                 nvidia) exportvkicd nvidia ;;
-                intel*|anv) exportvkicd intel ;;
+                nvk) exportvkicd nouveau ;;
                 amd|radv) exportvkicd radeon ;;
+                amdvlk) exportvkicd amd ;;
+                intel*|anv) exportvkicd intel ;;
                 llvmpipe|lvp) exportvkicd lvp ;;
             esac
     }
@@ -6925,7 +6929,7 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
                             done
                         }
                         IGNPS=(
-                            'tee' 'ls' 'shellsrv' 'cat'
+                            'tee' 'ls' 'ssrv' 'cat' 'tini'
                             'sleep' 'gamemoded' 'bash' 'grep'
                         )
                         find_processes

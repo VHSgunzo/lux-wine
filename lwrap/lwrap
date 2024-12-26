@@ -702,6 +702,7 @@ is_exe_exist() { command -v "$@" &>/dev/null ; }
 which_exe() { command -v "$@" ; }
 
 check_url_stat_code() {
+    set -o pipefail
     if is_exe_exist curl
         then curl -sL -o /dev/null -I -w "%{http_code}" "$@" 2>/dev/null
     elif is_exe_exist wget
@@ -779,7 +780,7 @@ try_dl() {
             fi
             if is_url "$URL"
                 then
-                    WGET_ARGS=(--no-check-certificate --content-disposition -t 3 -T 5 -w 0.5 "$URL" -O "$FILEDIR/$FILENAME")
+                    WGET_ARGS=(--no-check-certificate -t 3 -T 5 -w 0.5 "$URL" -O "$FILEDIR/$FILENAME")
                     [ ! -d "$FILEDIR" ] && \
                         mkdir -p "$FILEDIR"
                     if [[ "$NOT_TERM" == 1 && "$NO_DL_GUI" != 1 ]] && \
@@ -848,7 +849,7 @@ try_dl() {
                             elif is_exe_exist curl
                                 then
                                     curl -R --progress-bar --insecure --fail -L "$URL" -o \
-                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|\
+                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|sed '0,/100/{/100/d;}'|\
                                         sed -ur 's|[# ]+||g;s|.*=.*||g;s|.*|#Downloading at &\n&|g'|\
                                     dl_progress
                             elif is_exe_exist wget2

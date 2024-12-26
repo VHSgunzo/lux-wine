@@ -1,3 +1,13 @@
+# v0.78.5.5
+
+* Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.9) `v9.21`
+* Add NVK vulkan driver
+* Add AMDVLK vulkan driver
+* Remove DB script for `League of Legends`
+* Fix `lwrap` download GUI
+* Minor fixes
+
 # v0.78.5.4
 
 * Remove `Yandex Cloud` mirrors
