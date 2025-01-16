@@ -1,8 +1,8 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 
 pkgname='lwrap'
-pkgver='0.78.5'
-pkgrel='5'
+pkgver='0.80'
+pkgrel='1'
 pkgdesc='Lux Wine wrapper for RunImage container'
 arch=('x86_64')
 url='https://github.com/VHSgunzo/lux-wine'
@@ -41,8 +41,8 @@ optdepends=(
     'lib32-opencl-icd-loader' 'opencl-icd-loader'
     'lib32-llvm' 'wine-prefix-dotnet'
 )
-source=('lwrap' 'lwexec')
-sha256sums=('SKIP' 'SKIP')
+source=('lwrap')
+sha256sums=('SKIP')
 install='lwrap.install'
 
 shopt -s extglob
@@ -50,9 +50,9 @@ shopt -s extglob
 package() {
     install -dm755 "$pkgdir/usr/bin"
     install -Dm755 "$pkgname" "$pkgdir/opt/$pkgname/bin/$pkgname"
-    install -Dm755 "lwexec" "$pkgdir/opt/$pkgname/bin/lwexec"
     cp -ar --no-preserve=ownership "$(realpath ../../)"/!(.git*|$pkgname|lutris-wine) "$pkgdir/opt/$pkgname"
     mv -f "$pkgdir/opt/$pkgname/lux-wine" "$pkgdir/opt/$pkgname/bin/lux-wine"
+    ln -sfr "$pkgdir/opt/$pkgname/bin/lux-wine" "$pkgdir/usr/bin/lux-wine"
     ln -sfr "$pkgdir/opt/$pkgname/bin/$pkgname" "$pkgdir/usr/bin/$pkgname"
     mkdir -p "$pkgdir/usr"/{lib,lib32}
     ln -sfr "$pkgdir/usr/lib/syslog-ng/libcef.so" "$pkgdir/usr/lib/libcef.so"

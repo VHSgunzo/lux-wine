@@ -39,7 +39,7 @@ wget -qO - lux-wine-git.static.hf.space|sed 1d|bash
 ## **Terminal usage**:
 ```
 ┌──[user@linux]─[~]
-└──╼ $ lwrap {lwrap arg} blabla.exe {exe args}
+└──╼ $ lwrun {lwrun arg} blabla.exe {exe args}
 
       -explorer                   Wine explorer
       -cmd                        Open CMD or open file in CMD
@@ -107,6 +107,7 @@ lwrun --uninstall
 - [x] Easy installation without root rights and dependencies
 - [x] The ability to install completely offline
 - [x] Own portable [lwrun container](https://github.com/VHSgunzo/lwrun) with isolation from the host system
+- [x] Ability to install apps from container repositories without root permissions
 - [x] Automatic rolling update system
 - [x] Quick initialization and launch
 - [x] Ability to specify EXE arguments and save them in settings

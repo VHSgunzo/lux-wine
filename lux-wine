@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.78.5.5"
+export LW_VERSION="0.80.1"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -59,7 +59,7 @@ OLD_LW_DIR="$HOME/.local/share/LutrisWine"
 [ ! -n "$LW_NAME" ] && export LW_NAME="$(basename "$0")"
 [ ! -n "$LW_DIR" ] && export LW_DIR="$HOME/.local/share/LuxWine"
 [ ! -n "$LW_BIN_DIR" ] && export LW_BIN_DIR="$LW_DIR/bin"
-[ ! -n "$LWRAP" ] && export LWRAP="$LW_BIN_DIR/lwrap"
+[ ! -n "$LWRUN" ] && export LWRUN="$LW_BIN_DIR/lwrun"
 if [ ! -n "$LW_TRAY" ]
     then
         [ "$DESKTOP_SESSION" == "plasma" ] && \
@@ -1561,7 +1561,7 @@ create_shortcut() {
                 SHRT_NAME="$SHRT_NAME ($(basename "$WINEPREFIX"))"
             DESKF="${LW_DEF_TMP}/${SHRT_NAME}.desktop"
             echo "[Desktop Entry]" > "$DESKF"
-            (LW_SOURCE="$LWRAP"
+            (LW_SOURCE="$LWRUN"
             [[ "$1" =~ "'" ]] && \
                 SHRTEXEPATH="\"$1\""||\
                 SHRTEXEPATH="'$1'"
@@ -3770,11 +3770,11 @@ is_app_exist() {
         do
             [ -n "$(if [ -n "$args" ]
                 then
-                    awk -v s="Exec='$LWRAP' '$1' $args" '$0==s' "$app" 2>/dev/null
-                    awk -v s="Exec='$LWRAP' \"$1\" $args" '$0==s' "$app" 2>/dev/null
+                    awk -v s="Exec='$LWRUN' '$1' $args" '$0==s' "$app" 2>/dev/null
+                    awk -v s="Exec='$LWRUN' \"$1\" $args" '$0==s' "$app" 2>/dev/null
                 else
-                    awk -v s="Exec='$LWRAP' '$1'" '$0==s' "$app" 2>/dev/null
-                    awk -v s="Exec='$LWRAP' \"$1\"" '$0==s' "$app" 2>/dev/null
+                    awk -v s="Exec='$LWRUN' '$1'" '$0==s' "$app" 2>/dev/null
+                    awk -v s="Exec='$LWRUN' \"$1\"" '$0==s' "$app" 2>/dev/null
             fi|head -1)" ] && ret=0 && echo "$app" && break
     done
     return $ret
@@ -4160,13 +4160,11 @@ lu_help() {
             exit 1
     fi
     echo_help() {
-    [[ "$RUNSRC" =~ "lwrun" ]] && \
-        local LW_NAME="lwrap"
     echo -e "
         ${GREEN}Lux Wine ${RED}v${LW_VERSION} ${GREEN}by $LW_DEVELOPERS
             ${RED}Usage:
             $RED┌──[$GREEN$USER$YELLOW@$BLUE`uname -a|awk '{print$2}'`$RED]─[$GREEN$PWD$RED]
-            $RED└──╼ \$$GREEN $LW_NAME $BLUE{$LW_NAME arg} ${RED}blabla.exe $YELLOW{exe args}
+            $RED└──╼ \$$GREEN lwrun $BLUE{lwrun arg} ${RED}blabla.exe $YELLOW{exe args}
 
             ${RED}-explorer $GREEN                  Wine explorer
             ${RED}-cmd $GREEN                       Open CMD or open file in CMD
@@ -6915,44 +6913,6 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
         print_error yad "Don't run Lux Wine as root!"
         exit 1
     else
-        (if [[ "$RUNSRC" =~ "lwrun" ]]
-            then
-                lwait_fl="/tmp/.lwait.$RUNPID"
-                [[ -f "$lwait_fl" && ! -d "/proc/$RUNPID" ]] && \
-                    rm -f "$lwait_fl"
-                if [ ! -f "$lwait_fl" ]
-                    then
-                        find_processes() {
-                            processes="$(ls -l /proc/*/exe 2>/dev/null|grep ' ->')"
-                            for ps in "${IGNPS[@]}"
-                                do processes="$(grep -wv "$ps"<<<"$processes")"
-                            done
-                        }
-                        IGNPS=(
-                            'tee' 'ls' 'ssrv' 'cat' 'tini'
-                            'sleep' 'gamemoded' 'bash' 'grep'
-                        )
-                        find_processes
-                        wait_lwpids=100
-                        while [[ "$wait_lwpids" -gt 0 && \
-                            ! -n "$processes" && -d "/proc/$LWPID" ]]
-                            do
-                                wait_lwpids="$(( $wait_lwpids - 1 ))"
-                                sleep 0.01 2>/dev/null
-                                find_processes
-                        done
-                        touch "$lwait_fl"
-                        while [[ -f "$lwait_fl" && \
-                            -n "$processes" && -d "/proc/$LWPID" ]]
-                            do
-                                sleep 1
-                                find_processes
-                        done
-                        rm -f "$lwait_fl"
-                        sleep 0.5
-                fi
-        fi) 2>/dev/null &
-        lwait_pid=$!
         lite_init "$@"
         case $1 in
             -init) full_init "$@" ;;
@@ -6992,4 +6952,3 @@ if [[ "$EUID" == 0 && "$ALLOW_ROOT" != 1 ]]
             *) lu_start "$@" ;;
         esac
 fi
-wait "$lwait_pid" &>/dev/null

@@ -1,3 +1,21 @@
+# v0.80.1
+
+* Update [lwrun](https://github.com/VHSgunzo/runimage/releases/download/v0.40.1) container `v0.40.1`
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.22) `v9.22`
+* Change container filesystem to [DwarFS](https://github.com/mhx/dwarfs) (reduce size)
+* Enable `OverlayFS` (read-write) mode by default
+* Now you can install any apps and updates from the container repos without rebuilding the container
+* Fix `firefox`, `steam`, `lux-wine` decorations (now as in the system)
+* Remove `AMDVLK` vulkan driver
+* Update `lwrap`
+* Add `ru_RU.KOI8-R` locale
+* Remove `lwexec` and all the other pieces that are now part of the container.
+* Add [continuous](https://github.com/VHSgunzo/lwrun/releases/download/continuous) update CI for lwrun
+* Add ability to enable sandbox for `HOME` or create tmpfs `HOME`
+* Add ability to `lwrun` to system `/usr/bin` `/bin` `/opt` path
+* Replace `glibc` and `lib32-glibc` with `glibc-eac` and `lib32-glibc-eac`
+* Add an attempt to use a local proprietary Nvidia driver (if there are no 32-bit libs, the driver will be downloaded as before)
+
 # v0.78.5.5
 
 * Update [lwrun](https://huggingface.co/lux-wine/lwrun/tree/main/releases/v0.39.1) packages

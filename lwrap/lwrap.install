@@ -1,4 +1,5 @@
 pkg_tool() {
+    local ret=1
     unset pacdblck_exist
     pacdblck='/var/lib/pacman/db.lck'
     if [ -f "$pacdblck" ]
@@ -7,8 +8,11 @@ pkg_tool() {
             rm -f "$pacdblck"
     fi
     LANG= sh -c "$@"
-    [ "$pacdblck_exist" == 1 ] && \
-    touch "$pacdblck"
+    ret="$?"
+    if [ "$pacdblck_exist" == 1 ]
+        then touch "$pacdblck"
+    fi
+    return $ret
 }
 export -f pkg_tool
 
@@ -31,11 +35,20 @@ export -f pkg_tool
 ## arg 1:  the new package version
 ## arg 2:  the old package version
 post_upgrade() {
-    pac -Q zenity 2>/dev/null|grep -q '4.0.0' && \
+    pac -Q zenity 2>/dev/null|grep -q '4\.[0-9]\.[0-9]' && \
     pkg_tool 'yes|sudo downgrade zenity=3.44.2'
 
     pac -Q chromium &>/dev/null && \
     pkg_tool 'yes|pac -Rsndd chromium'
+
+    pac -Q amdvlk &>/dev/null && \
+    pkg_tool 'yes|pac -Rsndd amdvlk'
+
+    pac -Q lib32-amdvlk &>/dev/null && \
+    pkg_tool 'yes|pac -Rsndd lib32-amdvlk'
+
+    pac -Q glibc-eac lib32-glibc-eac &>/dev/null||\
+    pkg_tool 'yes|pac -Sy glibc-eac lib32-glibc-eac'
 
     return 0
 }
