@@ -1,3 +1,7 @@
+# v0.80.2
+
+* Fix hostexec hang on legacy forking
+
 # v0.80.1
 
 * Update [lwrun](https://github.com/VHSgunzo/runimage/releases/download/v0.40.1) container `v0.40.1`

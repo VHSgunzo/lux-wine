@@ -315,7 +315,7 @@ print_input() {
 check_wine_pids() {
     unset WINE_PIDS CHK_WINE_PIDS PROC_EXES
     if [ "$INSIDE_RUNIMAGE" == 1 ]
-        then PROC_EXES="$(hostexec sh -c 'ls -l /proc/*/exe 2>/dev/null')"
+        then PROC_EXES="$(hostexec sh -c 'ls -l /proc/*/exe 2>/dev/null' </dev/null)"
         else PROC_EXES="$(ls -l /proc/*/exe 2>/dev/null)"
     fi
     if [[ "$WINE_VERSION" == "System" && "$NEW_WINE_VERSION" != "System" ]] \
@@ -362,7 +362,7 @@ check_luwine_sh_pid() {
 check_exes() {
     unset EXE_PIDS CHK_EXES RUN_EXES RUN_EXE PROC_EXES
     if [ "$INSIDE_RUNIMAGE" == 1 ]
-        then PROC_EXES="$(hostexec sh -c 'ls -l /proc/*/exe 2>/dev/null')"
+        then PROC_EXES="$(hostexec sh -c 'ls -l /proc/*/exe 2>/dev/null' </dev/null)"
         else PROC_EXES="$(ls -l /proc/*/exe 2>/dev/null)"
     fi
     RUN_EXES="$(ps -o pid=,cmd= -p $(echo "$PROC_EXES"|\
