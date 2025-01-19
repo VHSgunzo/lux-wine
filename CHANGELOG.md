@@ -1,3 +1,9 @@
+# v0.80.3
+
+* Update [lwrun](https://github.com/VHSgunzo/runimage/releases/download/v0.40.2) container `v0.40.2`
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.23) `v9.23`
+* Update `lwrap`
+
 # v0.80.2
 
 * Fix hostexec hang on legacy forking

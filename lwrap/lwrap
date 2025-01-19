@@ -422,7 +422,11 @@ update_lwrun() (
             HOSTEXEC_ARGS=(hostexec env RIM_RUN_IN_ONE=0)
             "${HOSTEXEC_ARGS[@]}" ls "$RUNIMAGE_LW" &>/dev/null||\
             "${HOSTEXEC_ARGS[@]}" LWLN_ONLY=1 "$RUNSRC"
-            "${HOSTEXEC_ARGS[@]}" "$RUNIMAGE_LW" "${IN_TERM[@]}" rim-update
+            if mountpoint -q /usr/share/icons
+                then HOSTEXEC_ARGS+=(LWRUN_UPDATE=1 "$RUNIMAGE_LW")
+                else unset HOSTEXEC_ARGS
+            fi
+            "${HOSTEXEC_ARGS[@]}" "${IN_TERM[@]}" rim-update
             ret="$?"
     fi
     return $ret
