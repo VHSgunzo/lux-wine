@@ -53,6 +53,10 @@ post_upgrade() {
             pkg_tool 'yes|pac -Sy glibc-eac lib32-glibc-eac'
     fi
 
+    if [ ! -L "$HOME/.local/share/LuxWine/bin/lwrap" ]
+        then ln -sfr "$HOME/.local/share/LuxWine/bin/lwrun" "$HOME/.local/share/LuxWine/bin/lwrap"
+    fi
+
     return 0
 }
 
