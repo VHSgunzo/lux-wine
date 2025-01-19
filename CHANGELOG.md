@@ -1,6 +1,6 @@
 # v0.80.3
 
-* Update [lwrun](https://github.com/VHSgunzo/runimage/releases/download/v0.40.2) container `v0.40.2`
+* Update [lwrun](https://github.com/VHSgunzo/runimage/tag/download/v0.40.2) container `v0.40.2`
 * Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.23) `v9.23`
 * Update `lwrap`
 
@@ -10,7 +10,7 @@
 
 # v0.80.1
 
-* Update [lwrun](https://github.com/VHSgunzo/runimage/releases/download/v0.40.1) container `v0.40.1`
+* Update [lwrun](https://github.com/VHSgunzo/runimage/tag/download/v0.40.1) container `v0.40.1`
 * Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.22) `v9.22`
 * Change container filesystem to [DwarFS](https://github.com/mhx/dwarfs) (reduce size)
 * Enable `OverlayFS` (read-write) mode by default
