@@ -57,6 +57,10 @@ post_upgrade() {
         then ln -sfr "$HOME/.local/share/LuxWine/bin/lwrun" "$HOME/.local/share/LuxWine/bin/lwrap"
     fi
 
+    if [ ! -L "$HOME/.local/share/LuxWine/bin/xterm" ]
+        then ln -sfr "$HOME/.local/share/LuxWine/bin/lwrun" "$HOME/.local/share/LuxWine/bin/xterm"
+    fi
+
     return 0
 }
 
