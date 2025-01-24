@@ -61,6 +61,10 @@ post_upgrade() {
         then ln -sfr "$HOME/.local/share/LuxWine/bin/lwrun" "$HOME/.local/share/LuxWine/bin/xterm"
     fi
 
+    if grep -q nocap /usr/lib/steam/steam 2>/dev/null
+        then sed -i 's| nocap||' /usr/lib/steam/steam
+    fi
+
     return 0
 }
 

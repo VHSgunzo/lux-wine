@@ -201,6 +201,18 @@ try_install_lwrun() {
                 ln -sf "$LWRUN" "$RUNIMAGE_LW"
                 ln -sf "$LWRUN" "$HBIN_DIR/runimage-lw"
         fi
+        XTERM_LN="$LWBIN_DIR/xterm"
+        if [ "$(readrealpath "$XTERM_LN")" != "$LWRUN" ]
+            then
+                mkdir -p "$LWBIN_DIR"
+                ln -sf "$LWRUN" "$XTERM_LN"
+        fi
+        LWRAP_LN="$LWBIN_DIR/lwrap"
+        if [ "$(readrealpath "$LWRAP_LN")" != "$LWRUN" ]
+            then
+                mkdir -p "$LWBIN_DIR"
+                ln -sf "$LWRUN" "$LWRAP_LN"
+        fi
     }
     if [[ "$RUNSRC" =~ "lwrun" && -f "$REALRUNSRC" && "$LWLN_ONLY" != 1 && \
         "$REALRUNSRC" != "$LWRUN" && ! "${REALRUNSRC,,}" =~ .*/(run$|cdrom/lwrun|sr[0-9]/lwrun)$ && \
@@ -221,7 +233,8 @@ try_install_lwrun() {
             fi
     elif [[ "$REALRUNSRC" != "$(readrealpath "$LWRUN")" ]] && \
         [[ "${REALRUNSRC,,}" =~ .*/(run|cdrom.*/lwrun|sr[0-9]/lwrun)$ ||\
-           "$REALRUNSRC" =~ ^/(usr/bin|bin|opt)/lwrun$ || "$LWLN_ONLY" == 1 ]]
+           "$REALRUNSRC" =~ ^/(usr/bin|bin|opt)/lwrun$ ||\
+           "$RUNSRC" =~ .*/RunDir/lwrun$ || "$LWLN_ONLY" == 1 ]]
         then
             mkdir -p "$LWBIN_DIR"
             ln -sf "$REALRUNSRC" "$LWRUN"

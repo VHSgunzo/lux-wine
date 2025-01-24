@@ -1,3 +1,10 @@
+# v0.80.4
+
+* Update [lwrun](https://github.com/VHSgunzo/runimage/tag/download/v0.40.4) container `v0.40.4`
+* Disable `RIM_UNSHARE_HOSTNAME`
+* Update `lwrap`
+* Minor fixes
+
 # v0.80.3
 
 * Update [lwrun](https://github.com/VHSgunzo/runimage/tag/download/v0.40.2) container `v0.40.2`
