@@ -596,7 +596,7 @@ try_dl() {
                             elif is_exe_exist curl
                                 then
                                     curl -R --progress-bar --insecure --fail -L "$URL" -o \
-                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|\
+                                        "$FILEDIR/$FILENAME" |& tr '\r' '\n'|sed '0,/100/{/100/d;}'|\
                                         sed -ur 's|[# ]+||g;s|.*=.*||g;s|.*|#Downloading at &\n&|g'|\
                                     dl_progress
                             elif is_exe_exist wget2
