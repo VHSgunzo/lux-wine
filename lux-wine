@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.80.4"
+export LW_VERSION="0.80.5"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -4781,6 +4781,9 @@ check_gstreamer() {
             export MEDIACONV_VIDEO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_video.foz"
             if [[ -d "$WINEDIR" && -d "$WINEDIR/lib64/gstreamer-1.0" ]]
                 then
+                    if [ -d "$WINEDIR/share" ]
+                        then export ESPEAK_DATA_PATH="$WINEDIR/share"
+                    fi
                     export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
                     if [ -d "$WINEDIR/share/media" ]
                         then
@@ -5030,7 +5033,6 @@ check_vkd3d() {
                 then
                     wdllover_upd "$(echo $check_dlls_slk|sed 's|.dll||g;s| |,|g')=n"
                     wdllover_upd "${ALLLIBVKD3DDLLS}=n"
-                    export VKD3D_FEATURE_LEVEL=12_1
                     local CACHE_DIRNAME="${EXE_DIR//[^[:alnum:]._-]/}${EXE_NAME//[^[:alnum:]._-]/}"
                     export VKD3D_SHADER_CACHE_PATH="$LW_DEF_CACHE/vkd3d_cache/$CACHE_DIRNAME"
                     try_mkdir "$VKD3D_SHADER_CACHE_PATH"
@@ -6187,6 +6189,7 @@ check_other_fixes() {
     export __GL_SHADER_DISK_CACHE_SIZE=5000000000
     export __GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1
     export RADV_PERFTEST='rt,gpl'
+    export SteamGameId=0
 }
 
 check_videodrv() {

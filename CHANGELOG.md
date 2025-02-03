@@ -1,3 +1,12 @@
+# v0.80.5
+
+* Replace old `zenity` with `zenity-gtk3` package
+* Add `frei0r-plugins` package
+* Add `lib32-gstreamer` package
+* Update `steam-runtime-libs` package
+* Update `mangohud` and `lib32-mangohud` packages
+* Minor fixes
+
 # v0.80.4
 
 * Update [lwrun](https://github.com/VHSgunzo/runimage/releases/tag/v0.40.4) container `v0.40.4`

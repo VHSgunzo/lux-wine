@@ -1,7 +1,7 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 
 pkgname='lwrap'
-pkgver='0.80.4'
+pkgver='0.80.5'
 pkgrel='1'
 pkgdesc='Lux Wine wrapper for RunImage container'
 arch=('x86_64')
@@ -34,7 +34,7 @@ depends=(
     'libmpeg2' 'twolame' 'lib32-twolame' 'gst-plugin-msdk' 'lib32-libdv' 'libdv' 'GE-Proton'
     'xxd-standalone' 'obs-vkcapture-lw' 'lib32-obs-vkcapture-lw' 'egl-wayland' 'gstreamer-vaapi'
     'moninfo' 'perl-image-exiftool' 'xorg-xlsfonts' 'firefox' 'controllermap' 'libayatana-appindicator'
-    'vulkan-nouveau' 'lib32-vulkan-nouveau'
+    'vulkan-nouveau' 'lib32-vulkan-nouveau' 'lib32-gstreamer' 'frei0r-plugins' 'zenity-gtk3'
 )
 optdepends=(
     'xf86-video-amdgpu' 'xf86-video-intel' 'llvm'
