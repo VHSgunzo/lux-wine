@@ -1,6 +1,6 @@
 # v0.80.6
 
-* Update [lwrun](https://github.com/VHSgunzo/runimage/releases/tag/v0.40.5) container `v0.40.6`
+* Update [lwrun](https://github.com/VHSgunzo/runimage/releases/tag/v0.40.6) container `v0.40.6`
 * Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.25) `v9.25`
 * Change themes apply logic
 * Send output from all `print_` functions to `stderr`
