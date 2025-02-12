@@ -13,6 +13,11 @@ This project allows you to easily run your favorite applications and games for W
 ```
 curl -sL lwrap.github.io|bash
 ```
+
+<details><summary style="font-size: 15px;"><b>
+Alternative mirrors and installation commands
+</b></summary>
+
 * HF mirror:
 ```
 curl -sL lux-wine-git.static.hf.space|sed 1d|bash
@@ -26,6 +31,8 @@ wget -qO - lwrap.github.io|bash
 ```
 wget -qO - lux-wine-git.static.hf.space|sed 1d|bash
 ```
+
+</details> 
 
 ## Video of the installation process:
 [![Installation video](https://img.youtube.com/vi/a0vrAgY2uZk/0.jpg)](https://www.youtube.com/watch?v=a0vrAgY2uZk)
@@ -102,6 +109,16 @@ lwrun --uninstall
 
 ### **VkBasalt:**
 * Disable/Enable: `HOME`
+
+## **Install apps from container repositories**:
+Here is an example of installing an application (discord) from the container repositories. You do not need root rights to install it. During installation, the application shortcut will also appear in the system applications menu. You can read more about container application integration [here](https://github.com/VHSgunzo/runimage?tab=readme-ov-file#runimage-desktop-integration). [ArchLinux](https://archlinux.org/packages) and [Chaotic-AUR](https://aur.chaotic.cx/packages) repositories are connected in the container.
+```
+RIM_DINTEG=1 runimage-lw pac -Sy discord
+```
+You can also run the installed application from the terminal:
+```
+runimage-lw discord
+```
 
 ## Features:
 - [x] Easy installation without root rights and dependencies

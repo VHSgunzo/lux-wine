@@ -43,7 +43,7 @@ CHK_UPDATE='3'
     NOT_TERM=1||NOT_TERM=0
 
 error_msg() {
-    echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR"
+    echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR" 1>&2
     if [ "$NOT_TERM" == 1 ]
         then notify-send -a 'Lux Wine Error' "$@" 2>/dev/null &
     fi
@@ -52,7 +52,7 @@ error_msg() {
 info_msg() {
     if [ "$QUIET_MODE" != 1 ]
         then
-            echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR"
+            echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR" 1>&2
             if [[ "$NOT_TERM" == 1 && "$NO_NOTIFY" != 1 ]]
                 then notify-send -a 'Lux Wine Info' "$@" 2>/dev/null &
             fi
@@ -62,7 +62,7 @@ info_msg() {
 warn_msg() {
     if [ "$QUIET_MODE" != 1 ]
         then
-            echo -e "${YELLOW}[ WARNING ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR"
+            echo -e "${YELLOW}[ WARNING ][$(date +"%Y.%m.%d %T")]: $@ $RESETCOLOR" 1>&2
             if [[ "$NOT_TERM" == 1 && "$NO_NOTIFY" != 1 ]]
                 then notify-send -a 'Lux Wine Warning' "$@" 2>/dev/null &
             fi

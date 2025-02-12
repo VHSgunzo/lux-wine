@@ -53,12 +53,16 @@ post_upgrade() {
             pkg_tool 'yes|pac -Sy glibc-eac lib32-glibc-eac'
     fi
 
-    if [ ! -L "$HOME/.local/share/LuxWine/bin/lwrap" ]
-        then ln -sfr "$HOME/.local/share/LuxWine/bin/lwrun" "$HOME/.local/share/LuxWine/bin/lwrap"
-    fi
-
-    if [ ! -L "$HOME/.local/share/LuxWine/bin/xterm" ]
-        then ln -sfr "$HOME/.local/share/LuxWine/bin/lwrun" "$HOME/.local/share/LuxWine/bin/xterm"
+    local LWRUN="$HOME/.local/share/LuxWine/bin/lwrun"
+    if [ -f "$LWRUN" ]
+        then
+            for link in lwrap xterm
+                do
+                    local link_path="$HOME/.local/share/LuxWine/bin/$link"
+                    if [ ! -L "$link_path" ]
+                        then ln -sfr "$LWRUN" "$link_path"
+                    fi
+            done
     fi
 
     if grep -q nocap /usr/lib/steam/steam 2>/dev/null

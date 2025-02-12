@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.80.5"
+export LW_VERSION="0.80.6"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -218,7 +218,6 @@ check_def_config() {
     [ ! -n "$CHKSTEAMAPPS" ] && export CHKSTEAMAPPS=1
     [ ! -n "$RESIZABLE_BAR" ] && export RESIZABLE_BAR=1
     [ ! -n "$DEFPFX_VERSION" ] && export DEFPFX_VERSION='v0.0.8'
-    [ ! -n "$GTK_THEME" ] && export GTK_THEME='Adwaita:dark'
     export DEFPFX_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix.xz.lwpfx"
     export DEFPFXDOTNET_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
     export DEFPFXDOTNETDESKTOP_URL="https://github.com/VHSgunzo/wine-prefix/releases/download/$DEFPFX_VERSION/defprefix_dotnetdesktop.xz.lwpfx"
@@ -243,10 +242,10 @@ print_error() {
         --selectable-labels
     )
     if [[ "$1" == "yad" && -n "$2" && -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && -n "$3" ]]
-        then echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
+        then echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR" 1>&2
     elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && ! -n "$3" ]]
-        then echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
-    else echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
+        then echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR" 1>&2
+    else echo -e "${RED}[ ERROR ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR" 1>&2
     fi
     if [[ "$1" == "yad" && -n "$2" && -n "$3" && "$NO_YAD" != 1 ]]
         then yad "${yad_args[@]}" --title="$2" --text="$3" Lux Wine
@@ -268,10 +267,10 @@ print_info() {
                 --selectable-labels
             )
             if [[ "$1" == "yad" && -n "$2" && -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && -n "$3" ]]
-                then echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR"
+                then echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $3 $RESETCOLOR" 1>&2
             elif [[ "$1" == "yad" && -n "$2" && ! -n "$3" ]] || [[ "$1" == "notify" && -n "$2" && ! -n "$3" ]]
-                then echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR"
-            else echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR"
+                then echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $2 $RESETCOLOR" 1>&2
+            else echo -e "${GREEN}[ INFO ][$(date +"%Y.%m.%d %T")]: $1 $RESETCOLOR" 1>&2
             fi
             if [[ "$1" == "yad" && -n "$2" && -n "$3" && "$NO_YAD" != 1 ]]
                 then yad "${yad_args[@]}" --title="$2" --text="$3" Lux Wine
@@ -2899,7 +2898,6 @@ lu_config() {
     FSRMODELST="Enabled \n ultra \n quality \n balanced \n performance \n Disabled"
     MANGOHUDLST="Enabled \n DLSYM \n Disabled"
     VKCAPTURELST="Vulkan \n OpenGL \n Disabled"
-    GTKTHEMELST="Adwaita:dark \n Adwaita \n $(ls -1 "$HOME/.themes" 2>/dev/null)"
     GAMESCOPEARGSLST="Disabled \n -f \n -W 1920 -H 1080 -f \n -w 2560 -h 1440 -W 1920 -H 1080 -F fsr -f"
     lwconfig_save() {
         LWCFGVAR="WINE_VERSION WIN_VER WINEARCH WINEPREFIX WINE_THEME WDLLOVER WMONOVER WD3DMODE DISABLE_NVAPI WINE_DXGI D3D_EXTRAS DGVOODOO2 \
@@ -2907,7 +2905,7 @@ lu_config() {
             FSR_MODE WINE_SANDBOX ESYNC FSYNC GSTREAMER SHOW_WINEDBG LARGE_ADDRESS OLD_GL_STRING \
             NO_WRITE_WATCH HIDE_NVIDIA_GPU HEAP_DELAY_FREE SHARED_MEMORY ALLOW_XIM DIS_LAYER_AMD DIS_NETCORE \
             VIRTUAL_DESKTOP BATTLEYE EAC DXVKASYNC RESIZABLE_BAR LATENCYFLEX DXR EXEARGS CHK_UPDATE EXE_LWDB EXE_LWDBFL \
-            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR CHECK_LW_APPS GTK_THEME LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
+            LOADBAR LOADBARGIF CHKSTEAMAPPS LW_STEAMAPPS_DIR CHECK_LW_APPS LOG DEBUG SYS_WINETRICKS CPU_LIMIT CMPRSS_METHOD ZSTD_CMPRSS_LVL \
             DIS_OTH_DISPL RESTORE_RESOL RESTORE_GAMMA DIS_COPMOSITOR RESET_PULSE PULSE_LTCY TERMINAL HOLD_TERMINAL LW_TERM_APP \
             LW_DOWNLOADER AUTOSTART_TRAY US_LAYOUT VKBASALT VKBASALT_FFX_CAS VKICDFILES GAMEMODE LWMANGOHUD MANGOHUD_USER_CONF FPS_LIMIT \
             VSYNC LWVKCAPTURE NVPRIME DRIPRIME SDL_GAMECONTROLLERCONFIG GAMESCOPEARG"
@@ -3054,7 +3052,6 @@ lu_config() {
             --field="Check Steam apps:CHK" "$CHKSTEAMAPPS" \
             --field="Steam apps common folder::DIR" "$LW_STEAMAPPS_DIR" \
             --field="Auto remove apps shortcuts:CHK" "$CHECK_LW_APPS" \
-            --field="GTK theme::CB" "$(cfg_items "$GTK_THEME" "$GTKTHEMELST")" \
             --field="LOG:CHK" "$LOG" \
             --field="DEBUG:CHK" "$DEBUG" \
             --field="Use system Winetricks:CHK" "$SYS_WINETRICKS" \
@@ -4604,6 +4601,10 @@ check_themes() {
                 then
                     if [ "$(cat "$WINEPREFIX/.lwtheme" 2>/dev/null)" != "$WINE_THEME" ]
                         then
+                            if [ "$WINE_THEME" == 'DEFAULT' ]
+                                then sed -i 's|"ThemeActive"="0"|"ThemeActive"="1"|gi' "$WINEPREFIX/user.reg" 2>/dev/null
+                                else sed -i 's|"ThemeActive"="1"|"ThemeActive"="0"|gi' "$WINEPREFIX/user.reg" 2>/dev/null
+                            fi
                             check_wine_pids
                             [[ ! -n "$WINE_PIDS" && -n "$OLD_WINE" ]] && unset OLD_WINE
                             check_ld_library
@@ -5106,9 +5107,12 @@ check_dxvk-nvapi() {
             GIT_RELEASE_URL="$NVAPI_GIT_RELEASE_URL"
             if dll_manager "dxvk-nvapi" "$DXVK_NVAPI_VERSION"
                 then
-                    if [ "$WINEARCH" != "win32" ] && [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || ! -f "$PFX_DLL64_PTH/_nvngx.dll" ]]
+                    if [ "$WINEARCH" != "win32" ] && \
+                        [[ ! -f "$PFX_DLL64_PTH/nvngx.dll" || \
+                           ! -f "$PFX_DLL64_PTH/_nvngx.dll" || \
+                           ! -f "$PFX_DLL64_PTH/nvngx_dlssg.dll" ]]
                         then
-                            CPNVNGX="$(find /usr/* -type f -name "*nvngx.dll" 2>/dev/null|awk '{print $1}'|grep 'lib')"
+                            CPNVNGX="$(find /usr/lib/nvidia/wine -type f -name "*nvngx*.dll" 2>/dev/null)"
                             if [ -n "$CPNVNGX" ]
                                 then
                                     for CPNVNGXFLS in $CPNVNGX
@@ -5116,7 +5120,7 @@ check_dxvk-nvapi() {
                                             try_ln "$CPNVNGXFLS" "$PFX_DLL64_PTH/"
                                     done
                                 else
-                                    print_error yad "nvngx.dll not found in your system!"
+                                    print_error yad "nvngx not found in your system!"
                             fi
                     fi
                     export DXVK_ENABLE_NVAPI=1
@@ -6165,7 +6169,6 @@ check_other_fixes() {
             fi
     done
     sed -i '/steam.exe\\" -silent"/d' "$WINEPREFIX/user.reg" 2>/dev/null
-    sed -i 's|"ThemeActive"="1"|"ThemeActive"="0"|gi' "$WINEPREFIX/user.reg" 2>/dev/null
     [ "$LARGE_ADDRESS" == 1 ] && export WINE_LARGE_ADDRESS_AWARE=1
     if [ "$OLD_GL_STRING" == 1 ]
         then
