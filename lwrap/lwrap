@@ -108,6 +108,7 @@ make_install() {
             cp -rf "$RSTEAM_DESKF" "$HSTEAM_DESKF"
             sed -i "s|^Exec.*steam-runtime|Exec='$HBIN_DIR/steam-runtime'|g" "$HSTEAM_DESKF"
             sed -i "s|^Name=Steam (Runtime)|Name=Steam (RunImage LW)|g" "$HSTEAM_DESKF"
+            sed -i '/RunOnDiscreteGpu/d;/PrefersNonDefaultGPU/d' "$HSTEAM_DESKF"
             HICNSTM="$HOME_ICONS/steam.png"
             for hi_icon_size in ${HICOLOR_SIZES[@]}
                 do
@@ -326,9 +327,9 @@ try_dl_lwrun() {
         local GIT_LWRUN_VERSION='continuous'
         local GIT_LWRUN="https://github.com/VHSgunzo/lwrun/releases"
         local GIT_HF_LWRUN="https://huggingface.co/lux-wine/lwrun/resolve/main/releases"
-        # YC_LWRUN="https://storage.yandexcloud.net/lwrun"
+        local YC_LWRUN="https://storage.yandexcloud.net/lwrun"
         local lwrunurl=(
-            # "$YC_LWRUN/releases/$GIT_LWRUN_VERSION/lwrun"
+            "$YC_LWRUN/releases/$GIT_LWRUN_VERSION/lwrun"
             "$GIT_HF_LWRUN/$GIT_LWRUN_VERSION/lwrun"
             "$GIT_LWRUN/download/$GIT_LWRUN_VERSION/lwrun"
         )

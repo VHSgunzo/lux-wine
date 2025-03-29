@@ -1,7 +1,7 @@
 # Maintainer: VHSgunzo <vhsgunzo.github.io>
 
 pkgname='lwrap'
-pkgver='0.80.6'
+pkgver='0.80.7'
 pkgrel='1'
 pkgdesc='Lux Wine wrapper for RunImage container'
 arch=('x86_64')

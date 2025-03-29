@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.80.6"
+export LW_VERSION="0.80.7"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -183,7 +183,7 @@ check_def_config() {
     [ ! -n "$DIS_LAYER_AMD" ] && export DIS_LAYER_AMD=1
     [ ! -n "$US_LAYOUT" ] && export US_LAYOUT=1
     [ ! -n "$WMONOVER" ] && export WMONOVER="Microsoft.Xna.Framework.*,Gac=n"
-    [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64,icu=n;lsteamclient,winemenubuilder.exe=;winhttp,amd_ags_x64.dll=n,b'
+    [ ! -n "$WDLLOVER" ] && export WDLLOVER='steam_api,steam_api64,steamclient,steamclient64,icu=n;lsteamclient,winemenubuilder.exe=;winhttp,winmm,amd_ags_x64.dll=n,b'
     [ ! -n "$WINE_THEME" ] && export WINE_THEME='Breeze Dark'
     [ ! -n "$LWMANGOHUD" ] && export LWMANGOHUD='Enabled'
     [ ! -n "$LWVKCAPTURE" ] && export LWVKCAPTURE='Disabled'
@@ -224,8 +224,8 @@ check_def_config() {
     export DEFPFX_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix.xz.lwpfx"
     export DEFPFXDOTNET_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
     export DEFPFXDOTNETDESKTOP_HF_URL="https://huggingface.co/lux-wine/wine-prefix/resolve/main/releases/$DEFPFX_VERSION/defprefix_dotnetdesktop.xz.lwpfx"
-    #export DEFPFX_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix.xz.lwpfx"
-    #export DEFPFXDOTNET_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
+    export DEFPFX_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix.xz.lwpfx"
+    export DEFPFXDOTNET_YC_URL="https://storage.yandexcloud.net/lux-wine/wine-prefix/$DEFPFX_VERSION/defprefix_dotnet.xz.lwpfx"
 }
 
 print_var() {
@@ -2529,8 +2529,8 @@ check_db_script() {
                                     elif [ -f "$LWRAP_DEFPFXDOTNET" ]
                                         then PFXRESTORE="$LWRAP_DEFPFXDOTNET"
                                     else
-                                        #if (try_download "$DEFPFXDOTNET_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
-                                        if (try_download "$DEFPFXDOTNET_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        if (try_download "$DEFPFXDOTNET_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                            try_download "$DEFPFXDOTNET_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
                                             try_download "$DEFPFXDOTNET_URL" "$LW_DEF_WINEPFXBKP_DIR/")
                                             then PFXRESTORE="$LWDIR_DEFPFXDOTNET"
                                             else exit 1
@@ -2559,8 +2559,8 @@ check_db_script() {
                                     elif [ -f "$LWRAP_DEFPFX" ]
                                         then PFXRESTORE="$LWRAP_DEFPFX"
                                     else
-                                        #if (try_download "$DEFPFX_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
-                                        if (try_download "$DEFPFX_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                        if (try_download "$DEFPFX_YC_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
+                                            try_download "$DEFPFX_HF_URL" "$LW_DEF_WINEPFXBKP_DIR/"||\
                                             try_download "$DEFPFX_URL" "$LW_DEF_WINEPFXBKP_DIR/")
                                             then PFXRESTORE="$LWDIR_DEFPFX"
                                             else exit 1
@@ -2872,7 +2872,7 @@ lu_config() {
     export LWCFGKEY=$RANDOM
     WINELST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*') $(is_exe_nofirstrun && echo '\n Default') $([ -n "$SYS_WINE" ] && echo '\n System') \n GE-Proton7-55"
     WINETHEMESLST="Disabled \n $(ls -1 "$LW_THEMES_DIR" 2>/dev/null|sed 's|.reg||gi')"
-    WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64,icu=n;lsteamclient,winemenubuilder.exe=;winhttp,amd_ags_x64=n,b \n Disabled"
+    WDLLOVERLST="steam_api,steam_api64,steamclient,steamclient64,icu=n;lsteamclient,winemenubuilder.exe=;winhttp,winmm,amd_ags_x64=n,b \n Disabled"
     WMONOOVERLST="Microsoft.Xna.Framework.*,Gac=n \n Disabled"
     WINVERLST="11 \n 10 \n \n 8 \n 7 \n xp"
     WARCHLST="win64 \n win32"

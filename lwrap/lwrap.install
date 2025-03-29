@@ -63,6 +63,7 @@ post_upgrade() {
                         then ln -sfr "$LWRUN" "$link_path"
                     fi
             done
+            env -u LD_PRELOAD lwrap --install
     fi
 
     if grep -q nocap /usr/lib/steam/steam 2>/dev/null

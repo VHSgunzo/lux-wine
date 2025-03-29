@@ -1,3 +1,13 @@
+# v0.80.7
+
+* Update [lwrun](https://github.com/VHSgunzo/runimage/releases/tag/v0.40.7) container `v0.40.7`
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v9.26) `v9.26`
+* Update `mangohud` and `lib32-mangohud` packages
+* Reduce RAM usage and speedup `lwrun` container
+* Reduced the size of the `lwrun` container
+* Revert `Yandex Cloud` mirrors
+* Minor fixes
+
 # v0.80.6
 
 * Update [lwrun](https://github.com/VHSgunzo/runimage/releases/tag/v0.40.6) container `v0.40.6`
