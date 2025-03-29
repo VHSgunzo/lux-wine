@@ -56,6 +56,7 @@ post_upgrade() {
     local LWRUN="$HOME/.local/share/LuxWine/bin/lwrun"
     if [ -f "$LWRUN" ]
         then
+            env -u LD_PRELOAD lwrap --install
             for link in lwrap xterm
                 do
                     local link_path="$HOME/.local/share/LuxWine/bin/$link"
@@ -63,7 +64,6 @@ post_upgrade() {
                         then ln -sfr "$LWRUN" "$link_path"
                     fi
             done
-            env -u LD_PRELOAD lwrap --install
     fi
 
     if grep -q nocap /usr/lib/steam/steam 2>/dev/null
