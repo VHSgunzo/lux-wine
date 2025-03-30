@@ -71,7 +71,7 @@ post_upgrade() {
     fi
 
     sed -i 's|URUNTIME_MOUNT=[0-9]|URUNTIME_MOUNT=0|' /var/RunDir/sharun/bin/uruntime
-    echo RIM_CMPRS_BSIZE=23 >> "$RIMENVFL"
+    echo RIM_CMPRS_BSIZE=18 >> "$RIMENVFL"
 
     return 0
 }
