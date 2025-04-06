@@ -106,8 +106,8 @@ make_install() {
     if [[ -d "$RUNROOTFS" && -f "$RSTEAM_DESKF" ]]
         then
             cp -rf "$RSTEAM_DESKF" "$HSTEAM_DESKF"
-            sed -i "s|^Exec.*steam-runtime|Exec='$HBIN_DIR/steam-runtime'|g" "$HSTEAM_DESKF"
-            sed -i "s|^Name=Steam (Runtime)|Name=Steam (RunImage LW)|g" "$HSTEAM_DESKF"
+            sed -i "s|^Exec.*steam.*|Exec='$HBIN_DIR/steam' %U|g" "$HSTEAM_DESKF"
+            sed -i "s|^Name=Steam.*|Name=Steam (RunImage LW)|g" "$HSTEAM_DESKF"
             sed -i '/RunOnDiscreteGpu/d;/PrefersNonDefaultGPU/d' "$HSTEAM_DESKF"
             HICNSTM="$HOME_ICONS/steam.png"
             for hi_icon_size in ${HICOLOR_SIZES[@]}
@@ -186,7 +186,7 @@ try_install_lwrun() {
                 info_msg "Update lwrun link..."
                 ln -sf "$LWRUN" "$LWRUN_LN"
         fi
-        for steam in {steam,steam-runtime,steam-native}
+        for steam in {steam,steam-native}
             do
                 STEAM_LN="$HBIN_DIR/$steam"
                 if [ "$(readrealpath "$STEAM_LN")" != "$LWRUN" ]
