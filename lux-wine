@@ -195,7 +195,7 @@ check_def_config() {
     [ ! -n "$BATTLEYE" ] && export BATTLEYE=1
     [ ! -n "$EAC" ] && export EAC=1
     [ ! -n "$EXE_LWDB" ] && export EXE_LWDB=1
-#     [ ! -n "$CHECK_LW_APPS" ] && export CHECK_LW_APPS=1
+    [ ! -n "$CHECK_LW_APPS" ] && export CHECK_LW_APPS=1
     [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='Disabled'
     [ ! -n "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
     export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
@@ -2203,14 +2203,47 @@ check_shrt() (
     if [ "$CHECK_LW_APPS" == 1 ]
         then
             IFS=$'\n'
+            LW_APPS_RM=()
+            SKIPAPPRMFL="$LW_DEF_TMP/skipcheckshrt.$LWPID"
+            LW_APPS_RM_SKIP=($([ -f "$SKIPAPPRMFL" ] && cat "$SKIPAPPRMFL" 2>/dev/null))
             LW_APPS_EXES=($(grep -Eiom1 " [\"']/.*\.exe| [\"']/.*\.bat" -r \
                 "$LW_APPS_DIR" 2>/dev/null|sed "s|.*\.desktop: ['\"]||g"))
             if [ -n "$LW_APPS_EXES" ]
                 then
                     for exe in "${LW_APPS_EXES[@]}"
-                        do [ ! -f "$(ipath "$exe"|head -1)" ] && \
-                            NO_YAD=1 RM_ALL_EXE_APPS=1 lu_rmapp "$exe"
+                        do
+                            APPIPATH="$(ipath "$exe"|head -1)"
+                            if [[ ! -f "$APPIPATH" && ! "${LW_APPS_RM_SKIP[@]}" =~ "$exe" ]]
+                                then LW_APPS_RM+=("$exe")
+                            elif [[ -f "$APPIPATH" && "${LW_APPS_RM_SKIP[@]}" =~ "$exe" ]]
+                                then
+                                    sed -i "s|$exe||g;/^$/d" "$SKIPAPPRMFL" 2>/dev/null && \
+                                    LW_APPS_RM_SKIP=($([ -f "$SKIPAPPRMFL" ] && cat "$SKIPAPPRMFL" 2>/dev/null))
+                            fi
                     done
+            fi
+            if [ -n "$LW_APPS_RM" ]
+                then
+                    if [ "${#LW_APPS_RM[@]}" -gt 1 ]
+                        then
+                            if print_question "Lux Wine Shortcuts Remover" \
+                            "Several broken apps have been found:\n\n$(for app in "${LW_APPS_RM[@]}";do echo "$app";done)\n\nDo you want to remove the shortcuts for these apps?"
+                                then
+                                    for app in "${LW_APPS_RM[@]}"
+                                        do
+                                            [[ -d "/proc/$LWPID" ]] && \
+                                            NO_YAD=1 RM_ALL_EXE_APPS=1 lu_rmapp "$app"
+                                    done
+                                else
+                                    try_mkdir "$LW_DEF_TMP"
+                                    for app in "${LW_APPS_RM[@]}"
+                                        do echo "$app" >> "$SKIPAPPRMFL"
+                                    done
+                            fi
+                        else
+                            [[ -d "/proc/$LWPID" ]] && \
+                            NO_YAD=1 RM_ALL_EXE_APPS=1 lu_rmapp "$LW_APPS_RM"
+                    fi
             fi
     fi
 )
@@ -6842,7 +6875,7 @@ lu_tray() {
                 then
                     (sleep 1 2>/dev/null
                     check_tray
-                    while [[ -n "$TRAY_PID" && -d "/proc/$TRAY_PID" ]]
+                    while [[ -n "$TRAY_PID" && -d "/proc/$TRAY_PID" && -d "/proc/$LWPID" ]]
                         do check_shrt
                             check_tray
                             sleep 2 2>/dev/null
