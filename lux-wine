@@ -195,7 +195,7 @@ check_def_config() {
     [ ! -n "$BATTLEYE" ] && export BATTLEYE=1
     [ ! -n "$EAC" ] && export EAC=1
     [ ! -n "$EXE_LWDB" ] && export EXE_LWDB=1
-    [ ! -n "$CHECK_LW_APPS" ] && export CHECK_LW_APPS=1
+#     [ ! -n "$CHECK_LW_APPS" ] && export CHECK_LW_APPS=1
     [ ! -n "$MUST_HAVE_DLL" ] && export MUST_HAVE_DLL='Disabled'
     [ ! -n "$VKBASALT_FFX_CAS" ] && export VKBASALT_FFX_CAS="0.6"
     export DXVK_GIT_RELEASE_URL="https://api.github.com/repos/doitsujin/dxvk/releases"
