@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.80.7"
+export LW_VERSION="0.80.8"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -627,7 +627,7 @@ check_dll_symlink() {
     unset NEW32SLK NEW64SLK
     for dll_check in $check_dlls_slk
         do
-            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -Ev ".*/wine/(i386|x86_64)?-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
             for x32_x86 in "x32" "x86"
                 do
                    if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" \
@@ -642,7 +642,7 @@ check_dll_symlink() {
             done
             if [ "$WINEARCH" != "win32" ]
                 then
-                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -Ev ".*/wine/(i386|x86_64)?-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" \
                         && -f "$PFX_DLL64_PTH/$dll_check" ]] \
                         || [[ -f "$LW_RUNTIME_DIR/$1/v$2/x64/$dll_check" && "$PFX_DLL64_VER" != "v$2" \
@@ -655,7 +655,7 @@ check_dll_symlink() {
     done
     for dll_check in $check_dlls_slk
         do
-            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
+            PFX_DLL32_VER="$(readlink -f "$PFX_DLL32_PTH/$dll_check"|grep -Ev ".*/wine/(i386|x86_64)?-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
             for x32_x86 in "x32" "x86"
                 do
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/$x32_x86/$dll_check" && "$PFX_DLL32_VER" != "$2" ]]
@@ -677,7 +677,7 @@ check_dll_symlink() {
             done
             if [ "$WINEARCH" != "win32" ]
                 then
-                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -v "/.*-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
+                    PFX_DLL64_VER="$(readlink -f "$PFX_DLL64_PTH/$dll_check"|grep -Ev ".*/wine/(i386|x86_64)?-windows/"|grep -v "/fakedlls/"|grep -wo "$2")"
                     if [[ -f "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" && "$PFX_DLL64_VER" != "$2" ]]
                         then
                             if try_ln "$LW_RUNTIME_DIR/$1/$2/x64/$dll_check" "$PFX_DLL64_PTH/"
@@ -1221,7 +1221,7 @@ check_musthave_dll() {
                 then
                     export UPDPFX_LOG="$WINEPREFIX/update_pfx.log"
                     $TERM_APP $LWSHELL -c "print_info notify 'Try to install DLL in prefix: [ $NEED_INSTALL_DLLS ]'|& tee -a '$UPDPFX_LOG' ; \
-                    winetricks -q -f -r $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
+                    winetricks -q -f $NEED_INSTALL_DLLS|& tee -a '$UPDPFX_LOG'"
                     while read WTRXDLL
                         do
                             if [ ! -n "$(grep -wo "$WTRXDLL" "$WTRX_LOG" 2>/dev/null)" ]
@@ -2026,7 +2026,7 @@ check_def_wine() {
     IGNWINE=(
         'Default' 'SETWINE' 'System' 'Proton 7.0'
         'Proton 8.0' 'Proton 9.0' 'Proton 9.0 (Beta)'
-        'Proton - Experimental'
+        'Proton - Experimental' 'Proton 10.0'
     )
     if [[ -n "$WINE_VERSION" && ! -d "$LW_WINE_DIR/$WINE_VERSION" && "$WINEINUSEDEL" != 1 && \
         ! -L "$LW_WINE_DIR/$WINE_VERSION" && ! "${IGNWINE[@]}" =~ "$WINE_VERSION" ]]
@@ -2705,12 +2705,15 @@ check_latencyflex() {
             for latencydll in {latencyflex_layer,latencyflex_wine}
                 do
                     sys_latencydll="/usr/lib/wine/x86_64-windows/${latencydll}.dll"
-                    wine_latencydll="$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-windows/${latencydll}.dll"
+                    local winelatencydlldirpfx="$LW_WINE_DIR/$WINE_VERSION/lib64"
+                    [ -d "$winelatencydlldirpfx" ]||\
+                        local winelatencydlldirpfx="$LW_WINE_DIR/$WINE_VERSION/lib"
+                    wine_latencydll="$winelatencydlldirpfx/wine/x86_64-windows/${latencydll}.dll"
                     pfx_latencydll="$WINEPREFIX/drive_c/windows/system32/${latencydll}.dll"
                     if [ -f "$sys_latencydll" ]
                         then
                             if [[ ! -f "$wine_latencydll" \
-                                && -d "$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-windows" ]]
+                                && -d "$winelatencydlldirpfx/wine/x86_64-windows" ]]
                                 then
                                     try_ln "$sys_latencydll" "$wine_latencydll" &>/dev/null
                                     try_ln "$sys_latencydll.a" "$wine_latencydll.a" &>/dev/null
@@ -2719,9 +2722,9 @@ check_latencyflex() {
                     fi
             done
             latencyso="/usr/lib/wine/x86_64-unix/latencyflex_layer.so"
-            wine_latencyso="$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-unix/latencyflex_layer.so"
+            wine_latencyso="$winelatencydlldirpfx/wine/x86_64-unix/latencyflex_layer.so"
             if [[ -f "$latencyso" && ! -f "$wine_latencyso" \
-                && -d "$LW_WINE_DIR/$WINE_VERSION/lib64/wine/x86_64-unix" ]]
+                && -d "$winelatencydlldirpfx/wine/x86_64-unix" ]]
                 then
                     try_ln "$latencyso" "$wine_latencyso" &>/dev/null
             fi
@@ -4795,7 +4798,7 @@ check_gamemode() {
 
 check_gstreamer() {
     disable_gstreamer() {
-        [ ! -d "$WINEDIR/lib64/gstreamer-1.0" ] && \
+        [[ ! -d "$winegst64dir" && ! -d "$winegst32dir" ]] && \
         print_error notify "Wine GSTREAMER not found!"
         unset GSTREAMER
         wdllover_upd "winegstreamer="
@@ -4803,8 +4806,18 @@ check_gstreamer() {
         print_info "GSTREAMER is disabled!"
     }
     [ -n "$1" ] && export GSTREAMER="$1"
+    local new_winegst64dir="$WINEDIR/lib/x86_64-linux-gnu/gstreamer-1.0"
+    local old_winegst64dir="$WINEDIR/lib64/gstreamer-1.0"
+    local new_winegst32dir="$WINEDIR/lib/i386-linux-gnu/gstreamer-1.0"
+    local old_winegst32dir="$WINEDIR/lib/gstreamer-1.0"
+    [ -d "$new_winegst64dir" ] && \
+        local winegst64dir="$new_winegst64dir"||\
+        local winegst64dir="$old_winegst64dir"
+    [ -d "$new_winegst32dir" ] && \
+        local winegst32dir="$new_winegst32dir"||\
+        local winegst32dir="$old_winegst32dir"
     if [ "$GSTREAMER" == 1 ] && \
-        [[ -d "/usr/lib/gstreamer-1.0" || -d "$WINEDIR/lib64/gstreamer-1.0" ]]
+        [[ -d "/usr/lib/gstreamer-1.0" || -d "$winegst64dir" || -d "$winegst32dir" ]]
         then
             try_mkdir "$LW_DEF_CACHE/gstreamer-1.0"
             export GST_GL_WINDOW='surfaceless'
@@ -4813,12 +4826,12 @@ check_gstreamer() {
             export MEDIACONV_AUDIO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_audio.foz"
             export MEDIACONV_VIDEO_DUMP_FILE="$WINE_GST_REGISTRY_DIR/video.foz"
             export MEDIACONV_VIDEO_TRANSCODED_FILE="$WINE_GST_REGISTRY_DIR/transcoded_video.foz"
-            if [[ -d "$WINEDIR" && -d "$WINEDIR/lib64/gstreamer-1.0" ]]
+            if [ -d "$WINEDIR" ] && [[ -d "$winegst64dir" || -d "$winegst32dir" ]]
                 then
                     if [ -d "$WINEDIR/share" ]
                         then export ESPEAK_DATA_PATH="$WINEDIR/share"
                     fi
-                    export GST_PLUGIN_SYSTEM_PATH_1_0="$WINEDIR/lib64/gstreamer-1.0:$WINEDIR/lib/gstreamer-1.0"
+                    export GST_PLUGIN_SYSTEM_PATH_1_0="$winegst64dir:$winegst32dir"
                     if [ -d "$WINEDIR/share/media" ]
                         then
                             export MEDIACONV_BLANK_VIDEO_FILE="$WINEDIR/share/media/blank.mkv"
@@ -4855,21 +4868,26 @@ check_wd3dmode() {
 try_ln_wine_build_dll() {
     for wine_build_dll in "$@"
         do
+        local dstdll64pth="$PFX_DLL64_PTH/${wine_build_dll}.dll"
+        local dstdll32pth="$PFX_DLL32_PTH/${wine_build_dll}.dll"
         if [ "$WINE_VERSION" == "System" ]
             then
-                try_ln "/usr/lib32/wine/i386-windows/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                try_ln "/usr/lib32/wine/i386-windows/${wine_build_dll}.dll" "$dstdll32pth" &>/dev/null
                 [ "$WINEARCH" != "win32" ] && \
-                    try_ln "/usr/lib/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                    try_ln "/usr/lib/wine/x86_64-windows/${wine_build_dll}.dll" "$dstdll64pth" &>/dev/null
             else
-                if ! try_ln "$WINEDIR/lib/wine/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                if ! try_ln "$WINEDIR/lib/wine/${wine_build_dll}.dll" "$dstdll32pth" &>/dev/null
                     then
-                        try_ln "$WINEDIR/lib/wine/i386-windows/${wine_build_dll}.dll" "$PFX_DLL32_PTH/${wine_build_dll}.dll" &>/dev/null
+                        try_ln "$WINEDIR/lib/wine/i386-windows/${wine_build_dll}.dll" "$dstdll32pth" &>/dev/null
                 fi
                 if [ "$WINEARCH" != "win32" ]
                     then
-                        if ! try_ln "$WINEDIR/lib64/wine/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                        if [ -d "$WINEDIR/lib64" ]
                             then
-                                try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$PFX_DLL64_PTH/${wine_build_dll}.dll" &>/dev/null
+                                if ! try_ln "$WINEDIR/lib64/wine/${wine_build_dll}.dll" "$dstdll64pth" &>/dev/null
+                                    then try_ln "$WINEDIR/lib64/wine/x86_64-windows/${wine_build_dll}.dll" "$dstdll64pth" &>/dev/null
+                                fi
+                            else try_ln "$WINEDIR/lib/wine/x86_64-windows/${wine_build_dll}.dll" "$dstdll64pth" &>/dev/null
                         fi
                 fi
         fi
@@ -4889,9 +4907,12 @@ check_wined3d() {
             fi
             if [ "$WINEARCH" != "win32" ]
                 then
-                    if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                    if [ -d "$WINEDIR/lib64" ]
                         then
-                            try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                            if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                                then try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
+                            fi
+                        else try_ln "$WINEDIR/lib/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH/dxgi.dll" &>/dev/null
                     fi
             fi
             try_ln_wine_build_dll d3d11 d3d10 d3d10core d3d10_1 d3d9 d3d8 d3d12 d3d12core
@@ -4909,33 +4930,34 @@ check_dxvk_async() {
 }
 
 get_proton_d3dlib() {
+    try_get_proton_d3dlib() {
+        if [[ ! -d "$LW_RUNTIME_DIR/$3/$WINE_VERSION/x32" && ! -d "$LW_RUNTIME_DIR/$3/$WINE_VERSION/x64" ]]
+            then
+                local new_d3dlib_dir="$WINEDIR/lib/wine/$2/i386-windows"
+                local new_d3dlib64_dir="$WINEDIR/lib/wine/$2/x86_64-windows"
+                local old_d3dlib_dir="$WINEDIR/lib/wine/$2"
+                local old_d3dlib64_dir="$WINEDIR/lib64/wine/$2"
+                [ -d "$new_d3dlib_dir" ] && \
+                    d3dlib_dir="$new_d3dlib_dir"||\
+                    d3dlib_dir="$old_d3dlib_dir"
+                [ -d "$new_d3dlib64_dir" ] && \
+                    d3dlib64_dir="$new_d3dlib64_dir"||\
+                    d3dlib64_dir="$old_d3dlib64_dir"
+                if [[ -d "$d3dlib_dir" && -d "$d3dlib64_dir" ]]
+                    then
+                        try_mkdir "$LW_RUNTIME_DIR/$3/$WINE_VERSION"
+                        try_$1 "$d3dlib_dir" "$LW_RUNTIME_DIR/$3/$WINE_VERSION/x32"
+                        try_$1 "$d3dlib64_dir" "$LW_RUNTIME_DIR/$3/$WINE_VERSION/x64"
+                        eval "export $4=1"
+                fi
+        fi
+    }
     unset P_DXVK P_NVAPI P_VKD3D
     if [ -d "$WINEDIR" ]
         then
-            if [[ ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_VERSION/x32" && ! -d "$LW_RUNTIME_DIR/dxvk/$WINE_VERSION/x64" ]] \
-                && [[ -d "$WINEDIR/lib/wine/dxvk" && -d "$WINEDIR/lib64/wine/dxvk" ]]
-                then
-                    try_mkdir "$LW_RUNTIME_DIR/dxvk/$WINE_VERSION"
-                    try_$1 "$WINEDIR/lib/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_VERSION/x32"
-                    try_$1 "$WINEDIR/lib64/wine/dxvk" "$LW_RUNTIME_DIR/dxvk/$WINE_VERSION/x64"
-                    export P_DXVK=1
-            fi
-            if [[ ! -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_VERSION/x32" && ! -d "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_VERSION/x64" ]] \
-            && [[ -d "$WINEDIR/lib/wine/nvapi" && -d "$WINEDIR/lib64/wine/nvapi" ]]
-            then
-                try_mkdir "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_VERSION"
-                try_$1 "$WINEDIR/lib/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_VERSION/x32"
-                try_$1 "$WINEDIR/lib64/wine/nvapi" "$LW_RUNTIME_DIR/dxvk-nvapi/$WINE_VERSION/x64"
-                export P_NVAPI=1
-            fi
-            if [[ ! -d "$LW_RUNTIME_DIR/vkd3d/$WINE_VERSION/x32" && ! -d "$LW_RUNTIME_DIR/vkd3d/$WINE_VERSION/x64" ]] \
-                && [[ -d "$WINEDIR/lib/wine/vkd3d-proton" && -d "$WINEDIR/lib64/wine/vkd3d-proton" ]]
-                then
-                    try_mkdir "$LW_RUNTIME_DIR/vkd3d/$WINE_VERSION"
-                    try_$1 "$WINEDIR/lib/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_VERSION/x32"
-                    try_$1 "$WINEDIR/lib64/wine/vkd3d-proton" "$LW_RUNTIME_DIR/vkd3d/$WINE_VERSION/x64"
-                    export P_VKD3D=1
-            fi
+            try_get_proton_d3dlib "$1" dxvk dxvk P_DXVK
+            try_get_proton_d3dlib "$1" nvapi dxvk-nvapi P_NVAPI
+            try_get_proton_d3dlib "$1" vkd3d-proton vkd3d P_VKD3D
     fi
 }
 
@@ -4980,7 +5002,7 @@ check_proton_d3dlib() {
 check_dxvk() {
     [ -n "$1" ] && export DXVK="$1"
     [ -n "$2" ] && export DXVK_VERSION="$2"
-    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,d3d8,dxgi,openvr_api_dxvk,dxvk_config"
+    export ALLDXVKDLLS="d3d11,d3d10,d3d10core,d3d10_1,d3d9,d3d8,dxgi,openvr_api_dxvk,dxvk_config,openvr_api_dxvk"
     if [[ "$DXVK" == 1 && "$WINED3D" != 1 ]]
         then
             [ "$DXVK_VERSION" == "Default" ] && \
@@ -5000,9 +5022,12 @@ check_dxvk() {
                             fi
                             if [ "$WINEARCH" == "win64" ]
                                 then
-                                    if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                                    if [ -d "$WINEDIR/lib64" ]
                                         then
-                                            try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                                            if ! try_ln "$WINEDIR/lib64/wine/fakedlls/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                                                then try_ln "$WINEDIR/lib64/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
+                                            fi
+                                        else try_ln "$WINEDIR/lib/wine/x86_64-windows/dxgi.dll" "$PFX_DLL64_PTH" &>/dev/null
                                     fi
                             fi
                             wdllover_upd "$(echo $check_dlls_slk|sed 's| dxgi||i;s|.dll||gi;s| |,|g')=n;dxgi=b"
@@ -5093,10 +5118,18 @@ check_vkd3d() {
                     if [ "$WINEARCH" == 'win64' ]
                         then
                             local libvkd3dpdll64="$PFX_DLL64_PTH/${libvkd3d}.dll"
-                            local libvkd3dwdll64="$WINEDIR/lib64/vkd3d/${libvkd3d}.dll"
+                            local new_libvkd3dwdll64="$WINEDIR/lib/vkd3d/x86_64-windows/${libvkd3d}.dll"
+                            local old_libvkd3dwdll64="$WINEDIR/lib64/vkd3d/${libvkd3d}.dll"
                     fi
                     local libvkd3dpdll32="$PFX_DLL32_PTH/${libvkd3d}.dll"
-                    local libvkd3dwdll32="$WINEDIR/lib/vkd3d/${libvkd3d}.dll"
+                    local new_libvkd3dwdll32="$WINEDIR/lib/vkd3d/i386-windows/${libvkd3d}.dll"
+                    local old_libvkd3dwdll32="$WINEDIR/lib/vkd3d/${libvkd3d}.dll"
+                    [ -e "$new_libvkd3dwdll64" ] && \
+                        libvkd3dwdll64="$new_libvkd3dwdll64"||\
+                        libvkd3dwdll64="$old_libvkd3dwdll64"
+                    [ -e "$new_libvkd3dwdll32" ] && \
+                        libvkd3dwdll32="$new_libvkd3dwdll32"||\
+                        libvkd3dwdll32="$old_libvkd3dwdll32"
                     [[ -f "$libvkd3dwdll32" && ! "$(ls -l "$libvkd3dpdll32" 2>/dev/null)" =~ "$WINE_VERSION" ]] && \
                         try_ln "$libvkd3dwdll32" "$libvkd3dpdll32" && local ret=0
                     [[ -f "$libvkd3dwdll64" && ! "$(ls -l "$libvkd3dpdll64" 2>/dev/null)" =~ "$WINE_VERSION" ]] && \
@@ -5131,7 +5164,7 @@ check_wine_nvml() {
 check_dxvk-nvapi() {
     [ -n "$1" ] && export DXVK_NVAPI="$1"
     [ -n "$2" ] && export DXVK_NVAPI_VERSION="$2"
-    export ALLNVAPIDLLS="nvapi,nvapi64,nvml,nvcuda"
+    export ALLNVAPIDLLS="nvapi,nvapi64,nvml,nvcuda,nvofapi64"
     if [[ "$DISABLE_NVAPI" != 1 && "$DXVK_NVAPI" == 1 && "$DXVK" != 0 && \
         -n "$(lspci|grep -o NVIDIA)" && "$WINED3D" != 1 ]]
         then
@@ -5704,12 +5737,12 @@ check_ld_library() {
     [ -n "$1" ] && ld_lib_upd "$1"
     if [ -n "$LD_LIBRARY_PATH" ]
         then
-            if [ ! -n "$(echo $LD_LIBRARY_PATH|grep "$WINEDIR/lib64:$WINEDIR/lib")" ]
+            if [ ! -n "$(echo $LD_LIBRARY_PATH|grep "$WINEDIR/lib64:$WINEDIR/lib/x86_64-linux-gnu:$WINEDIR/lib:$WINEDIR/lib/i386-linux-gnu")" ]
                 then
-                    export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib:$LD_LIBRARY_PATH"
+                    export LD_LIBRARY_PATH="$WINEDIR/lib64:$WINEDIR/lib/x86_64-linux-gnu:$WINEDIR/lib:$WINEDIR/lib/i386-linux-gnu:$LD_LIBRARY_PATH"
             fi
         else
-            ld_lib_upd "$WINEDIR/lib64:$WINEDIR/lib:/usr/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64"
+            ld_lib_upd "$WINEDIR/lib64:$WINEDIR/lib/x86_64-linux-gnu:$WINEDIR/lib:$WINEDIR/lib/i386-linux-gnu:/usr/lib64:/usr/lib:/usr/lib32:/opt/cuda/lib64:/usr/lib/openmpi:/opt/cuda/extras/CUPTI/lib64:/opt/cuda/nvvm/lib64"
     fi
 }
 

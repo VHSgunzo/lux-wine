@@ -1,3 +1,10 @@
+# v0.80.8
+
+* Update [lwrun](https://github.com/VHSgunzo/lwrun/releases/tag/continuous) packages
+* Update [GE-Proton](https://github.com/VHSgunzo/ge-proton-lw/releases/tag/v10.4) `v10.4`
+* Fix library search paths for the new Proton 10+
+* Fix `winetricks` "warning: unknown option -r"
+
 # v0.80.7
 
 * Update [lwrun](https://github.com/VHSgunzo/runimage/releases/tag/v0.40.7) container `v0.40.7`
