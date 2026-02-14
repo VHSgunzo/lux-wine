@@ -17,9 +17,18 @@ pkg_tool() {
 export -f pkg_tool
 
 ## arg 1:  the new package version
-# pre_install() {
-#     true
-# }
+pre_install() {
+    if ! grep -q cachyos /etc/pacman.conf
+        then
+            echo '
+[cachyos]
+Server = https://cdn.cachyos.org/repo/$arch/$repo
+Server = https://cdn-1.cachyos.org/$arch/$repo
+Server = https://cdn77.cachyos.org/repo/$arch/$repo
+' >> /etc/pacman.conf
+            pkg_tool 'yes|pac -Sy proton-cachyos'
+    fi
+}
 
 ## arg 1:  the new package version
 #post_install() {
@@ -28,9 +37,9 @@ export -f pkg_tool
 
 ## arg 1:  the new package version
 ## arg 2:  the old package version
-# pre_upgrade() {
-#     pre_install
-# }
+pre_upgrade() {
+    pre_install
+}
 
 ## arg 1:  the new package version
 ## arg 2:  the old package version
@@ -52,6 +61,9 @@ post_upgrade() {
             pac -Q glibc-eac lib32-glibc-eac &>/dev/null||\
             pkg_tool 'yes|pac -Sy glibc-eac lib32-glibc-eac'
     fi
+
+    pac -Q GE-Proton &>/dev/null && \
+    pkg_tool 'yes|pac -Rsndd GE-Proton'
 
     local LWRUN="$HOME/.local/share/LuxWine/bin/lwrun"
     if [ -f "$LWRUN" ]

@@ -1,3 +1,11 @@
+# v0.81.3
+
+* Update [lwrun](https://github.com/VHSgunzo/lwrun/releases/tag/continuous) packages
+* Add `CachyOS` repo
+* Replace `GE-Proton` with `proton-cachyos` package
+* Update [lw-runtime](https://github.com/VHSgunzo/lw-runtime/releases/tag/continuous) `v0.0.6`
+* Minor fixes
+
 # v0.81.2
 
 * Update [lwrun](https://github.com/VHSgunzo/lwrun/releases/tag/continuous) packages

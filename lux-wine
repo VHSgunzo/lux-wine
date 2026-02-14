@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LW_VERSION="0.81.2"
+export LW_VERSION="0.81.3"
 export LW_DEVELOPERS="VHSgunzo"
 
 export RED='\033[1;91m'
@@ -2028,6 +2028,8 @@ check_def_wine() {
         'Default' 'SETWINE' 'System' 'Proton 7.0'
         'Proton 8.0' 'Proton 9.0' 'Proton 9.0 (Beta)'
         'Proton - Experimental' 'Proton 10.0'
+        'proton-cachyos' 'proton-ge-custom'
+        'proton-cachyos-slr' 'Proton Hotfix'
     )
     if [[ -n "$WINE_VERSION" && ! -d "$LW_WINE_DIR/$WINE_VERSION" && "$WINEINUSEDEL" != 1 && \
         ! -L "$LW_WINE_DIR/$WINE_VERSION" && ! "${IGNWINE[@]}" =~ "$WINE_VERSION" ]]
@@ -2063,7 +2065,7 @@ check_def_wine() {
                     try_rm "$LW_WINE_DIR/$BINWINE" &>/dev/null
                     print_info notify "Deleted broken Wine: $BINWINE"
                 else
-                    if [[ -w "$LW_WINE_DIR/$BINWINE" && "$(realpath "$LW_WINE_DIR/$BINWINE")" != '/usr/share/steam/compatibilitytools.d/'* ]]
+                    if [[ -w "$LW_WINE_DIR/$BINWINE" && "$(realpath "$LW_WINE_DIR/$BINWINE")" != "$SYS_STM_COMPAT_DIR/"* ]]
                         then
                             WFILESDIR="$LW_WINE_DIR/$BINWINE/files"
                             WVERSFL="$LW_WINE_DIR/$BINWINE/version"
@@ -2685,17 +2687,19 @@ check_steamapps() {
         else
             unset STMEAC STMBATTLEYE
     fi
-    STMPRTNGE="$SYS_STM_COMPAT_DIR/$(ls -1t "$SYS_STM_COMPAT_DIR" 2>/dev/null|grep -im1 "GE-Proton")"
-    if [[ -f "$STMPRTNGE/files/bin/wine" ]]
-        then
-            STMPRTNGE_V="$(basename "$STMPRTNGE")"
-            if [[ -n "$STMPRTNGE_V" && ! -d "$LW_WINE_DIR/$STMPRTNGE_V" ]]
+    for STMPRTN in $(ls -1t "$SYS_STM_COMPAT_DIR" 2>/dev/null)
+        do
+            STMPRTNPTH="$SYS_STM_COMPAT_DIR/$STMPRTN"
+            if [[ -f "$STMPRTNPTH/files/bin/wine" ]]
                 then
-                    try_mkdir "$LW_WINE_DIR"
-                    try_ln "$STMPRTNGE/files" "$LW_WINE_DIR/$STMPRTNGE_V"
-                    print_info notify "Found $STMPRTNGE_V in Steam and linked to Lux Wine"
+                    if [ ! -d "$LW_WINE_DIR/$STMPRTN" ]
+                        then
+                            try_mkdir "$LW_WINE_DIR"
+                            try_ln "$STMPRTNPTH/files" "$LW_WINE_DIR/$STMPRTN"
+                            print_info notify "Found $STMPRTN in Steam and linked to Lux Wine"
+                    fi
             fi
-    fi
+    done
 }
 
 check_latencyflex() {
@@ -4519,7 +4523,7 @@ lu_winemgr() {
             exit 1
     fi
     export WGUIDW=$RANDOM
-    export ILW_LIST="$(ls -1 -t "$LW_WINE_DIR" 2>/dev/null|grep -v '.*.tar.*')"
+    export ILW_LIST="$(find "$LW_WINE_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null)"
     [[ "$NO_CHK_GIT" != 1 && "$2" != "delonly" ]] && \
         get_wine_git_lst
     if [[ -n "$ILW_LIST" && "$WINEGITOK" == 1 ]]
